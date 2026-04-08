@@ -29,7 +29,7 @@ jobs:
           cache: true
 
       - name: Install FRB Codegen
-        run: cargo install flutter_rust_bridge_codegen 
+        run: cargo install -b flutter_rust_bridge_codegen 
 
       - name: Run Codegen
         run: flutter_rust_bridge_codegen generate
