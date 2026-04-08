@@ -5,8 +5,17 @@ import 'package:flutter/services.dart';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:image/image.dart' as img;
 
+import 'model_session_loader_stub.dart'
+    if (dart.library.io) 'model_session_loader_io.dart'
+    if (dart.library.html) 'model_session_loader_web.dart';
+
 const String kCommonModelAsset = 'model/common.onnx';
 const String kCommonConfigAsset = 'model/common.json';
+const List<String> kCommonModelPartAssets = <String>[
+	'model/common.onnx.partaa',
+	'model/common.onnx.partab',
+	'model/common.onnx.partac',
+];
 
 class DdddOcrConfig {
 	DdddOcrConfig({
@@ -161,7 +170,25 @@ class DdddOcr {
 	}
 
 	static Future<OrtSession> _createBundledSession(OnnxRuntime runtime, String modelAsset) async {
-		return runtime.createSessionFromAsset(modelAsset);
+		try {
+			return await runtime.createSessionFromAsset(modelAsset);
+		} catch (_) {
+			final merged = await _loadModelBytesFromParts(kCommonModelPartAssets);
+			return createSessionFromMergedModelBytes(
+				runtime,
+				merged,
+				modelFileName: modelAsset.split('/').last,
+			);
+		}
+	}
+
+	static Future<Uint8List> _loadModelBytesFromParts(List<String> assets) async {
+		final builder = BytesBuilder(copy: false);
+		for (final asset in assets) {
+			final part = await rootBundle.load(asset);
+			builder.add(part.buffer.asUint8List());
+		}
+		return builder.toBytes();
 	}
 
 	img.Image _resize(img.Image source) {
