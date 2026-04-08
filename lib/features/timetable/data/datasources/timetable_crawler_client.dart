@@ -1,13 +1,13 @@
 import 'dart:convert';
 
-import 'package:curriculum_table/src/table_getter/ddddocr.dart';
-import 'package:curriculum_table/src/table_getter/http_client_factory.dart';
+import 'package:curriculum_table/features/timetable/data/datasources/http_client_factory.dart';
+import 'package:curriculum_table/features/timetable/data/services/ocr_engine.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html/parser.dart' as html_parser;
 
-class ScheduleFetchResult {
-  ScheduleFetchResult({
+class TimetableCrawlerResult {
+  TimetableCrawlerResult({
     required this.verifyCode,
     required this.loginLikelySuccess,
     required this.html,
@@ -24,8 +24,8 @@ class ScheduleFetchResult {
   final Uint8List captchaBytes;
 }
 
-class ScheduleFetchException implements Exception {
-  ScheduleFetchException({
+class TimetableCrawlerException implements Exception {
+  TimetableCrawlerException({
     required this.message,
     this.cause,
   });
@@ -37,21 +37,21 @@ class ScheduleFetchException implements Exception {
   String toString() => message;
 }
 
-class PachongClient {
-  PachongClient({
+class TimetableCrawlerClient {
+  TimetableCrawlerClient({
     Dio? httpClient,
     this.loginBaseUrl = 'http://202.119.81.112:8080',
     this.targetUrl =
         'http://202.119.81.112:9080/njlgdx/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL',
     this.proxyBaseUrl = 'https://table-getter.enbofan663.workers.dev/',
-  }) : _http = httpClient ?? createPachongHttpClient();
+  }) : _http = httpClient ?? createTimetableHttpClient();
 
   final Dio _http;
   final String loginBaseUrl;
   final String targetUrl;
   final String proxyBaseUrl;
 
-  Future<ScheduleFetchResult> loginAndFetchSchedule({
+  Future<TimetableCrawlerResult> loginAndFetchSchedule({
     required String username,
     required String password,
     int maxAttempts = 5,
@@ -112,7 +112,7 @@ class PachongClient {
         throw StateError('验证码识别结果无效（非4位字母数字）。');
       }
 
-      return ScheduleFetchResult(
+      return TimetableCrawlerResult(
         verifyCode: finalVerifyCode,
         loginLikelySuccess: loginLikelySuccess,
         html: finalHtml,
@@ -120,10 +120,10 @@ class PachongClient {
         rows: finalRows,
         captchaBytes: finalCaptchaBytes,
       );
-    } on ScheduleFetchException {
+    } on TimetableCrawlerException {
       rethrow;
     } catch (e) {
-      throw ScheduleFetchException(
+      throw TimetableCrawlerException(
         message: '抓取流程异常: $e',
         cause: e,
       );

@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 
-Dio createPachongHttpClient() {
+Dio createTimetableHttpClient() {
 	final dio = Dio(
 		BaseOptions(
 			connectTimeout: const Duration(seconds: 12),
@@ -11,8 +11,6 @@ Dio createPachongHttpClient() {
 			validateStatus: (_) => true,
 		),
 	);
-
-	// Keep a consistent UA for endpoints that inspect client fingerprint.
 	dio.options.headers[HttpHeaders.userAgentHeader] = 'curriculum_table';
 	return dio;
 }
