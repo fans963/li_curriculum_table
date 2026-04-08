@@ -12,6 +12,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Ensure LFS files are present
+        run: |
+          git lfs install
+          git lfs pull
+
+      - name: Verify model shards
+        run: |
+          ls -lh model/common.onnx.partaa model/common.onnx.partab model/common.onnx.partac
+          for f in model/common.onnx.partaa model/common.onnx.partab model/common.onnx.partac; do
+            size=$(wc -c < "$f")
+            if [ "$size" -lt 1000000 ]; then
+              echo "Model shard looks invalid (too small): $f ($size bytes)"
+              exit 1
+            fi
+          done
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@nightly
