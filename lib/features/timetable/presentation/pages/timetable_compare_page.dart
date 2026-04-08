@@ -128,19 +128,36 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                       child: Text(state.isLoading ? '抓取中...' : '抓取并对比'),
                     ),
                   ),
-                  // const SizedBox(height: 4),
-                  // if ((state.data?.captchaBytes ?? Uint8List(0)).isNotEmpty)
-                  //   _CaptchaPreview(
-                  //     captchaBytes: state.data!.captchaBytes,
-                  //     verifyCode: state.data!.verifyCode,
-                  //   ),
-                  // Align(
-                  //   alignment: Alignment.centerLeft,
-                  //   child: Text(
-                  //     state.status,
-                  //     style: Theme.of(context).textTheme.bodySmall,
-                  //   ),
-                  // ),
+                  const SizedBox(height: 4),
+                  if ((state.data?.captchaBytes ?? Uint8List(0)).isNotEmpty)
+                    _CaptchaPreview(
+                      captchaBytes: state.data!.captchaBytes,
+                      verifyCode: state.data!.verifyCode,
+                    ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      state.status,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ),
+                  if ((state.data?.networkLogs ?? const <String>[]).isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 8),
+                      width: double.infinity,
+                      constraints: const BoxConstraints(maxHeight: 160),
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: SingleChildScrollView(
+                        child: SelectableText(
+                          (state.data?.networkLogs ?? const <String>[]).join('\n'),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

@@ -30,6 +30,7 @@ class TimetableRepositoryImpl implements TimetableRepository {
       captchaBytes: result.captchaBytes,
       verifyCode: result.verifyCode,
       loginLikelySuccess: result.loginLikelySuccess,
+      networkLogs: result.networkLogs,
     );
   }
 }

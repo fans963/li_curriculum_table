@@ -10,6 +10,7 @@ class TimetableData {
     required this.captchaBytes,
     required this.verifyCode,
     required this.loginLikelySuccess,
+    required this.networkLogs,
   });
 
   final List<CourseRow> rows;
@@ -17,4 +18,5 @@ class TimetableData {
   final Uint8List captchaBytes;
   final String verifyCode;
   final bool loginLikelySuccess;
+  final List<String> networkLogs;
 }

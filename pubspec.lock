@@ -613,7 +613,7 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.2.1"
-  rust_lib_curriculum_table:
+  rust_lib_li_curriculum_table:
     dependency: "direct main"
     description:
       path: rust_builder

@@ -10,7 +10,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  rust_lib_curriculum_table:
+  rust_lib_li_curriculum_table:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
   kalender: ^0.16.0

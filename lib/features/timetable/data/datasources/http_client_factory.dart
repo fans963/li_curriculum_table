@@ -1,6 +1,5 @@
-import 'dart:io';
-
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 Dio createTimetableHttpClient() {
 	final dio = Dio(
@@ -11,6 +10,8 @@ Dio createTimetableHttpClient() {
 			validateStatus: (_) => true,
 		),
 	);
-	dio.options.headers[HttpHeaders.userAgentHeader] = 'curriculum_table';
+	if (!kIsWeb) {
+		dio.options.headers['user-agent'] = 'curriculum_table';
+	}
 	return dio;
 }
