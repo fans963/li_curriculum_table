@@ -1,17 +1,22 @@
 # curriculum_table
 
-A new Flutter project.
+一个轻盈优雅的课表工具 📚
 
-## Getting Started
+## 简介 ✨
 
-This project is a starting point for a Flutter application.
+curriculum_table 是一个基于 Flutter 的跨平台课表应用，支持登录抓取课表、OCR 识别验证码。
 
-A few resources to get you started if this is your first Flutter project:
+## 功能亮点 🌿
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- 🔐 账号登录 + 验证码自动识别（非web端本地部署绝对安全）
+- 🎨 Material 3 主题与动态取色
+- 🧩 Riverpod 分层架构，清晰易扩展
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## 快速开始 🚀
+
+```bash
+flutter pub get
+flutter run
+```
+
+愿这张课表，帮你把每一天都安排得从容好看 ☘️
