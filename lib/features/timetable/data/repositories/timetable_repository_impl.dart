@@ -1,8 +1,8 @@
-import 'package:curriculum_table/features/timetable/domain/entities/course_row.dart';
-import 'package:curriculum_table/features/timetable/data/datasources/timetable_crawler_client.dart';
-import 'package:curriculum_table/features/timetable/domain/entities/timetable_data.dart';
-import 'package:curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
-import 'package:curriculum_table/features/timetable/domain/services/course_mapper.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/timetable_crawler_client.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
 
 class TimetableRepositoryImpl implements TimetableRepository {
   TimetableRepositoryImpl(this._client);

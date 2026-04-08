@@ -1,5 +1,5 @@
-import 'package:curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
-import 'package:curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -34,23 +34,24 @@ class TimetableController extends Notifier<TimetableUiState> {
       );
     } catch (e) {
       final err = e.toString();
-      var message = '抓取失败: $e';
+      var message = '抓取失败，请稍后重试。';
       final loweredErr = err.toLowerCase();
       final isConnRefused =
           RegExp(r'errno\s*[:=]\s*111\b').hasMatch(err) ||
           loweredErr.contains('connection refused') ||
           err.contains('errno=111') ||
           err.contains('errno:111');
+      final isWebXhrNetworkError =
+          kIsWeb &&
+          (loweredErr.contains('xmlhttprequest onerror') ||
+              loweredErr.contains('networkerror when attempting to fetch resource') ||
+              loweredErr.contains('dioexception [connection error]') ||
+              loweredErr.contains('dioexception [connection errorl]'));
 
       if (isConnRefused) {
-        final modeText = kIsWeb ? 'Web 代理模式' : '桌面/移动直连模式';
-        message =
-            '抓取失败: 连接被拒绝（errno=111）。\n'
-            '当前模式: $modeText\n'
-            '代理地址: ${ref.read(timetableCrawlerClientProvider).proxyBaseUrl}\n'
-            '当前登录地址: ${ref.read(timetableCrawlerClientProvider).loginBaseUrl}\n'
-            '当前课表地址: ${ref.read(timetableCrawlerClientProvider).targetUrl}\n'
-            '请确认手机网络可访问这些地址（通常需校园网或校内VPN）。';
+        message = '抓取失败，网络连接不可用，请检查网络后重试。';
+      } else if (isWebXhrNetworkError) {
+        message = '抓取失败，代理服务暂不可用，请稍后重试。';
       }
 
       state = state.copyWith(isLoading: false, status: message);

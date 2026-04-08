@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 
-import 'package:curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
-import 'package:curriculum_table/features/timetable/domain/services/course_mapper.dart';
-import 'package:curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:kalender/kalender.dart' as k;
@@ -128,19 +128,19 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                       child: Text(state.isLoading ? '抓取中...' : '抓取并对比'),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  if ((state.data?.captchaBytes ?? Uint8List(0)).isNotEmpty)
-                    _CaptchaPreview(
-                      captchaBytes: state.data!.captchaBytes,
-                      verifyCode: state.data!.verifyCode,
-                    ),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      state.status,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                  ),
+                  // const SizedBox(height: 4),
+                  // if ((state.data?.captchaBytes ?? Uint8List(0)).isNotEmpty)
+                  //   _CaptchaPreview(
+                  //     captchaBytes: state.data!.captchaBytes,
+                  //     verifyCode: state.data!.verifyCode,
+                  //   ),
+                  // Align(
+                  //   alignment: Alignment.centerLeft,
+                  //   child: Text(
+                  //     state.status,
+                  //     style: Theme.of(context).textTheme.bodySmall,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
@@ -207,7 +207,8 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                                                 Text(
                                                   e.subtitle,
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ],

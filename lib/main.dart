@@ -1,5 +1,5 @@
-import 'package:curriculum_table/app/app.dart';
-import 'package:curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/app/app.dart';
+import 'package:li_curriculum_table/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';

@@ -1,5 +1,5 @@
-import 'package:curriculum_table/features/timetable/domain/entities/timetable_data.dart';
-import 'package:curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
 
 class FetchTimetableUseCase {
   FetchTimetableUseCase(this._repository);

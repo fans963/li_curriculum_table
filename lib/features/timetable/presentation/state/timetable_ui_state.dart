@@ -1,4 +1,4 @@
-import 'package:curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 
 class TimetableUiState {
   const TimetableUiState({

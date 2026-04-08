@@ -1,4 +1,4 @@
-import 'package:curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 

@@ -1,6 +1,6 @@
-import 'package:curriculum_table/features/timetable/presentation/bar/title_bar.dart';
-import 'package:curriculum_table/features/timetable/presentation/pages/timetable_compare_page.dart';
-import 'package:curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/timetable_compare_page.dart';
+import 'package:li_curriculum_table/util/util.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
-import 'package:curriculum_table/features/timetable/data/datasources/http_client_factory.dart';
-import 'package:curriculum_table/features/timetable/data/services/ocr_engine.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/http_client_factory.dart';
+import 'package:li_curriculum_table/features/timetable/data/services/ocr_engine.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:html/parser.dart' as html_parser;

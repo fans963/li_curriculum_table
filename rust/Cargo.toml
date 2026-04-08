@@ -1,5 +1,5 @@
 [package]
-name = "rust_lib_curriculum_table"
+name = "rust_lib_li_curriculum_table"
 version = "0.1.0"
 edition = "2021"
 

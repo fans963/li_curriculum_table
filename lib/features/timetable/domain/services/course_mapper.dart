@@ -1,5 +1,5 @@
-import 'package:curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
-import 'package:curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
 import 'package:flutter/material.dart';
 
 DateTime mondayOfCurrentWeek() {
