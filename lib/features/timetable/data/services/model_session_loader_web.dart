@@ -15,7 +15,7 @@ Future<OrtSession> createSessionFromMergedModelBytes(
   );
   final url = web.URL.createObjectURL(blob);
   try {
-    return runtime.createSession(url);
+    return await runtime.createSession(url);
   } finally {
     web.URL.revokeObjectURL(url);
   }

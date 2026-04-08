@@ -7,7 +7,7 @@ import 'package:image/image.dart' as img;
 
 import 'model_session_loader_stub.dart'
     if (dart.library.io) 'model_session_loader_io.dart'
-    if (dart.library.html) 'model_session_loader_web.dart';
+	if (dart.library.js_interop) 'model_session_loader_web.dart';
 
 const String kCommonModelAsset = 'model/common.onnx';
 const String kCommonConfigAsset = 'model/common.json';
