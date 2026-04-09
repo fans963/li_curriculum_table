@@ -1,5 +1,6 @@
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/section_time_mapping.dart';
 import 'package:flutter/material.dart';
 
 DateTime mondayOfCurrentWeek() {
@@ -24,8 +25,8 @@ List<CourseOccurrence> buildCourseOccurrences(List<CourseRow> rows) {
       final weekday = _weekdayFromChinese(m.group(1)!);
       final startSection = int.parse(m.group(2)!);
       final endSection = int.parse(m.group(3)!);
-      final startClock = _sectionStartClock[startSection];
-      final endClock = _sectionEndClock[endSection];
+      final startClock = startClockOfSection(startSection);
+      final endClock = endClockOfSection(endSection);
       if (weekday == null || startClock == null || endClock == null) {
         continue;
       }
@@ -129,37 +130,3 @@ int? _weekdayFromChinese(String c) {
       return null;
   }
 }
-
-const Map<int, (int, int)> _sectionStartClock = <int, (int, int)>{
-  1: (8, 0),
-  2: (8, 50),
-  3: (9, 50),
-  4: (10, 40),
-  5: (11, 30),
-  6: (14, 0),
-  7: (14, 50),
-  8: (15, 50),
-  9: (16, 40),
-  10: (17, 30),
-  11: (19, 0),
-  12: (19, 50),
-  13: (20, 40),
-  14: (21, 30),
-};
-
-const Map<int, (int, int)> _sectionEndClock = <int, (int, int)>{
-  1: (8, 45),
-  2: (9, 35),
-  3: (10, 35),
-  4: (11, 25),
-  5: (12, 15),
-  6: (14, 45),
-  7: (15, 35),
-  8: (16, 35),
-  9: (17, 25),
-  10: (18, 15),
-  11: (19, 45),
-  12: (20, 35),
-  13: (21, 25),
-  14: (22, 15),
-};
