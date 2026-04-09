@@ -10,12 +10,16 @@ class TimetableControlPanel extends StatelessWidget {
     required this.isLoading,
     required this.currentTeachingWeek,
     required this.onTeachingWeekChanged,
+    required this.minWeek,
+    required this.maxWeek,
   });
 
   final TextEditingController usernameController;
   final TextEditingController passwordController;
   final bool isLoading;
   final int currentTeachingWeek;
+  final int minWeek;
+  final int maxWeek;
   final ValueChanged<int> onTeachingWeekChanged;
 
   @override
@@ -44,11 +48,14 @@ class TimetableControlPanel extends StatelessWidget {
             isDense: true,
           ),
         );
-        // Cap at 18 as per requirement
-        final weekOptions = List<int>.generate(18, (index) => index + 1);
+        // Dynamically generated based on crawl data
+        final weekOptions = List<int>.generate(
+          maxWeek - minWeek + 1, 
+          (index) => minWeek + index,
+        );
         final selectedWeek = weekOptions.contains(currentTeachingWeek)
             ? currentTeachingWeek
-            : 1;
+            : minWeek;
         final weekField = DropdownButtonFormField<int>(
           initialValue: selectedWeek,
           items: weekOptions

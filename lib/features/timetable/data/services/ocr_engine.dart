@@ -4,18 +4,15 @@ import 'dart:typed_data';
 import 'package:flutter/services.dart';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:image/image.dart' as img;
+import 'package:zstandard/zstandard.dart';
 
 import 'model_session_loader_stub.dart'
     if (dart.library.io) 'model_session_loader_io.dart'
 	if (dart.library.js_interop) 'model_session_loader_web.dart';
 
-const String kCommonModelAsset = 'model/common.onnx';
-const String kCommonConfigAsset = 'model/common.json';
-const List<String> kCommonModelPartAssets = <String>[
-	'model/common.onnx.partaa',
-	'model/common.onnx.partab',
-	'model/common.onnx.partac',
-];
+const String kCommonModelAsset = 'model/common_pruned.onnx.zst';
+const String kCommonConfigAsset = 'model/common_pruned.json';
+const List<String> kCommonModelPartAssets = <String>[];
 
 class DdddOcrConfig {
 	DdddOcrConfig({
@@ -171,6 +168,18 @@ class DdddOcr {
 
 	static Future<OrtSession> _createBundledSession(OnnxRuntime runtime, String modelAsset) async {
 		try {
+			if (modelAsset.endsWith('.zst')) {
+				final compressed = await rootBundle.load(modelAsset);
+				final decompressed = await Zstandard().decompress(compressed.buffer.asUint8List());
+				if (decompressed == null) {
+					throw StateError('zstd decompression failed');
+				}
+				return createSessionFromMergedModelBytes(
+					runtime,
+					decompressed,
+					modelFileName: modelAsset.split('/').last.replaceAll('.zst', ''),
+				);
+			}
 			return await runtime.createSessionFromAsset(modelAsset);
 		} catch (_) {
 			final merged = await _loadModelBytesFromParts(kCommonModelPartAssets);

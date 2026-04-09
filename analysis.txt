@@ -1,0 +1,16 @@
+Analyzing curriculum_table...                                   
+
+warning • Unused import: 'package:flutter/foundation.dart' • lib/features/timetable/data/repositories/timetable_repository_impl.dart:9:8 • unused_import
+   info • Use an initializing formal to assign a parameter to a field • lib/features/timetable/data/services/ocr_engine.dart:48:8 • prefer_initializing_formals
+   info • Use an initializing formal to assign a parameter to a field • lib/features/timetable/data/services/ocr_engine.dart:49:5 • prefer_initializing_formals
+   info • Use an initializing formal to assign a parameter to a field • lib/features/timetable/data/services/ocr_engine.dart:50:5 • prefer_initializing_formals
+warning • Unused import: 'package:flutter/material.dart' • lib/features/timetable/presentation/calendar_view/calendar_view_adapter.dart:2:8 • unused_import
+warning • Unused import: 'package:calendar_view/calendar_view.dart' • lib/features/timetable/presentation/calendar_view/timetable_week_view_components.dart:1:8 • unused_import
+warning • Unused import: 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart' • lib/features/timetable/presentation/calendar_view/timetable_week_view_components.dart:3:8 • unused_import
+warning • Unused import: 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart' • lib/features/timetable/presentation/calendar_view/timetable_week_view_components.dart:5:8 • unused_import
+warning • The declaration '_rulerWidth' isn't referenced • lib/features/timetable/presentation/pages/timetable_compare_page.dart:13:14 • unused_element
+warning • Unused import: 'dart:typed_data' • lib/features/timetable/presentation/pages/widgets/timetable_page_sections.dart:1:8 • unused_import
+   info • 'encryptedSharedPreferences' is deprecated and shouldn't be used. EncryptedSharedPreferences is deprecated and will be removed in v11. The Jetpack Security library is deprecated by Google. Your data will be automatically migrated to custom ciphers on first access. Remove this parameter - it will be ignored • lib/features/timetable/presentation/providers/timetable_providers.dart:32:30 • deprecated_member_use
+warning • Unused import: 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_inference.dart' • lib/features/timetable/presentation/state/timetable_controller.dart:5:8 • unused_import
+
+12 issues found. (ran in 2.7s)

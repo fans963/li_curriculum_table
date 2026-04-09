@@ -1,19 +1,15 @@
 import 'dart:async';
 
-import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/calendar_view_adapter.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_ruler_components.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 
 // UI Constants
 const double _pixelsPerMinute = 1.0;
-const double _rulerWidth = 48.0;
 const int _startDisplayHour = 8;
 const int _endDisplayHour = 22;
 
@@ -28,7 +24,7 @@ class TimetableComparePage extends ConsumerStatefulWidget {
 class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _calendarKey = GlobalKey<WeekViewState>();
+  final _calendarKey = GlobalKey<TimetableWeekViewState>();
   Timer? _nowTicker;
   DateTime _now = DateTime.now();
 
@@ -72,10 +68,7 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
     final state = ref.watch(timetableControllerProvider);
     final displayWeek = state.displayWeek;
 
-    // Use a high-level wrapper required by calendar_view
-    return CalendarControllerProvider(
-      controller: ref.watch(timetableEventControllerProvider),
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: colorScheme.surface,
         floatingActionButton: FloatingActionButton(
           onPressed: state.isLoading ? null : _triggerFetch,
@@ -98,6 +91,8 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                   passwordController: _passwordController,
                   isLoading: state.isLoading,
                   currentTeachingWeek: state.currentTeachingWeek,
+                  minWeek: state.minWeek,
+                  maxWeek: state.maxWeek,
                   onTeachingWeekChanged: (week) {
                     // This is CALIBRATION: Fixes the anchor
                     ref.read(timetableControllerProvider.notifier).setCurrentTeachingWeek(week);
@@ -106,7 +101,7 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                     final anchor = state.termStartMonday;
                     if (anchor != null) {
                       final targetDate = anchor.add(Duration(days: (week - 1) * 7));
-                      _calendarKey.currentState?.jumpToWeek(targetDate);
+                      _calendarKey.currentState?.jumpToDate(targetDate);
                     }
                   },
                 ),
@@ -173,7 +168,6 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -190,7 +184,7 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
     if (anchor == null) return;
 
     final week = calculateWeekIndex(date, anchor);
-    if (week > 18 || week < 1) return; // Cap at 18
+    if (week > state.maxWeek || week < state.minWeek) return;
     
     if (week != state.displayWeek) {
       ref.read(timetableControllerProvider.notifier).updateDisplayWeek(week);

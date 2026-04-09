@@ -51,6 +51,64 @@ class BoundaryHourLinePainter extends CustomPainter {
   }
 }
 
+/// A custom time indicator (ruler) painter that displays class start/end timestamps.
+class SectionBoundaryTimeIndicatorPainter extends CustomPainter {
+  SectionBoundaryTimeIndicatorPainter({
+    required this.textColor,
+    required this.heightPerMinute,
+    required this.startHour,
+  });
+
+  final Color textColor;
+  final double heightPerMinute;
+  final int startHour;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+      textAlign: TextAlign.right,
+    );
+
+    final List<int> timePointsMins = [];
+    for (final range in sectionTimeMapping.values) {
+      timePointsMins.add(range.start.$1 * 60 + range.start.$2);
+      timePointsMins.add(range.end.$1 * 60 + range.end.$2);
+    }
+
+    final uniquePoints = timePointsMins.toSet().toList();
+    final startMins = startHour * 60;
+
+    for (final mins in uniquePoints) {
+      final y = (mins - startMins) * heightPerMinute;
+      if (y >= 0 && y <= size.height) {
+        final hour = mins ~/ 60;
+        final minute = mins % 60;
+        final timeStr = '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+        textPainter.text = TextSpan(
+          text: timeStr,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: textColor,
+          ),
+        );
+        textPainter.layout(minWidth: size.width, maxWidth: size.width);
+        
+        // Offset the text so it's centered vertically on the line
+        textPainter.paint(canvas, Offset(0, y - textPainter.height / 2));
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant SectionBoundaryTimeIndicatorPainter oldDelegate) {
+    return oldDelegate.textColor != textColor ||
+        oldDelegate.heightPerMinute != heightPerMinute;
+  }
+}
+
 /// A custom timeline (ruler) builder that displays class start/end timestamps.
 Widget timetableTimeLineBuilder(DateTime date, Color textColor) {
   // We only want to show labels if the current 'date' minute matches a class point.

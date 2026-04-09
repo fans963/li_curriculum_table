@@ -11,6 +11,7 @@
 #include <flutter_secure_storage_windows/flutter_secure_storage_windows_plugin.h>
 #include <screen_retriever_windows/screen_retriever_windows_plugin_c_api.h>
 #include <window_manager/window_manager_plugin.h>
+#include <zstandard_windows/zstandard_windows_plugin_c_api.h>
 
 void RegisterPlugins(flutter::PluginRegistry* registry) {
   DynamicColorPluginCApiRegisterWithRegistrar(
@@ -23,4 +24,6 @@ void RegisterPlugins(flutter::PluginRegistry* registry) {
       registry->GetRegistrarForPlugin("ScreenRetrieverWindowsPluginCApi"));
   WindowManagerPluginRegisterWithRegistrar(
       registry->GetRegistrarForPlugin("WindowManagerPlugin"));
+  ZstandardWindowsPluginCApiRegisterWithRegistrar(
+      registry->GetRegistrarForPlugin("ZstandardWindowsPluginCApi"));
 }

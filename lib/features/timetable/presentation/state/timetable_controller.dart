@@ -1,8 +1,8 @@
 import 'dart:async';
 
+import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_inference.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
@@ -23,7 +23,7 @@ class TimetableController extends Notifier<TimetableUiState> {
   }
 
   void updateDisplayWeek(int week) {
-    if (week < 1) return;
+    if (week < state.minWeek || week > state.maxWeek) return;
     state = state.copyWith(displayWeek: week);
   }
 
@@ -42,7 +42,7 @@ class TimetableController extends Notifier<TimetableUiState> {
       referenceDate: baseline.referenceDate,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor);
+    final inferred = calculateWeekIndex(DateTime.now(), anchor).clamp(state.minWeek, state.maxWeek);
 
     state = state.copyWith(
       referenceWeek: baseline.referenceWeek,
@@ -61,6 +61,39 @@ class TimetableController extends Notifier<TimetableUiState> {
     }
 
     state = state.copyWith(data: cachedData, status: '已加载上次缓存课表。');
+    _updateWeekRange(cachedData);
+  }
+
+  void _updateWeekRange(TimetableData? data) {
+    if (data == null || data.occurrences.isEmpty) {
+      state = state.copyWith(minWeek: 1, maxWeek: 18);
+      return;
+    }
+
+    int min = 1;
+    int max = 18;
+
+    bool initialized = false;
+    for (final occ in data.occurrences) {
+      if (occ.startWeek != null && occ.endWeek != null) {
+        if (!initialized) {
+          min = occ.startWeek!;
+          max = occ.endWeek!;
+          initialized = true;
+        } else {
+          if (occ.startWeek! < min) min = occ.startWeek!;
+          if (occ.endWeek! > max) max = occ.endWeek!;
+        }
+      }
+    }
+
+    // Fallback if no valid week indices found
+    if (!initialized) {
+      min = 1;
+      max = 18;
+    }
+
+    state = state.copyWith(minWeek: min, maxWeek: max);
   }
 
   void _setBaselineAndInfer({
@@ -73,7 +106,7 @@ class TimetableController extends Notifier<TimetableUiState> {
       referenceWeek: safeWeek,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor);
+    final inferred = calculateWeekIndex(DateTime.now(), anchor).clamp(state.minWeek, state.maxWeek);
 
     state = state.copyWith(
       referenceWeek: safeWeek,
@@ -138,6 +171,15 @@ class TimetableController extends Notifier<TimetableUiState> {
         status:
             '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
       );
+      _updateWeekRange(data);
+
+      if (state.termStartMonday == null) {
+        final now = DateTime.now();
+        _setBaselineAndInfer(
+          referenceDate: DateTime(now.year, now.month, now.day),
+          referenceWeek: 1,
+        );
+      }
     } catch (e) {
       final err = e.toString();
       var message = '抓取失败，请稍后重试。';

@@ -25,6 +25,8 @@ dependencies:
   web: ^1.1.1
   flutter_secure_storage: ^10.0.0
   calendar_view: ^2.0.0
+  infinite_calendar_view: ^2.11.3
+  zstandard: ^1.5.0
 
 dev_dependencies:
   flutter_test:
@@ -40,10 +42,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - model/common.onnx.partaa
-    - model/common.onnx.partab
-    - model/common.onnx.partac
-    - model/common.json
+    - model/common_pruned.onnx.zst
+    - model/common_pruned.json
     - assets/icon/icon.png
 
 msix_config:

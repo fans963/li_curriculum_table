@@ -7,6 +7,8 @@ class TimetableUiState {
     required this.currentTeachingWeek,
     required this.displayWeek,
     required this.referenceWeek,
+    required this.minWeek,
+    required this.maxWeek,
     this.termStartMonday,
     this.data,
   });
@@ -18,6 +20,8 @@ class TimetableUiState {
       currentTeachingWeek: 1,
       displayWeek: 1,
       referenceWeek: 1,
+      minWeek: 1,
+      maxWeek: 18,
     );
   }
 
@@ -26,6 +30,8 @@ class TimetableUiState {
   final int currentTeachingWeek; // "Today's" week
   final int displayWeek; // "Viewed" week
   final int referenceWeek;
+  final int minWeek;
+  final int maxWeek;
   final DateTime? termStartMonday;
   final TimetableData? data;
 
@@ -35,6 +41,8 @@ class TimetableUiState {
     int? currentTeachingWeek,
     int? displayWeek,
     int? referenceWeek,
+    int? minWeek,
+    int? maxWeek,
     DateTime? termStartMonday,
     TimetableData? data,
     bool clearData = false,
@@ -45,6 +53,8 @@ class TimetableUiState {
       currentTeachingWeek: currentTeachingWeek ?? this.currentTeachingWeek,
       displayWeek: displayWeek ?? this.displayWeek,
       referenceWeek: referenceWeek ?? this.referenceWeek,
+      minWeek: minWeek ?? this.minWeek,
+      maxWeek: maxWeek ?? this.maxWeek,
       termStartMonday: termStartMonday ?? this.termStartMonday,
       data: clearData ? null : (data ?? this.data),
     );
