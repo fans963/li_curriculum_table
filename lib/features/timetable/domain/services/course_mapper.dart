@@ -1,5 +1,6 @@
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_time_text_parser.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/section_time_mapping.dart';
 import 'package:flutter/material.dart';
 
@@ -14,20 +15,19 @@ DateTime mondayOfCurrentWeek() {
 
 List<CourseOccurrence> buildCourseOccurrences(List<CourseRow> rows) {
   final weekStart = mondayOfCurrentWeek();
-  final reg = RegExp(r'星期([一二三四五六日天])\((\d{2})-(\d{2})小节\)');
   final dedup = <String>{};
   final result = <CourseOccurrence>[];
 
   for (final row in rows) {
-    final matches = reg.allMatches(row.timeText).toList(growable: false);
-    for (var i = 0; i < matches.length; i++) {
-      final m = matches[i];
-      final weekday = _weekdayFromChinese(m.group(1)!);
-      final startSection = int.parse(m.group(2)!);
-      final endSection = int.parse(m.group(3)!);
+    final slots = parseCourseTimeSlots(row.timeText);
+    for (var i = 0; i < slots.length; i++) {
+      final slot = slots[i];
+      final weekday = slot.weekday;
+      final startSection = slot.startSection;
+      final endSection = slot.endSection;
       final startClock = startClockOfSection(startSection);
       final endClock = endClockOfSection(endSection);
-      if (weekday == null || startClock == null || endClock == null) {
+      if (startClock == null || endClock == null) {
         continue;
       }
 
@@ -48,7 +48,7 @@ List<CourseOccurrence> buildCourseOccurrences(List<CourseRow> rows) {
       );
 
       final key =
-          '${row.courseId}|${row.courseName}|$weekday|$startSection|$endSection';
+          '${row.courseId}|${row.courseName}|$weekday|$startSection|$endSection|${slot.startWeek}|${slot.endWeek}|${slot.weekText}';
       if (!dedup.add(key)) {
         continue;
       }
@@ -63,6 +63,9 @@ List<CourseOccurrence> buildCourseOccurrences(List<CourseRow> rows) {
           stage: row.stage,
           start: start,
           end: end,
+          startWeek: slot.startWeek,
+          endWeek: slot.endWeek,
+          weekText: slot.weekText,
           color: _colorFromCourseId(row.courseId),
         ),
       );
@@ -107,26 +110,4 @@ Color _colorFromCourseId(String courseId) {
     hash = (hash * 31 + code) & 0x7fffffff;
   }
   return palette[hash % palette.length];
-}
-
-int? _weekdayFromChinese(String c) {
-  switch (c) {
-    case '一':
-      return DateTime.monday;
-    case '二':
-      return DateTime.tuesday;
-    case '三':
-      return DateTime.wednesday;
-    case '四':
-      return DateTime.thursday;
-    case '五':
-      return DateTime.friday;
-    case '六':
-      return DateTime.saturday;
-    case '日':
-    case '天':
-      return DateTime.sunday;
-    default:
-      return null;
-  }
 }

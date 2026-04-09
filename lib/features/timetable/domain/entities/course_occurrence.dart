@@ -10,6 +10,9 @@ class CourseOccurrence {
     required this.stage,
     required this.start,
     required this.end,
+    this.startWeek,
+    this.endWeek,
+    this.weekText = '',
     required this.color,
   });
 
@@ -21,5 +24,8 @@ class CourseOccurrence {
   final String stage;
   final DateTime start;
   final DateTime end;
+  final int? startWeek;
+  final int? endWeek;
+  final String weekText;
   final Color color;
 }

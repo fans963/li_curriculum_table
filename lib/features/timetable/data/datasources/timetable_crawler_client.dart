@@ -27,10 +27,7 @@ class TimetableCrawlerResult {
 }
 
 class TimetableCrawlerException implements Exception {
-  TimetableCrawlerException({
-    required this.message,
-    this.cause,
-  });
+  TimetableCrawlerException({required this.message, this.cause});
 
   final String message;
   final Object? cause;
@@ -70,12 +67,16 @@ class TimetableCrawlerClient {
 
     try {
       for (var attempt = 1; attempt <= maxAttempts; attempt++) {
-        final start = await (kIsWeb ? _startRemoteSession() : _startDirectSession());
+        final start = await (kIsWeb
+            ? _startRemoteSession()
+            : _startDirectSession());
         networkLogs.addAll(start.networkLogs);
 
         final captchaBytes = start.captchaBytes;
-        final commonCode =
-            (await ocrCommon.classification(captchaBytes, alnumOnly: true)).trim();
+        final commonCode = (await ocrCommon.classification(
+          captchaBytes,
+          alnumOnly: true,
+        )).trim();
         final verifyCode = commonCode;
         if (!_isValidVerifyCode(verifyCode)) {
           continue;
@@ -132,10 +133,7 @@ class TimetableCrawlerClient {
       final detail = networkLogs.isEmpty
           ? ''
           : '\n网络日志:\n${networkLogs.join('\n')}';
-      throw TimetableCrawlerException(
-        message: '抓取流程异常: $e$detail',
-        cause: e,
-      );
+      throw TimetableCrawlerException(message: '抓取流程异常: $e$detail', cause: e);
     } finally {
       await ocrCommon.close();
     }
@@ -182,7 +180,8 @@ class TimetableCrawlerClient {
       throw StateError('远端未返回验证码图片');
     }
 
-    final session = (data['session'] as Map?)?.cast<String, dynamic>() ??
+    final session =
+        (data['session'] as Map?)?.cast<String, dynamic>() ??
         <String, dynamic>{};
     final networkLogs = ((data['networkLogs'] as List?) ?? const <dynamic>[])
         .map((e) => e.toString())
@@ -208,8 +207,9 @@ class TimetableCrawlerClient {
     );
     _mergeCookies(cookies, loginInitRes.headers.map['set-cookie']);
 
-    final captchaUri = Uri.parse(loginBaseUrl)
-      .resolve('/verifycode.servlet?t=${DateTime.now().millisecondsSinceEpoch}');
+    final captchaUri = Uri.parse(
+      loginBaseUrl,
+    ).resolve('/verifycode.servlet?t=${DateTime.now().millisecondsSinceEpoch}');
     final captchaRes = await _http.getUri<List<int>>(
       captchaUri,
       options: _directOptions(
@@ -252,8 +252,8 @@ class TimetableCrawlerClient {
 
     final html = (data['html'] as String?) ?? '';
     final networkLogs = ((data['networkLogs'] as List?) ?? const <dynamic>[])
-      .map((e) => e.toString())
-      .toList(growable: false);
+        .map((e) => e.toString())
+        .toList(growable: false);
     return _RemoteSubmitResponse(html: html, networkLogs: networkLogs);
   }
 
@@ -263,7 +263,8 @@ class TimetableCrawlerClient {
     required String password,
     required String verifyCode,
   }) async {
-    final cookies = (session['cookies'] as Map?)?.cast<String, String>() ??
+    final cookies =
+        (session['cookies'] as Map?)?.cast<String, String>() ??
         <String, String>{};
     final networkLogs = <String>[];
     Uri? redirectLandingUri;
@@ -355,7 +356,10 @@ class TimetableCrawlerClient {
     );
     _mergeCookies(cookies, targetRes.headers.map['set-cookie']);
 
-    final html = utf8.decode(targetRes.data ?? const <int>[], allowMalformed: true);
+    final html = utf8.decode(
+      targetRes.data ?? const <int>[],
+      allowMalformed: true,
+    );
     return _RemoteSubmitResponse(html: html, networkLogs: networkLogs);
   }
 
@@ -423,15 +427,11 @@ class TimetableCrawlerClient {
       final decoded = jsonDecode(text);
       data = (decoded as Map).cast<String, dynamic>();
     } catch (_) {
-      throw StateError(
-        '远端返回非JSON: status=$statusCode, body=$text',
-      );
+      throw StateError('远端返回非JSON: status=$statusCode, body=$text');
     }
 
     if (statusCode < 200 || statusCode >= 300) {
-      throw StateError(
-        '远端接口失败: status=$statusCode, body=${jsonEncode(data)}',
-      );
+      throw StateError('远端接口失败: status=$statusCode, body=${jsonEncode(data)}');
     }
 
     return data;

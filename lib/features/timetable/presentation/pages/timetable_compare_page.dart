@@ -77,7 +77,7 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                 dateTimeRange: DateTimeRange(start: e.start, end: e.end),
                 title: e.courseName,
                 subtitle:
-                    '${e.teacher} · ${e.location.isEmpty ? '未填教室' : e.location}',
+                    '${_formatWeekLabel(e)} · ${e.teacher} · ${e.location.isEmpty ? '未填教室' : e.location}',
                 color: e.color,
               ),
             )
@@ -115,9 +115,10 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
             startTime: e.start,
             endTime: e.end,
             subject:
-                '${e.courseName}\n${e.teacher}  ${e.location.isEmpty ? '未填教室' : e.location}',
+                '${e.courseName}\n${_formatWeekLabel(e)} · ${e.teacher}  ${e.location.isEmpty ? '未填教室' : e.location}',
             color: e.color,
-            notes: '学分:${e.credit}  ${e.courseType}  ${e.stage}',
+            notes:
+                '周次:${_formatWeekLabel(e)}  学分:${e.credit}  ${e.courseType}  ${e.stage}',
           ),
         )
         .toList(growable: false);
@@ -617,4 +618,22 @@ class _SfCourseDataSource extends sf.CalendarDataSource {
   _SfCourseDataSource(List<sf.Appointment> source) {
     appointments = source;
   }
+}
+
+String _formatWeekLabel(CourseOccurrence occurrence) {
+  final weekText = occurrence.weekText.trim();
+  if (weekText.isNotEmpty) {
+    return weekText;
+  }
+
+  final startWeek = occurrence.startWeek;
+  final endWeek = occurrence.endWeek;
+  if (startWeek == null || endWeek == null) {
+    return '周次未知';
+  }
+
+  if (startWeek == endWeek) {
+    return '$startWeek周';
+  }
+  return '$startWeek-$endWeek周';
 }
