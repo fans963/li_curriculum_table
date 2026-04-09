@@ -8,22 +8,16 @@ import 'package:html/parser.dart' as html_parser;
 
 class TimetableCrawlerResult {
   TimetableCrawlerResult({
-    required this.verifyCode,
     required this.loginLikelySuccess,
     required this.html,
     required this.headers,
     required this.rows,
-    required this.captchaBytes,
-    required this.networkLogs,
   });
 
-  final String verifyCode;
   final bool loginLikelySuccess;
   final String html;
   final List<String> headers;
   final List<List<String>> rows;
-  final Uint8List captchaBytes;
-  final List<String> networkLogs;
 }
 
 class TimetableCrawlerException implements Exception {
@@ -57,20 +51,16 @@ class TimetableCrawlerClient {
   }) async {
     final ocrCommon = await DdddOcr.createCommon();
 
-    var finalVerifyCode = '';
-    var finalCaptchaBytes = Uint8List(0);
     var finalHtml = '';
     var finalHeaders = <String>[];
     var finalRows = <List<String>>[];
     var loginLikelySuccess = false;
-    final networkLogs = <String>[];
 
     try {
       for (var attempt = 1; attempt <= maxAttempts; attempt++) {
         final start = await (kIsWeb
             ? _startRemoteSession()
             : _startDirectSession());
-        networkLogs.addAll(start.networkLogs);
 
         final captchaBytes = start.captchaBytes;
         final commonCode = (await ocrCommon.classification(
@@ -95,15 +85,12 @@ class TimetableCrawlerClient {
                 password: password,
                 verifyCode: verifyCode,
               ));
-        networkLogs.addAll(submit.networkLogs);
 
         final html = submit.html;
         final parsed = parseSchedule(html);
         final headers = parsed.$1;
         final rows = parsed.$2;
 
-        finalVerifyCode = verifyCode;
-        finalCaptchaBytes = captchaBytes;
         finalHtml = html;
         finalHeaders = headers;
         finalRows = rows;
@@ -114,26 +101,16 @@ class TimetableCrawlerClient {
         }
       }
 
-      if (finalVerifyCode.isEmpty) {
-        throw StateError('验证码识别结果无效（非4位字母数字）。');
-      }
-
       return TimetableCrawlerResult(
-        verifyCode: finalVerifyCode,
         loginLikelySuccess: loginLikelySuccess,
         html: finalHtml,
         headers: finalHeaders,
         rows: finalRows,
-        captchaBytes: finalCaptchaBytes,
-        networkLogs: networkLogs,
       );
     } on TimetableCrawlerException {
       rethrow;
     } catch (e) {
-      final detail = networkLogs.isEmpty
-          ? ''
-          : '\n网络日志:\n${networkLogs.join('\n')}';
-      throw TimetableCrawlerException(message: '抓取流程异常: $e$detail', cause: e);
+      throw TimetableCrawlerException(message: '抓取流程异常: $e', cause: e);
     } finally {
       await ocrCommon.close();
     }
@@ -183,27 +160,18 @@ class TimetableCrawlerClient {
     final session =
         (data['session'] as Map?)?.cast<String, dynamic>() ??
         <String, dynamic>{};
-    final networkLogs = ((data['networkLogs'] as List?) ?? const <dynamic>[])
-        .map((e) => e.toString())
-        .toList(growable: false);
     return _RemoteStartResponse(
       captchaBytes: Uint8List.fromList(base64Decode(captchaBase64)),
       session: session,
-      networkLogs: networkLogs,
     );
   }
 
   Future<_RemoteStartResponse> _startDirectSession() async {
     final cookies = <String, String>{};
-    final networkLogs = <String>[];
-
     final loginInitUri = Uri.parse(loginBaseUrl).resolve('/');
     final loginInitRes = await _http.getUri<List<int>>(
       loginInitUri,
       options: _directOptions(responseType: ResponseType.bytes),
-    );
-    networkLogs.add(
-      '[DIRECT][START] GET / status=${loginInitRes.statusCode ?? 0} url=${loginInitUri.toString()}',
     );
     _mergeCookies(cookies, loginInitRes.headers.map['set-cookie']);
 
@@ -217,9 +185,6 @@ class TimetableCrawlerClient {
         headers: _cookieHeaders(cookies),
       ),
     );
-    networkLogs.add(
-      '[DIRECT][START] GET captcha status=${captchaRes.statusCode ?? 0} bytes=${(captchaRes.data ?? const <int>[]).length} url=${captchaUri.toString()}',
-    );
     _mergeCookies(cookies, captchaRes.headers.map['set-cookie']);
 
     final captchaBytes = Uint8List.fromList(captchaRes.data ?? const <int>[]);
@@ -230,7 +195,6 @@ class TimetableCrawlerClient {
     return _RemoteStartResponse(
       captchaBytes: captchaBytes,
       session: <String, dynamic>{'cookies': cookies},
-      networkLogs: networkLogs,
     );
   }
 
@@ -251,10 +215,7 @@ class TimetableCrawlerClient {
     );
 
     final html = (data['html'] as String?) ?? '';
-    final networkLogs = ((data['networkLogs'] as List?) ?? const <dynamic>[])
-        .map((e) => e.toString())
-        .toList(growable: false);
-    return _RemoteSubmitResponse(html: html, networkLogs: networkLogs);
+    return _RemoteSubmitResponse(html: html);
   }
 
   Future<_RemoteSubmitResponse> _submitDirectSession({
@@ -266,7 +227,6 @@ class TimetableCrawlerClient {
     final cookies =
         (session['cookies'] as Map?)?.cast<String, String>() ??
         <String, String>{};
-    final networkLogs = <String>[];
     Uri? redirectLandingUri;
     final loginCandidates = <Uri>[
       Uri.parse(loginBaseUrl).resolve('/Logon.do?method=logon'),
@@ -293,9 +253,6 @@ class TimetableCrawlerClient {
           },
         ),
       );
-      networkLogs.add(
-        '[DIRECT][SUBMIT] POST logon status=${loginRes.statusCode ?? 0} url=${loginUri.toString()}',
-      );
       _mergeCookies(cookies, loginRes.headers.map['set-cookie']);
       final location = loginRes.headers.value('location') ?? '';
 
@@ -314,9 +271,6 @@ class TimetableCrawlerClient {
           ),
         );
         redirectLandingUri = redirectUri;
-        networkLogs.add(
-          '[DIRECT][SUBMIT] redirect status=${redirectRes.statusCode ?? 0} url=${redirectUri.toString()}',
-        );
         _mergeCookies(cookies, redirectRes.headers.map['set-cookie']);
         final nextLocation = redirectRes.headers.value('location') ?? '';
 
@@ -351,16 +305,13 @@ class TimetableCrawlerClient {
         headers: _cookieHeaders(cookies),
       ),
     );
-    networkLogs.add(
-      '[DIRECT][SUBMIT] GET target status=${targetRes.statusCode ?? 0} url=${targetUri.toString()}',
-    );
     _mergeCookies(cookies, targetRes.headers.map['set-cookie']);
 
     final html = utf8.decode(
       targetRes.data ?? const <int>[],
       allowMalformed: true,
     );
-    return _RemoteSubmitResponse(html: html, networkLogs: networkLogs);
+    return _RemoteSubmitResponse(html: html);
   }
 
   Map<String, String> _cookieHeaders(Map<String, String> cookies) {
@@ -457,17 +408,14 @@ class _RemoteStartResponse {
   _RemoteStartResponse({
     required this.captchaBytes,
     required this.session,
-    required this.networkLogs,
   });
 
   final Uint8List captchaBytes;
   final Map<String, dynamic> session;
-  final List<String> networkLogs;
 }
 
 class _RemoteSubmitResponse {
-  _RemoteSubmitResponse({required this.html, required this.networkLogs});
+  _RemoteSubmitResponse({required this.html});
 
   final String html;
-  final List<String> networkLogs;
 }

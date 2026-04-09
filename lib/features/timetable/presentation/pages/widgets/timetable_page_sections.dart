@@ -71,10 +71,6 @@ class TimetableControlPanel extends StatelessWidget {
                   }
                 },
         );
-        final inferredWeekLabel = Text(
-          '自动推算: 依据最近缓存基准，当前第$currentTeachingWeek周',
-          style: Theme.of(context).textTheme.bodySmall,
-        );
 
         if (wide) {
           return Column(
@@ -89,8 +85,6 @@ class TimetableControlPanel extends StatelessWidget {
                   SizedBox(width: 170, child: weekField),
                 ],
               ),
-              const SizedBox(height: 6),
-              inferredWeekLabel,
             ],
           );
         }
@@ -103,8 +97,6 @@ class TimetableControlPanel extends StatelessWidget {
             passwordField,
             const SizedBox(height: 8),
             weekField,
-            const SizedBox(height: 6),
-            inferredWeekLabel,
           ],
         );
       },
@@ -138,6 +130,10 @@ class TimetableStatusBanner extends StatelessWidget {
         : hasData
         ? colorScheme.onPrimaryContainer
         : colorScheme.onSurfaceVariant;
+
+    if (!isError && !isLoading) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       width: double.infinity,
@@ -227,47 +223,6 @@ class TimetableSummaryChip extends StatelessWidget {
   }
 }
 
-class TimetableNetworkLogPanel extends StatelessWidget {
-  const TimetableNetworkLogPanel({super.key, required this.logs});
-
-  final List<String> logs;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return ExpansionTile(
-      tilePadding: const EdgeInsets.symmetric(horizontal: 12),
-      childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      collapsedBackgroundColor: colorScheme.surfaceContainerLow,
-      backgroundColor: colorScheme.surfaceContainerLow,
-      collapsedShape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(10),
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      title: Text(
-        '网络日志 (${logs.length})',
-        style: Theme.of(context).textTheme.bodyMedium,
-      ),
-      children: [
-        Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(maxHeight: 220),
-          decoration: BoxDecoration(
-            color: Colors.black.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.all(8),
-          child: SingleChildScrollView(
-            child: SelectableText(
-              logs.join('\n'),
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
 
 class TimetableEmptyCalendarTip extends StatelessWidget {
   const TimetableEmptyCalendarTip({super.key});
@@ -290,47 +245,3 @@ class TimetableEmptyCalendarTip extends StatelessWidget {
   }
 }
 
-class TimetableCaptchaPreview extends StatelessWidget {
-  const TimetableCaptchaPreview({
-    super.key,
-    required this.captchaBytes,
-    required this.verifyCode,
-  });
-
-  final Uint8List captchaBytes;
-  final String verifyCode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('本次抓取验证码预览:'),
-          const SizedBox(height: 4),
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.black12),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Image.memory(
-              captchaBytes,
-              width: 124,
-              height: 44,
-              fit: BoxFit.contain,
-              gaplessPlayback: true,
-              filterQuality: FilterQuality.none,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 6),
-            child: Text('OCR识别结果: $verifyCode'),
-          ),
-          const SizedBox(height: 4),
-        ],
-      ),
-    );
-  }
-}

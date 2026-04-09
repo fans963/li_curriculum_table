@@ -122,14 +122,6 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
         )
         .toList(growable: false);
 
-    final hasCaptcha = data != null && data.captchaBytes.isNotEmpty;
-    final networkLogs = data?.networkLogs ?? const <String>[];
-    final summaryItems = _buildSummaryItems(
-      data: data,
-      occurrences: occurrences,
-      currentTeachingWeek: currentTeachingWeek,
-    );
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       floatingActionButton: FloatingActionButton(
@@ -168,35 +160,6 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                 hasData: occurrences.isNotEmpty,
               ),
             ),
-            if (summaryItems.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: summaryItems
-                      .map(
-                        (item) => TimetableSummaryChip(
-                          label: item.label,
-                          value: item.value,
-                        ),
-                      )
-                      .toList(growable: false),
-                ),
-              ),
-            if (hasCaptcha)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: TimetableCaptchaPreview(
-                  captchaBytes: data.captchaBytes,
-                  verifyCode: data.verifyCode,
-                ),
-              ),
-            if (networkLogs.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                child: TimetableNetworkLogPanel(logs: networkLogs),
-              ),
             const SizedBox(height: 8),
             Expanded(
               child: Container(
@@ -250,24 +213,6 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
           username: _usernameController.text,
           password: _passwordController.text,
         );
-  }
-
-  List<TimetableSummaryItem> _buildSummaryItems({
-    required TimetableData? data,
-    required List<CourseOccurrence> occurrences,
-    required int currentTeachingWeek,
-  }) {
-    if (data == null) {
-      return const <TimetableSummaryItem>[];
-    }
-
-    final uniqueCourses = occurrences.map((e) => e.courseName).toSet().length;
-    return <TimetableSummaryItem>[
-      TimetableSummaryItem(label: '教学周', value: '第$currentTeachingWeek周'),
-      TimetableSummaryItem(label: '原始行', value: '${data.rows.length}'),
-      TimetableSummaryItem(label: '展示时段', value: '${occurrences.length}'),
-      TimetableSummaryItem(label: '课程数', value: '$uniqueCourses'),
-    ];
   }
 }
 

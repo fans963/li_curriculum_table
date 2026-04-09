@@ -31,20 +31,11 @@ class TimetableRepositoryImpl implements TimetableRepository {
     final rows = rawRows
         .map((row) => _mergeWeekHintsIntoRow(row, weekHints))
         .toList(growable: false);
-    if (kDebugMode) {
-      final rowsWithWeek = rows.where((e) => e.timeText.contains('周')).length;
-      debugPrint(
-        '[WEEK_HINT] parsedHints=${weekHints.length} rowsWithWeek=$rowsWithWeek/${rows.length}',
-      );
-    }
 
     return TimetableData(
       rows: rows,
       occurrences: buildCourseOccurrences(rows),
-      captchaBytes: result.captchaBytes,
-      verifyCode: result.verifyCode,
       loginLikelySuccess: result.loginLikelySuccess,
-      networkLogs: result.networkLogs,
     );
   }
 

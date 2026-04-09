@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
@@ -19,10 +17,7 @@ class LoadCachedTimetableUseCase {
     return TimetableData(
       rows: rows,
       occurrences: buildCourseOccurrences(rows),
-      captchaBytes: Uint8List(0),
-      verifyCode: '',
       loginLikelySuccess: true,
-      networkLogs: const ['已加载本地缓存课表。'],
     );
   }
 }
