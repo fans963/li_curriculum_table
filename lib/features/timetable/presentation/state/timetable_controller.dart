@@ -1,4 +1,8 @@
+import 'dart:async';
+
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_inference.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
 import 'package:flutter/foundation.dart';
@@ -7,6 +11,74 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class TimetableController extends Notifier<TimetableUiState> {
   @override
   TimetableUiState build() => TimetableUiState.initial();
+
+  void setCurrentTeachingWeek(int week) {
+    if (week < 1) {
+      return;
+    }
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    _setBaselineAndInfer(referenceDate: today, referenceWeek: week);
+  }
+
+  Future<void> restoreCachedTeachingWeekBaseline() async {
+    final loadBaseline = ref.read(
+      loadCachedTeachingWeekBaselineUseCaseProvider,
+    );
+    final baseline = await loadBaseline();
+    if (baseline == null) {
+      return;
+    }
+
+    final inferred = inferTeachingWeekFromBaseline(
+      referenceDate: baseline.referenceDate,
+      referenceWeek: baseline.referenceWeek,
+    );
+
+    state = state.copyWith(
+      referenceWeek: baseline.referenceWeek,
+      currentTeachingWeek: inferred,
+      status: '已根据缓存基准自动推算到第$inferred周。',
+    );
+  }
+
+  Future<void> restoreCachedTimetable() async {
+    final loadCachedTimetable = ref.read(loadCachedTimetableUseCaseProvider);
+    final cachedData = await loadCachedTimetable();
+    if (cachedData == null) {
+      return;
+    }
+
+    state = state.copyWith(data: cachedData, status: '已加载上次缓存课表。');
+  }
+
+  void _setBaselineAndInfer({
+    required DateTime referenceDate,
+    required int referenceWeek,
+  }) {
+    final safeWeek = referenceWeek < 1 ? 1 : referenceWeek;
+    final inferred = inferTeachingWeekFromBaseline(
+      referenceDate: referenceDate,
+      referenceWeek: safeWeek,
+    );
+
+    state = state.copyWith(
+      referenceWeek: safeWeek,
+      currentTeachingWeek: inferred,
+    );
+
+    final cacheBaseline = ref.read(cacheTeachingWeekBaselineUseCaseProvider);
+    unawaited(
+      cacheBaseline(
+        TeachingWeekBaseline(
+          referenceDate: referenceDate,
+          referenceWeek: safeWeek,
+        ),
+      ).catchError((_) {
+        // Cache write failures should never break the interactive flow.
+      }),
+    );
+  }
 
   Future<void> fetchAndBuild({
     required String username,
@@ -28,6 +100,13 @@ class TimetableController extends Notifier<TimetableUiState> {
 
     try {
       final data = await useCase(username: cleanUser, password: password);
+      final cacheTimetable = ref.read(cacheTimetableUseCaseProvider);
+      try {
+        await cacheTimetable(data.rows);
+      } catch (_) {
+        // Cache failures should not block timetable fetch success.
+      }
+
       if (data.loginLikelySuccess) {
         final cacheCredentials = ref.read(cacheCredentialsUseCaseProvider);
         try {

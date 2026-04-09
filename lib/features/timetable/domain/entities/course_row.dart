@@ -21,6 +21,56 @@ class CourseRow {
   final String courseType;
   final String stage;
 
+  Map<String, String> toJson() {
+    return <String, String>{
+      'courseId': courseId,
+      'order': order,
+      'courseName': courseName,
+      'teacher': teacher,
+      'timeText': timeText,
+      'credit': credit,
+      'location': location,
+      'courseType': courseType,
+      'stage': stage,
+    };
+  }
+
+  static CourseRow? fromJson(Map<String, dynamic> json) {
+    final courseId = json['courseId'];
+    final order = json['order'];
+    final courseName = json['courseName'];
+    final teacher = json['teacher'];
+    final timeText = json['timeText'];
+    final credit = json['credit'];
+    final location = json['location'];
+    final courseType = json['courseType'];
+    final stage = json['stage'];
+
+    if (courseId is! String ||
+        order is! String ||
+        courseName is! String ||
+        teacher is! String ||
+        timeText is! String ||
+        credit is! String ||
+        location is! String ||
+        courseType is! String ||
+        stage is! String) {
+      return null;
+    }
+
+    return CourseRow(
+      courseId: courseId,
+      order: order,
+      courseName: courseName,
+      teacher: teacher,
+      timeText: timeText,
+      credit: credit,
+      location: location,
+      courseType: courseType,
+      stage: stage,
+    );
+  }
+
   static CourseRow? fromParsed(List<String> row) {
     if (row.length < 10) {
       return null;

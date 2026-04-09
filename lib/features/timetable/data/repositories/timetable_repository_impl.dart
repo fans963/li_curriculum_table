@@ -67,12 +67,18 @@ class TimetableRepositoryImpl implements TimetableRepository {
       final slot = slots[i];
       final matchedWeekTexts = <String>[];
       for (final hint in hints) {
-        final sameSlot =
-            hint.courseName == row.courseName &&
-            hint.weekday == slot.weekday &&
-            hint.startSection == slot.startSection &&
-            hint.endSection == slot.endSection;
-        if (!sameSlot) {
+        final sameCourseAndWeekday =
+            hint.courseName == row.courseName && hint.weekday == slot.weekday;
+        if (!sameCourseAndWeekday) {
+          continue;
+        }
+
+        // Use overlapping ranges instead of strict equality to tolerate
+        // dataList anomalies like 01-03 vs 02-03 for the same kbtable block.
+        final overlapsSection =
+            hint.startSection <= slot.endSection &&
+            hint.endSection >= slot.startSection;
+        if (!overlapsSection) {
           continue;
         }
         if (!matchedWeekTexts.contains(hint.weekText)) {
@@ -84,7 +90,9 @@ class TimetableRepositoryImpl implements TimetableRepository {
       if (matchedWeekTexts.isEmpty) {
         mergedParts.add(slotText);
       } else {
-        mergedParts.add('${matchedWeekTexts.join(',')} $slotText');
+        for (final weekText in matchedWeekTexts) {
+          mergedParts.add('$weekText $slotText');
+        }
       }
     }
 

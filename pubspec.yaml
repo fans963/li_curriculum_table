@@ -13,7 +13,6 @@ dependencies:
   rust_lib_li_curriculum_table:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
-  kalender: ^0.16.0
   syncfusion_flutter_calendar: ^33.1.47
   flutter_onnxruntime: ^1.6.4
   image: ^4.8.0

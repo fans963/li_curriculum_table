@@ -1,17 +1,18 @@
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 
 class SecureCredentialsLocalDataSource {
-  SecureCredentialsLocalDataSource(this._storage);
+  SecureCredentialsLocalDataSource(this._store);
 
   static const String _usernameKey = 'timetable.credentials.username';
   static const String _passwordKey = 'timetable.credentials.password';
 
-  final FlutterSecureStorage _storage;
+  final SecureStorageStore _store;
 
   Future<LoginCredentials?> readCredentials() async {
-    final username = await _storage.read(key: _usernameKey);
-    final password = await _storage.read(key: _passwordKey);
+    final values = await _store.readAll([_usernameKey, _passwordKey]);
+    final username = values[_usernameKey];
+    final password = values[_passwordKey];
 
     if (username == null ||
         username.trim().isEmpty ||
@@ -24,12 +25,13 @@ class SecureCredentialsLocalDataSource {
   }
 
   Future<void> saveCredentials(LoginCredentials credentials) async {
-    await _storage.write(key: _usernameKey, value: credentials.username.trim());
-    await _storage.write(key: _passwordKey, value: credentials.password);
+    await _store.writeAll({
+      _usernameKey: credentials.username.trim(),
+      _passwordKey: credentials.password,
+    });
   }
 
   Future<void> clearCredentials() async {
-    await _storage.delete(key: _usernameKey);
-    await _storage.delete(key: _passwordKey);
+    await _store.deleteAll([_usernameKey, _passwordKey]);
   }
 }

@@ -17,25 +17,28 @@ class TitleBar extends StatelessWidget {
       child: Container(
         height: 40,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        color: colorScheme.surface,
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh,
+          border: Border(bottom: BorderSide(color: colorScheme.outlineVariant)),
+        ),
         child: Row(
           children: [
             RichText(
-              text: const TextSpan(
+              text: TextSpan(
                 children: [
                   TextSpan(
                     text: '🍐',
                     style: TextStyle(
                       fontSize: 25,
-                      color: Colors.lightGreenAccent,
-                      fontFamily: 'NotoColorEmoji', 
+                      color: colorScheme.primary,
+                      fontFamily: 'NotoColorEmoji',
                     ),
                   ),
                   TextSpan(
                     text: '课表',
                     style: TextStyle(
                       fontSize: 24,
-                      color: Colors.black87, 
+                      color: colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
