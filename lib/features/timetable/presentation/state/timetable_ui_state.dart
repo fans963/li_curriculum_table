@@ -5,30 +5,37 @@ class TimetableUiState {
     required this.isLoading,
     required this.status,
     required this.currentTeachingWeek,
+    required this.displayWeek,
     required this.referenceWeek,
+    this.termStartMonday,
     this.data,
   });
 
   factory TimetableUiState.initial() {
-    return TimetableUiState(
+    return const TimetableUiState(
       isLoading: false,
       status: '请输入账号密码并点击“抓取并对比”。',
       currentTeachingWeek: 1,
+      displayWeek: 1,
       referenceWeek: 1,
     );
   }
 
   final bool isLoading;
   final String status;
-  final int currentTeachingWeek;
+  final int currentTeachingWeek; // "Today's" week
+  final int displayWeek; // "Viewed" week
   final int referenceWeek;
+  final DateTime? termStartMonday;
   final TimetableData? data;
 
   TimetableUiState copyWith({
     bool? isLoading,
     String? status,
     int? currentTeachingWeek,
+    int? displayWeek,
     int? referenceWeek,
+    DateTime? termStartMonday,
     TimetableData? data,
     bool clearData = false,
   }) {
@@ -36,7 +43,9 @@ class TimetableUiState {
       isLoading: isLoading ?? this.isLoading,
       status: status ?? this.status,
       currentTeachingWeek: currentTeachingWeek ?? this.currentTeachingWeek,
+      displayWeek: displayWeek ?? this.displayWeek,
       referenceWeek: referenceWeek ?? this.referenceWeek,
+      termStartMonday: termStartMonday ?? this.termStartMonday,
       data: clearData ? null : (data ?? this.data),
     );
   }

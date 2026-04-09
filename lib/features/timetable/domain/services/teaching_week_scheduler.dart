@@ -8,23 +8,32 @@ DateTime mondayOfDate(DateTime date) {
   ).subtract(Duration(days: date.weekday - DateTime.monday));
 }
 
-DateTime mondayOfTermWeekOne({required int currentTeachingWeek}) {
-  final safeWeek = currentTeachingWeek < 1 ? 1 : currentTeachingWeek;
-  final todayMonday = mondayOfDate(DateTime.now());
-  return todayMonday.subtract(Duration(days: (safeWeek - 1) * 7));
+DateTime mondayOfTermWeekOne({
+  required int referenceWeek,
+  required DateTime referenceDate,
+}) {
+  final safeWeek = referenceWeek < 1 ? 1 : referenceWeek;
+  final refMonday = mondayOfDate(referenceDate);
+  return refMonday.subtract(Duration(days: (safeWeek - 1) * 7));
+}
+
+int calculateWeekIndex(DateTime viewedDate, DateTime termStartMonday) {
+  final viewedMonday = mondayOfDate(viewedDate);
+  final daysDiff = viewedMonday.difference(termStartMonday).inDays;
+  final weekOffset = (daysDiff / 7).round();
+  return weekOffset + 1;
 }
 
 List<CourseOccurrence> spreadOccurrencesByTeachingWeek({
   required List<CourseOccurrence> templates,
+  required DateTime termStartMonday,
   required int currentTeachingWeek,
 }) {
   if (templates.isEmpty) {
     return const <CourseOccurrence>[];
   }
 
-  final termWeekOneMonday = mondayOfTermWeekOne(
-    currentTeachingWeek: currentTeachingWeek,
-  );
+  final termWeekOneMonday = termStartMonday;
   final result = <CourseOccurrence>[];
 
   for (final occurrence in templates) {

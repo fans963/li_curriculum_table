@@ -13,7 +13,6 @@ dependencies:
   rust_lib_li_curriculum_table:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
-  syncfusion_flutter_calendar: ^33.1.47
   flutter_onnxruntime: ^1.6.4
   image: ^4.8.0
   dio: ^5.9.2
@@ -25,6 +24,7 @@ dependencies:
   flex_color_scheme: ^8.4.0
   web: ^1.1.1
   flutter_secure_storage: ^10.0.0
+  calendar_view: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -35,6 +35,7 @@ dev_dependencies:
   flutter_launcher_icons:
     git:
       url: https://github.com/devmil/flutter_launcher_icons.git
+  msix: ^3.16.13
 
 flutter:
   uses-material-design: true
@@ -44,3 +45,11 @@ flutter:
     - model/common.onnx.partac
     - model/common.json
     - assets/icon/icon.png
+
+msix_config:
+  display_name: 🍐课表
+  publisher_display_name: fan
+  identity_name: company.suite.flutterapp
+  msix_version: 1.0.0.0
+  logo_path: assets/icon/icon.png
+  capabilities: internetClient, location, microphone, webcam

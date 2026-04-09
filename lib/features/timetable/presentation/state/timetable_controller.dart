@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_inference.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
 import 'package:flutter/foundation.dart';
@@ -21,23 +22,33 @@ class TimetableController extends Notifier<TimetableUiState> {
     _setBaselineAndInfer(referenceDate: today, referenceWeek: week);
   }
 
+  void updateDisplayWeek(int week) {
+    if (week < 1) return;
+    state = state.copyWith(displayWeek: week);
+  }
+
   Future<void> restoreCachedTeachingWeekBaseline() async {
     final loadBaseline = ref.read(
       loadCachedTeachingWeekBaselineUseCaseProvider,
     );
     final baseline = await loadBaseline();
     if (baseline == null) {
+      // No fallback; user must specify 'Today's Week' to calibrate the anchor.
       return;
     }
 
-    final inferred = inferTeachingWeekFromBaseline(
-      referenceDate: baseline.referenceDate,
+    final anchor = mondayOfTermWeekOne(
       referenceWeek: baseline.referenceWeek,
+      referenceDate: baseline.referenceDate,
     );
+
+    final inferred = calculateWeekIndex(DateTime.now(), anchor);
 
     state = state.copyWith(
       referenceWeek: baseline.referenceWeek,
       currentTeachingWeek: inferred,
+      displayWeek: inferred, // Initial view is today
+      termStartMonday: anchor,
       status: '已根据缓存基准自动推算到第$inferred周。',
     );
   }
@@ -57,14 +68,18 @@ class TimetableController extends Notifier<TimetableUiState> {
     required int referenceWeek,
   }) {
     final safeWeek = referenceWeek < 1 ? 1 : referenceWeek;
-    final inferred = inferTeachingWeekFromBaseline(
+    final anchor = mondayOfTermWeekOne(
       referenceDate: referenceDate,
       referenceWeek: safeWeek,
     );
 
+    final inferred = calculateWeekIndex(DateTime.now(), anchor);
+
     state = state.copyWith(
       referenceWeek: safeWeek,
       currentTeachingWeek: inferred,
+      displayWeek: inferred, // Reset view on calibration
+      termStartMonday: anchor,
     );
 
     final cacheBaseline = ref.read(cacheTeachingWeekBaselineUseCaseProvider);

@@ -1,23 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:syncfusion_flutter_calendar/calendar.dart' as sf;
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 
 Widget buildTimetableAppointmentCard({
   required BuildContext context,
-  required sf.CalendarAppointmentDetails details,
+  required CourseOccurrence occurrence,
   required DateTime now,
 }) {
-  final appointment = details.appointments.first as sf.Appointment;
   final isOngoing =
-      !now.isBefore(appointment.startTime) && now.isBefore(appointment.endTime);
-  final lines = appointment.subject
-      .split('\n')
-      .map((line) => line.trim())
-      .where((line) => line.isNotEmpty)
-      .toList(growable: false);
-  final title = lines.isNotEmpty ? lines.first : '课程';
-  final timeLine = lines.length > 1 ? lines[1] : '';
-  final teacherLine = lines.length > 2 ? lines[2] : '';
-  final locationLine = lines.length > 3 ? lines[3] : '';
+      !now.isBefore(occurrence.start) && now.isBefore(occurrence.end);
+
+  final title = occurrence.courseName;
+  final timeLine = _formatOccurrenceTimeRange(occurrence);
+  final teacherLine = occurrence.teacher.trim();
+  final locationLine = occurrence.location.trim();
   final tone = resolveAppointmentTone(
     Theme.of(context).colorScheme,
     seedText: title,
@@ -79,7 +74,7 @@ Widget buildTimetableAppointmentCard({
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(9, 8, 10, 8),
+                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -94,7 +89,7 @@ Widget buildTimetableAppointmentCard({
                         ),
                       ),
                       if (timeLine.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 1),
                         Text(
                           timeLine,
                           maxLines: 1,
@@ -108,7 +103,7 @@ Widget buildTimetableAppointmentCard({
                         ),
                       ],
                       if (teacherLine.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           teacherLine,
                           maxLines: 1,
@@ -122,7 +117,7 @@ Widget buildTimetableAppointmentCard({
                         ),
                       ],
                       if (locationLine.isNotEmpty) ...[
-                        const SizedBox(height: 2),
+                        const SizedBox(height: 1),
                         Text(
                           locationLine,
                           maxLines: 1,
@@ -248,4 +243,13 @@ class AppointmentTone {
   final Color border;
   final Color accent;
   final Color shadow;
+}
+
+String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
+  String twoDigits(int value) => value.toString().padLeft(2, '0');
+  final start =
+      '${twoDigits(occurrence.start.hour)}:${twoDigits(occurrence.start.minute)}';
+  final end =
+      '${twoDigits(occurrence.end.hour)}:${twoDigits(occurrence.end.minute)}';
+  return '$start-$end';
 }

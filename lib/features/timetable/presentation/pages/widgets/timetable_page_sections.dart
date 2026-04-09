@@ -44,7 +44,8 @@ class TimetableControlPanel extends StatelessWidget {
             isDense: true,
           ),
         );
-        final weekOptions = List<int>.generate(30, (index) => index + 1);
+        // Cap at 18 as per requirement
+        final weekOptions = List<int>.generate(18, (index) => index + 1);
         final selectedWeek = weekOptions.contains(currentTeachingWeek)
             ? currentTeachingWeek
             : 1;
@@ -54,12 +55,12 @@ class TimetableControlPanel extends StatelessWidget {
               .map(
                 (week) => DropdownMenuItem<int>(
                   value: week,
-                  child: Text('当前周: 第$week周'),
+                  child: Text('第$week周'),
                 ),
               )
               .toList(growable: false),
           decoration: const InputDecoration(
-            labelText: '当前周数',
+            labelText: '今日周数',
             border: OutlineInputBorder(),
             isDense: true,
           ),
