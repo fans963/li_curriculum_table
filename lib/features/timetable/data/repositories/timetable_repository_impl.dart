@@ -5,6 +5,7 @@ import 'package:li_curriculum_table/features/timetable/domain/entities/timetable
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_time_text_parser.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/section_range_utils.dart';
 import 'package:flutter/foundation.dart';
 
 class TimetableRepositoryImpl implements TimetableRepository {
@@ -62,36 +63,64 @@ class TimetableRepositoryImpl implements TimetableRepository {
       return row;
     }
 
-    final mergedParts = <String>[];
-    for (var i = 0; i < slots.length; i++) {
-      final slot = slots[i];
-      final matchedWeekTexts = <String>[];
-      for (final hint in hints) {
-        final sameCourseAndWeekday =
-            hint.courseName == row.courseName && hint.weekday == slot.weekday;
-        if (!sameCourseAndWeekday) {
-          continue;
-        }
+    // Identify all hints that belong to this course.
+    final courseHints =
+        hints.where((h) => h.courseName == row.courseName).toList();
 
-        // Use overlapping ranges instead of strict equality to tolerate
-        // dataList anomalies like 01-03 vs 02-03 for the same kbtable block.
-        final overlapsSection =
-            hint.startSection <= slot.endSection &&
-            hint.endSection >= slot.startSection;
-        if (!overlapsSection) {
-          continue;
+    // Group hints and slots by (weekday, largeSessionStart).
+    String keyFor(int weekday, int startSection) {
+      final range = getLargeSessionRangeForSection(startSection);
+      return '$weekday|${range?.$1 ?? startSection}';
+    }
+
+    final hintGroups = <String, List<KbtableWeekHint>>{};
+    for (final hint in courseHints) {
+      final k = keyFor(hint.weekday, hint.startSection);
+      hintGroups.putIfAbsent(k, () => []).add(hint);
+    }
+
+    final slotGroups = <String, List<int>>{};
+    for (var i = 0; i < slots.length; i++) {
+      final k = keyFor(slots[i].weekday, slots[i].startSection);
+      slotGroups.putIfAbsent(k, () => []).add(i);
+    }
+
+    final finalMatchedHints =
+        List<List<String>>.generate(slots.length, (_) => []);
+
+    for (final k in slotGroups.keys) {
+      final indices = slotGroups[k]!;
+      final gHints = hintGroups[k] ?? [];
+
+      if (indices.length == gHints.length && indices.length > 1) {
+        // Precise 1-to-1 matching if counts match within a session block.
+        for (var j = 0; j < indices.length; j++) {
+          finalMatchedHints[indices[j]] = [gHints[j].weekText];
         }
-        if (!matchedWeekTexts.contains(hint.weekText)) {
-          matchedWeekTexts.add(hint.weekText);
+      } else {
+        // Fallback to broad overlapping match.
+        for (final idx in indices) {
+          final slot = slots[idx];
+          for (final hint in gHints) {
+            final overlapsSize =
+                hint.startSection <= slot.endSection &&
+                hint.endSection >= slot.startSection;
+            if (overlapsSize && !finalMatchedHints[idx].contains(hint.weekText)) {
+              finalMatchedHints[idx].add(hint.weekText);
+            }
+          }
         }
       }
+    }
 
-      final slotText = slotTexts[i];
-      if (matchedWeekTexts.isEmpty) {
-        mergedParts.add(slotText);
+    final mergedParts = <String>[];
+    for (var i = 0; i < slots.length; i++) {
+      final matched = finalMatchedHints[i];
+      if (matched.isEmpty) {
+        mergedParts.add(slotTexts[i]);
       } else {
-        for (final weekText in matchedWeekTexts) {
-          mergedParts.add('$weekText $slotText');
+        for (final weekText in matched) {
+          mergedParts.add('$weekText ${slotTexts[i]}');
         }
       }
     }

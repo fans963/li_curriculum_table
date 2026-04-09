@@ -1,4 +1,5 @@
 import 'package:html/parser.dart' as html_parser;
+import 'package:li_curriculum_table/features/timetable/domain/services/section_range_utils.dart';
 
 class KbtableWeekHint {
   const KbtableWeekHint({
@@ -33,7 +34,7 @@ List<KbtableWeekHint> parseKbtableWeekHints(String htmlContent) {
   }
 
   for (final row in rows.skip(1)) {
-    final sectionRange = _sectionRangeForRow(
+    final sectionRange = sectionRangeFromRowHeader(
       row.querySelector('th')?.text ?? '',
     );
     if (sectionRange == null) {
@@ -81,16 +82,6 @@ final RegExp _cellEntryReg = RegExp(
   multiLine: true,
 );
 
-(int, int)? _sectionRangeForRow(String rowHeaderText) {
-  final normalized = rowHeaderText.replaceAll(RegExp(r'\s+'), '');
-  if (normalized.contains('第一大节')) return (1, 3);
-  if (normalized.contains('第二大节')) return (4, 5);
-  if (normalized.contains('第三大节')) return (6, 7);
-  if (normalized.contains('第四大节')) return (8, 10);
-  if (normalized.contains('第五大节')) return (11, 13);
-  if (normalized.contains('中午')) return (14, 14);
-  return null;
-}
 
 String _normalizeCellText(String rawHtml) {
   final withBreaks = rawHtml
