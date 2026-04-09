@@ -186,6 +186,9 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
             );
           },
         ),
+        pinchToZoomParam: const PinchToZoomParameters(
+          pinchToZoom: false,
+        ),
       ),
     ));
   }
