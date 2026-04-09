@@ -25,6 +25,7 @@ dependencies:
   dynamic_color: ^1.8.1
   flex_color_scheme: ^8.4.0
   web: ^1.1.1
+  flutter_secure_storage: ^10.0.0
 
 dev_dependencies:
   flutter_test:

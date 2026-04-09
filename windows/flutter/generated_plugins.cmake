@@ -5,6 +5,7 @@
 list(APPEND FLUTTER_PLUGIN_LIST
   dynamic_color
   flutter_onnxruntime
+  flutter_secure_storage_windows
   screen_retriever_windows
   window_manager
 )

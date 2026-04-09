@@ -1,3 +1,4 @@
+import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
 import 'package:flutter/foundation.dart';
@@ -27,10 +28,21 @@ class TimetableController extends Notifier<TimetableUiState> {
 
     try {
       final data = await useCase(username: cleanUser, password: password);
+      if (data.loginLikelySuccess) {
+        final cacheCredentials = ref.read(cacheCredentialsUseCaseProvider);
+        try {
+          await cacheCredentials(
+            LoginCredentials(username: cleanUser, password: password),
+          );
+        } catch (_) {
+          // Cache failures should not block timetable fetch success.
+        }
+      }
       state = state.copyWith(
         isLoading: false,
         data: data,
-        status: '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
+        status:
+            '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
       );
     } catch (e) {
       final err = e.toString();
@@ -44,7 +56,9 @@ class TimetableController extends Notifier<TimetableUiState> {
       final isWebXhrNetworkError =
           kIsWeb &&
           (loweredErr.contains('xmlhttprequest onerror') ||
-              loweredErr.contains('networkerror when attempting to fetch resource') ||
+              loweredErr.contains(
+                'networkerror when attempting to fetch resource',
+              ) ||
               loweredErr.contains('dioexception [connection error]') ||
               loweredErr.contains('dioexception [connection errorl]'));
 

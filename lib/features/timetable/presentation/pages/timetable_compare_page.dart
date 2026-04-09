@@ -23,9 +23,29 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
       k.DefaultEventsController();
   final k.CalendarController _kalenderController = k.CalendarController();
 
+  Future<void> _restoreCachedCredentials() async {
+    try {
+      final loadCachedCredentials = ref.read(
+        loadCachedCredentialsUseCaseProvider,
+      );
+      final cached = await loadCachedCredentials();
+      if (!mounted || cached == null) {
+        return;
+      }
+
+      _usernameController.text = cached.username;
+      _passwordController.text = cached.password;
+    } catch (_) {
+      // Ignore cache-read failures to keep page startup resilient.
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _restoreCachedCredentials();
+    });
     ref.listenManual(timetableControllerProvider, (previous, next) {
       final occurrences = next.data?.occurrences ?? const <CourseOccurrence>[];
       _syncKalenderEvents(occurrences);
@@ -153,7 +173,9 @@ class _TimetableComparePageState extends ConsumerState<TimetableComparePage> {
                       ),
                       child: SingleChildScrollView(
                         child: SelectableText(
-                          (state.data?.networkLogs ?? const <String>[]).join('\n'),
+                          (state.data?.networkLogs ?? const <String>[]).join(
+                            '\n',
+                          ),
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ),
