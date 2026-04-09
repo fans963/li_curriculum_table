@@ -82,7 +82,8 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
           daysShowed: 7,
           initialDate: termStart ?? DateTime.now().withoutTime,
           heightPerMinute: widget.pixelsPerMinute,
-          initialVerticalScrollOffset: (widget.startHour * 60).toDouble() * widget.pixelsPerMinute,
+          initialVerticalScrollOffset: 480 * widget.pixelsPerMinute,
+          minVerticalScrollOffset: 480 * widget.pixelsPerMinute,
           maxPreviousDays: maxPreviousDays,
           maxNextDays: maxNextDays,
           onDayChange: (date) {
@@ -95,6 +96,8 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
           }
         },
         dayParam: DayParam(
+          dayTopPadding: 0,
+          dayColor: colorScheme.surface,
           dayEventBuilder: (event, height, width, heightPerMinute) {
             final occurrence = event.data as CourseOccurrence?;
             if (occurrence == null) return const SizedBox.shrink();
@@ -104,6 +107,15 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
               now: widget.now,
             );
           },
+          dayCustomPainter: (heightPerMinute, isToday) => VerticalDashedSeparatorPainter(
+            color: colorScheme.outlineVariant,
+          ),
+        ),
+        offTimesParam: OffTimesParam(
+          offTimesColor: colorScheme.surface,
+        ),
+        fullDayParam: const FullDayParam(
+          fullDayEventsBarVisibility: false,
         ),
         daysHeaderParam: DaysHeaderParam(
           daysHeaderHeight: headerHeight,
@@ -114,6 +126,7 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
                 color: colorScheme.surface,
                 border: Border(
                   bottom: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+                  right: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
                 ),
               ),
               child: Center(
@@ -157,10 +170,56 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
             );
           },
         ),
-        timesIndicatorsParam: const TimesIndicatorsParam(
+        timesIndicatorsParam: TimesIndicatorsParam(
           timesIndicatorsWidth: 0,
+          timesIndicatorsCustomPainter: (_) => EmptyPainter(),
+        ),
+        currentHourIndicatorParam: const CurrentHourIndicatorParam(
+          currentHourIndicatorLineVisibility: false,
+          currentHourIndicatorHourVisibility: false,
         ),
       ),
     ));
   }
+}
+
+class VerticalDashedSeparatorPainter extends CustomPainter {
+  final Color color;
+  final double dashHeight;
+  final double dashSpace;
+
+  VerticalDashedSeparatorPainter({
+    required this.color,
+    this.dashHeight = 4.0,
+    this.dashSpace = 4.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 0.5;
+
+    double y = 0;
+    while (y < size.height) {
+      canvas.drawLine(
+        Offset(size.width, y),
+        Offset(size.width, y + dashHeight),
+        paint,
+      );
+      y += dashHeight + dashSpace;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant VerticalDashedSeparatorPainter oldDelegate) {
+    return oldDelegate.color != color;
+  }
+}
+
+class EmptyPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {}
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
