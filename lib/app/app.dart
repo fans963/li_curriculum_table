@@ -1,6 +1,4 @@
-import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/timetable_compare_page.dart';
-import 'package:li_curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/material.dart';
@@ -85,12 +83,7 @@ class CurriculumTableApp extends StatelessWidget {
             brightness: Brightness.dark,
             dynamicScheme: darkDynamic,
           ),
-          home: Column(
-            children: [
-              if (isDesktop) const TitleBar(),
-              const Expanded(child: TimetableComparePage()),
-            ],
-          ),
+          home: const MainScreen(),
         );
       },
     );

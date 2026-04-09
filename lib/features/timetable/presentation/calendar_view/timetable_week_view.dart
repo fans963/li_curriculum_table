@@ -174,9 +174,17 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
           timesIndicatorsWidth: 0,
           timesIndicatorsCustomPainter: (_) => EmptyPainter(),
         ),
-        currentHourIndicatorParam: const CurrentHourIndicatorParam(
-          currentHourIndicatorLineVisibility: false,
+        currentHourIndicatorParam: CurrentHourIndicatorParam(
+          currentHourIndicatorLineVisibility: true,
           currentHourIndicatorHourVisibility: false,
+          currentHourIndicatorCustomPainter: (heightPerMinute, isToday) {
+            return CurrentTimeIndicatorPainter(
+              heightPerMinute: heightPerMinute,
+              isToday: isToday,
+              color: colorScheme.primary,
+              now: widget.now,
+            );
+          },
         ),
       ),
     ));
@@ -222,4 +230,53 @@ class EmptyPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {}
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+class CurrentTimeIndicatorPainter extends CustomPainter {
+  final double heightPerMinute;
+  final bool isToday;
+  final Color color;
+  final DateTime now;
+
+  CurrentTimeIndicatorPainter({
+    required this.heightPerMinute,
+    required this.isToday,
+    required this.color,
+    required this.now,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (!isToday) return;
+
+    final absoluteMinutes = now.hour * 60 + now.minute;
+    final y = absoluteMinutes * heightPerMinute;
+
+    final paint = Paint()
+      ..color = color.withOpacity(0.8)
+      ..strokeWidth = 2.0
+      ..style = PaintingStyle.stroke;
+
+    // Draw the bright horizontal line indicating current time across the card zone
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+
+    // Draw an elegant indicator dot on the left side
+    final circlePaintOuter = Paint()
+      ..color = color
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(4, y), 5.0, circlePaintOuter);
+
+    final circlePaintInner = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(4, y), 2.0, circlePaintInner);
+  }
+
+  @override
+  bool shouldRepaint(covariant CurrentTimeIndicatorPainter oldDelegate) {
+    return oldDelegate.heightPerMinute != heightPerMinute ||
+        oldDelegate.isToday != isToday ||
+        oldDelegate.now != now ||
+        oldDelegate.color != color;
+  }
 }

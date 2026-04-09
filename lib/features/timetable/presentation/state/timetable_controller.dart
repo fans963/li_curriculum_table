@@ -177,7 +177,7 @@ class TimetableController extends Notifier<TimetableUiState> {
         final now = DateTime.now();
         _setBaselineAndInfer(
           referenceDate: DateTime(now.year, now.month, now.day),
-          referenceWeek: 1,
+          referenceWeek: 6,
         );
       }
     } catch (e) {

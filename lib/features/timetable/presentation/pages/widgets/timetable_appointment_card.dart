@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 
 Widget buildTimetableAppointmentCard({
@@ -11,7 +12,6 @@ Widget buildTimetableAppointmentCard({
 
   final title = occurrence.courseName;
   final timeLine = _formatOccurrenceTimeRange(occurrence);
-  final teacherLine = occurrence.teacher.trim();
   final locationLine = occurrence.location.trim();
   final tone = resolveAppointmentTone(
     Theme.of(context).colorScheme,
@@ -20,9 +20,13 @@ Widget buildTimetableAppointmentCard({
 
   return Padding(
     padding: const EdgeInsets.all(1.5),
-    child: Stack(
-      clipBehavior: Clip.none,
-      children: [
+    child: GestureDetector(
+      onTap: () {
+        _showDetailsBottomSheet(context, occurrence, tone, isOngoing, timeLine);
+      },
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
         DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -78,9 +82,10 @@ Widget buildTimetableAppointmentCard({
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      AutoSizeText(
                         title,
                         maxLines: 2,
+                        minFontSize: 8,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: tone.foreground,
@@ -88,39 +93,12 @@ Widget buildTimetableAppointmentCard({
                           height: 1.15,
                         ),
                       ),
-                      if (timeLine.isNotEmpty) ...[
-                        const SizedBox(height: 1),
-                        Text(
-                          timeLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: tone.foreground.withValues(alpha: 0.92),
-                                fontWeight: FontWeight.w600,
-                                height: 1.15,
-                              ),
-                        ),
-                      ],
-                      if (teacherLine.isNotEmpty) ...[
-                        const SizedBox(height: 1),
-                        Text(
-                          teacherLine,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: tone.foreground.withValues(alpha: 0.84),
-                                fontWeight: FontWeight.w500,
-                                height: 1.15,
-                              ),
-                        ),
-                      ],
                       if (locationLine.isNotEmpty) ...[
                         const SizedBox(height: 1),
-                        Text(
+                        AutoSizeText(
                           locationLine,
                           maxLines: 1,
+                          minFontSize: 8,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
@@ -165,6 +143,27 @@ Widget buildTimetableAppointmentCard({
             ),
           ),
       ],
+    ),
+    ),
+  );
+}
+
+void _showDetailsBottomSheet(
+  BuildContext context,
+  CourseOccurrence occurrence,
+  AppointmentTone tone,
+  bool isOngoing,
+  String timeLine,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (context) => _CourseDetailsSheet(
+      occurrence: occurrence,
+      tone: tone,
+      timeLine: timeLine,
+      isOngoing: isOngoing,
     ),
   );
 }
@@ -252,4 +251,140 @@ String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
   final end =
       '${twoDigits(occurrence.end.hour)}:${twoDigits(occurrence.end.minute)}';
   return '$start-$end';
+}
+
+class _CourseDetailsSheet extends StatelessWidget {
+  final CourseOccurrence occurrence;
+  final AppointmentTone tone;
+  final String timeLine;
+  final bool isOngoing;
+
+  const _CourseDetailsSheet({
+    required this.occurrence,
+    required this.tone,
+    required this.timeLine,
+    required this.isOngoing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 32,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.onSurfaceVariant.withOpacity(0.4),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Title
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    occurrence.courseName,
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
+                  ),
+                ),
+                if (isOngoing) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: tone.accent,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      '进行中',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: tone.foreground,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ]
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              occurrence.weekText,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Info List
+            _buildInfoRow(context, Icons.access_time_filled, '时间', timeLine, tone.accent),
+            _buildInfoRow(context, Icons.location_on, '地点', occurrence.location, tone.accent),
+            _buildInfoRow(context, Icons.person, '教师', occurrence.teacher, tone.accent),
+            _buildInfoRow(context, Icons.school, '其他信息', '${occurrence.courseType} ${occurrence.credit.isNotEmpty ? '· ${occurrence.credit}学分' : ''}', tone.accent),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, IconData icon, String label, String value, Color iconColor) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: iconColor.withOpacity(0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 20, color: iconColor),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w500,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

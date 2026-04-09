@@ -17,9 +17,9 @@ class TimetableUiState {
     return const TimetableUiState(
       isLoading: false,
       status: '请输入账号密码并点击“抓取并对比”。',
-      currentTeachingWeek: 1,
-      displayWeek: 1,
-      referenceWeek: 1,
+      currentTeachingWeek: 6,
+      displayWeek: 6,
+      referenceWeek: 6,
       minWeek: 1,
       maxWeek: 18,
     );
