@@ -15,6 +15,12 @@ pub struct TimeSlot {
     pub week_text: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone, Default)]
+pub struct ProxySession {
+    pub jsession8080: String,
+    pub jsession9080: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CourseRow {
     #[serde(rename = "courseId")]
@@ -38,6 +44,38 @@ pub struct TimetableRecord {
     pub headers: Vec<String>,
     pub rows: Vec<CourseRow>,
     pub login_likely_success: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Campus {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Building {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClassroomAvailability {
+    pub classroom_name: String,
+    pub availability: Vec<bool>, // true = free, false = occupied
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct OccupiedSlot {
+    pub start_week: u32,
+    pub end_week: u32,
+    pub weekday: u32,
+    pub slot_index: u32, // 0-4
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ClassroomSchedule {
+    pub classroom_name: String,
+    pub occupied_slots: Vec<OccupiedSlot>,
 }
 
 pub struct KbtableWeekHint {

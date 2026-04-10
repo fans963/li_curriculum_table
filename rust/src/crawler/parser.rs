@@ -1,5 +1,5 @@
 use crate::crawler::error::{CrawlerError, CrawlerResult};
-use crate::crawler::model::{CourseRow, KbtableWeekHint, TimeSlot, TimetableRecord};
+use crate::crawler::model::{Campus, CourseRow, KbtableWeekHint, TimeSlot, TimetableRecord, ClassroomSchedule, OccupiedSlot};
 use regex::Regex;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -12,9 +12,17 @@ static CELL_ENTRY_REG: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"([^\r\n]+?)\s*([0-9]{1,2}(?:\s*-\s*[0-9]{1,2})?(?:\s*,\s*[0-9]{1,2}(?:\s*-\s*[0-9]{1,2})?)*)\s*\(周\)").unwrap()
 });
 
+static BULK_WEEK_REG: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"\((\d+(?:\s*-\s*\d+)?(?:\s*,\s*\d+(?:\s*-\s*\d+)?)*)周\)").unwrap()
+});
+
+
 static WEEK_RANGE_REG: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"(\d{1,2})").unwrap()
 });
+
+static NOBR_SELECTOR: LazyLock<Selector> = LazyLock::new(|| Selector::parse("nobr").unwrap());
+static KB_CONTENT_SELECTOR: LazyLock<Selector> = LazyLock::new(|| Selector::parse("div.kbcontent1").unwrap());
 
 pub fn parse_and_process_timetable(html_content: &str) -> CrawlerResult<TimetableRecord> {
     let document = Html::parse_document(html_content);
@@ -346,4 +354,147 @@ fn normalize_cell_text(html: &str) -> String {
         .replace("\n\n", "\n")
         .trim()
         .to_string()
+}
+
+pub fn parse_classroom_availability(html: &str, target_weekday: u32) -> CrawlerResult<HashMap<String, bool>> {
+    let document = Html::parse_document(html);
+    let table_selector = Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    
+    let table = match document.select(&table_selector).next() {
+        Some(t) => t,
+        None => return Err(CrawlerError::Parse("Table #kbtable not found".to_string())),
+    };
+
+    let tr_selector = Selector::parse("tr").unwrap();
+    let td_selector = Selector::parse("td").unwrap();
+
+    let mut map = HashMap::new();
+
+    // Skip header rows
+    for tr in table.select(&tr_selector).skip(2) {
+        let tds: Vec<_> = tr.select(&td_selector).collect();
+        if tds.len() < 8 {
+            continue;
+        }
+
+        // First column is classroom name (wrapped in <nobr>)
+        let classroom_name = tds[0]
+            .select(&NOBR_SELECTOR)
+            .next()
+            .map(|n| n.text().collect::<String>().trim().to_string())
+            .unwrap_or_default();
+
+        if classroom_name.is_empty() {
+            continue;
+        }
+
+        // Target weekday column (1-7)
+        let target_td = &tds[target_weekday as usize];
+        
+        // If it contains div.kbcontent1, it's occupied.
+        let is_occupied = target_td.select(&KB_CONTENT_SELECTOR).next().is_some();
+        map.insert(classroom_name, !is_occupied);
+    }
+
+    Ok(map)
+}
+
+pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedule>> {
+    let document = Html::parse_document(html);
+    let table_selector = Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    
+    let table = match document.select(&table_selector).next() {
+        Some(t) => t,
+        None => return Err(CrawlerError::Parse("Table #kbtable not found".to_string())),
+    };
+
+    let tr_selector = Selector::parse("tr").unwrap();
+    let td_selector = Selector::parse("td").unwrap();
+
+    let mut schedules = Vec::new();
+
+    // Skip header rows (usually 2 rows)
+    for tr in table.select(&tr_selector).skip(2) {
+        let tds: Vec<_> = tr.select(&td_selector).collect();
+        if tds.len() < 36 { // 1 (name) + 35 (7 days * 5 slots)
+            continue;
+        }
+
+        let classroom_name = tds[0]
+            .select(&NOBR_SELECTOR)
+            .next()
+            .map(|n| n.text().collect::<String>().trim().to_string())
+            .unwrap_or_default();
+
+        if classroom_name.is_empty() {
+            continue;
+        }
+
+        let mut occupied_slots = Vec::new();
+
+        for day_idx in 0..7 {
+            let weekday = (day_idx + 1) as u32;
+            for slot_idx in 0..5 {
+                let cell_idx = 1 + day_idx * 5 + slot_idx;
+                let target_td = &tds[cell_idx];
+                
+                for div in target_td.select(&KB_CONTENT_SELECTOR) {
+                    let cell_html = div.inner_html();
+                    let cell_text = normalize_cell_text(&cell_html);
+
+                    // For building schedule, weeks are typically in (1-16周) format
+                    for cap in BULK_WEEK_REG.captures_iter(&cell_text) {
+                        let week_body = cap
+                            .get(1)
+                            .map(|m| m.as_str().replace(' ', ""))
+                            .unwrap_or_default();
+
+                        if !week_body.is_empty() {
+                            for part in week_body.split(',') {
+                                let (sw, ew) = parse_week_range(part);
+                                if sw > 0 && ew > 0 {
+                                    occupied_slots.push(OccupiedSlot {
+                                        start_week: sw,
+                                        end_week: ew,
+                                        weekday,
+                                        slot_index: slot_idx as u32,
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        schedules.push(ClassroomSchedule {
+            classroom_name,
+            occupied_slots,
+        });
+    }
+
+    Ok(schedules)
+}
+
+pub fn parse_campuses(html: &str) -> CrawlerResult<Vec<Campus>> {
+    let document = Html::parse_document(html);
+    let select_selector = Selector::parse("select[name='xqid']").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    let option_selector = Selector::parse("option").unwrap();
+
+    let select = match document.select(&select_selector).next() {
+        Some(s) => s,
+        None => return Err(CrawlerError::Parse("Select[name='xqid'] not found".to_string())),
+    };
+
+    let mut campuses = vec![];
+    for option in select.select(&option_selector) {
+        let id = option.value().attr("value").unwrap_or_default().to_string();
+        let name = option.text().collect::<String>().trim().to_string();
+        if !id.is_empty() {
+            campuses.push(Campus { id, name });
+        }
+    }
+
+    Ok(campuses)
 }

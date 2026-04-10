@@ -4,15 +4,13 @@ import 'package:li_curriculum_table/features/timetable/domain/entities/timetable
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
-import 'package:li_curriculum_table/core/rust/api/crawler.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
 
 class TimetableController extends Notifier<TimetableUiState> {
-  static bool _isOcrInitialized = false;
 
   @override
   TimetableUiState build() => TimetableUiState.initial();
@@ -149,11 +147,7 @@ class TimetableController extends Notifier<TimetableUiState> {
     );
 
     try {
-      if (!_isOcrInitialized) {
-        final ByteData modelData = await rootBundle.load('assets/models/common_pruned.onnx');
-        initOcrEngine(modelBytes: modelData.buffer.asUint8List());
-        _isOcrInitialized = true;
-      }
+      await ref.read(ocrInitializerProvider).ensureInitialized();
     } catch (e) {
       state = state.copyWith(isLoading: false, status: 'OCR 引擎初始化失败: $e');
       return;

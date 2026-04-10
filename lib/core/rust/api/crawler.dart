@@ -7,15 +7,16 @@ import '../crawler/model.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_ocr_engine`
+Future<ArcDdddOcr> getOcrEngine() =>
+    RustLib.instance.api.crateApiCrawlerGetOcrEngine();
 
 void initOcrEngine({required List<int> modelBytes}) =>
     RustLib.instance.api.crateApiCrawlerInitOcrEngine(modelBytes: modelBytes);
 
-Future<TimetableRecord> fetchTimetableData({
-  required String username,
-  required String password,
-}) => RustLib.instance.api.crateApiCrawlerFetchTimetableData(
-  username: username,
-  password: password,
-);
+Future<TimetableRecord> fetchTimetableData(
+        {required String username, required String password}) =>
+    RustLib.instance.api.crateApiCrawlerFetchTimetableData(
+        username: username, password: password);
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < DdddOcr >>>
+abstract class ArcDdddOcr implements RustOpaqueInterface {}

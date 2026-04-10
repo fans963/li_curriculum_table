@@ -4,6 +4,7 @@ import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/se
 import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
+import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -17,6 +18,7 @@ class _MainScreenState extends State<MainScreen> {
 
   final List<Widget> _tabs = const [
     TimetableTab(),
+    ClassroomTab(),
     SettingsTab(),
   ];
 
@@ -46,6 +48,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.calendar_view_week_outlined),
             selectedIcon: Icon(Icons.calendar_view_week),
             label: '课表',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.room_outlined),
+            selectedIcon: Icon(Icons.room),
+            label: '空闲教室',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

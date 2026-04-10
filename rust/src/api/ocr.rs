@@ -60,7 +60,7 @@ impl DdddOcr {
     }
 
     fn decode_ctc(&self, output: &tract_ndarray::ArrayViewD<f32>) -> String {
-        println!("Output shape: {:?}", output.shape());
+        // println!("Output shape: {:?}", output.shape());
         
         // Find which axes are batch, time, class. 
         // Typically output is [batch, time, class] or [time, batch, class]
@@ -100,7 +100,7 @@ impl DdddOcr {
             indices_vec.push(best_idx);
         }
 
-        println!("Indices: {:?}", indices_vec);
+        // println!("Indices: {:?}", indices_vec);
 
         let mut result = String::new();
         let mut last_idx = 0; // Blank is 0

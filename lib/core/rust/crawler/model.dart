@@ -6,6 +6,90 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+class Building {
+  final String id;
+  final String name;
+
+  const Building({
+    required this.id,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Building &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+}
+
+class Campus {
+  final String id;
+  final String name;
+
+  const Campus({
+    required this.id,
+    required this.name,
+  });
+
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Campus &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+}
+
+class ClassroomAvailability {
+  final String classroomName;
+  final List<bool> availability;
+
+  const ClassroomAvailability({
+    required this.classroomName,
+    required this.availability,
+  });
+
+  @override
+  int get hashCode => classroomName.hashCode ^ availability.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassroomAvailability &&
+          runtimeType == other.runtimeType &&
+          classroomName == other.classroomName &&
+          availability == other.availability;
+}
+
+class ClassroomSchedule {
+  final String classroomName;
+  final List<OccupiedSlot> occupiedSlots;
+
+  const ClassroomSchedule({
+    required this.classroomName,
+    required this.occupiedSlots,
+  });
+
+  @override
+  int get hashCode => classroomName.hashCode ^ occupiedSlots.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassroomSchedule &&
+          runtimeType == other.runtimeType &&
+          classroomName == other.classroomName &&
+          occupiedSlots == other.occupiedSlots;
+}
+
 class CourseRow {
   final String courseId;
   final String order;
@@ -59,6 +143,37 @@ class CourseRow {
           courseType == other.courseType &&
           stage == other.stage &&
           slots == other.slots;
+}
+
+class OccupiedSlot {
+  final int startWeek;
+  final int endWeek;
+  final int weekday;
+  final int slotIndex;
+
+  const OccupiedSlot({
+    required this.startWeek,
+    required this.endWeek,
+    required this.weekday,
+    required this.slotIndex,
+  });
+
+  @override
+  int get hashCode =>
+      startWeek.hashCode ^
+      endWeek.hashCode ^
+      weekday.hashCode ^
+      slotIndex.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OccupiedSlot &&
+          runtimeType == other.runtimeType &&
+          startWeek == other.startWeek &&
+          endWeek == other.endWeek &&
+          weekday == other.weekday &&
+          slotIndex == other.slotIndex;
 }
 
 class TimeSlot {
