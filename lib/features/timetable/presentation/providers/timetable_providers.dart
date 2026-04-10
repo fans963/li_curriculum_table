@@ -1,4 +1,3 @@
-import 'package:li_curriculum_table/core/config/timetable_endpoints.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_credentials_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_teaching_week_baseline_local_datasource.dart';

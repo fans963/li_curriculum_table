@@ -9,7 +9,8 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 // These functions are ignored because they are not marked as `pub`: `get_ocr_engine`
 
-void initCrawler() => RustLib.instance.api.crateApiCrawlerInitCrawler();
+void initOcrEngine({required List<int> modelBytes}) =>
+    RustLib.instance.api.crateApiCrawlerInitOcrEngine(modelBytes: modelBytes);
 
 Future<TimetableRecord> fetchTimetableData({
   required String username,

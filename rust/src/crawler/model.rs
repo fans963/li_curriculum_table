@@ -54,11 +54,26 @@ pub struct CrawlerConfig {
     pub target_url: String,
 }
 
+impl CrawlerConfig {
+    pub fn get_portal_url(&self) -> String {
+        const DEFAULT_PORTAL_URL: &str = "http://202.119.81.112:8080";
+        DEFAULT_PORTAL_URL.to_string()
+    }
+
+    pub fn get_base_url(&self) -> String {
+        "http://202.119.81.112:9080/njlgdx".to_string()
+    }
+
+    pub fn get_target_url(&self) -> String {
+        format!("{}/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL", self.get_base_url())
+    }
+}
+
 impl Default for CrawlerConfig {
     fn default() -> Self {
         Self {
-            login_url: "http://202.119.81.112:8080".to_string(),
-            target_url: "http://202.119.81.112:9080/njlgdx/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL".to_string(),
+            login_url: "".to_string(), 
+            target_url: "".to_string(),
         }
     }
 }

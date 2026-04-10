@@ -39,6 +39,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/icon.png
+    - assets/models/
 
 msix_config:
   display_name: 🍐课表

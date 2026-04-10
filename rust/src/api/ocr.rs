@@ -8,9 +8,10 @@ pub struct DdddOcr {
 }
 
 impl DdddOcr {
-    pub fn new() -> anyhow::Result<DdddOcr> {
-        let model_bytes = include_bytes!("../model/common_pruned.onnx");
+    pub fn new(model_bytes: Vec<u8>) -> anyhow::Result<DdddOcr> {
+        println!("OCR: Initializing from external bytes (len: {})...", model_bytes.len());
         let mut model_cursor = Cursor::new(model_bytes);
+        println!("OCR: Initializing tract engine (this may take a few seconds on Web)...");
         let model = tract_onnx::onnx()
             .model_for_read(&mut model_cursor)?
             .into_optimized()?
@@ -20,6 +21,7 @@ impl DdddOcr {
             "", "6", "f", "p", "L", "Y", "w", "3", "F", "m", "X", "G", "x", "i", "T", "N", "v", "c", "B", "n", "Q", "H", "K", "W", "P", "r", "l", "E", "Z", "s", "2", "z", "D", "O", "4", "1", "t", "b", "o", "u", "9", "j", "0", "8", "5", "e", "A", "R", "g", "k", "S", "I", "7", "d", "V", "J", "a", "h", "q", "U", "M", "y", "C"
         ].into_iter().map(|s| s.to_string()).collect();
 
+        println!("OCR: Model ready.");
         Ok(Self { model, charset })
     }
 

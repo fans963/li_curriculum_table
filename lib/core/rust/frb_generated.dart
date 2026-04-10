@@ -68,7 +68,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1611760764;
+  int get rustContentHash => 1076612820;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -80,7 +80,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<DdddOcr> crateApiOcrDdddOcrNew();
+  Future<DdddOcr> crateApiOcrDdddOcrNew({required List<int> modelBytes});
 
   Future<TimetableRecord> crateApiCrawlerFetchTimetableData({
     required String username,
@@ -89,7 +89,7 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiSimpleInitApp();
 
-  void crateApiCrawlerInitCrawler();
+  void crateApiCrawlerInitOcrEngine({required List<int> modelBytes});
 
   RustArcIncrementStrongCountFnType get rust_arc_increment_strong_count_DdddOcr;
 
@@ -107,11 +107,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<DdddOcr> crateApiOcrDdddOcrNew() {
+  Future<DdddOcr> crateApiOcrDdddOcrNew({required List<int> modelBytes}) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(modelBytes, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -125,14 +126,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiOcrDdddOcrNewConstMeta,
-        argValues: [],
+        argValues: [modelBytes],
         apiImpl: this,
       ),
     );
   }
 
   TaskConstMeta get kCrateApiOcrDdddOcrNewConstMeta =>
-      const TaskConstMeta(debugName: "DdddOcr_new", argNames: []);
+      const TaskConstMeta(debugName: "DdddOcr_new", argNames: ["modelBytes"]);
 
   @override
   Future<TimetableRecord> crateApiCrawlerFetchTimetableData({
@@ -197,26 +198,30 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
-  void crateApiCrawlerInitCrawler() {
+  void crateApiCrawlerInitOcrEngine({required List<int> modelBytes}) {
     return handler.executeSync(
       SyncTask(
         callFfi: () {
           final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(modelBytes, serializer);
           return pdeCallFfi(generalizedFrbRustBinding, serializer, funcId: 4)!;
         },
         codec: SseCodec(
           decodeSuccessData: sse_decode_unit,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateApiCrawlerInitCrawlerConstMeta,
-        argValues: [],
+        constMeta: kCrateApiCrawlerInitOcrEngineConstMeta,
+        argValues: [modelBytes],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiCrawlerInitCrawlerConstMeta =>
-      const TaskConstMeta(debugName: "init_crawler", argNames: []);
+  TaskConstMeta get kCrateApiCrawlerInitOcrEngineConstMeta =>
+      const TaskConstMeta(
+        debugName: "init_ocr_engine",
+        argNames: ["modelBytes"],
+      );
 
   RustArcIncrementStrongCountFnType
   get rust_arc_increment_strong_count_DdddOcr => wire
@@ -292,6 +297,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<CourseRow> dco_decode_list_course_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_course_row).toList();
+  }
+
+  @protected
+  List<int> dco_decode_list_prim_u_8_loose(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return raw as List<int>;
   }
 
   @protected
@@ -455,6 +466,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  List<int> sse_decode_list_prim_u_8_loose(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var len_ = sse_decode_i_32(deserializer);
+    return deserializer.buffer.getUint8List(len_);
+  }
+
+  @protected
   Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var len_ = sse_decode_i_32(deserializer);
@@ -615,6 +633,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     for (final item in self) {
       sse_encode_course_row(item, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_list_prim_u_8_loose(
+    List<int> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
   }
 
   @protected

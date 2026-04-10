@@ -12,6 +12,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DdddOcr>>
 abstract class DdddOcr implements RustOpaqueInterface {
   // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
-  static Future<DdddOcr> newInstance() =>
-      RustLib.instance.api.crateApiOcrDdddOcrNew();
+  static Future<DdddOcr> newInstance({required List<int> modelBytes}) =>
+      RustLib.instance.api.crateApiOcrDdddOcrNew(modelBytes: modelBytes);
 }
