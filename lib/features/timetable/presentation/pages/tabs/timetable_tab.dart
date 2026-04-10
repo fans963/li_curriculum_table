@@ -58,6 +58,19 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
         scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surface,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: state.isLoading
+            ? null
+            : () => ref.read(timetableControllerProvider.notifier).syncFromCache(),
+        icon: state.isLoading
+            ? const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            : const Icon(Icons.sync),
+        label: Text(state.isLoading ? '同步中...' : '同步课表'),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -70,22 +83,28 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
               ),
             ),
             Expanded(
-              child: ScrollConfiguration(
-                behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) => true,
-                  child: TimetableWeekView(
-                    key: _calendarKey,
-                    startHour: _startDisplayHour,
-                    endHour: _endDisplayHour,
-                    pixelsPerMinute: _pixelsPerMinute,
-                    now: _now,
-                    onPageChange: (date, page) {
-                      _syncDisplayWeekFromDate(date);
-                    },
-                  ),
-                ),
-              ),
+              child: state.needsLogin
+                  ? _NeedsLoginView(
+                      onSync: () => ref
+                          .read(timetableControllerProvider.notifier)
+                          .syncFromCache(),
+                    )
+                  : ScrollConfiguration(
+                      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) => true,
+                        child: TimetableWeekView(
+                          key: _calendarKey,
+                          startHour: _startDisplayHour,
+                          endHour: _endDisplayHour,
+                          pixelsPerMinute: _pixelsPerMinute,
+                          now: _now,
+                          onPageChange: (date, page) {
+                            _syncDisplayWeekFromDate(date);
+                          },
+                        ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -104,5 +123,39 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     if (week != state.displayWeek) {
       ref.read(timetableControllerProvider.notifier).updateDisplayWeek(week);
     }
+  }
+}
+
+class _NeedsLoginView extends StatelessWidget {
+  final VoidCallback onSync;
+  const _NeedsLoginView({required this.onSync});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.calendar_view_week_rounded,
+                size: 64, color: colorScheme.primary.withValues(alpha: 0.5)),
+            const SizedBox(height: 16),
+            Text(
+              '暂无课表数据',
+              style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '请先前往「设置」页面输入账号密码，\n然后点击下方「同步课表」按钮。',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

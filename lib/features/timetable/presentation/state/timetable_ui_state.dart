@@ -11,12 +11,13 @@ class TimetableUiState {
     required this.maxWeek,
     this.termStartMonday,
     this.data,
+    this.needsLogin = false,
   });
 
   factory TimetableUiState.initial() {
     return const TimetableUiState(
       isLoading: false,
-      status: '请输入账号密码并点击“抓取并对比”。',
+      status: '',
       currentTeachingWeek: 6,
       displayWeek: 6,
       referenceWeek: 6,
@@ -34,6 +35,7 @@ class TimetableUiState {
   final int maxWeek;
   final DateTime? termStartMonday;
   final TimetableData? data;
+  final bool needsLogin;
 
   TimetableUiState copyWith({
     bool? isLoading,
@@ -46,6 +48,7 @@ class TimetableUiState {
     DateTime? termStartMonday,
     TimetableData? data,
     bool clearData = false,
+    bool? needsLogin,
   }) {
     return TimetableUiState(
       isLoading: isLoading ?? this.isLoading,
@@ -57,6 +60,7 @@ class TimetableUiState {
       maxWeek: maxWeek ?? this.maxWeek,
       termStartMonday: termStartMonday ?? this.termStartMonday,
       data: clearData ? null : (data ?? this.data),
+      needsLogin: needsLogin ?? this.needsLogin,
     );
   }
 }

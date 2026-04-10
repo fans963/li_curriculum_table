@@ -11,6 +11,7 @@ class ClassroomState {
   final List<ClassroomAvailabilityEntity> results;
   final bool isLoading;
   final String? error;
+  final bool needsLogin;
 
   ClassroomState({
     this.campuses = const [],
@@ -21,6 +22,7 @@ class ClassroomState {
     this.results = const [],
     this.isLoading = false,
     this.error,
+    this.needsLogin = false,
   });
 
   ClassroomState copyWith({
@@ -32,6 +34,7 @@ class ClassroomState {
     List<ClassroomAvailabilityEntity>? results,
     bool? isLoading,
     String? error,
+    bool? needsLogin,
   }) {
     return ClassroomState(
       campuses: campuses ?? this.campuses,
@@ -42,6 +45,7 @@ class ClassroomState {
       results: results ?? this.results,
       isLoading: isLoading ?? this.isLoading,
       error: error,
+      needsLogin: needsLogin ?? this.needsLogin,
     );
   }
 }

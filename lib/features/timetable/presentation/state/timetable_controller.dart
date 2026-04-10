@@ -58,12 +58,22 @@ class TimetableController extends Notifier<TimetableUiState> {
   Future<void> restoreCachedTimetable() async {
     final loadCachedTimetable = ref.read(loadCachedTimetableUseCaseProvider);
     final cachedData = await loadCachedTimetable();
-    if (cachedData == null) {
+    if (cachedData != null) {
+      state = state.copyWith(data: cachedData, status: '', needsLogin: false);
+      _updateWeekRange(cachedData);
       return;
     }
 
-    state = state.copyWith(data: cachedData, status: '已加载上次缓存课表。');
-    _updateWeekRange(cachedData);
+    // No cache — check if credentials exist to determine needsLogin state
+    try {
+      final loadCreds = ref.read(loadCachedCredentialsUseCaseProvider);
+      final creds = await loadCreds();
+      if (creds == null || creds.isEmpty) {
+        state = state.copyWith(needsLogin: true);
+      }
+    } catch (_) {
+      state = state.copyWith(needsLogin: true);
+    }
   }
 
   void _updateWeekRange(TimetableData? data) {
@@ -130,6 +140,24 @@ class TimetableController extends Notifier<TimetableUiState> {
     );
   }
 
+  /// Sync timetable using cached credentials (called from timetable tab FAB).
+  Future<void> syncFromCache() async {
+    try {
+      final loadCreds = ref.read(loadCachedCredentialsUseCaseProvider);
+      final creds = await loadCreds();
+      if (creds == null || creds.isEmpty) {
+        state = state.copyWith(needsLogin: true, status: '');
+        return;
+      }
+      await fetchAndBuild(username: creds.username, password: creds.password);
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        status: '同步失败: $e',
+      );
+    }
+  }
+
   Future<void> fetchAndBuild({
     required String username,
     required String password,
@@ -142,6 +170,7 @@ class TimetableController extends Notifier<TimetableUiState> {
 
     state = state.copyWith(
       isLoading: true,
+      needsLogin: false,
       status: '正在初始化 OCR 引擎 (仅需一次)...',
       clearData: true,
     );

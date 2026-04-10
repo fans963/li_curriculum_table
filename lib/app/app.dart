@@ -1,6 +1,7 @@
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 class CurriculumTableApp extends StatelessWidget {
@@ -39,9 +40,16 @@ class CurriculumTableApp extends StatelessWidget {
       navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
     );
 
+    // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
+    // Material Icons are a separate bundled font and remain unaffected.
+    const String? webFontFamily = kIsWeb
+        ? 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif'
+        : null;
+
     return brightness == Brightness.dark
         ? FlexThemeData.dark(
             colors: colors,
+            fontFamily: webFontFamily,
             useMaterial3: true,
             swapLegacyOnMaterial3: true,
             visualDensity: FlexColorScheme.comfortablePlatformDensity,
@@ -55,6 +63,7 @@ class CurriculumTableApp extends StatelessWidget {
           )
         : FlexThemeData.light(
             colors: colors,
+            fontFamily: webFontFamily,
             useMaterial3: true,
             swapLegacyOnMaterial3: true,
             visualDensity: FlexColorScheme.comfortablePlatformDensity,

@@ -82,6 +82,14 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
                             const SliverFillRemaining(
                               child: Center(child: CircularProgressIndicator()),
                             )
+                          else if (state.needsLogin)
+                            SliverFillRemaining(
+                              child: _NeedsLoginView(
+                                onRetry: () => ref
+                                    .read(classroomControllerProvider.notifier)
+                                    .fetchCampuses(forceRefresh: true),
+                              ),
+                            )
                           else if (state.error != null)
                             SliverFillRemaining(
                               child: _ErrorView(
@@ -492,6 +500,44 @@ class _StatusIndicator extends StatelessWidget {
         isFree ? Icons.check_rounded : Icons.close_rounded,
         size: 18,
         color: isFree ? colorScheme.primary : colorScheme.error.withValues(alpha: 0.5),
+      ),
+    );
+  }
+}
+
+class _NeedsLoginView extends StatelessWidget {
+  final VoidCallback onRetry;
+  const _NeedsLoginView({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.login_rounded, size: 64, color: colorScheme.primary.withValues(alpha: 0.6)),
+            const SizedBox(height: 16),
+            Text(
+              '需要登录',
+              style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '请先前往「设置」页面输入账号密码，然后返回此页面。',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: 24),
+            FilledButton.tonal(
+              onPressed: onRetry,
+              child: const Text('已登录，点击加载'),
+            ),
+          ],
+        ),
       ),
     );
   }

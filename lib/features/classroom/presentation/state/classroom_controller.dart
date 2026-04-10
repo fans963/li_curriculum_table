@@ -54,10 +54,31 @@ class ClassroomController extends Notifier<ClassroomState> {
   }
 
   Future<void> fetchCampuses({bool forceRefresh = false}) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, error: null, needsLogin: false);
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
+
+      // If no credentials available and no local cache, show login prompt instead of crashing.
+      if (user == null || pass == null) {
+        if (!forceRefresh) {
+          // Try loading from cache even without credentials
+          try {
+            final cached = await repository.getCampuses(forceRefresh: false);
+            if (cached.isNotEmpty) {
+              state = state.copyWith(
+                campuses: cached,
+                selectedCampus: cached.first,
+              );
+              await fetchBuildings(forceRefresh: false);
+              return;
+            }
+          } catch (_) {}
+        }
+        state = state.copyWith(isLoading: false, needsLogin: true);
+        return;
+      }
+
       final campuses = await repository.getCampuses(
         username: user,
         password: pass,

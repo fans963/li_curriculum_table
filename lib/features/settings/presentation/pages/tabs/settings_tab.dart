@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 
@@ -14,6 +17,7 @@ class SettingsTab extends ConsumerStatefulWidget {
 class _SettingsTabState extends ConsumerState<SettingsTab> {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+  Timer? _saveDebounce;
 
   @override
   void initState() {
@@ -23,6 +27,22 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       await notifier.restoreCachedTimetable();
       await notifier.restoreCachedTeachingWeekBaseline();
       await _restoreCachedCredentials();
+
+      // Auto-save credentials when user types (debounced)
+      _usernameController.addListener(_onCredentialsChanged);
+      _passwordController.addListener(_onCredentialsChanged);
+    });
+  }
+
+  void _onCredentialsChanged() {
+    _saveDebounce?.cancel();
+    _saveDebounce = Timer(const Duration(milliseconds: 800), () {
+      final u = _usernameController.text.trim();
+      final p = _passwordController.text;
+      if (u.isNotEmpty && p.isNotEmpty) {
+        final cacheCredentials = ref.read(cacheCredentialsUseCaseProvider);
+        cacheCredentials(LoginCredentials(username: u, password: p));
+      }
     });
   }
 
@@ -38,17 +58,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   @override
   void dispose() {
+    _saveDebounce?.cancel();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
-  void _triggerFetch() {
-    ref.read(timetableControllerProvider.notifier).fetchAndBuild(
-          username: _usernameController.text,
-          password: _passwordController.text,
-        );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,19 +71,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('设置与同步'),
+        title: const Text('设置'),
         centerTitle: true,
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: state.isLoading ? null : _triggerFetch,
-        icon: state.isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.sync),
-        label: Text(state.isLoading ? '抓取中' : '同步课表'),
       ),
       body: SafeArea(
         child: ListView(
