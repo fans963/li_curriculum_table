@@ -1,3 +1,5 @@
+import 'package:li_curriculum_table/core/rust/crawler/model.dart' as rust_model;
+
 class CourseRow {
   const CourseRow({
     required this.courseId,
@@ -9,7 +11,23 @@ class CourseRow {
     required this.location,
     required this.courseType,
     required this.stage,
+    required this.slots,
   });
+
+  factory CourseRow.fromRust(rust_model.CourseRow row) {
+    return CourseRow(
+      courseId: row.courseId,
+      order: row.order,
+      courseName: row.courseName,
+      teacher: row.teacher,
+      timeText: row.timeText,
+      credit: row.credit,
+      location: row.location,
+      courseType: row.courseType,
+      stage: row.stage,
+      slots: row.slots,
+    );
+  }
 
   final String courseId;
   final String order;
@@ -20,9 +38,10 @@ class CourseRow {
   final String location;
   final String courseType;
   final String stage;
+  final List<rust_model.TimeSlot> slots;
 
-  Map<String, String> toJson() {
-    return <String, String>{
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
       'courseId': courseId,
       'order': order,
       'courseName': courseName,
@@ -32,6 +51,14 @@ class CourseRow {
       'location': location,
       'courseType': courseType,
       'stage': stage,
+      'slots': slots.map((e) => {
+        'weekday': e.weekday,
+        'startSection': e.startSection,
+        'endSection': e.endSection,
+        'startWeek': e.startWeek,
+        'endWeek': e.endWeek,
+        'weekText': e.weekText,
+      }).toList(),
     };
   }
 
@@ -45,6 +72,7 @@ class CourseRow {
     final location = json['location'];
     final courseType = json['courseType'];
     final stage = json['stage'];
+    final slotsJson = json['slots'] as List?;
 
     if (courseId is! String ||
         order is! String ||
@@ -58,6 +86,22 @@ class CourseRow {
       return null;
     }
 
+    final slots = <rust_model.TimeSlot>[];
+    if (slotsJson != null) {
+      for (final s in slotsJson) {
+        if (s is Map) {
+          slots.add(rust_model.TimeSlot(
+            weekday: s['weekday'] as int,
+            startSection: s['startSection'] as int,
+            endSection: s['endSection'] as int,
+            startWeek: s['startWeek'] as int,
+            endWeek: s['endWeek'] as int,
+            weekText: s['weekText'] as String,
+          ));
+        }
+      }
+    }
+
     return CourseRow(
       courseId: courseId,
       order: order,
@@ -68,24 +112,7 @@ class CourseRow {
       location: location,
       courseType: courseType,
       stage: stage,
-    );
-  }
-
-  static CourseRow? fromParsed(List<String> row) {
-    if (row.length < 10) {
-      return null;
-    }
-
-    return CourseRow(
-      courseId: row[1],
-      order: row[2],
-      courseName: row[3],
-      teacher: row[4],
-      timeText: row[5],
-      credit: row[6],
-      location: row[7],
-      courseType: row[8],
-      stage: row[9],
+      slots: slots,
     );
   }
 }

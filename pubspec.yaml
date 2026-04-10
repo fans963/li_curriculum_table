@@ -13,10 +13,6 @@ dependencies:
   rust_lib_li_curriculum_table:
     path: rust_builder
   flutter_rust_bridge: 2.12.0
-  flutter_onnxruntime: ^1.6.4
-  image: ^4.8.0
-  dio: ^5.9.2
-  html: ^0.15.6
   riverpod: ^3.2.1
   flutter_riverpod: ^3.0.3
   window_manager: ^0.5.1
@@ -26,7 +22,6 @@ dependencies:
   flutter_secure_storage: ^10.0.0
   calendar_view: ^2.0.0
   infinite_calendar_view: ^2.11.3
-  zstandard: ^1.5.0
   auto_size_text: ^3.0.0
 
 dev_dependencies:
@@ -43,8 +38,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - model/common_pruned.onnx.zst
-    - model/common_pruned.json
     - assets/icon/icon.png
 
 msix_config:

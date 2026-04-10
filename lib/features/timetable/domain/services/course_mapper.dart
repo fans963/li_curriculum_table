@@ -1,6 +1,5 @@
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_time_text_parser.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/section_time_mapping.dart';
 import 'package:flutter/material.dart';
 
@@ -19,7 +18,7 @@ List<CourseOccurrence> buildCourseOccurrences(List<CourseRow> rows) {
   final result = <CourseOccurrence>[];
 
   for (final row in rows) {
-    final slots = parseCourseTimeSlots(row.timeText);
+    final slots = row.slots;
     for (var i = 0; i < slots.length; i++) {
       final slot = slots[i];
       final weekday = slot.weekday;

@@ -29,7 +29,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 final secureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   return const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+    aOptions: AndroidOptions(
+      resetOnError: true,
+    ),
     iOptions: IOSOptions(
       accessibility: KeychainAccessibility.first_unlock_this_device,
     ),
@@ -132,18 +134,7 @@ final clearCachedTimetableUseCaseProvider =
     });
 
 final timetableCrawlerClientProvider = Provider<TimetableCrawlerClient>((ref) {
-  final loginBaseUrl = kIsWeb
-      ? TimetableEndpoints.webLoginBaseUrl
-      : TimetableEndpoints.directLoginBaseUrl;
-  final targetUrl = kIsWeb
-      ? TimetableEndpoints.webTargetUrl
-      : TimetableEndpoints.directTargetUrl;
-
-  final client = TimetableCrawlerClient(
-    loginBaseUrl: loginBaseUrl,
-    targetUrl: targetUrl,
-    proxyBaseUrl: TimetableEndpoints.proxyBaseUrl,
-  );
+  final client = TimetableCrawlerClient();
 
   ref.onDispose(() {
     client.close();
