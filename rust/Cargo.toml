@@ -5,6 +5,14 @@ edition = "2021"
 
 [features]
 
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = [
+    "-O3",
+    "--enable-bulk-memory",
+    "--enable-threads",
+    "--enable-mutable-globals",
+    "--enable-nontrapping-float-to-int",
+]
 
 [lib]
 crate-type = ["cdylib", "staticlib"]
@@ -35,14 +43,13 @@ encoding_rs = "0.8.35"
 getrandom = { version = "0.2.17", features = ["js"] }
 console_log = "1.0.0"
 base64 = "0.22.1"
-wee_alloc = "0.4.5"
 
 [profile.release]
-opt-level = "z"     # Optimize for size
+opt-level = 3  
 lto = "fat"
-codegen-units = 1   # Maximize LTO impact
+codegen-units = 1   
 panic = "abort"
-strip = true        # Automatically strip symbols from the binary
+strip = true        
 debug = false
 debug-assertions = false
 overflow-checks = false

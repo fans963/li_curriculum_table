@@ -1,8 +1,5 @@
-import 'package:calendar_view/calendar_view.dart';
 import 'package:flutter/material.dart';
-import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/section_time_mapping.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 
 /// A custom hour line painter that ONLY draws lines at class start/end times.
 class BoundaryHourLinePainter extends CustomPainter {

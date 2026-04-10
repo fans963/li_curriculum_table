@@ -256,7 +256,7 @@ class CurrentTimeIndicatorPainter extends CustomPainter {
     final y = absoluteMinutes * heightPerMinute;
 
     final paint = Paint()
-      ..color = color.withOpacity(0.8)
+      ..color = color.withValues(alpha: 0.8)
       ..strokeWidth = 2.0
       ..style = PaintingStyle.stroke;
 

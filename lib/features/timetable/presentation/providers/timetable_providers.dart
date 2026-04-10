@@ -22,7 +22,6 @@ import 'package:li_curriculum_table/features/timetable/domain/usecases/load_cach
 import 'package:li_curriculum_table/features/timetable/domain/usecases/load_cached_timetable_usecase.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
