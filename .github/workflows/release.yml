@@ -1,0 +1,82 @@
+name: Fastforge Local Build
+
+on:
+  push:
+    branches: [ main ] # 每次推送到主分支就运行，方便你随时拿最新包
+  workflow_dispatch:   # 允许你在网页上手动点按钮触发构建
+
+jobs:
+  build:
+    name: Build ${{ matrix.job_name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            job_name: "Android & Linux"
+            fastforge_jobs: "android-apk,linux-pacman,linux-appimage,linux-deb"
+            
+          - os: windows-latest
+            job_name: "Windows"
+            fastforge_jobs: "windows-exe"
+            
+          - os: macos-latest
+            job_name: "macOS" # 不发 TestFlight，所以去掉 iOS
+            fastforge_jobs: "macos-dmg,macos-pkg"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      # 1. 基础环境：Linux 编译依赖
+      - name: Install Linux Build Tools
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev bsdtar
+
+      # 2. 基础环境：Rust & Flutter
+      - name: Setup Build Env
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: >-
+            ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || 
+                matrix.os == 'ubuntu-latest' && 'aarch64-linux-android,x86_64-unknown-linux-gnu' || 
+                'x86_64-pc-windows-msvc' }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+          cache: true
+
+      # 3. 安装 Fastforge (使用你查到的 dart pub 方式)
+      - name: Install Fastforge & FRB
+        run: |
+          dart pub global activate fastforge
+          cargo install flutter_rust_bridge_codegen
+          # 确保环境变量生效
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/.pub-cache/bin" >> $GITHUB_PATH
+
+      # 4. 运行生成 (FRB + Build Runner)
+      - name: Codegen
+        run: |
+          if [ ! -f env.json ]; then echo "{}" > env.json; fi
+          flutter_rust_bridge_codegen generate
+          flutter pub get
+          dart run build_runner build --delete-conflicting-outputs
+
+      # 5. 执行 Fastforge 本地构建任务
+      # 对应你 toml 里的 release 配置名
+      - name: Run Fastforge
+        run: fastforge release --name release --jobs ${{ matrix.fastforge_jobs }}
+
+      # 6. 保存产物到 GitHub Actions 页面
+      - name: Archive Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: li-table-${{ matrix.os }}
+          path: dist/
