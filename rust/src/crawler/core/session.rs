@@ -1,11 +1,10 @@
-use crate::api::ocr::DdddOcr;
+use crate::ocr::DdddOcr;
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::{CrawlerConfig, PROXY_URL};
 use base64::Engine;
 #[cfg(target_arch = "wasm32")]
 use crate::crawler::model::ProxySession;
 use encoding_rs::GBK;
-use image::load_from_memory;
 use reqwest::{Client, Method};
 use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
@@ -32,7 +31,7 @@ pub enum NetworkingStrategy {
 pub struct SessionManager {
     pub client: Client,
     pub config: CrawlerConfig,
-    pub ocr: Arc<DdddOcr>,
+    pub ocr: Arc<Mutex<DdddOcr>>,
     pub login_lock: Mutex<()>,
     pub strategy: NetworkingStrategy,
     #[cfg(target_arch = "wasm32")]
@@ -40,7 +39,7 @@ pub struct SessionManager {
 }
 
 impl SessionManager {
-    pub async fn new(ocr: Arc<DdddOcr>) -> Self {
+    pub async fn new(ocr: Arc<Mutex<DdddOcr>>) -> Self {
         #[cfg(target_arch = "wasm32")]
         let mut strategy: NetworkingStrategy = NetworkingStrategy::VercelFallback;
         #[cfg(not(target_arch = "wasm32"))]
@@ -50,7 +49,6 @@ impl SessionManager {
 
         #[cfg(target_arch = "wasm32")]
         {
-            // Web Discovery: Try to find local native proxy server using a one-off client
             let port = get_proxy_port();
             let local_discovery_url = format!("http://localhost:{}/status", port);
             log::info!("Web: Probing for local native proxy at {}...", local_discovery_url);
@@ -70,8 +68,6 @@ impl SessionManager {
                 .cookie_store(true)
                 .redirect(reqwest::redirect::Policy::limited(10));
             
-            // Native always uses Direct because it IS the gateway.
-            // Standard HTTP Proxy support can be added as an explicit setting later if needed.
             strategy = NetworkingStrategy::Direct;
             log::info!("[V8] Native mode: Using Direct connection.");
             b
@@ -97,15 +93,12 @@ impl SessionManager {
         password: &str,
         max_attempts: u32,
     ) -> CrawlerResult<()> {
-        // Quick check without lock
         if self.check_session().await {
             return Ok(());
         }
 
-        // Acquire lock to ensure only one login attempt happens at a time
         let _lock = self.login_lock.lock().await;
 
-        // Double check after acquiring lock (another task might have finished login)
         if self.check_session().await {
             return Ok(());
         }
@@ -114,13 +107,10 @@ impl SessionManager {
             println!("Crawler: Shared Login attempt {}/{}", attempt, max_attempts);
             let captcha_bytes = self.get_captcha().await?;
             
-            let img = load_from_memory(&captcha_bytes)
-                .map_err(|e| CrawlerError::Ocr(format!("Failed to load image: {}", e)))?;
-
-            let verify_code = self
-                .ocr
-                .classification(img)
-                .map_err(|e| CrawlerError::Ocr(format!("OCR failed: {}", e)))?;
+            let verify_code = {
+                let ocr_guard = self.ocr.lock().await;
+                ocr_guard.recognize(&captcha_bytes)
+            };
 
             let verify_code = verify_code.trim();
             println!("Crawler: Shared OCR result: '{}'", verify_code);
@@ -203,11 +193,6 @@ impl SessionManager {
         if self.strategy == NetworkingStrategy::VercelFallback || self.strategy == NetworkingStrategy::LocalNativeProxy {
             #[cfg(target_arch = "wasm32")]
             {
-                // Bypassing browser 'Forbidden Header' restrictions for 'Cookie' and 'Referer'
-                // by using custom X-Proxy-* headers which the proxy then maps to standard headers.
-                
-                // For LocalNativeProxy, we don't necessarily need to manually manage cookies here 
-                // if the Native side handles them, but forwarding them doesn't hurt.
                 if self.strategy == NetworkingStrategy::VercelFallback {
                     let session = self.session.lock().unwrap();
 
@@ -242,7 +227,6 @@ impl SessionManager {
         let status = resp.status();
         println!("Crawler: [Response] status: {}, url: {}", status, resp.url());
 
-        // Extract server-side logs from custom header if present (Both WASM and Fallback Native)
         if self.strategy == NetworkingStrategy::VercelFallback {
             if let Some(logs_b64) = resp.headers().get("X-Proxy-Logs") {
                 if let Ok(logs_str) = logs_b64.to_str() {
@@ -301,7 +285,6 @@ impl SessionManager {
                 *self.session.lock().unwrap() = session_json;
             }
 
-            use base64::Engine;
             let bytes = base64::engine::general_purpose::STANDARD
                 .decode(captcha_b64)
                 .map_err(|e| CrawlerError::Ocr(format!("Base64 decode failed: {}", e)))?;
@@ -346,20 +329,12 @@ impl SessionManager {
             let resp = self.client.post(api_url).json(&payload).send().await?;
             let json: serde_json::Value = resp.json().await?;
 
-            // Log server-side diagnostics
             if let Some(logs) = json["networkLogs"].as_array() {
                 for log_line in logs {
                     log::info!("[PROXY] {}", log_line.as_str().unwrap_or(""));
                 }
             }
-            if let Some(status) = json["statusCode"].as_i64() {
-                log::info!("[PROXY] target statusCode={}", status);
-            }
-            if let Some(sess) = json.get("session") {
-                log::info!("[PROXY] session={}", sess);
-            }
 
-            // Update local session from proxy response (WASM only uses this for now)
             #[cfg(target_arch = "wasm32")]
             {
                 if let Ok(new_session) = serde_json::from_value::<crate::crawler::model::ProxySession>(
@@ -370,13 +345,10 @@ impl SessionManager {
             }
 
             let html_b64 = json["html"].as_str().unwrap_or("");
-
             if html_b64.is_empty() {
-                log::warn!("[PROXY] html field is empty — login likely failed (wrong captcha or credentials)");
                 return Err(CrawlerError::Parse("Proxy returned empty HTML".to_string()));
             }
 
-            use base64::Engine;
             let bytes = base64::engine::general_purpose::STANDARD
                 .decode(html_b64)
                 .map_err(|e| CrawlerError::Ocr(format!("HTML Base64 decode failed: {}", e)))?;
@@ -387,11 +359,6 @@ impl SessionManager {
                 let (decoded, _, _) = GBK.decode(&bytes);
                 decoded.into_owned()
             };
-            log::info!(
-                "[PROXY] decoded html length={}, snippet={}",
-                text.len(),
-                &text[..text.len().min(200)]
-            );
             Ok(text)
         } else {
             let portal_url = self.config.get_portal_url();

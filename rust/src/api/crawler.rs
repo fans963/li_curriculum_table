@@ -1,13 +1,14 @@
 use std::sync::{Arc, OnceLock};
 pub use crate::crawler::model::{TimetableRecord, CourseRow, TimeSlot};
 pub use crate::crawler::SessionManager;
-use crate::api::ocr::DdddOcr;
+use crate::ocr::DdddOcr;
 use crate::crawler::services::timetable::TimetableService;
+use tokio::sync::Mutex;
 
 static SHARED_SESSION_MANAGER: OnceLock<Arc<SessionManager>> = OnceLock::new();
 
-pub async fn init_ocr_engine(model_bytes: Vec<u8>) -> anyhow::Result<()> {
-    let ocr = Arc::new(DdddOcr::new(model_bytes)?);
+pub async fn init_ocr_engine(_model_bytes: Vec<u8>) -> anyhow::Result<()> {
+    let ocr = Arc::new(Mutex::new(DdddOcr::new()));
     let manager = SessionManager::new(ocr).await;
     let arc_manager = Arc::new(manager);
     
