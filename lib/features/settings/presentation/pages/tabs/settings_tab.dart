@@ -48,7 +48,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
 
   Future<void> _restoreCachedCredentials() async {
     try {
-      final loadCachedCredentials = ref.read(loadCachedCredentialsUseCaseProvider);
+      final loadCachedCredentials =
+          ref.read(loadCachedCredentialsUseCaseProvider);
       final cached = await loadCachedCredentials();
       if (!mounted || cached == null) return;
       _usernameController.text = cached.username;
@@ -63,7 +64,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     _passwordController.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +94,9 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   minWeek: state.minWeek,
                   maxWeek: state.maxWeek,
                   onTeachingWeekChanged: (week) {
-                    ref.read(timetableControllerProvider.notifier).setCurrentTeachingWeek(week);
+                    ref
+                        .read(timetableControllerProvider.notifier)
+                        .setCurrentTeachingWeek(week);
                   },
                 ),
                 const SizedBox(height: 24),
@@ -164,20 +166,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     return Column(
       children: [
         const Divider(height: 1),
-        const SizedBox(height: 16),
-        Text(
-          'Antigravity Curriculum Table',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: colorScheme.outline,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        Text(
-          'Version 1.2.0',
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colorScheme.outline.withOpacity(0.6),
-              ),
-        ),
       ],
     );
   }

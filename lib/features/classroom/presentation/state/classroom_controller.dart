@@ -209,6 +209,72 @@ class ClassroomController extends Notifier<ClassroomState> {
     await fetchAvailability(forceRefresh: true);
   }
 
+  /// Only syncs data for the current view (active campus and building)
+  /// and potentially basic metadata (campus list, term info).
+  Future<void> syncCurrentContext() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(classroomRepositoryProvider);
+      final (user, pass) = await _getCredentials();
+
+      // 1. Ensure basic campus/term context is loaded
+      if (state.campuses.isEmpty || state.currentTerm.isEmpty) {
+        final (campuses, term) = await repository.getCampuses(
+          username: user,
+          password: pass,
+          forceRefresh: true,
+        );
+        state = state.copyWith(campuses: campuses, currentTerm: term);
+        
+        // Pick a selection if none exists
+        if (state.selectedCampus == null && campuses.isNotEmpty) {
+          final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+          final selection = campuses.any((e) => e.id == lastId)
+              ? campuses.firstWhere((e) => e.id == lastId)
+              : campuses.first;
+          state = state.copyWith(selectedCampus: selection);
+        }
+      }
+
+      // 2. Refresh active building schedule ONLY
+      final campus = state.selectedCampus;
+      if (campus != null) {
+        // Ensure buildings are loaded for this campus
+        if (state.buildings.isEmpty) {
+          final buildings = await repository.getBuildings(
+            campus.id,
+            username: user,
+            password: pass,
+            forceRefresh: true,
+          );
+          state = state.copyWith(buildings: buildings);
+          
+          if (state.selectedBuilding == null && buildings.isNotEmpty) {
+            final lastBId = await ref.read(classroomLocalDataSourceProvider).readLastBuildingId();
+            state = state.copyWith(
+              selectedBuilding: buildings.any((e) => e.id == lastBId)
+                  ? buildings.firstWhere((e) => e.id == lastBId)
+                  : buildings.first,
+            );
+          }
+        }
+
+        // Now refresh the specific visibility schedule for the current view
+        if (state.selectedBuilding != null) {
+          await fetchAvailability(forceRefresh: true);
+        }
+      }
+
+      state = state.copyWith(isLoading: false);
+      
+      // OPTIONAL: Trigger full sync in the background for other buildings
+      // without awaiting it, if we want eventual consistency
+      // _triggerBackgroundFullSync(); 
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
   Future<void> bulkSync() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
