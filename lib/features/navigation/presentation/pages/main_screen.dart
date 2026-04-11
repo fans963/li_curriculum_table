@@ -17,6 +17,7 @@ import 'package:li_curriculum_table/features/grades/presentation/pages/grades_ta
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
 
 import 'package:li_curriculum_table/features/navigation/presentation/state/global_sync_controller.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -38,6 +39,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   void initState() {
     super.initState();
+    // Remove the native splash screen after the first frame
+    FlutterNativeSplash.remove();
+    
     final initialIndex = ref.read(navigationControllerProvider);
     _pageController = PageController(initialPage: initialIndex);
   }

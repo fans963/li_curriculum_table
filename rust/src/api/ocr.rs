@@ -19,12 +19,7 @@ impl DdddOcr {
             .model_for_read(&mut model_cursor)?
             .into_typed()?;
 
-        let model = if cfg!(target_os = "android") {
-            println!("OCR: Android detected, skipping heavy optimization for fast startup.");
-            base_model.into_runnable()?
-        } else {
-            base_model.into_optimized()?.into_runnable()?
-        };
+        let model = base_model.into_optimized()?.into_runnable()?;
 
         let charset = vec![
             "", "6", "f", "p", "L", "Y", "w", "3", "F", "m", "X", "G", "x", "i", "T", "N", "v",
