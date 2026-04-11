@@ -66,19 +66,6 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
         scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surface,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: state.isLoading
-            ? null
-            : () => ref.read(timetableControllerProvider.notifier).syncFromCache(),
-        icon: state.isLoading
-            ? const SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : const Icon(Icons.sync),
-        label: Text(state.isLoading ? '同步中...' : '同步课表'),
-      ),
       body: SafeArea(
         child: Column(
           children: [

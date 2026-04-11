@@ -119,5 +119,62 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
 
     return results;
   }
+
+  @override
+  Future<void> syncAllSchedules({
+    required String term,
+    String? username,
+    String? password,
+  }) async {
+    // 1. Get all campuses (force refresh)
+    final (campuses, _) = await getCampuses(
+      username: username,
+      password: password,
+      forceRefresh: true,
+    );
+
+    // 2. For each campus, get buildings (force refresh)
+    final allBuildingsByCampus = <String, List<BuildingEntity>>{};
+    for (final campus in campuses) {
+      final buildings = await getBuildings(
+        campus.id,
+        username: username,
+        password: password,
+        forceRefresh: true,
+      );
+      allBuildingsByCampus[campus.id] = buildings;
+    }
+
+    // 3. For each building across all campuses, fetch schedule in parallel
+    // We use a small batch size to avoid overwhelming the server/proxy
+    final List<Future<void>> fetchTasks = [];
+    for (final campusId in allBuildingsByCampus.keys) {
+      final buildings = allBuildingsByCampus[campusId]!;
+      for (final building in buildings) {
+        fetchTasks.add(() async {
+          try {
+            final schedule = await _remoteDataSource.getBuildingSchedule(
+              campusId: campusId,
+              buildingId: building.id,
+              term: term,
+              username: username,
+              password: password,
+            );
+            await _localDataSource.saveBuildingSchedule(
+              campusId: campusId,
+              buildingId: building.id,
+              schedule: schedule,
+            );
+          } catch (e) {
+            // Log and continue - we don't want one building to kill the whole sync
+            print('Failed to sync building ${building.name}: $e');
+          }
+        }());
+      }
+    }
+
+    // Process in parallel
+    await Future.wait(fetchTasks);
+  }
 }
 

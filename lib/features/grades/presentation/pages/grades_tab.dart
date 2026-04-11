@@ -22,12 +22,6 @@ class GradesTab extends ConsumerWidget {
   PreferredSizeWidget _buildHeader(BuildContext context, WidgetRef ref, GradeState state) {
     return AppBar(
       title: const Text('成绩查询'),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: () => ref.read(gradeControllerProvider.notifier).loadGrades(forceRefresh: true),
-        ),
-      ],
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(110),
         child: SafeArea(

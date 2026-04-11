@@ -26,4 +26,10 @@ abstract class ClassroomRepository {
     String? password,
     bool forceRefresh = false,
   });
+
+  Future<void> syncAllSchedules({
+    required String term,
+    String? username,
+    String? password,
+  });
 }

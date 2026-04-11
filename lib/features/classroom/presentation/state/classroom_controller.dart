@@ -208,4 +208,37 @@ class ClassroomController extends Notifier<ClassroomState> {
   Future<void> manualRefresh() async {
     await fetchAvailability(forceRefresh: true);
   }
+
+  Future<void> bulkSync() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final repository = ref.read(classroomRepositoryProvider);
+      final (user, pass) = await _getCredentials();
+
+      // Ensure we have current term info first if missing
+      if (state.currentTerm.isEmpty) {
+        final (campuses, term) = await repository.getCampuses(
+          username: user,
+          password: pass,
+          forceRefresh: true,
+        );
+        state = state.copyWith(campuses: campuses, currentTerm: term);
+      }
+
+      await repository.syncAllSchedules(
+        term: state.currentTerm,
+        username: user,
+        password: pass,
+      );
+
+      // Refresh current view if possible
+      if (state.selectedCampus != null && state.selectedBuilding != null) {
+        await fetchAvailability(forceRefresh: false); // Load the newly cached data
+      }
+      
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
 }

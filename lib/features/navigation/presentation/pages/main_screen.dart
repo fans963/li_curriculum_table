@@ -7,15 +7,25 @@ import 'package:li_curriculum_table/features/timetable/presentation/bar/title_ba
 import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
 import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
 
-class MainScreen extends StatefulWidget {
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_tab.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
+import 'package:li_curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
+import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
+import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
+import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
+
+import 'package:li_curriculum_table/features/navigation/presentation/state/global_sync_controller.dart';
+
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+class _MainScreenState extends ConsumerState<MainScreen> {
   late final PageController _pageController;
 
   final List<Widget> _tabs = [
@@ -28,7 +38,8 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: _currentIndex);
+    final initialIndex = ref.read(navigationControllerProvider);
+    _pageController = PageController(initialPage: initialIndex);
   }
 
   @override
@@ -39,6 +50,9 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentIndex = ref.watch(navigationControllerProvider);
+    final syncState = ref.watch(globalSyncControllerProvider);
+    
     return Scaffold(
       body: Column(
         children: [
@@ -52,12 +66,27 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+      floatingActionButton: (currentIndex == 3) // No refresh button on Settings
+        ? null
+        : FloatingActionButton(
+            onPressed: syncState.isSyncing 
+              ? null 
+              : () => ref.read(globalSyncControllerProvider.notifier).syncGlobal(),
+            child: syncState.isSyncing
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.refresh),
+          ),
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
+        selectedIndex: currentIndex,
         onDestinationSelected: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
+          ref.read(navigationControllerProvider.notifier).setIndex(index);
           _pageController.animateToPage(
             index,
             duration: kDefaultAnimationDuration,

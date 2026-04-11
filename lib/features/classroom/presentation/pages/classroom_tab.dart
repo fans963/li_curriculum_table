@@ -124,17 +124,6 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: state.isLoading ? null : () => ref.read(classroomControllerProvider.notifier).manualRefresh(),
-        icon: state.isLoading
-            ? const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70),
-              )
-            : const Icon(Icons.refresh_rounded),
-        label: Text(state.isLoading ? '正在刷新...' : '手动刷新'),
-      ),
     );
   }
 }
