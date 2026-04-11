@@ -8,7 +8,7 @@ const COMPRESSED_MODEL_BYTES: &[u8] =
 
 // Universal backend: Flex (Fast & Portable CPU)
 type B = Flex;
-type Dev = <Flex as Backend>::Device;
+type Dev = <B as Backend>::Device;
 
 pub struct DdddOcr {
     model: Model<B>,
@@ -17,10 +17,11 @@ pub struct DdddOcr {
 
 impl DdddOcr {
     pub fn new() -> Self {
+        use burn_store::ModuleSnapshot;
         use std::io::Read;
         let device = Default::default();
 
-        // Decompress model weights at runtime
+        // Decompress F16 model weights at runtime
         let mut decoder =
             ruzstd::decoding::StreamingDecoder::new(std::io::Cursor::new(COMPRESSED_MODEL_BYTES))
                 .expect("Failed to initialize zstd decoder");
@@ -29,13 +30,25 @@ impl DdddOcr {
             .read_to_end(&mut decompressed)
             .expect("Failed to decompress OCR model weights");
 
-        Self {
-            model: Model::from_bytes(
-                burn::tensor::Bytes::from_bytes_vec(decompressed),
-                &device,
-            ),
-            device,
-        }
+        // Load F16 weights and cast back to F32 for Flex backend compatibility
+        let mut store = burn_store::BurnpackStore::from_bytes(Some(
+            burn::tensor::Bytes::from_bytes_vec(decompressed),
+        ));
+        
+        // We use the HalfPrecisionAdapter to ensure F16 -> F32 conversion during load.
+        // For the pruned model, we want to make sure it handles all possible weights.
+        let mut adapter = burn_store::HalfPrecisionAdapter::new();
+        // Add all likely module names if they are custom
+        adapter = adapter.with_module("Model"); 
+        
+        store = store.with_from_adapter(adapter);
+
+        let mut model = Model::new(&device);
+        model
+            .load_from(&mut store)
+            .expect("Failed to load OCR model from bytes");
+
+        Self { model, device }
     }
 
     pub fn recognize(&self, img_bytes: &[u8]) -> String {
