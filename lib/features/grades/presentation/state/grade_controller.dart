@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import '../../domain/repositories/grade_repository.dart';
 import '../../data/repositories/grade_repository_impl.dart';
 import '../../data/datasources/grade_remote_datasource.dart';
@@ -30,6 +31,11 @@ class GradeController extends Notifier<GradeState> {
   }
 
   Future<void> loadGrades({bool forceRefresh = false}) async {
+    // Ensure OCR is ready if we might need to refresh from remote
+    if (forceRefresh) {
+      await ref.read(ocrInitializerProvider).ensureInitialized();
+    }
+    
     state = state.copyWith(isLoading: true, errorMessage: null);
 
     try {

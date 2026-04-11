@@ -34,7 +34,7 @@ Future<void> main() async {
   }
 
   final container = ProviderContainer();
-  // Start loading OCR engine immediately in background
+  // Start loading OCR engine in background to avoid blocking startup
   container.read(ocrInitializerProvider).ensureInitialized();
 
   runApp(

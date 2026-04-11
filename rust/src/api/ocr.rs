@@ -1,23 +1,21 @@
 use image::{DynamicImage, GenericImageView};
+use log::info;
 use std::io::Cursor;
+use std::sync::Mutex;
 use tract_onnx::prelude::*;
 
+enum OcrEngine {
+    Tract(RunnableModel<TypedFact, Box<dyn TypedOp>, Graph<TypedFact, Box<dyn TypedOp>>>),
+}
+
 pub struct DdddOcr {
-    model: RunnableModel<TypedFact, Box<dyn TypedOp>, Graph<TypedFact, Box<dyn TypedOp>>>,
+    engine: Mutex<OcrEngine>,
     charset: Vec<String>,
 }
 
 impl DdddOcr {
     pub fn new(model_bytes: Vec<u8>) -> anyhow::Result<DdddOcr> {
-        println!(
-            "OCR: Initializing from external bytes (len: {})...",
-            model_bytes.len()
-        );
-        let mut model_cursor = Cursor::new(model_bytes);
-        println!("OCR: Initializing tract engine (this may take a few seconds on Web)...");
-        let model = tract_onnx::onnx()
-            .model_for_read(&mut model_cursor)?
-            .into_typed()?.into_optimized()?.into_runnable()?;
+        info!("OCR: Initializing optimized engine...");
 
         let charset = vec![
             "", "6", "f", "p", "L", "Y", "w", "3", "F", "m", "X", "G", "x", "i", "T", "N", "v",
@@ -29,55 +27,79 @@ impl DdddOcr {
         .map(|s| s.to_string())
         .collect();
 
-        println!("OCR: Model ready.");
-        Ok(Self { model, charset })
+        info!("OCR: [v5] Precision: f32 (Optimized), Target Shape: [1, 1, 64, 192]");
+        let mut model_cursor = Cursor::new(model_bytes);
+        let model = tract_onnx::onnx()
+            .model_for_read(&mut model_cursor)?
+            .with_input_fact(0, f32::fact(&[1, 1, 64, 192]).into())?
+            .into_typed()?
+            .into_optimized()?
+            .into_runnable()?;
+
+        info!("OCR: [v5] Optimized Tract Engine initialized.");
+        Ok(Self {
+            engine: Mutex::new(OcrEngine::Tract(model)),
+            charset,
+        })
     }
 
     #[flutter_rust_bridge::frb(ignore)]
-    fn preprocess(&self, img: DynamicImage) -> DynamicImage {
+    fn preprocess(&self, img: DynamicImage) -> (u32, u32, Vec<f32>) {
         let (w, h) = img.dimensions();
         let target_h = 64;
-        let target_w = (w as f32 * (target_h as f32 / h as f32)).round() as u32;
+        let target_w_actual = (w as f32 * (target_h as f32 / h as f32)).round() as u32;
+        let target_w_fixed = 192;
 
-        img.resize_exact(target_w, target_h, image::imageops::FilterType::CatmullRom)
+        let resized = img.resize_exact(
+            target_w_actual,
+            target_h,
+            image::imageops::FilterType::CatmullRom,
+        );
+        let rgb8 = resized.into_rgb8();
+
+        // Use 1.0 for padding (white background in normalized space)
+        let mut data = vec![1.0f32; (target_w_fixed * target_h) as usize];
+
+        for y in 0..target_h {
+            for x in 0..target_w_actual.min(target_w_fixed) {
+                let pixel = rgb8.get_pixel(x, y);
+                let r = pixel[0] as f32;
+                let g = pixel[1] as f32;
+                let b = pixel[2] as f32;
+                let val = r * 0.299 + g * 0.587 + b * 0.114;
+                data[(y * target_w_fixed + x) as usize] = (val / 127.5) - 1.0;
+            }
+        }
+
+        (target_w_fixed, target_h, data)
     }
 
     #[flutter_rust_bridge::frb(ignore)]
     pub fn classification(&self, img: DynamicImage) -> anyhow::Result<String> {
-        let resized = self.preprocess(img);
-        let (width, height) = resized.dimensions();
-        let rgb8 = resized.into_rgb8();
+        let (width, height, data) = self.preprocess(img);
 
-        let mut data = Vec::with_capacity((width * height) as usize);
-        for pixel in rgb8.pixels() {
-            let r = pixel[0] as f32;
-            let g = pixel[1] as f32;
-            let b = pixel[2] as f32;
-            let val = r * 0.299 + g * 0.587 + b * 0.114;
-            data.push((val / 127.5) - 1.0);
-        }
+        let engine = self
+            .engine
+            .lock()
+            .map_err(|_| anyhow::anyhow!("Failed to lock OCR engine"))?;
 
-        let tensor =
-            tract_ndarray::Array4::from_shape_vec((1, 1, height as usize, width as usize), data)
-                .unwrap()
+        match &*engine {
+            OcrEngine::Tract(model) => {
+                let tensor = tract_ndarray::Array4::from_shape_vec(
+                    (1, 1, height as usize, width as usize),
+                    data,
+                )
+                .map_err(|e| anyhow::anyhow!("Failed to create tensor: {}", e))?
                 .into_tensor();
 
-        let result = self.model.run(tvec!(tensor.into()))?;
-
-        let output = result[0].to_array_view::<f32>()?;
-        Ok(self.decode_ctc(&output))
+                let result = model.run(tvec!(tensor.into()))?;
+                let output = result[0].to_array_view::<f32>()?;
+                Ok(self.decode_ctc(&output))
+            }
+        }
     }
 
     fn decode_ctc(&self, output: &tract_ndarray::ArrayViewD<f32>) -> String {
-        println!("Output shape: {:?}", output.shape());
-
-        // Find which axes are batch, time, class.
-        // Typically output is [batch, time, class] or [time, batch, class]
-        // From burn we saw [23, 1, 63] meaning [time, batch, class].
-        // Let's assume the highest size dimension (after class) is time.
-        // Actually, ddddocr is usually [1, 23, 63] in tract if the onnx is standard,
-        // or [23, 1, 63]. We can just dynamically find the time and class axes.
-
         let shape = output.shape();
         let class_axis = shape
             .iter()
@@ -94,20 +116,17 @@ impl DdddOcr {
         let seq_len = shape[time_axis];
         let classes = shape[class_axis];
 
-        // Argmax along class_axis for each time step
         let mut indices_vec = Vec::new();
-
         for t in 0..seq_len {
             let mut best_val = f32::NEG_INFINITY;
             let mut best_idx = 0;
             for c in 0..classes {
-                // Determine indices based on shape [time, batch, class] vs [batch, time, class]
-                let mut idx = vec![0; 3];
-                idx[time_axis] = t;
-                idx[class_axis] = c;
-                // batch axis defaults to 0
+                let mut idx_raw = vec![0; 3];
+                idx_raw[time_axis] = t;
+                idx_raw[class_axis] = c;
 
-                let val = output[idx.as_slice()];
+                let idx = tract_ndarray::IxDyn(&idx_raw);
+                let val = output[idx];
                 if val > best_val {
                     best_val = val;
                     best_idx = c;
@@ -116,12 +135,13 @@ impl DdddOcr {
             indices_vec.push(best_idx);
         }
 
-        println!("Indices: {:?}", indices_vec);
+        self.indices_to_string(indices_vec)
+    }
 
+    fn indices_to_string(&self, indices: Vec<usize>) -> String {
         let mut result = String::new();
-        let mut last_idx = 0; // Blank is 0
-
-        for &idx in indices_vec.iter() {
+        let mut last_idx = 0;
+        for &idx in indices.iter() {
             if idx == 0 {
                 last_idx = 0;
                 continue;
@@ -129,13 +149,11 @@ impl DdddOcr {
             if idx == last_idx {
                 continue;
             }
-
             if idx > 0 && idx < self.charset.len() {
                 result.push_str(&self.charset[idx]);
             }
             last_idx = idx;
         }
-
         result
     }
 }

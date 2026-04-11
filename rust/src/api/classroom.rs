@@ -1,7 +1,5 @@
 use crate::api::crawler::get_shared_session_manager;
-use crate::crawler::model::{
-    Building, CampusPageData, ClassroomAvailability, ClassroomSchedule,
-};
+use crate::crawler::model::{Building, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::crawler::services::classroom::ClassroomService;
 use anyhow::Result;
 

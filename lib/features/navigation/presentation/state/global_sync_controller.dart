@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
@@ -25,6 +26,9 @@ class GlobalSyncController extends Notifier<GlobalSyncState> {
 
   Future<void> syncGlobal() async {
     if (state.isSyncing) return;
+    
+    // Ensure OCR is ready before starting any crawler-based tasks
+    await ref.read(ocrInitializerProvider).ensureInitialized();
 
     final currentIndex = ref.read(navigationControllerProvider);
     state = state.copyWith(isSyncing: true, lastError: null);

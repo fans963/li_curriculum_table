@@ -6,7 +6,8 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `decode_ctc`, `preprocess`
+// These functions are ignored because they are not marked as `pub`: `decode_ctc`, `indices_to_string`, `preprocess`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `OcrEngine`
 // These functions are ignored (category: IgnoreBecauseExplicitAttribute): `classification`
 
 // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<DdddOcr>>
