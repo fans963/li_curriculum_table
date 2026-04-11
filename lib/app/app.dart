@@ -4,6 +4,8 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
+const bool isWeb = kIsWeb;
+
 class CurriculumTableApp extends StatelessWidget {
   const CurriculumTableApp({super.key});
 

@@ -7,8 +7,6 @@ import '../crawler/model.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_ocr_engine`, `get_shared_session_manager`
-
 Future<void> initOcrEngine({required List<int> modelBytes}) =>
     RustLib.instance.api.crateApiCrawlerInitOcrEngine(modelBytes: modelBytes);
 
@@ -16,3 +14,15 @@ Future<TimetableRecord> fetchTimetableData(
         {required String username, required String password}) =>
     RustLib.instance.api.crateApiCrawlerFetchTimetableData(
         username: username, password: password);
+
+Future<ArcSessionManager> getSharedSessionManager() =>
+    RustLib.instance.api.crateApiCrawlerGetSharedSessionManager();
+
+Future<void> updateProxyConfig({required int port}) =>
+    RustLib.instance.api.crateApiCrawlerUpdateProxyConfig(port: port);
+
+Future<void> runProxyServer({required int port}) =>
+    RustLib.instance.api.crateApiCrawlerRunProxyServer(port: port);
+
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < SessionManager >>>
+abstract class ArcSessionManager implements RustOpaqueInterface {}

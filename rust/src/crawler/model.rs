@@ -125,6 +125,8 @@ pub struct CrawlerConfig {
     pub target_url: String,
 }
 
+pub const PROXY_URL: &str = "https://www.fans963blog.asia/";
+
 impl CrawlerConfig {
     pub fn get_portal_url(&self) -> String {
         const DEFAULT_PORTAL_URL: &str = "http://202.119.81.112:8080";

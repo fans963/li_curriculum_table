@@ -1,46 +1,91 @@
 use crate::api::ocr::DdddOcr;
 use crate::crawler::error::{CrawlerError, CrawlerResult};
-use crate::crawler::model::CrawlerConfig;
+use crate::crawler::model::{CrawlerConfig, PROXY_URL};
+use base64::Engine;
 #[cfg(target_arch = "wasm32")]
 use crate::crawler::model::ProxySession;
-#[cfg(target_arch = "wasm32")]
-use base64::Engine;
 use encoding_rs::GBK;
 use image::load_from_memory;
 use reqwest::{Client, Method};
+use std::sync::atomic::{AtomicU16, Ordering};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-#[cfg(target_arch = "wasm32")]
-const PROXY_URL: &str = "https://www.fans963blog.asia/";
+static PROXY_PORT: AtomicU16 = AtomicU16::new(9999);
+
+pub fn set_proxy_port(port: u16) {
+    PROXY_PORT.store(port, Ordering::SeqCst);
+}
+
+pub fn get_proxy_port() -> u16 {
+    PROXY_PORT.load(Ordering::SeqCst)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NetworkingStrategy {
+    Direct,
+    LocalProxy,
+    VercelFallback,
+    LocalNativeProxy, // Web version uses Native app as local gateway
+}
 
 pub struct SessionManager {
     pub client: Client,
     pub config: CrawlerConfig,
     pub ocr: Arc<DdddOcr>,
     pub login_lock: Mutex<()>,
+    pub strategy: NetworkingStrategy,
     #[cfg(target_arch = "wasm32")]
     pub session: Arc<std::sync::Mutex<ProxySession>>,
 }
 
 impl SessionManager {
-    pub fn new(ocr: Arc<DdddOcr>) -> Self {
-        let mut builder = Client::builder();
-
+    pub async fn new(ocr: Arc<DdddOcr>) -> Self {
+        #[cfg(target_arch = "wasm32")]
+        let mut strategy: NetworkingStrategy = NetworkingStrategy::VercelFallback;
         #[cfg(not(target_arch = "wasm32"))]
+        let strategy: NetworkingStrategy;
+
+        let builder = Client::builder();
+
+        #[cfg(target_arch = "wasm32")]
         {
-            builder = builder
-                .cookie_store(true)
-                .redirect(reqwest::redirect::Policy::limited(10));
+            // Web Discovery: Try to find local native proxy server using a one-off client
+            let port = get_proxy_port();
+            let local_discovery_url = format!("http://localhost:{}/status", port);
+            log::info!("Web: Probing for local native proxy at {}...", local_discovery_url);
+            
+            let probe_client = reqwest::Client::builder().build().unwrap_or_default();
+            if let Ok(resp) = probe_client.get(local_discovery_url).send().await {
+                if resp.status().is_success() {
+                    log::info!("Web: Local native proxy discovered! Switching to hyper-speed mode.");
+                    strategy = NetworkingStrategy::LocalNativeProxy;
+                }
+            }
         }
 
-        let client = builder.build().unwrap();
+        #[cfg(not(target_arch = "wasm32"))]
+        let builder = {
+            let b = builder
+                .cookie_store(true)
+                .redirect(reqwest::redirect::Policy::limited(10));
+            
+            // Native always uses Direct because it IS the gateway.
+            // Standard HTTP Proxy support can be added as an explicit setting later if needed.
+            strategy = NetworkingStrategy::Direct;
+            log::info!("[V8] Native mode: Using Direct connection.");
+            b
+        };
+
+        let client = builder.build().unwrap_or_default();
+        println!("Crawler: SessionManager initialized. Strategy: {:?}, Port: {}", strategy, get_proxy_port());
 
         Self {
             client,
             config: CrawlerConfig::default(),
             ocr,
             login_lock: Mutex::new(()),
+            strategy,
             #[cfg(target_arch = "wasm32")]
             session: Arc::new(std::sync::Mutex::new(ProxySession::default())),
         }
@@ -124,6 +169,7 @@ impl SessionManager {
         referer: Option<&str>,
     ) -> CrawlerResult<Vec<u8>> {
         let wrapped_url = self.wrap_url(url);
+        println!("Crawler: [Request] {} -> {}", url, wrapped_url);
 
         let mut headers = reqwest::header::HeaderMap::new();
         let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
@@ -154,42 +200,50 @@ impl SessionManager {
             }
         }
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            // Bypassing browser 'Forbidden Header' restrictions for 'Cookie' and 'Referer'
-            // by using custom X-Proxy-* headers which the proxy then maps to standard headers.
-            let session = self.session.lock().unwrap();
+        if self.strategy == NetworkingStrategy::VercelFallback || self.strategy == NetworkingStrategy::LocalNativeProxy {
+            #[cfg(target_arch = "wasm32")]
+            {
+                // Bypassing browser 'Forbidden Header' restrictions for 'Cookie' and 'Referer'
+                // by using custom X-Proxy-* headers which the proxy then maps to standard headers.
+                
+                // For LocalNativeProxy, we don't necessarily need to manually manage cookies here 
+                // if the Native side handles them, but forwarding them doesn't hurt.
+                if self.strategy == NetworkingStrategy::VercelFallback {
+                    let session = self.session.lock().unwrap();
 
-            let is_9080 = url.contains(":9080");
-            let cookie_val = if is_9080 {
-                if !session.jsession9080.is_empty() {
-                    Some(&session.jsession9080)
-                } else {
-                    Some(&session.jsession8080)
+                    let is_9080 = url.contains(":9080");
+                    let cookie_val = if is_9080 {
+                        if !session.jsession9080.is_empty() {
+                            Some(&session.jsession9080)
+                        } else {
+                            Some(&session.jsession8080)
+                        }
+                    } else {
+                        Some(&session.jsession8080)
+                    };
+
+                    if let Some(val) = cookie_val {
+                        if !val.is_empty() {
+                            req_builder =
+                                req_builder.header("X-Proxy-Cookie", format!("JSESSIONID={}", val));
+                        }
+                    }
                 }
-            } else {
-                Some(&session.jsession8080)
-            };
 
-            if let Some(val) = cookie_val {
-                if !val.is_empty() {
-                    req_builder =
-                        req_builder.header("X-Proxy-Cookie", format!("JSESSIONID={}", val));
+                if let Some(ref_val) = referer {
+                    req_builder = req_builder.header("X-Proxy-Referer", ref_val);
                 }
-            }
 
-            if let Some(ref_val) = referer {
-                req_builder = req_builder.header("X-Proxy-Referer", ref_val);
+                req_builder = req_builder.fetch_credentials_include();
             }
-
-            req_builder = req_builder.fetch_credentials_include();
         }
 
         let resp = req_builder.send().await?;
+        let status = resp.status();
+        println!("Crawler: [Response] status: {}, url: {}", status, resp.url());
 
-        #[cfg(target_arch = "wasm32")]
-        {
-            // Extract server-side logs from custom header if present
+        // Extract server-side logs from custom header if present (Both WASM and Fallback Native)
+        if self.strategy == NetworkingStrategy::VercelFallback {
             if let Some(logs_b64) = resp.headers().get("X-Proxy-Logs") {
                 if let Ok(logs_str) = logs_b64.to_str() {
                     let decoded: Result<Vec<u8>, _> =
@@ -207,6 +261,7 @@ impl SessionManager {
         }
 
         let bytes = resp.bytes().await?.to_vec();
+        println!("Crawler: [Data] received {} bytes", bytes.len());
         Ok(bytes)
     }
 
@@ -228,8 +283,7 @@ impl SessionManager {
     }
 
     async fn get_captcha(&self) -> CrawlerResult<Vec<u8>> {
-        #[cfg(target_arch = "wasm32")]
-        {
+        if self.strategy == NetworkingStrategy::VercelFallback {
             let api_url = format!("{}api/session/start", PROXY_URL);
             let payload = serde_json::json!({
                 "loginBaseUrl": self.config.get_portal_url()
@@ -239,27 +293,29 @@ impl SessionManager {
             let json: serde_json::Value = resp.json().await?;
 
             let captcha_b64 = json["captchaBase64"].as_str().unwrap_or("");
-            let session_json =
-                serde_json::from_value::<ProxySession>(json["session"].clone()).unwrap_or_default();
-
-            *self.session.lock().unwrap() = session_json;
+            
+            #[cfg(target_arch = "wasm32")]
+            {
+                let session_json =
+                    serde_json::from_value::<ProxySession>(json["session"].clone()).unwrap_or_default();
+                *self.session.lock().unwrap() = session_json;
+            }
 
             use base64::Engine;
             let bytes = base64::engine::general_purpose::STANDARD
                 .decode(captcha_b64)
                 .map_err(|e| CrawlerError::Ocr(format!("Base64 decode failed: {}", e)))?;
             Ok(bytes)
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
+        } else {
             let portal_url = self.config.get_portal_url();
             let init_url = format!("{}/Logon.do?method=logonurl", portal_url);
             let _ = self.fetch_raw(&init_url, Method::GET, None, None).await?;
 
             let captcha_url = format!("{}/verifycode.servlet", portal_url);
             let resp = self
-                .fetch_raw(&captcha_url, Method::GET, None, None)
-                .await?;
+                 .fetch_raw(&captcha_url, Method::GET, None, None)
+                 .await?;
+            println!("Crawler: Captcha fetched, length: {}", resp.len());
             Ok(resp)
         }
     }
@@ -270,10 +326,13 @@ impl SessionManager {
         password: &str,
         verify_code: &str,
     ) -> CrawlerResult<String> {
-        #[cfg(target_arch = "wasm32")]
-        {
+        if self.strategy == NetworkingStrategy::VercelFallback {
             let api_url = format!("{}api/session/submit", PROXY_URL);
+            
+            #[cfg(target_arch = "wasm32")]
             let session = self.session.lock().unwrap().clone();
+            #[cfg(not(target_arch = "wasm32"))]
+            let session = crate::crawler::model::ProxySession::default();
 
             let payload = serde_json::json!({
                 "username": username,
@@ -300,11 +359,14 @@ impl SessionManager {
                 log::info!("[PROXY] session={}", sess);
             }
 
-            // Update local session from proxy response
-            if let Ok(new_session) = serde_json::from_value::<crate::crawler::model::ProxySession>(
-                json["session"].clone(),
-            ) {
-                *self.session.lock().unwrap() = new_session;
+            // Update local session from proxy response (WASM only uses this for now)
+            #[cfg(target_arch = "wasm32")]
+            {
+                if let Ok(new_session) = serde_json::from_value::<crate::crawler::model::ProxySession>(
+                    json["session"].clone(),
+                ) {
+                    *self.session.lock().unwrap() = new_session;
+                }
             }
 
             let html_b64 = json["html"].as_str().unwrap_or("");
@@ -331,9 +393,7 @@ impl SessionManager {
                 &text[..text.len().min(200)]
             );
             Ok(text)
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
+        } else {
             let portal_url = self.config.get_portal_url();
             let logon_url = format!("{}/Logon.do?method=logon", portal_url);
             let init_url = format!("{}/Logon.do?method=logonurl", portal_url);
@@ -355,14 +415,17 @@ impl SessionManager {
     }
 
     fn wrap_url(&self, url: &str) -> String {
-        #[cfg(target_arch = "wasm32")]
-        {
-            let encoded: String = url::form_urlencoded::byte_serialize(url.as_bytes()).collect();
-            format!("{}?url={}", PROXY_URL, encoded)
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            url.to_string()
+        match self.strategy {
+            NetworkingStrategy::VercelFallback => {
+                let encoded: String = url::form_urlencoded::byte_serialize(url.as_bytes()).collect();
+                format!("{}?url={}", PROXY_URL, encoded)
+            }
+            NetworkingStrategy::LocalNativeProxy => {
+                let port = get_proxy_port();
+                let encoded: String = url::form_urlencoded::byte_serialize(url.as_bytes()).collect();
+                format!("http://localhost:{}/proxy?url={}", port, encoded)
+            }
+            _ => url.to_string(),
         }
     }
 }
