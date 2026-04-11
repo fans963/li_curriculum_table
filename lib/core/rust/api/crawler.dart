@@ -10,7 +10,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<ArcDdddOcr> getOcrEngine() =>
     RustLib.instance.api.crateApiCrawlerGetOcrEngine();
 
-void initOcrEngine({required List<int> modelBytes}) =>
+Future<void> initOcrEngine({required List<int> modelBytes}) =>
     RustLib.instance.api.crateApiCrawlerInitOcrEngine(modelBytes: modelBytes);
 
 Future<TimetableRecord> fetchTimetableData(

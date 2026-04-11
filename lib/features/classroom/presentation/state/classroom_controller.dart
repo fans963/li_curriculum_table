@@ -37,7 +37,8 @@ class ClassroomController extends Notifier<ClassroomState> {
   }
 
   Future<void> init() async {
-    await ref.read(ocrInitializerProvider).ensureInitialized();
+    // Proactively ensure OCR is initialized, but do not block tab switching.
+    ref.read(ocrInitializerProvider).ensureInitialized();
     if (state.campuses.isNotEmpty) return;
     await fetchCampuses();
   }
@@ -67,9 +68,14 @@ class ClassroomController extends Notifier<ClassroomState> {
             final result = await repository.getCampuses(forceRefresh: false);
             final (campuses, term) = result;
             if (campuses.isNotEmpty) {
+              final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+              final selection = campuses.any((e) => e.id == lastId)
+                  ? campuses.firstWhere((e) => e.id == lastId)
+                  : campuses.first;
+
               state = state.copyWith(
                 campuses: campuses,
-                selectedCampus: campuses.first,
+                selectedCampus: selection,
                 currentTerm: term,
               );
               await fetchBuildings(forceRefresh: false);
@@ -86,9 +92,14 @@ class ClassroomController extends Notifier<ClassroomState> {
         password: pass,
         forceRefresh: forceRefresh,
       );
+      final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+      final selection = campuses.any((e) => e.id == lastId)
+          ? campuses.firstWhere((e) => e.id == lastId)
+          : (campuses.isNotEmpty ? campuses.first : null);
+
       state = state.copyWith(
         campuses: campuses,
-        selectedCampus: campuses.isNotEmpty ? campuses.first : null,
+        selectedCampus: selection,
         currentTerm: term,
       );
 
@@ -104,6 +115,7 @@ class ClassroomController extends Notifier<ClassroomState> {
 
   Future<void> setCampus(CampusEntity campus) async {
     state = state.copyWith(selectedCampus: campus, buildings: [], selectedBuilding: null, results: []);
+    await ref.read(classroomLocalDataSourceProvider).saveLastCampusId(campus.id);
     await fetchBuildings();
   }
 
@@ -121,13 +133,21 @@ class ClassroomController extends Notifier<ClassroomState> {
         password: pass,
         forceRefresh: forceRefresh,
       );
+
+      final lastBId = await ref.read(classroomLocalDataSourceProvider).readLastBuildingId();
+      final selection = buildings.any((e) => e.id == lastBId)
+          ? buildings.firstWhere((e) => e.id == lastBId)
+          : (buildings.isNotEmpty ? buildings.first : null);
+
       state = state.copyWith(
         buildings: buildings,
-        selectedBuilding: buildings.isNotEmpty ? (forceRefresh ? buildings.first : (state.selectedBuilding ?? buildings.first)) : null,
+        selectedBuilding: (forceRefresh || state.selectedBuilding == null) 
+            ? selection 
+            : state.selectedBuilding,
         isLoading: false,
       );
 
-      if (buildings.isNotEmpty) {
+      if (state.selectedBuilding != null) {
         await fetchAvailability(forceRefresh: forceRefresh);
       }
     } catch (e) {
@@ -137,6 +157,7 @@ class ClassroomController extends Notifier<ClassroomState> {
 
   void selectBuilding(BuildingEntity building) {
     state = state.copyWith(selectedBuilding: building);
+    ref.read(classroomLocalDataSourceProvider).saveLastBuildingId(building.id);
     fetchAvailability();
   }
 

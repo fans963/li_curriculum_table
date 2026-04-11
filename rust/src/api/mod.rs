@@ -1,4 +1,5 @@
-pub mod simple;
-pub mod ocr;
-pub mod crawler;
 pub mod classroom;
+pub mod crawler;
+pub mod grade;
+pub mod ocr;
+pub mod simple;

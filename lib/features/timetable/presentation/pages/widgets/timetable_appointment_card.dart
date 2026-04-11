@@ -1,151 +1,193 @@
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
+import 'package:li_curriculum_table/util/util.dart';
 
 Widget buildTimetableAppointmentCard({
   required BuildContext context,
   required CourseOccurrence occurrence,
   required DateTime now,
 }) {
-  final isOngoing =
-      !now.isBefore(occurrence.start) && now.isBefore(occurrence.end);
-
-  final title = occurrence.courseName;
-  final timeLine = _formatOccurrenceTimeRange(occurrence);
-  final locationLine = occurrence.location.trim();
-  final tone = resolveAppointmentTone(
-    Theme.of(context).colorScheme,
-    seedText: title,
+  return _AnimatedAppointmentCard(
+    occurrence: occurrence,
+    now: now,
   );
+}
 
-  return Padding(
-    padding: const EdgeInsets.all(1.5),
-    child: GestureDetector(
-      onTap: () {
-        _showDetailsBottomSheet(context, occurrence, tone, isOngoing, timeLine);
-      },
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-        DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                if (isOngoing)
-                  Color.alphaBlend(
-                    tone.accent.withValues(alpha: 0.14),
-                    tone.background,
-                  )
-                else
-                  tone.background,
-                if (isOngoing)
-                  Color.alphaBlend(
-                    tone.accent.withValues(alpha: 0.08),
-                    tone.backgroundAlt,
-                  )
-                else
-                  tone.backgroundAlt,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isOngoing ? tone.accent : tone.border,
-              width: isOngoing ? 1.4 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: isOngoing
-                    ? tone.accent.withValues(alpha: 0.22)
-                    : tone.shadow,
-                blurRadius: isOngoing ? 14 : 10,
-                offset: isOngoing ? const Offset(0, 4) : const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
+class _AnimatedAppointmentCard extends StatefulWidget {
+  final CourseOccurrence occurrence;
+  final DateTime now;
+
+  const _AnimatedAppointmentCard({
+    required this.occurrence,
+    required this.now,
+  });
+
+  @override
+  State<_AnimatedAppointmentCard> createState() => _AnimatedAppointmentCardState();
+}
+
+class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final occurrence = widget.occurrence;
+    final now = widget.now;
+    final isOngoing = !now.isBefore(occurrence.start) && now.isBefore(occurrence.end);
+
+    final title = occurrence.courseName;
+    final timeLine = _formatOccurrenceTimeRange(occurrence);
+    final locationLine = occurrence.location.trim();
+    final tone = resolveAppointmentTone(
+      Theme.of(context).colorScheme,
+      seedText: title,
+    );
+
+    return Padding(
+      padding: const EdgeInsets.all(1.5),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        onTap: () {
+          _showDetailsBottomSheet(context, occurrence, tone, isOngoing, timeLine);
+        },
+        child: AnimatedScale(
+          scale: _isPressed ? 0.96 : 1.0,
+          duration: const Duration(milliseconds: 150),
+          curve: Curves.easeOutCubic,
+          child: Stack(
+            clipBehavior: Clip.none,
             children: [
-              Container(
-                width: isOngoing ? 5 : 4,
+              AnimatedContainer(
+                duration: kDefaultAnimationDuration,
+                curve: kDefaultAnimationCurve,
                 decoration: BoxDecoration(
-                  color: tone.accent,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(12),
-                    bottomLeft: Radius.circular(12),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AutoSizeText(
-                        title,
-                        maxLines: 2,
-                        minFontSize: 8,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: tone.foreground,
-                          fontWeight: FontWeight.w700,
-                          height: 1.15,
-                        ),
-                      ),
-                      if (locationLine.isNotEmpty) ...[
-                        const SizedBox(height: 1),
-                        AutoSizeText(
-                          locationLine,
-                          maxLines: 1,
-                          minFontSize: 8,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: tone.foreground.withValues(alpha: 0.84),
-                                fontWeight: FontWeight.w500,
-                                height: 1.15,
-                              ),
-                        ),
-                      ],
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      if (isOngoing)
+                        Color.alphaBlend(
+                          tone.accent.withValues(alpha: 0.14),
+                          tone.background,
+                        )
+                      else
+                        tone.background,
+                      if (isOngoing)
+                        Color.alphaBlend(
+                          tone.accent.withValues(alpha: 0.08),
+                          tone.backgroundAlt,
+                        )
+                      else
+                        tone.backgroundAlt,
                     ],
                   ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isOngoing ? tone.accent : tone.border,
+                    width: isOngoing ? 1.4 : 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: isOngoing
+                          ? tone.accent.withValues(alpha: 0.22)
+                          : tone.shadow.withValues(alpha: _isPressed ? 0.05 : 0.08),
+                      blurRadius: isOngoing ? 14 : (_isPressed ? 6 : 10),
+                      offset: isOngoing ? const Offset(0, 4) : (_isPressed ? const Offset(0, 1) : const Offset(0, 3)),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    AnimatedContainer(
+                      duration: kDefaultAnimationDuration,
+                      curve: kDefaultAnimationCurve,
+                      width: isOngoing ? 5 : 4,
+                      decoration: BoxDecoration(
+                        color: tone.accent,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(12),
+                          bottomLeft: Radius.circular(12),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AutoSizeText(
+                              title,
+                              maxLines: 2,
+                              minFontSize: 8,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: tone.foreground,
+                                fontWeight: FontWeight.w700,
+                                height: 1.15,
+                              ),
+                            ),
+                            if (locationLine.isNotEmpty) ...[
+                              const SizedBox(height: 1),
+                              AutoSizeText(
+                                locationLine,
+                                maxLines: 1,
+                                minFontSize: 8,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: tone.foreground.withValues(alpha: 0.84),
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.15,
+                                    ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              if (isOngoing)
+                Positioned(
+                  top: -7,
+                  right: 6,
+                  child: AnimatedOpacity(
+                    duration: kDefaultAnimationDuration,
+                    opacity: 1.0,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: tone.accent,
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: tone.accent.withValues(alpha: 0.35),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        '进行中',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: tone.foreground,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
-        if (isOngoing)
-          Positioned(
-            top: -7,
-            right: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: tone.accent,
-                borderRadius: BorderRadius.circular(999),
-                boxShadow: [
-                  BoxShadow(
-                    color: tone.accent.withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Text(
-                '进行中',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: tone.foreground,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.2,
-                ),
-              ),
-            ),
-          ),
-      ],
-    ),
-    ),
-  );
+      ),
+    );
+  }
 }
 
 void _showDetailsBottomSheet(
@@ -246,10 +288,8 @@ class AppointmentTone {
 
 String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
   String twoDigits(int value) => value.toString().padLeft(2, '0');
-  final start =
-      '${twoDigits(occurrence.start.hour)}:${twoDigits(occurrence.start.minute)}';
-  final end =
-      '${twoDigits(occurrence.end.hour)}:${twoDigits(occurrence.end.minute)}';
+  final start = '${twoDigits(occurrence.start.hour)}:${twoDigits(occurrence.start.minute)}';
+  final end = '${twoDigits(occurrence.end.hour)}:${twoDigits(occurrence.end.minute)}';
   return '$start-$end';
 }
 

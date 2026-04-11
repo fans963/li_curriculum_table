@@ -247,4 +247,24 @@ class TimetableController extends Notifier<TimetableUiState> {
       state = state.copyWith(isLoading: false, status: message);
     }
   }
+
+  Future<void> clearAllCache() async {
+    state = state.copyWith(isLoading: true, status: '正在清除缓存...');
+
+    // 1. Clear all data in secure storage EXCEPT credentials
+    final store = ref.read(secureStorageStoreProvider);
+    await store.deleteAllExcept([
+      'timetable.credentials.username',
+      'timetable.credentials.password',
+    ]);
+
+    // 2. Reset internal state
+    state = TimetableUiState.initial().copyWith(
+      needsLogin: false, // Assume we keep credentials
+      status: '缓存已清除。',
+    );
+
+    // 3. Invalidate other relevant providers (if they were already providing data)
+    // ref.invalidate(classroomControllerProvider); 
+  }
 }

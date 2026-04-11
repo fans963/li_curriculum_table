@@ -1,13 +1,19 @@
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
 import 'package:li_curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await RustLib.init();
+
+  // Hide system status bar for a more unified look on mobile
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
   if (isDesktop) {
     await windowManager.ensureInitialized();
 
@@ -23,5 +29,15 @@ Future<void> main() async {
       await windowManager.focus();
     });
   }
-  runApp(const ProviderScope(child: CurriculumTableApp()));
+
+  final container = ProviderContainer();
+  // Start loading OCR engine immediately in background
+  container.read(ocrInitializerProvider).ensureInitialized();
+
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const CurriculumTableApp(),
+    ),
+  );
 }

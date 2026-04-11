@@ -1,7 +1,9 @@
-use crate::crawler::core::SessionManager;
-use crate::crawler::services::classroom::ClassroomService;
-use crate::crawler::model::{Building, Campus, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::api::crawler::get_ocr_engine;
+use crate::crawler::core::SessionManager;
+use crate::crawler::model::{
+    Building, CampusPageData, ClassroomAvailability, ClassroomSchedule,
+};
+use crate::crawler::services::classroom::ClassroomService;
 use anyhow::Result;
 use std::sync::Arc;
 
@@ -11,15 +13,17 @@ pub async fn get_campuses(
 ) -> Result<CampusPageData> {
     let ocr = get_ocr_engine().await?;
     let session = Arc::new(SessionManager::new(ocr));
-    
+
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
     }
 
     let service = ClassroomService::new(session);
-    let data = service.get_campuses().await
+    let data = service
+        .get_campuses()
+        .await
         .map_err(|e| anyhow::anyhow!("Failed to fetch campuses: {}", e))?;
-    
+
     Ok(data)
 }
 
@@ -30,15 +34,17 @@ pub async fn get_buildings(
 ) -> Result<Vec<Building>> {
     let ocr = get_ocr_engine().await?;
     let session = Arc::new(SessionManager::new(ocr));
-    
+
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
     }
 
     let service = ClassroomService::new(session);
-    let buildings = service.get_buildings(&campus_id).await
+    let buildings = service
+        .get_buildings(&campus_id)
+        .await
         .map_err(|e| anyhow::anyhow!("Failed to fetch buildings: {}", e))?;
-    
+
     Ok(buildings)
 }
 
@@ -53,15 +59,17 @@ pub async fn get_classroom_availability(
 ) -> Result<Vec<ClassroomAvailability>> {
     let ocr = get_ocr_engine().await?;
     let session = Arc::new(SessionManager::new(ocr));
-    
+
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
     }
- 
+
     let service = ClassroomService::new(session);
-    let availability = service.get_classroom_availability(&campus_id, &building_id, week, weekday, &term).await
+    let availability = service
+        .get_classroom_availability(&campus_id, &building_id, week, weekday, &term)
+        .await
         .map_err(|e| anyhow::anyhow!("Failed to fetch classroom availability: {}", e))?;
-    
+
     Ok(availability)
 }
 
@@ -74,15 +82,16 @@ pub async fn get_building_schedule(
 ) -> Result<Vec<ClassroomSchedule>> {
     let ocr = get_ocr_engine().await?;
     let session = Arc::new(SessionManager::new(ocr));
-    
+
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
     }
- 
+
     let service = ClassroomService::new(session);
-    let schedules = service.get_building_schedule(&campus_id, &building_id, &term).await
+    let schedules = service
+        .get_building_schedule(&campus_id, &building_id, &term)
+        .await
         .map_err(|e| anyhow::anyhow!("Failed to fetch building schedule: {}", e))?;
-    
+
     Ok(schedules)
 }
-

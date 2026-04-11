@@ -6,6 +6,7 @@ import 'package:li_curriculum_table/features/classroom/domain/models/campus.dart
 import 'package:li_curriculum_table/features/classroom/domain/models/classroom_availability.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
+import 'package:li_curriculum_table/util/util.dart';
 
 class ClassroomTab extends ConsumerStatefulWidget {
   const ClassroomTab({super.key});
@@ -50,61 +51,70 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
                           .selectDate(date),
                     ),
                     Expanded(
-                      child: CustomScrollView(
-                        physics: const BouncingScrollPhysics(),
-                        slivers: [
-                          SliverToBoxAdapter(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              child: _QueryControlCard(state: state),
-                            ),
-                          ),
-                          if (state.results.isNotEmpty)
-                            SliverToBoxAdapter(
-                              child: Padding(
-                                padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-                                child: Text(
-                                  '* 未出现在列表中的教室本学期系统均无排课',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: colorScheme.outline,
-                                        fontStyle: FontStyle.italic,
+                      child: AnimatedSwitcher(
+                        duration: kDefaultAnimationDuration,
+                        switchInCurve: kDefaultAnimationCurve,
+                        switchOutCurve: kDefaultAnimationCurve,
+                        child: state.isLoading && state.results.isEmpty
+                            ? const Center(key: ValueKey('loading'), child: CircularProgressIndicator())
+                            : CustomScrollView(
+                                key: const ValueKey('results_list'),
+                                physics: const BouncingScrollPhysics(),
+                                slivers: [
+                                  SliverToBoxAdapter(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                                      child: _QueryControlCard(state: state),
+                                    ),
+                                  ),
+                                  if (state.results.isNotEmpty)
+                                    SliverToBoxAdapter(
+                                      child: Padding(
+                                        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                                        child: Text(
+                                          '* 未出现在列表中的教室本学期系统均无排课',
+                                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                color: colorScheme.outline,
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                        ),
                                       ),
-                                ),
-                              ),
-                            ),
-                          const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                                    ),
+                                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-                          SliverPersistentHeader(
-                            pinned: true,
-                            delegate: _SessionHeaderDelegate(colorScheme: colorScheme),
-                          ),
-                          if (state.isLoading && state.results.isEmpty)
-                            const SliverFillRemaining(
-                              child: Center(child: CircularProgressIndicator()),
-                            )
-                          else if (state.needsLogin)
-                            SliverFillRemaining(
-                              child: _NeedsLoginView(
-                                onRetry: () => ref
-                                    .read(classroomControllerProvider.notifier)
-                                    .fetchCampuses(forceRefresh: true),
+                                  SliverPersistentHeader(
+                                    pinned: true,
+                                    delegate: _SessionHeaderDelegate(colorScheme: colorScheme),
+                                  ),
+                                  if (state.needsLogin)
+                                    SliverFillRemaining(
+                                      child: _NeedsLoginView(
+                                        onRetry: () => ref
+                                            .read(classroomControllerProvider.notifier)
+                                            .fetchCampuses(forceRefresh: true),
+                                      ),
+                                    )
+                                  else if (state.error != null)
+                                    SliverFillRemaining(
+                                      child: _ErrorView(
+                                        message: state.error!,
+                                        onRetry: () => ref
+                                            .read(classroomControllerProvider.notifier)
+                                            .fetchAvailability(),
+                                      ),
+                                    )
+                                  else if (state.results.isEmpty)
+                                    const SliverFillRemaining(
+                                      hasScrollBody: false,
+                                      child: Center(child: Text('暂无搜索结果')),
+                                    )
+                                  else
+                                    SliverPadding(
+                                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                                      sliver: _ClassroomSliverList(results: state.results),
+                                    ),
+                                ],
                               ),
-                            )
-                          else if (state.error != null)
-                            SliverFillRemaining(
-                              child: _ErrorView(
-                                message: state.error!,
-                                onRetry: () => ref
-                                    .read(classroomControllerProvider.notifier)
-                                    .fetchAvailability(),
-                              ),
-                            )
-                          else
-                            SliverPadding(
-                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                              sliver: _ClassroomSliverList(results: state.results),
-                            ),
-                        ],
                       ),
                     ),
                   ],
@@ -375,7 +385,7 @@ class _SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
           ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
           Expanded(
@@ -388,7 +398,7 @@ class _SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
             ),
           ),
           ...sessions.map((s) => SizedBox(
-                width: 56,
+                width: 52,
                 child: Text(
                   s,
                   textAlign: TextAlign.center,
@@ -467,7 +477,6 @@ class _ClassroomSliverList extends StatelessWidget {
                     final isFree = item.availability[sIdx];
                     return _StatusIndicator(isFree: isFree);
                   }),
-
                 ],
               ),
             ),
@@ -487,19 +496,32 @@ class _StatusIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      width: 48,
-      height: 32,
+      width: 44,
+      height: 28,
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: isFree 
-            ? colorScheme.primaryContainer.withValues(alpha: 0.4) 
-            : colorScheme.errorContainer.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(8),
+            ? colorScheme.primary.withOpacity(0.15) 
+            : colorScheme.error.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isFree 
+              ? colorScheme.primary.withOpacity(0.3) 
+              : colorScheme.error.withOpacity(0.15),
+          width: 1,
+        ),
       ),
-      child: Icon(
-        isFree ? Icons.check_rounded : Icons.close_rounded,
-        size: 18,
-        color: isFree ? colorScheme.primary : colorScheme.error.withValues(alpha: 0.5),
+      child: Center(
+        child: Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isFree 
+                ? colorScheme.primary 
+                : colorScheme.error.withOpacity(0.3),
+          ),
+        ),
       ),
     );
   }

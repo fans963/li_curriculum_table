@@ -60,6 +60,32 @@ pub struct CampusPageData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Grade {
+    pub term: String,
+    #[serde(rename = "courseCode")]
+    pub course_code: String,
+    #[serde(rename = "courseName")]
+    pub course_name: String,
+    pub score: String,
+    #[serde(rename = "scoreMark")]
+    pub score_mark: String,
+    pub credits: f64,
+    #[serde(rename = "totalHours")]
+    pub total_hours: u32,
+    #[serde(rename = "assessmentMethod")]
+    pub assessment_method: String,
+    #[serde(rename = "courseAttribute")]
+    pub course_attribute: String,
+    #[serde(rename = "courseNature")]
+    pub course_nature: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct GradeRecord {
+    pub grades: Vec<Grade>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Building {
     pub id: String,
     pub name: String,
@@ -110,14 +136,17 @@ impl CrawlerConfig {
     }
 
     pub fn get_target_url(&self) -> String {
-        format!("{}/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL", self.get_base_url())
+        format!(
+            "{}/xskb/xskb_list.do?Ves632DSdyV=NEW_XSD_PYGL",
+            self.get_base_url()
+        )
     }
 }
 
 impl Default for CrawlerConfig {
     fn default() -> Self {
         Self {
-            login_url: "".to_string(), 
+            login_url: "".to_string(),
             target_url: "".to_string(),
         }
     }

@@ -1,5 +1,8 @@
 use crate::crawler::error::{CrawlerError, CrawlerResult};
-use crate::crawler::model::{Campus, CourseRow, KbtableWeekHint, TimeSlot, TimetableRecord, ClassroomSchedule, OccupiedSlot};
+use crate::crawler::model::{
+    Campus, ClassroomSchedule, CourseRow, Grade, GradeRecord, KbtableWeekHint,
+    OccupiedSlot, TimeSlot, TimetableRecord,
+};
 use regex::Regex;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
@@ -16,13 +19,11 @@ static BULK_WEEK_REG: LazyLock<Regex> = LazyLock::new(|| {
     Regex::new(r"\((\d+(?:\s*-\s*\d+)?(?:\s*,\s*\d+(?:\s*-\s*\d+)?)*)周\)").unwrap()
 });
 
-
-static WEEK_RANGE_REG: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(\d{1,2})").unwrap()
-});
+static WEEK_RANGE_REG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(\d{1,2})").unwrap());
 
 static NOBR_SELECTOR: LazyLock<Selector> = LazyLock::new(|| Selector::parse("nobr").unwrap());
-static KB_CONTENT_SELECTOR: LazyLock<Selector> = LazyLock::new(|| Selector::parse("div.kbcontent1").unwrap());
+static KB_CONTENT_SELECTOR: LazyLock<Selector> =
+    LazyLock::new(|| Selector::parse("div.kbcontent1").unwrap());
 
 pub fn parse_and_process_timetable(html_content: &str) -> CrawlerResult<TimetableRecord> {
     let document = Html::parse_document(html_content);
@@ -212,11 +213,11 @@ fn merge_week_hints_into_rows(rows: Vec<CourseRow>, hints: Vec<KbtableWeekHint>)
         for i in 0..raw_slots.len() {
             let matched = &final_matched_hints[i];
             let raw_slot = &raw_slots[i];
-            
+
             if matched.is_empty() {
                 merged_parts.push(slot_texts[i].clone());
                 // If no week hint, use an empty week text or try to parse from raw text if possible
-                // (Usually raw rows have their own week info sometimes? 
+                // (Usually raw rows have their own week info sometimes?
                 // In this app, week hints from #kbtable are primary)
                 structured_slots.push(TimeSlot {
                     weekday: raw_slot.weekday,
@@ -229,7 +230,7 @@ fn merge_week_hints_into_rows(rows: Vec<CourseRow>, hints: Vec<KbtableWeekHint>)
             } else {
                 for week_text in matched {
                     merged_parts.push(format!("{} {}", week_text, slot_texts[i]));
-                    
+
                     let (sw, ew) = parse_week_range(week_text);
                     structured_slots.push(TimeSlot {
                         weekday: raw_slot.weekday,
@@ -272,10 +273,11 @@ fn parse_course_time_slots(time_text: &str) -> Vec<RawParsedSlot> {
 }
 
 fn parse_week_range(week_text: &str) -> (u32, u32) {
-    let nums: Vec<u32> = WEEK_RANGE_REG.find_iter(week_text)
+    let nums: Vec<u32> = WEEK_RANGE_REG
+        .find_iter(week_text)
         .filter_map(|m| m.as_str().parse::<u32>().ok())
         .collect();
-    
+
     if nums.is_empty() {
         (0, 0)
     } else if nums.len() == 1 {
@@ -356,10 +358,14 @@ fn normalize_cell_text(html: &str) -> String {
         .to_string()
 }
 
-pub fn parse_classroom_availability(html: &str, target_weekday: u32) -> CrawlerResult<HashMap<String, bool>> {
+pub fn parse_classroom_availability(
+    html: &str,
+    target_weekday: u32,
+) -> CrawlerResult<HashMap<String, bool>> {
     let document = Html::parse_document(html);
-    let table_selector = Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
-    
+    let table_selector =
+        Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+
     let table = match document.select(&table_selector).next() {
         Some(t) => t,
         None => return Err(CrawlerError::Parse("Table #kbtable not found".to_string())),
@@ -390,7 +396,7 @@ pub fn parse_classroom_availability(html: &str, target_weekday: u32) -> CrawlerR
 
         // Target weekday column (1-7)
         let target_td = &tds[target_weekday as usize];
-        
+
         // If it contains div.kbcontent1, it's occupied.
         let is_occupied = target_td.select(&KB_CONTENT_SELECTOR).next().is_some();
         map.insert(classroom_name, !is_occupied);
@@ -401,8 +407,9 @@ pub fn parse_classroom_availability(html: &str, target_weekday: u32) -> CrawlerR
 
 pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedule>> {
     let document = Html::parse_document(html);
-    let table_selector = Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
-    
+    let table_selector =
+        Selector::parse("table#kbtable").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+
     let table = match document.select(&table_selector).next() {
         Some(t) => t,
         None => return Err(CrawlerError::Parse("Table #kbtable not found".to_string())),
@@ -416,7 +423,8 @@ pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedul
     // Skip header rows (usually 2 rows)
     for tr in table.select(&tr_selector).skip(2) {
         let tds: Vec<_> = tr.select(&td_selector).collect();
-        if tds.len() < 36 { // 1 (name) + 35 (7 days * 5 slots)
+        if tds.len() < 36 {
+            // 1 (name) + 35 (7 days * 5 slots)
             continue;
         }
 
@@ -437,7 +445,7 @@ pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedul
             for slot_idx in 0..5 {
                 let cell_idx = 1 + day_idx * 5 + slot_idx;
                 let target_td = &tds[cell_idx];
-                
+
                 for div in target_td.select(&KB_CONTENT_SELECTOR) {
                     let cell_html = div.inner_html();
                     let cell_text = normalize_cell_text(&cell_html);
@@ -467,7 +475,6 @@ pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedul
             }
         }
 
-
         schedules.push(ClassroomSchedule {
             classroom_name,
             occupied_slots,
@@ -479,12 +486,17 @@ pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedul
 
 pub fn parse_campuses(html: &str) -> CrawlerResult<crate::crawler::model::CampusPageData> {
     let document = Html::parse_document(html);
-    let select_selector = Selector::parse("select[name='xqid']").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    let select_selector =
+        Selector::parse("select[name='xqid']").map_err(|e| CrawlerError::Parse(e.to_string()))?;
     let option_selector = Selector::parse("option").unwrap();
 
     let select = match document.select(&select_selector).next() {
         Some(s) => s,
-        None => return Err(CrawlerError::Parse("Select[name='xqid'] not found".to_string())),
+        None => {
+            return Err(CrawlerError::Parse(
+                "Select[name='xqid'] not found".to_string(),
+            ))
+        }
     };
 
     let mut campuses = vec![];
@@ -517,4 +529,74 @@ fn parse_selected_term(document: &Html) -> String {
         .and_then(|opt| opt.value().attr("value"))
         .unwrap_or_default()
         .to_string()
+}
+
+pub fn parse_grades(html: &str) -> CrawlerResult<GradeRecord> {
+    let document = Html::parse_document(html);
+    let table_selector =
+        Selector::parse("table#dataList").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    let row_selector = Selector::parse("tr").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+
+    let mut grades = Vec::new();
+
+    if let Some(table) = document.select(&table_selector).next() {
+        // Skip header row
+        for row in table.select(&row_selector).skip(1) {
+            let cells: Vec<_> = row.select(&Selector::parse("td").unwrap()).collect();
+            if cells.len() < 11 {
+                continue;
+            }
+
+            let grade = Grade {
+                term: cells[1].text().collect::<String>().trim().to_string(),
+                course_code: cells[2].text().collect::<String>().trim().to_string(),
+                course_name: cells[3].text().collect::<String>().trim().to_string(),
+                score: cells[4].text().collect::<String>().trim().to_string(),
+                score_mark: cells[5].text().collect::<String>().trim().to_string(),
+                credits: cells[6]
+                    .text()
+                    .collect::<String>()
+                    .trim()
+                    .parse::<f64>()
+                    .unwrap_or(0.0),
+                total_hours: cells[7]
+                    .text()
+                    .collect::<String>()
+                    .trim()
+                    .parse::<u32>()
+                    .unwrap_or(0),
+                assessment_method: cells[8].text().collect::<String>().trim().to_string(),
+                course_attribute: cells[9].text().collect::<String>().trim().to_string(),
+                course_nature: cells[10].text().collect::<String>().trim().to_string(),
+            };
+
+            if !grade.course_name.is_empty() {
+                grades.push(grade);
+            }
+        }
+    }
+
+    Ok(GradeRecord { grades })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_parse_grades_real_data() {
+        let html =
+            fs::read_to_string("/home/fan/workspace/flutter/curriculum_table/cjcx_list").unwrap();
+        let record = parse_grades(&html).unwrap();
+
+        assert!(!record.grades.is_empty());
+        println!("Parsed {} grades", record.grades.len());
+
+        // Verify first row based on cjcx_list content
+        let first = &record.grades[0];
+        assert_eq!(first.course_name, "劳动教育理论");
+        assert_eq!(first.score, "优");
+        assert_eq!(first.credits, 0.5);
+    }
 }

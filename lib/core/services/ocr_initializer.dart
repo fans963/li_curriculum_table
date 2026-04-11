@@ -21,7 +21,8 @@ class OcrInitializer {
     if (_ref.read(ocrInitializedProvider)) return;
 
     final ByteData modelData = await rootBundle.load('assets/models/common_pruned.onnx');
-    initOcrEngine(modelBytes: modelData.buffer.asUint8List());
+    await initOcrEngine(modelBytes: modelData.buffer.asUint8List());
+
     _ref.read(ocrInitializedProvider.notifier).setInitialized(true);
   }
 }

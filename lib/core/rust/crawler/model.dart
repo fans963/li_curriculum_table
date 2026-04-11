@@ -167,6 +167,61 @@ class CourseRow {
           slots == other.slots;
 }
 
+class Grade {
+  final String term;
+  final String courseCode;
+  final String courseName;
+  final String score;
+  final String scoreMark;
+  final double credits;
+  final int totalHours;
+  final String assessmentMethod;
+  final String courseAttribute;
+  final String courseNature;
+
+  const Grade({
+    required this.term,
+    required this.courseCode,
+    required this.courseName,
+    required this.score,
+    required this.scoreMark,
+    required this.credits,
+    required this.totalHours,
+    required this.assessmentMethod,
+    required this.courseAttribute,
+    required this.courseNature,
+  });
+
+  @override
+  int get hashCode =>
+      term.hashCode ^
+      courseCode.hashCode ^
+      courseName.hashCode ^
+      score.hashCode ^
+      scoreMark.hashCode ^
+      credits.hashCode ^
+      totalHours.hashCode ^
+      assessmentMethod.hashCode ^
+      courseAttribute.hashCode ^
+      courseNature.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Grade &&
+          runtimeType == other.runtimeType &&
+          term == other.term &&
+          courseCode == other.courseCode &&
+          courseName == other.courseName &&
+          score == other.score &&
+          scoreMark == other.scoreMark &&
+          credits == other.credits &&
+          totalHours == other.totalHours &&
+          assessmentMethod == other.assessmentMethod &&
+          courseAttribute == other.courseAttribute &&
+          courseNature == other.courseNature;
+}
+
 class OccupiedSlot {
   final int startWeek;
   final int endWeek;

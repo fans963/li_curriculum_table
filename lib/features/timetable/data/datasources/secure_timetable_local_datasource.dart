@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:isolate';
 
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/cached_timetable.dart';
@@ -25,30 +26,34 @@ class SecureTimetableLocalDataSource {
       return null;
     }
 
-    final decoded = jsonDecode(rowsJson);
-    if (decoded is! List) {
-      return null;
-    }
-
-    final rows = <CourseRow>[];
-    for (final entry in decoded) {
-      if (entry is! Map<String, dynamic>) {
+    return await Isolate.run(() {
+      final decoded = jsonDecode(rowsJson);
+      if (decoded is! List) {
         return null;
       }
-      final row = CourseRow.fromJson(entry);
-      if (row == null) {
-        return null;
-      }
-      rows.add(row);
-    }
 
-    return CachedTimetable(rows: rows, cachedAt: cachedAt);
+      final rows = <CourseRow>[];
+      for (final entry in decoded) {
+        if (entry is! Map<String, dynamic>) {
+          return null;
+        }
+        final row = CourseRow.fromJson(entry);
+        if (row == null) {
+          return null;
+        }
+        rows.add(row);
+      }
+
+      return CachedTimetable(rows: rows, cachedAt: cachedAt);
+    });
   }
 
   Future<void> saveCachedTimetable(CachedTimetable cached) async {
-    final rowsJson = jsonEncode(
-      cached.rows.map((row) => row.toJson()).toList(growable: false),
-    );
+    final rowsJson = await Isolate.run(() {
+      return jsonEncode(
+        cached.rows.map((row) => row.toJson()).toList(growable: false),
+      );
+    });
     await _store.writeAll({
       _rowsJsonKey: rowsJson,
       _cachedAtKey: cached.cachedAt.toIso8601String(),

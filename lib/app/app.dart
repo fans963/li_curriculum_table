@@ -28,16 +28,23 @@ class CurriculumTableApp extends StatelessWidget {
     );
 
     final subThemes = FlexSubThemesData(
-      defaultRadius: 12,
-      blendOnLevel: 14,
+      defaultRadius: 16,
+      blendOnLevel: 10,
       blendOnColors: true,
       useMaterial3Typography: true,
       interactionEffects: true,
       tintedDisabledControls: true,
       inputDecoratorBorderType: FlexInputBorderType.outline,
+      inputDecoratorRadius: 12.0,
       inputDecoratorUnfocusedHasBorder: true,
-      navigationBarIndicatorSchemeColor: SchemeColor.secondaryContainer,
+      inputDecoratorFocusedHasBorder: true,
+      inputDecoratorBackgroundAlpha: 5,
+      navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
       navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      cardRadius: 16,
+      popupMenuRadius: 12,
+      dialogRadius: 16,
+      timePickerDialogRadius: 12,
     );
 
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.

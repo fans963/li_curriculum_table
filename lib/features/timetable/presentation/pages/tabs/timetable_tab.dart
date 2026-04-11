@@ -7,6 +7,7 @@ import 'package:li_curriculum_table/features/timetable/domain/services/teaching_
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/util/util.dart';
 
 // UI Constants
 const double _pixelsPerMinute = 0.78;
@@ -31,6 +32,13 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     _nowTicker = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
       setState(() => _now = DateTime.now());
+    });
+
+    // Restore cached data on startup
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final notifier = ref.read(timetableControllerProvider.notifier);
+      await notifier.restoreCachedTimetable();
+      await notifier.restoreCachedTeachingWeekBaseline();
     });
   }
 
@@ -83,28 +91,35 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
               ),
             ),
             Expanded(
-              child: state.needsLogin
-                  ? _NeedsLoginView(
-                      onSync: () => ref
-                          .read(timetableControllerProvider.notifier)
-                          .syncFromCache(),
-                    )
-                  : ScrollConfiguration(
-                      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                      child: NotificationListener<ScrollNotification>(
-                        onNotification: (notification) => true,
-                        child: TimetableWeekView(
-                          key: _calendarKey,
-                          startHour: _startDisplayHour,
-                          endHour: _endDisplayHour,
-                          pixelsPerMinute: _pixelsPerMinute,
-                          now: _now,
-                          onPageChange: (date, page) {
-                            _syncDisplayWeekFromDate(date);
-                          },
+              child: AnimatedSwitcher(
+                duration: kDefaultAnimationDuration,
+                switchInCurve: kDefaultAnimationCurve,
+                switchOutCurve: kDefaultAnimationCurve,
+                child: state.needsLogin
+                    ? _NeedsLoginView(
+                        key: const ValueKey('needs_login'),
+                        onSync: () => ref
+                            .read(timetableControllerProvider.notifier)
+                            .syncFromCache(),
+                      )
+                    : ScrollConfiguration(
+                        key: const ValueKey('timetable_view'),
+                        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                        child: NotificationListener<ScrollNotification>(
+                          onNotification: (notification) => true,
+                          child: TimetableWeekView(
+                            key: _calendarKey,
+                            startHour: _startDisplayHour,
+                            endHour: _endDisplayHour,
+                            pixelsPerMinute: _pixelsPerMinute,
+                            now: _now,
+                            onPageChange: (date, page) {
+                              _syncDisplayWeekFromDate(date);
+                            },
+                          ),
                         ),
                       ),
-                    ),
+              ),
             ),
           ],
         ),
@@ -128,7 +143,7 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
 
 class _NeedsLoginView extends StatelessWidget {
   final VoidCallback onSync;
-  const _NeedsLoginView({required this.onSync});
+  const _NeedsLoginView({super.key, required this.onSync});
 
   @override
   Widget build(BuildContext context) {

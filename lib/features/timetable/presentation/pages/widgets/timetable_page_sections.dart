@@ -23,90 +23,86 @@ class TimetableControlPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 860;
-        final usernameField = TextField(
-          controller: usernameController,
-          enabled: !isLoading,
-          textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: '账号',
-            border: OutlineInputBorder(),
-            isDense: true,
-          ),
-        );
-        final passwordField = TextField(
-          controller: passwordController,
-          enabled: !isLoading,
-          obscureText: true,
-          textInputAction: TextInputAction.done,
-          decoration: const InputDecoration(
-            labelText: '密码',
-            border: OutlineInputBorder(),
-            isDense: true,
-          ),
-        );
-        // Dynamically generated based on crawl data
-        final weekOptions = List<int>.generate(
-          maxWeek - minWeek + 1, 
-          (index) => minWeek + index,
-        );
-        final selectedWeek = weekOptions.contains(currentTeachingWeek)
-            ? currentTeachingWeek
-            : minWeek;
-        final weekField = DropdownButtonFormField<int>(
-          initialValue: selectedWeek,
-          items: weekOptions
-              .map(
-                (week) => DropdownMenuItem<int>(
-                  value: week,
-                  child: Text('第$week周'),
-                ),
-              )
-              .toList(growable: false),
-          decoration: const InputDecoration(
-            labelText: '今日周数',
-            border: OutlineInputBorder(),
-            isDense: true,
-          ),
-          onChanged: isLoading
-              ? null
-              : (value) {
-                  if (value != null) {
-                    onTeachingWeekChanged(value);
-                  }
-                },
-        );
-
-        if (wide) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(child: usernameField),
-                  const SizedBox(width: 10),
-                  Expanded(child: passwordField),
-                  const SizedBox(width: 10),
-                  SizedBox(width: 170, child: weekField),
-                ],
-              ),
-            ],
-          );
-        }
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Card(
+      elevation: 0,
+      color: colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
           children: [
-            usernameField,
-            const SizedBox(height: 8),
-            passwordField,
-            const SizedBox(height: 8),
-            weekField,
+            TextField(
+              controller: usernameController,
+              enabled: !isLoading,
+              textInputAction: TextInputAction.next,
+              decoration: InputDecoration(
+                labelText: '教务系统账号',
+                prefixIcon: const Icon(Icons.account_circle_outlined),
+                hintText: '请输入学号',
+                filled: true,
+                fillColor: colorScheme.surface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: passwordController,
+              enabled: !isLoading,
+              obscureText: true,
+              textInputAction: TextInputAction.done,
+              decoration: InputDecoration(
+                labelText: '登录密码',
+                prefixIcon: const Icon(Icons.lock_outline_rounded),
+                hintText: '请输入密码',
+                filled: true,
+                fillColor: colorScheme.surface,
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Dynamically generated based on crawl data
+            Builder(
+              builder: (context) {
+                final weekOptions = List<int>.generate(
+                  maxWeek - minWeek + 1,
+                  (index) => minWeek + index,
+                );
+                final selectedWeek = weekOptions.contains(currentTeachingWeek)
+                    ? currentTeachingWeek
+                    : (weekOptions.isNotEmpty ? weekOptions.first : 1);
+
+                return DropdownButtonFormField<int>(
+                  value: selectedWeek,
+                  items: weekOptions
+                      .map(
+                        (week) => DropdownMenuItem<int>(
+                          value: week,
+                          child: Text('第 $week 周'),
+                        ),
+                      )
+                      .toList(growable: false),
+                  decoration: InputDecoration(
+                    labelText: '当前教学周',
+                    prefixIcon: const Icon(Icons.calendar_today_outlined),
+                    filled: true,
+                    fillColor: colorScheme.surface,
+                  ),
+                  onChanged: isLoading
+                      ? null
+                      : (value) {
+                          if (value != null) {
+                            onTeachingWeekChanged(value);
+                          }
+                        },
+                );
+              },
+            ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 }
@@ -127,50 +123,54 @@ class TimetableStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isError = _looksLikeError(status);
+    
     final backgroundColor = isError
         ? colorScheme.errorContainer
         : hasData
-        ? colorScheme.primaryContainer
-        : colorScheme.surfaceContainerHighest;
+            ? colorScheme.secondaryContainer.withOpacity(0.4)
+            : colorScheme.surfaceContainerHighest;
     final foregroundColor = isError
         ? colorScheme.onErrorContainer
         : hasData
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.onSurfaceVariant;
+            ? colorScheme.onSecondaryContainer
+            : colorScheme.onSurfaceVariant;
 
-    if (!isError && !isLoading) {
+    if (!isError && !isLoading && status.isEmpty) {
       return const SizedBox.shrink();
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            isLoading
-                ? Icons.hourglass_top_rounded
-                : isError
-                ? Icons.error_outline
-                : Icons.info_outline,
-            size: 18,
-            color: foregroundColor,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              status,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+    return Card(
+      elevation: 0,
+      color: backgroundColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              )
+            else
+              Icon(
+                isError ? Icons.error_outline : Icons.info_outline,
+                size: 20,
                 color: foregroundColor,
-                fontWeight: FontWeight.w500,
+              ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                status,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: foregroundColor,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

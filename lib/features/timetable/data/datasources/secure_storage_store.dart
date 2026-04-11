@@ -24,4 +24,13 @@ class SecureStorageStore {
       await _storage.delete(key: key);
     }
   }
+
+  Future<void> deleteAllExcept(List<String> preservedKeys) async {
+    final allEntries = await _storage.readAll();
+    for (final key in allEntries.keys) {
+      if (!preservedKeys.contains(key)) {
+        await _storage.delete(key: key);
+      }
+    }
+  }
 }

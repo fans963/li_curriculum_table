@@ -1,5 +1,7 @@
-pub mod timetable;
 pub mod classroom;
+pub mod grade;
+pub mod timetable;
 
-pub use timetable::TimetableService;
 pub use classroom::ClassroomService;
+pub use grade::GradeService;
+pub use timetable::TimetableService;

@@ -5,6 +5,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/t
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
+import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -15,22 +16,37 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  late final PageController _pageController;
 
-  final List<Widget> _tabs = const [
+  final List<Widget> _tabs = [
     TimetableTab(),
     ClassroomTab(),
+    GradesTab(),
     SettingsTab(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _currentIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         children: [
-          if (isDesktop) const TitleBar(),
+          if (isDesktop) TitleBar(),
           Expanded(
-            child: IndexedStack(
-              index: _currentIndex,
+            child: PageView(
+              controller: _pageController,
+              physics: const NeverScrollableScrollPhysics(),
               children: _tabs,
             ),
           ),
@@ -42,6 +58,11 @@ class _MainScreenState extends State<MainScreen> {
           setState(() {
             _currentIndex = index;
           });
+          _pageController.animateToPage(
+            index,
+            duration: kDefaultAnimationDuration,
+            curve: kDefaultAnimationCurve,
+          );
         },
         destinations: const [
           NavigationDestination(
@@ -53,6 +74,11 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.room_outlined),
             selectedIcon: Icon(Icons.room),
             label: '空闲教室',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.grade_outlined),
+            selectedIcon: Icon(Icons.grade),
+            label: '成绩',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

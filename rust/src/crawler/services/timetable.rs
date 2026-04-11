@@ -21,16 +21,21 @@ impl TimetableService {
         max_attempts: u32,
     ) -> CrawlerResult<TimetableRecord> {
         // 1. Ensure logged in
-        self.session.login_if_needed(username, password, max_attempts).await?;
+        self.session
+            .login_if_needed(username, password, max_attempts)
+            .await?;
 
         // 2. Fetch timetable HTML
         let target_url = self.session.config.get_target_url();
         let portal_url = self.session.config.get_portal_url();
         let init_url = format!("{}/Logon.do?method=logonurl", portal_url);
-        
+
         log::info!("TimetableService: Fetching target HTML from {}", target_url);
-        let html = self.session.fetch_text(&target_url, Method::GET, None, Some(&init_url)).await?;
-        
+        let html = self
+            .session
+            .fetch_text(&target_url, Method::GET, None, Some(&init_url))
+            .await?;
+
         // 3. Parse
         let record = parse_and_process_timetable(&html)?;
         Ok(record)
