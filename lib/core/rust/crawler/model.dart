@@ -48,6 +48,28 @@ class Campus {
           name == other.name;
 }
 
+/// Bundled response from the classroom page: campuses + server-selected current term.
+class CampusPageData {
+  final List<Campus> campuses;
+  final String currentTerm;
+
+  const CampusPageData({
+    required this.campuses,
+    required this.currentTerm,
+  });
+
+  @override
+  int get hashCode => campuses.hashCode ^ currentTerm.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CampusPageData &&
+          runtimeType == other.runtimeType &&
+          campuses == other.campuses &&
+          currentTerm == other.currentTerm;
+}
+
 class ClassroomAvailability {
   final String classroomName;
   final List<bool> availability;

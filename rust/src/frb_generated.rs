@@ -499,6 +499,18 @@ impl SseDecode for crate::crawler::model::Campus {
     }
 }
 
+impl SseDecode for crate::crawler::model::CampusPageData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_campuses = <Vec<crate::crawler::model::Campus>>::sse_decode(deserializer);
+        let mut var_currentTerm = <String>::sse_decode(deserializer);
+        return crate::crawler::model::CampusPageData {
+            campuses: var_campuses,
+            current_term: var_currentTerm,
+        };
+    }
+}
+
 impl SseDecode for crate::crawler::model::ClassroomAvailability {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -890,6 +902,27 @@ impl flutter_rust_bridge::IntoIntoDart<crate::crawler::model::Campus>
     }
 }
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::crawler::model::CampusPageData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.campuses.into_into_dart().into_dart(),
+            self.current_term.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::crawler::model::CampusPageData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::crawler::model::CampusPageData>
+    for crate::crawler::model::CampusPageData
+{
+    fn into_into_dart(self) -> crate::crawler::model::CampusPageData {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::crawler::model::ClassroomAvailability {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1099,6 +1132,14 @@ impl SseEncode for crate::crawler::model::Campus {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <String>::sse_encode(self.id, serializer);
         <String>::sse_encode(self.name, serializer);
+    }
+}
+
+impl SseEncode for crate::crawler::model::CampusPageData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <Vec<crate::crawler::model::Campus>>::sse_encode(self.campuses, serializer);
+        <String>::sse_encode(self.current_term, serializer);
     }
 }
 

@@ -477,7 +477,7 @@ pub fn parse_building_schedule(html: &str) -> CrawlerResult<Vec<ClassroomSchedul
     Ok(schedules)
 }
 
-pub fn parse_campuses(html: &str) -> CrawlerResult<Vec<Campus>> {
+pub fn parse_campuses(html: &str) -> CrawlerResult<crate::crawler::model::CampusPageData> {
     let document = Html::parse_document(html);
     let select_selector = Selector::parse("select[name='xqid']").map_err(|e| CrawlerError::Parse(e.to_string()))?;
     let option_selector = Selector::parse("option").unwrap();
@@ -496,5 +496,25 @@ pub fn parse_campuses(html: &str) -> CrawlerResult<Vec<Campus>> {
         }
     }
 
-    Ok(campuses)
+    // Parse the server-selected current term from select[name='xnxqh']
+    let current_term = parse_selected_term(&document);
+
+    Ok(crate::crawler::model::CampusPageData {
+        campuses,
+        current_term,
+    })
+}
+
+fn parse_selected_term(document: &Html) -> String {
+    let term_selector = match Selector::parse("select[name='xnxqh'] option[selected]") {
+        Ok(s) => s,
+        Err(_) => return String::new(),
+    };
+
+    document
+        .select(&term_selector)
+        .next()
+        .and_then(|opt| opt.value().attr("value"))
+        .unwrap_or_default()
+        .to_string()
 }

@@ -64,11 +64,13 @@ class ClassroomController extends Notifier<ClassroomState> {
         if (!forceRefresh) {
           // Try loading from cache even without credentials
           try {
-            final cached = await repository.getCampuses(forceRefresh: false);
-            if (cached.isNotEmpty) {
+            final result = await repository.getCampuses(forceRefresh: false);
+            final (campuses, term) = result;
+            if (campuses.isNotEmpty) {
               state = state.copyWith(
-                campuses: cached,
-                selectedCampus: cached.first,
+                campuses: campuses,
+                selectedCampus: campuses.first,
+                currentTerm: term,
               );
               await fetchBuildings(forceRefresh: false);
               return;
@@ -79,7 +81,7 @@ class ClassroomController extends Notifier<ClassroomState> {
         return;
       }
 
-      final campuses = await repository.getCampuses(
+      final (campuses, term) = await repository.getCampuses(
         username: user,
         password: pass,
         forceRefresh: forceRefresh,
@@ -87,6 +89,7 @@ class ClassroomController extends Notifier<ClassroomState> {
       state = state.copyWith(
         campuses: campuses,
         selectedCampus: campuses.isNotEmpty ? campuses.first : null,
+        currentTerm: term,
       );
 
       if (campuses.isNotEmpty) {
@@ -169,6 +172,7 @@ class ClassroomController extends Notifier<ClassroomState> {
         buildingId: building.id,
         week: week,
         weekday: weekday,
+        term: state.currentTerm,
         username: user,
         password: pass,
         forceRefresh: forceRefresh,

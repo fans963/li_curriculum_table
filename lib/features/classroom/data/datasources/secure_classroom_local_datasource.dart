@@ -20,16 +20,25 @@ class ClassroomLocalDataSource {
   String _bulkScheduleKey(String campusId, String buildingId) =>
       'classroom.cache.bulk_schedule.$campusId.$buildingId';
 
-  Future<List<CampusEntity>?> readCampuses() async {
+  Future<(List<CampusEntity>, String)?> readCampuses() async {
     final data = await _store.readAll([_campusesKey]);
     final jsonStr = data[_campusesKey];
     if (jsonStr == null) return null;
-    final List<dynamic> decoded = jsonDecode(jsonStr);
-    return decoded.map((e) => CampusEntity.fromJson(e)).toList();
+    
+    final Map<String, dynamic> decoded = jsonDecode(jsonStr);
+    final List<dynamic> campusesRaw = decoded['campuses'];
+    final String term = decoded['currentTerm'];
+    
+    final campuses = campusesRaw.map((e) => CampusEntity.fromJson(e)).toList();
+    return (campuses, term);
   }
 
-  Future<void> saveCampuses(List<CampusEntity> campuses) async {
-    final jsonStr = jsonEncode(campuses.map((e) => e.toJson()).toList());
+  Future<void> saveCampuses(List<CampusEntity> campuses, String currentTerm) async {
+    final payload = {
+      'campuses': campuses.map((e) => e.toJson()).toList(),
+      'currentTerm': currentTerm,
+    };
+    final jsonStr = jsonEncode(payload);
     await _store.writeAll({_campusesKey: jsonStr});
   }
 

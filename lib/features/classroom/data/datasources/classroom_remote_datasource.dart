@@ -5,7 +5,7 @@ import 'package:li_curriculum_table/features/classroom/domain/models/classroom_a
 import 'package:li_curriculum_table/features/classroom/domain/models/classroom_schedule.dart';
 
 abstract class ClassroomRemoteDataSource {
-  Future<List<CampusEntity>> getCampuses({String? username, String? password});
+  Future<(List<CampusEntity>, String)> getCampuses({String? username, String? password});
   Future<List<BuildingEntity>> getBuildings(String campusId, {String? username, String? password});
   Future<List<ClassroomAvailabilityEntity>> getClassroomAvailability({
     required String campusId,
@@ -28,9 +28,10 @@ abstract class ClassroomRemoteDataSource {
 
 class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
   @override
-  Future<List<CampusEntity>> getCampuses({String? username, String? password}) async {
-    final campuses = await rust.getCampuses(username: username, password: password);
-    return campuses.map((c) => CampusEntity(id: c.id, name: c.name)).toList();
+  Future<(List<CampusEntity>, String)> getCampuses({String? username, String? password}) async {
+    final data = await rust.getCampuses(username: username, password: password);
+    final campuses = data.campuses.map((c) => CampusEntity(id: c.id, name: c.name)).toList();
+    return (campuses, data.currentTerm);
   }
 
   @override

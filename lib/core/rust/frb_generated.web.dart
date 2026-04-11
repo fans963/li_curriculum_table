@@ -65,6 +65,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   Campus dco_decode_campus(dynamic raw);
 
   @protected
+  CampusPageData dco_decode_campus_page_data(dynamic raw);
+
+  @protected
   ClassroomAvailability dco_decode_classroom_availability(dynamic raw);
 
   @protected
@@ -165,6 +168,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Campus sse_decode_campus(SseDeserializer deserializer);
+
+  @protected
+  CampusPageData sse_decode_campus_page_data(SseDeserializer deserializer);
 
   @protected
   ClassroomAvailability sse_decode_classroom_availability(
@@ -274,6 +280,10 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_campus(Campus self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_campus_page_data(
+      CampusPageData self, SseSerializer serializer);
 
   @protected
   void sse_encode_classroom_availability(

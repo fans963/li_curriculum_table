@@ -1,6 +1,6 @@
 use crate::crawler::core::SessionManager;
 use crate::crawler::services::classroom::ClassroomService;
-use crate::crawler::model::{Building, Campus, ClassroomAvailability, ClassroomSchedule};
+use crate::crawler::model::{Building, Campus, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::api::crawler::get_ocr_engine;
 use anyhow::Result;
 use std::sync::Arc;
@@ -8,7 +8,7 @@ use std::sync::Arc;
 pub async fn get_campuses(
     username: Option<String>,
     password: Option<String>,
-) -> Result<Vec<Campus>> {
+) -> Result<CampusPageData> {
     let ocr = get_ocr_engine().await?;
     let session = Arc::new(SessionManager::new(ocr));
     
@@ -17,10 +17,10 @@ pub async fn get_campuses(
     }
 
     let service = ClassroomService::new(session);
-    let campuses = service.get_campuses().await
+    let data = service.get_campuses().await
         .map_err(|e| anyhow::anyhow!("Failed to fetch campuses: {}", e))?;
     
-    Ok(campuses)
+    Ok(data)
 }
 
 pub async fn get_buildings(

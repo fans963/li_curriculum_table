@@ -100,7 +100,7 @@ abstract class RustLibApi extends BaseApi {
   Future<List<Building>> crateApiClassroomGetBuildings(
       {required String campusId, String? username, String? password});
 
-  Future<List<Campus>> crateApiClassroomGetCampuses(
+  Future<CampusPageData> crateApiClassroomGetCampuses(
       {String? username, String? password});
 
   Future<List<ClassroomAvailability>> crateApiClassroomGetClassroomAvailability(
@@ -256,7 +256,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<Campus>> crateApiClassroomGetCampuses(
+  Future<CampusPageData> crateApiClassroomGetCampuses(
       {String? username, String? password}) {
     return handler.executeNormal(NormalTask(
       callFfi: (port_) {
@@ -267,7 +267,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             funcId: 5, port: port_);
       },
       codec: SseCodec(
-        decodeSuccessData: sse_decode_list_campus,
+        decodeSuccessData: sse_decode_campus_page_data,
         decodeErrorData: sse_decode_AnyhowException,
       ),
       constMeta: kCrateApiClassroomGetCampusesConstMeta,
@@ -495,6 +495,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     return Campus(
       id: dco_decode_String(arr[0]),
       name: dco_decode_String(arr[1]),
+    );
+  }
+
+  @protected
+  CampusPageData dco_decode_campus_page_data(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return CampusPageData(
+      campuses: dco_decode_list_campus(arr[0]),
+      currentTerm: dco_decode_String(arr[1]),
     );
   }
 
@@ -754,6 +766,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_id = sse_decode_String(deserializer);
     var var_name = sse_decode_String(deserializer);
     return Campus(id: var_id, name: var_name);
+  }
+
+  @protected
+  CampusPageData sse_decode_campus_page_data(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_campuses = sse_decode_list_campus(deserializer);
+    var var_currentTerm = sse_decode_String(deserializer);
+    return CampusPageData(campuses: var_campuses, currentTerm: var_currentTerm);
   }
 
   @protected
@@ -1078,6 +1098,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.id, serializer);
     sse_encode_String(self.name, serializer);
+  }
+
+  @protected
+  void sse_encode_campus_page_data(
+      CampusPageData self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_campus(self.campuses, serializer);
+    sse_encode_String(self.currentTerm, serializer);
   }
 
   @protected

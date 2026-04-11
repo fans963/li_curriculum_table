@@ -52,6 +52,13 @@ pub struct Campus {
     pub name: String,
 }
 
+/// Bundled response from the classroom page: campuses + server-selected current term.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CampusPageData {
+    pub campuses: Vec<Campus>,
+    pub current_term: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Building {
     pub id: String,

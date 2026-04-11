@@ -1,6 +1,6 @@
 use crate::crawler::core::SessionManager;
 use crate::crawler::error::CrawlerResult;
-use crate::crawler::model::{Building, Campus, ClassroomAvailability, ClassroomSchedule};
+use crate::crawler::model::{Building, Campus, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::crawler::parser::parse_campuses;
 use reqwest::Method;
 use std::sync::Arc;
@@ -14,7 +14,7 @@ impl ClassroomService {
         Self { session }
     }
 
-    pub async fn get_campuses(&self) -> CrawlerResult<Vec<Campus>> {
+    pub async fn get_campuses(&self) -> CrawlerResult<CampusPageData> {
         let url = format!("{}/kbcx/kbxx_classroom", self.session.config.get_base_url());
         let html = self.session.fetch_text(&url, Method::GET, None, None).await?;
         parse_campuses(&html)

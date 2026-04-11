@@ -13,24 +13,25 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
   ClassroomRepositoryImpl(this._remoteDataSource, this._localDataSource);
 
   @override
-  Future<List<CampusEntity>> getCampuses({
+  Future<(List<CampusEntity>, String)> getCampuses({
     String? username,
     String? password,
     bool forceRefresh = false,
   }) async {
     if (!forceRefresh) {
       final cached = await _localDataSource.readCampuses();
-      if (cached != null && cached.isNotEmpty) {
+      if (cached != null) {
         return cached;
       }
     }
 
-    final campuses = await _remoteDataSource.getCampuses(
+    final result = await _remoteDataSource.getCampuses(
       username: username,
       password: password,
     );
-    await _localDataSource.saveCampuses(campuses);
-    return campuses;
+    final (campuses, term) = result;
+    await _localDataSource.saveCampuses(campuses, term);
+    return result;
   }
 
   @override
@@ -62,6 +63,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     required String buildingId,
     required int week,
     required int weekday,
+    required String term,
     String? username,
     String? password,
     bool forceRefresh = false,
@@ -76,7 +78,6 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     }
 
     if (schedule == null || schedule.isEmpty) {
-      final term = _getCurrentTerm();
       schedule = await _remoteDataSource.getBuildingSchedule(
         campusId: campusId,
         buildingId: buildingId,
@@ -117,23 +118,6 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     results.sort((a, b) => a.classroomName.compareTo(b.classroomName));
 
     return results;
-  }
-
-  String _getCurrentTerm() {
-    final now = DateTime.now();
-    final year = now.year;
-    final month = now.month;
-
-    if (month >= 2 && month <= 7) {
-      // Spring Semester: (Year-1)-Year-2
-      return '${year - 1}-$year-2';
-    } else if (month >= 8) {
-      // Autumn Semester: Year-(Year+1)-1
-      return '$year-${year + 1}-1';
-    } else {
-      // January: (Year-1)-Year-1
-      return '${year - 1}-$year-1';
-    }
   }
 }
 

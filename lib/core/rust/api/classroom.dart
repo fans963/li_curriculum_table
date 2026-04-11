@@ -7,7 +7,7 @@ import '../crawler/model.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<List<Campus>> getCampuses({String? username, String? password}) =>
+Future<CampusPageData> getCampuses({String? username, String? password}) =>
     RustLib.instance.api
         .crateApiClassroomGetCampuses(username: username, password: password);
 

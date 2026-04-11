@@ -12,6 +12,7 @@ class ClassroomState {
   final bool isLoading;
   final String? error;
   final bool needsLogin;
+  final String currentTerm;
 
   ClassroomState({
     this.campuses = const [],
@@ -23,6 +24,7 @@ class ClassroomState {
     this.isLoading = false,
     this.error,
     this.needsLogin = false,
+    this.currentTerm = '',
   });
 
   ClassroomState copyWith({
@@ -35,6 +37,7 @@ class ClassroomState {
     bool? isLoading,
     String? error,
     bool? needsLogin,
+    String? currentTerm,
   }) {
     return ClassroomState(
       campuses: campuses ?? this.campuses,
@@ -46,6 +49,7 @@ class ClassroomState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       needsLogin: needsLogin ?? this.needsLogin,
+      currentTerm: currentTerm ?? this.currentTerm,
     );
   }
 }
