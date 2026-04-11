@@ -7,7 +7,10 @@ import '../crawler/model.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-Future<List<Grade>> getGrades(
-        {required String username, required String password}) =>
-    RustLib.instance.api
-        .crateApiGradeGetGrades(username: username, password: password);
+Future<List<Grade>> getGrades({
+  required String username,
+  required String password,
+}) => RustLib.instance.api.crateApiGradeGetGrades(
+  username: username,
+  password: password,
+);

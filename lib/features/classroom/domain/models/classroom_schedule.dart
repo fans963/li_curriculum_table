@@ -1,53 +1,28 @@
-class OccupiedSlotEntity {
-  final int startWeek;
-  final int endWeek;
-  final int weekday;
-  final int slotIndex;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const OccupiedSlotEntity({
-    required this.startWeek,
-    required this.endWeek,
-    required this.weekday,
-    required this.slotIndex,
-  });
+part 'classroom_schedule.freezed.dart';
+part 'classroom_schedule.g.dart';
 
-  factory OccupiedSlotEntity.fromJson(Map<String, dynamic> json) {
-    return OccupiedSlotEntity(
-      startWeek: json['startWeek'] as int,
-      endWeek: json['endWeek'] as int,
-      weekday: json['weekday'] as int,
-      slotIndex: json['slotIndex'] as int,
-    );
-  }
+@freezed
+abstract class OccupiedSlot with _$OccupiedSlot {
+  const factory OccupiedSlot({
+    required int startWeek,
+    required int endWeek,
+    required int weekday,
+    required int slotIndex,
+  }) = _OccupiedSlot;
 
-  Map<String, dynamic> toJson() => {
-        'startWeek': startWeek,
-        'endWeek': endWeek,
-        'weekday': weekday,
-        'slotIndex': slotIndex,
-      };
+  factory OccupiedSlot.fromJson(Map<String, dynamic> json) =>
+      _$OccupiedSlotFromJson(json);
 }
 
-class ClassroomScheduleEntity {
-  final String classroomName;
-  final List<OccupiedSlotEntity> occupiedSlots;
+@freezed
+abstract class ClassroomSchedule with _$ClassroomSchedule {
+  const factory ClassroomSchedule({
+    required String classroomName,
+    required List<OccupiedSlot> occupiedSlots,
+  }) = _ClassroomSchedule;
 
-  const ClassroomScheduleEntity({
-    required this.classroomName,
-    required this.occupiedSlots,
-  });
-
-  factory ClassroomScheduleEntity.fromJson(Map<String, dynamic> json) {
-    return ClassroomScheduleEntity(
-      classroomName: json['classroomName'] as String,
-      occupiedSlots: (json['occupiedSlots'] as List)
-          .map((e) => OccupiedSlotEntity.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
-  }
-
-  Map<String, dynamic> toJson() => {
-        'classroomName': classroomName,
-        'occupiedSlots': occupiedSlots.map((e) => e.toJson()).toList(),
-      };
+  factory ClassroomSchedule.fromJson(Map<String, dynamic> json) =>
+      _$ClassroomScheduleFromJson(json);
 }

@@ -1,4 +1,4 @@
-use crate::api::crawler::get_shared_session_manager;
+use crate::api::crawler::get_authorized_session;
 use crate::crawler::model::{Building, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::crawler::services::classroom::ClassroomService;
 use anyhow::Result;
@@ -7,12 +7,7 @@ pub async fn get_campuses(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<CampusPageData> {
-    let session = get_shared_session_manager().await?;
-
-    if let (Some(u), Some(p)) = (username, password) {
-        let _ = session.login_if_needed(&u, &p, 3).await;
-    }
-
+    let session = get_authorized_session(username, password).await?;
     let service = ClassroomService::new(session);
     let data = service
         .get_campuses()
@@ -27,12 +22,7 @@ pub async fn get_buildings(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<Building>> {
-    let session = get_shared_session_manager().await?;
-
-    if let (Some(u), Some(p)) = (username, password) {
-        let _ = session.login_if_needed(&u, &p, 3).await;
-    }
-
+    let session = get_authorized_session(username, password).await?;
     let service = ClassroomService::new(session);
     let buildings = service
         .get_buildings(&campus_id)
@@ -51,12 +41,7 @@ pub async fn get_classroom_availability(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<ClassroomAvailability>> {
-    let session = get_shared_session_manager().await?;
-
-    if let (Some(u), Some(p)) = (username, password) {
-        let _ = session.login_if_needed(&u, &p, 3).await;
-    }
-
+    let session = get_authorized_session(username, password).await?;
     let service = ClassroomService::new(session);
     let availability = service
         .get_classroom_availability(&campus_id, &building_id, week, weekday, &term)
@@ -73,12 +58,7 @@ pub async fn get_building_schedule(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<ClassroomSchedule>> {
-    let session = get_shared_session_manager().await?;
-
-    if let (Some(u), Some(p)) = (username, password) {
-        let _ = session.login_if_needed(&u, &p, 3).await;
-    }
-
+    let session = get_authorized_session(username, password).await?;
     let service = ClassroomService::new(session);
     let schedules = service
         .get_building_schedule(&campus_id, &building_id, &term)

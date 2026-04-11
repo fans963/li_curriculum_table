@@ -7,6 +7,7 @@ import 'package:li_curriculum_table/features/timetable/domain/services/teaching_
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 
 // UI Constants

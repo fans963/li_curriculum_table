@@ -1,0 +1,77 @@
+Analyzing curriculum_table...                                   
+
+  error • The method 'crateApiAuthGetAuthorizedSession' isn't defined for the type 'RustLibApi' • lib/core/rust/api/auth.dart:12:28 • undefined_method
+  error • The method 'crateApiOcrDdddOcrNew' isn't defined for the type 'RustLibApi' • lib/core/rust/api/ocr.dart:17:28 • undefined_method
+warning • Unused import: 'package:flutter/foundation.dart' • lib/core/settings/presentation/settings_providers.dart:1:8 • unused_import
+warning • The member 'api' can only be used within its package • lib/core/settings/presentation/settings_providers.dart:54:22 • invalid_use_of_internal_member
+warning • The member 'api' can only be used within its package • lib/core/settings/presentation/settings_providers.dart:59:24 • invalid_use_of_internal_member
+  error • Missing concrete implementations of '_$Building.toJson', 'getter _$Building.id', and 'getter _$Building.name' • lib/features/classroom/domain/models/building.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$Campus.toJson', 'getter _$Campus.id', and 'getter _$Campus.name' • lib/features/classroom/domain/models/campus.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$ClassroomAvailability.toJson', 'getter _$ClassroomAvailability.availability', 'getter _$ClassroomAvailability.classroomName', and 'getter _$ClassroomAvailability.hasNoClassesThisTerm' • lib/features/classroom/domain/models/classroom_availability.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$OccupiedSlot.toJson', 'getter _$OccupiedSlot.endWeek', 'getter _$OccupiedSlot.slotIndex', 'getter _$OccupiedSlot.startWeek', and 1 more • lib/features/classroom/domain/models/classroom_schedule.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$ClassroomSchedule.toJson', 'getter _$ClassroomSchedule.classroomName', and 'getter _$ClassroomSchedule.occupiedSlots' • lib/features/classroom/domain/models/classroom_schedule.dart:20:7 • non_abstract_class_inherits_abstract_member
+   info • Use the null-aware marker '?' rather than a null check via an 'if' • lib/features/classroom/presentation/pages/classroom_tab.dart:273:11 • use_null_aware_elements
+   info • Unnecessary use of multiple underscores • lib/features/classroom/presentation/pages/classroom_tab.dart:341:31 • unnecessary_underscores
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/classroom/presentation/pages/classroom_tab.dart:492:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/classroom/presentation/pages/classroom_tab.dart:493:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/classroom/presentation/pages/classroom_tab.dart:497:37 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/classroom/presentation/pages/classroom_tab.dart:498:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/classroom/presentation/pages/classroom_tab.dart:510:37 • deprecated_member_use
+   info • Unnecessary use of multiple underscores • lib/features/classroom/presentation/pages/classroom_tab.dart:602:31 • unnecessary_underscores
+  error • Missing concrete implementations of 'getter _$ClassroomState.buildings', 'getter _$ClassroomState.campuses', 'getter _$ClassroomState.currentTerm', 'getter _$ClassroomState.error', and 6 more • lib/features/classroom/presentation/state/classroom_state.dart:9:7 • non_abstract_class_inherits_abstract_member
+   info • The imported package 'collection' isn't a dependency of the importing package • lib/features/grades/presentation/pages/grades_tab.dart:7:8 • depend_on_referenced_packages
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:46:33 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:47:35 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:53:62 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:72:49 • deprecated_member_use
+   info • Statements in an if should be enclosed in a block • lib/features/grades/presentation/pages/grades_tab.dart:326:22 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/grades/presentation/pages/grades_tab.dart:327:27 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/grades/presentation/pages/grades_tab.dart:328:27 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/grades/presentation/pages/grades_tab.dart:329:27 • curly_braces_in_flow_control_structures
+   info • Statements in an if should be enclosed in a block • lib/features/grades/presentation/pages/grades_tab.dart:330:10 • curly_braces_in_flow_control_structures
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:342:66 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:346:39 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:393:41 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:395:60 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:410:47 • deprecated_member_use
+   info • 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead. This feature was deprecated after v3.18.0-0.1.pre • lib/features/grades/presentation/pages/grades_tab.dart:432:34 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/grades/presentation/pages/grades_tab.dart:432:49 • deprecated_member_use
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:11:8 • duplicate_import
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:12:8 • duplicate_import
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:13:8 • duplicate_import
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:14:8 • duplicate_import
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:15:8 • duplicate_import
+warning • Duplicate import • lib/features/navigation/presentation/pages/main_screen.dart:16:8 • duplicate_import
+   info • The imported package 'flutter_native_splash' isn't a dependency of the importing package • lib/features/navigation/presentation/pages/main_screen.dart:20:8 • depend_on_referenced_packages
+warning • Unused import: 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart' • lib/features/navigation/presentation/state/global_sync_controller.dart:5:8 • unused_import
+   info • Don't invoke 'print' in production code • lib/features/navigation/presentation/state/global_sync_controller.dart:110:11 • avoid_print
+  error • Undefined name 'timetableControllerProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:28:33 • undefined_identifier
+  error • Undefined name 'cacheCredentialsUseCaseProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:45:43 • undefined_identifier
+  error • Undefined name 'loadCachedCredentialsUseCaseProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:54:20 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:72:29 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:100:31 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/settings/presentation/pages/tabs/settings_tab.dart:169:22 • undefined_identifier
+warning • The value of the local variable 'colorScheme' isn't used • lib/features/settings/presentation/pages/tabs/settings_tab.dart:174:11 • unused_local_variable
+warning • The value of the local variable 'colorScheme' isn't used • lib/features/settings/presentation/pages/tabs/settings_tab.dart:191:11 • unused_local_variable
+warning • The operand can't be 'null', so the condition is always 'false' • lib/features/timetable/data/datasources/secure_timetable_local_datasource.dart:41:17 • unnecessary_null_comparison
+   info • 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion • lib/features/timetable/domain/entities/course_occurrence.dart:14:38 • deprecated_member_use
+  error • Missing concrete implementations of '_$CourseOccurrence.toJson', 'getter _$CourseOccurrence.color', 'getter _$CourseOccurrence.courseName', 'getter _$CourseOccurrence.courseType', and 9 more • lib/features/timetable/domain/entities/course_occurrence.dart:18:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$CourseRow.toJson', 'getter _$CourseRow.courseId', 'getter _$CourseRow.courseName', 'getter _$CourseRow.courseType', and 7 more • lib/features/timetable/domain/entities/course_row.dart:9:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$LoginCredentials.toJson', 'getter _$LoginCredentials.password', and 'getter _$LoginCredentials.username' • lib/features/timetable/domain/entities/login_credentials.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$TeachingWeekBaseline.toJson', 'getter _$TeachingWeekBaseline.referenceDate', and 'getter _$TeachingWeekBaseline.referenceWeek' • lib/features/timetable/domain/entities/teaching_week_baseline.dart:7:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$TimeSlot.toJson', 'getter _$TimeSlot.endSection', 'getter _$TimeSlot.endWeek', 'getter _$TimeSlot.startSection', and 3 more • lib/features/timetable/domain/entities/time_slot.dart:8:7 • non_abstract_class_inherits_abstract_member
+  error • Missing concrete implementations of '_$TimetableData.toJson', 'getter _$TimetableData.loginLikelySuccess', 'getter _$TimetableData.occurrences', and 'getter _$TimetableData.rows' • lib/features/timetable/domain/entities/timetable_data.dart:9:7 • non_abstract_class_inherits_abstract_member
+warning • Unused import: 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart' • lib/features/timetable/presentation/calendar_view/calendar_view_adapter.dart:5:8 • unused_import
+warning • Unused import: 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart' • lib/features/timetable/presentation/calendar_view/timetable_week_view.dart:7:8 • unused_import
+  error • Undefined name 'timetableControllerProvider' • lib/features/timetable/presentation/pages/tabs/timetable_tab.dart:39:33 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/timetable/presentation/pages/tabs/timetable_tab.dart:54:29 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/timetable/presentation/pages/tabs/timetable_tab.dart:89:35 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/timetable/presentation/pages/tabs/timetable_tab.dart:118:28 • undefined_identifier
+  error • Undefined name 'timetableControllerProvider' • lib/features/timetable/presentation/pages/tabs/timetable_tab.dart:126:16 • undefined_identifier
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/timetable/presentation/pages/widgets/timetable_page_sections.dart:33:60 • deprecated_member_use
+   info • 'value' is deprecated and shouldn't be used. Use initialValue instead. This will set the initial value for the form field. This feature was deprecated after v3.33.0-1.0.pre • lib/features/timetable/presentation/pages/widgets/timetable_page_sections.dart:78:19 • deprecated_member_use
+   info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/features/timetable/presentation/pages/widgets/timetable_page_sections.dart:130:46 • deprecated_member_use
+  error • Missing concrete implementations of 'getter _$TimetableState.currentTeachingWeek', 'getter _$TimetableState.data', 'getter _$TimetableState.displayWeek', 'getter _$TimetableState.isLoading', and 6 more • lib/features/timetable/presentation/state/timetable_state.dart:7:7 • non_abstract_class_inherits_abstract_member
+   info • The imported package 'flutter_native_splash' isn't a dependency of the importing package • lib/main.dart:9:8 • depend_on_referenced_packages
+
+73 issues found. (ran in 5.1s)

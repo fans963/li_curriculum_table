@@ -11,8 +11,17 @@ pub enum CrawlerError {
     #[error("Parsing error: {0}")]
     Parse(String),
 
-    #[error("Login failed after {0} attempts")]
+    #[error("Login failed after {0} attempts. Please check your credentials.")]
     LoginFailed(u32),
+
+    #[error("Invalid credentials: Username or password incorrect")]
+    InvalidCredentials,
+
+    #[error("Session expired or invalid")]
+    SessionExpired,
+
+    #[error("The system is under maintenance or temporarily unavailable")]
+    Maintenance,
 
     #[error("Unknown error: {0}")]
     Unknown(String),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:infinite_calendar_view/infinite_calendar_view.dart';
 
 /// Provider for the Calendar EventController.

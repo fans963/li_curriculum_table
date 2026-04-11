@@ -3,22 +3,24 @@ import 'dart:async';
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/cached_timetable.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_ui_state.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_state.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
 
-class TimetableController extends Notifier<TimetableUiState> {
+part 'timetable_controller.g.dart';
 
+@riverpod
+class TimetableController extends _$TimetableController {
   @override
-  TimetableUiState build() => TimetableUiState.initial();
+  TimetableState build() => initialTimetableState;
 
   void setCurrentTeachingWeek(int week) {
-    if (week < 1) {
-      return;
-    }
+    if (week < 1) return;
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _setBaselineAndInfer(referenceDate: today, referenceWeek: week);
@@ -30,14 +32,9 @@ class TimetableController extends Notifier<TimetableUiState> {
   }
 
   Future<void> restoreCachedTeachingWeekBaseline() async {
-    final loadBaseline = ref.read(
-      loadCachedTeachingWeekBaselineUseCaseProvider,
-    );
-    final baseline = await loadBaseline();
-    if (baseline == null) {
-      // No fallback; user must specify 'Today's Week' to calibrate the anchor.
-      return;
-    }
+    final repository = ref.read(teachingWeekBaselineRepositoryProvider);
+    final baseline = await repository.loadBaseline();
+    if (baseline == null) return;
 
     final anchor = mondayOfTermWeekOne(
       referenceWeek: baseline.referenceWeek,
@@ -49,25 +46,34 @@ class TimetableController extends Notifier<TimetableUiState> {
     state = state.copyWith(
       referenceWeek: baseline.referenceWeek,
       currentTeachingWeek: inferred,
-      displayWeek: inferred, // Initial view is today
+      displayWeek: inferred,
       termStartMonday: anchor,
       status: '已根据缓存基准自动推算到第$inferred周。',
     );
   }
 
   Future<void> restoreCachedTimetable() async {
-    final loadCachedTimetable = ref.read(loadCachedTimetableUseCaseProvider);
-    final cachedData = await loadCachedTimetable();
+    final cacheRepository = ref.read(timetableCacheRepositoryProvider);
+    final cachedData = await cacheRepository.loadTimetable();
+    
     if (cachedData != null) {
-      state = state.copyWith(data: cachedData, status: '', needsLogin: false);
-      _updateWeekRange(cachedData);
+      state = state.copyWith(
+        data: TimetableData(
+          rows: cachedData.rows,
+          occurrences: buildCourseOccurrences(cachedData.rows),
+          loginLikelySuccess: true,
+        ),
+        status: '',
+        needsLogin: false,
+      );
+      _updateWeekRange(state.data);
       return;
     }
 
     // No cache — check if credentials exist to determine needsLogin state
     try {
-      final loadCreds = ref.read(loadCachedCredentialsUseCaseProvider);
-      final creds = await loadCreds();
+      final credentialsRepository = ref.read(credentialsRepositoryProvider);
+      final creds = await credentialsRepository.loadCredentials();
       if (creds == null || creds.isEmpty) {
         state = state.copyWith(needsLogin: true);
       }
@@ -99,7 +105,6 @@ class TimetableController extends Notifier<TimetableUiState> {
       }
     }
 
-    // Fallback if no valid week indices found
     if (!initialized) {
       min = 1;
       max = 18;
@@ -123,38 +128,32 @@ class TimetableController extends Notifier<TimetableUiState> {
     state = state.copyWith(
       referenceWeek: safeWeek,
       currentTeachingWeek: inferred,
-      displayWeek: inferred, // Reset view on calibration
+      displayWeek: inferred,
       termStartMonday: anchor,
     );
 
-    final cacheBaseline = ref.read(cacheTeachingWeekBaselineUseCaseProvider);
+    final repository = ref.read(teachingWeekBaselineRepositoryProvider);
     unawaited(
-      cacheBaseline(
+      repository.cacheBaseline(
         TeachingWeekBaseline(
           referenceDate: referenceDate,
           referenceWeek: safeWeek,
         ),
-      ).catchError((_) {
-        // Cache write failures should never break the interactive flow.
-      }),
+      ).catchError((_) {}),
     );
   }
 
-  /// Sync timetable using cached credentials (called from timetable tab FAB).
   Future<void> syncFromCache() async {
     try {
-      final loadCreds = ref.read(loadCachedCredentialsUseCaseProvider);
-      final creds = await loadCreds();
+      final repository = ref.read(credentialsRepositoryProvider);
+      final creds = await repository.loadCredentials();
       if (creds == null || creds.isEmpty) {
         state = state.copyWith(needsLogin: true, status: '');
         return;
       }
       await fetchAndBuild(username: creds.username, password: creds.password);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        status: '同步失败: $e',
-      );
+      state = state.copyWith(isLoading: false, status: '同步失败: $e');
     }
   }
 
@@ -172,7 +171,6 @@ class TimetableController extends Notifier<TimetableUiState> {
       isLoading: true,
       needsLogin: false,
       status: '正在初始化 OCR 引擎 (仅需一次)...',
-      clearData: true,
     );
 
     try {
@@ -184,32 +182,31 @@ class TimetableController extends Notifier<TimetableUiState> {
 
     state = state.copyWith(status: '正在爬取课表并生成对比视图...');
 
-    final useCase = ref.read(fetchTimetableUseCaseProvider);
+    final repository = ref.read(timetableRepositoryProvider);
 
     try {
-      final data = await useCase(username: cleanUser, password: password);
-      final cacheTimetable = ref.read(cacheTimetableUseCaseProvider);
+      final data = await repository.fetchTimetable(username: cleanUser, password: password);
+      
+      final cacheRepository = ref.read(timetableCacheRepositoryProvider);
       try {
-        await cacheTimetable(data.rows);
-      } catch (_) {
-        // Cache failures should not block timetable fetch success.
-      }
+        await cacheRepository.cacheTimetable(
+          CachedTimetable(rows: data.rows, cachedAt: DateTime.now()),
+        );
+      } catch (_) {}
 
       if (data.loginLikelySuccess) {
-        final cacheCredentials = ref.read(cacheCredentialsUseCaseProvider);
+        final credentialsRepository = ref.read(credentialsRepositoryProvider);
         try {
-          await cacheCredentials(
+          await credentialsRepository.cacheCredentials(
             LoginCredentials(username: cleanUser, password: password),
           );
-        } catch (_) {
-          // Cache failures should not block timetable fetch success.
-        }
+        } catch (_) {}
       }
+
       state = state.copyWith(
         isLoading: false,
         data: data,
-        status:
-            '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
+        status: '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
       );
       _updateWeekRange(data);
 
@@ -226,17 +223,12 @@ class TimetableController extends Notifier<TimetableUiState> {
       final loweredErr = err.toLowerCase();
       final isConnRefused =
           RegExp(r'errno\s*[:=]\s*111\b').hasMatch(err) ||
-          loweredErr.contains('connection refused') ||
-          err.contains('errno=111') ||
-          err.contains('errno:111');
+          loweredErr.contains('connection refused');
       final isWebXhrNetworkError =
           kIsWeb &&
           (loweredErr.contains('xmlhttprequest onerror') ||
-              loweredErr.contains(
-                'networkerror when attempting to fetch resource',
-              ) ||
-              loweredErr.contains('dioexception [connection error]') ||
-              loweredErr.contains('dioexception [connection errorl]'));
+              loweredErr.contains('networkerror when attempting to fetch resource') ||
+              loweredErr.contains('dioexception [connection error]'));
 
       if (isConnRefused) {
         message = '抓取失败，网络连接不可用，请检查网络后重试。';
@@ -250,21 +242,15 @@ class TimetableController extends Notifier<TimetableUiState> {
 
   Future<void> clearAllCache() async {
     state = state.copyWith(isLoading: true, status: '正在清除缓存...');
-
-    // 1. Clear all data in secure storage EXCEPT credentials
     final store = ref.read(secureStorageStoreProvider);
     await store.deleteAllExcept([
       'timetable.credentials.username',
       'timetable.credentials.password',
     ]);
 
-    // 2. Reset internal state
-    state = TimetableUiState.initial().copyWith(
-      needsLogin: false, // Assume we keep credentials
+    state = initialTimetableState.copyWith(
+      needsLogin: false,
       status: '缓存已清除。',
     );
-
-    // 3. Invalidate other relevant providers (if they were already providing data)
-    // ref.invalidate(classroomControllerProvider); 
   }
 }

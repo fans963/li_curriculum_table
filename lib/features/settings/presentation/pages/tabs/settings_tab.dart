@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/app/app.dart';
 
@@ -42,17 +43,15 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final u = _usernameController.text.trim();
       final p = _passwordController.text;
       if (u.isNotEmpty && p.isNotEmpty) {
-        final cacheCredentials = ref.read(cacheCredentialsUseCaseProvider);
-        cacheCredentials(LoginCredentials(username: u, password: p));
+        ref.read(credentialsRepositoryProvider).cacheCredentials(LoginCredentials(username: u, password: p));
       }
     });
   }
 
   Future<void> _restoreCachedCredentials() async {
     try {
-      final loadCachedCredentials =
-          ref.read(loadCachedCredentialsUseCaseProvider);
-      final cached = await loadCachedCredentials();
+      final repository = ref.read(credentialsRepositoryProvider);
+      final cached = await repository.loadCredentials();
       if (!mounted || cached == null) return;
       _usernameController.text = cached.username;
       _passwordController.text = cached.password;

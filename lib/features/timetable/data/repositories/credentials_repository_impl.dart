@@ -8,12 +8,12 @@ class CredentialsRepositoryImpl implements CredentialsRepository {
   final SecureCredentialsLocalDataSource _localDataSource;
 
   @override
-  Future<LoginCredentials?> readCredentials() {
+  Future<LoginCredentials?> loadCredentials() {
     return _localDataSource.readCredentials();
   }
 
   @override
-  Future<void> saveCredentials(LoginCredentials credentials) {
+  Future<void> cacheCredentials(LoginCredentials credentials) {
     return _localDataSource.saveCredentials(credentials);
   }
 

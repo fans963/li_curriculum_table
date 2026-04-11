@@ -49,7 +49,7 @@ impl DdddOcr {
             .expect("Failed to load OCR model from bytes");
 
         Self { model, device }
-    }
+    } 
 
     pub fn recognize(&self, img_bytes: &[u8]) -> String {
         let mut img = image::load_from_memory(img_bytes).unwrap();

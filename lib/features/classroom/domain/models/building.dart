@@ -1,21 +1,14 @@
-class BuildingEntity {
-  final String id;
-  final String name;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const BuildingEntity({
-    required this.id,
-    required this.name,
-  });
+part 'building.freezed.dart';
+part 'building.g.dart';
 
-  factory BuildingEntity.fromJson(Map<String, dynamic> json) {
-    return BuildingEntity(
-      id: json['id'] as String,
-      name: json['name'] as String,
-    );
-  }
+@freezed
+abstract class Building with _$Building {
+  const factory Building({
+    required String id,
+    required String name,
+  }) = _Building;
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-      };
+  factory Building.fromJson(Map<String, dynamic> json) => _$BuildingFromJson(json);
 }

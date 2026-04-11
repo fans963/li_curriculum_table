@@ -5,6 +5,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/calendar_vie
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 
 class TimetableWeekView extends ConsumerStatefulWidget {
@@ -69,8 +70,8 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
     const headerHeight = 64.0;
 
     // Dynamic boundaries relative to termStart (Week 1 Monday)
-    final int maxPreviousDays = (1 - timetableState.minWeek) * 7;
-    final int maxNextDays = (timetableState.maxWeek - 1) * 7;
+    final int maxPreviousDays = ((1 - timetableState.minWeek) * 7).toInt();
+    final int maxNextDays = ((timetableState.maxWeek - 1) * 7).toInt();
 
     return LayoutBuilder(builder: (context, constraints) {
       // Guard against unstable/negative constraints during initialization

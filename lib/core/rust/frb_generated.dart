@@ -3,6 +3,7 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
+import 'api/auth.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
 import 'api/grade.dart';
@@ -38,12 +39,8 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 
   /// Initialize flutter_rust_bridge in mock mode.
   /// No libraries for FFI are loaded.
-  static void initMock({
-    required RustLibApi api,
-  }) {
-    instance.initMockImpl(
-      api: api,
-    );
+  static void initMock({required RustLibApi api}) {
+    instance.initMockImpl(api: api);
   }
 
   /// Dispose flutter_rust_bridge
@@ -73,45 +70,62 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -700291118;
+  int get rustContentHash => 1665529287;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
-    stem: 'rust_lib_li_curriculum_table',
-    ioDirectory: 'rust/target/release/',
-    webPrefix: 'pkg/',
-    wasmBindgenName: 'wasm_bindgen',
-  );
+        stem: 'rust_lib_li_curriculum_table',
+        ioDirectory: 'rust/target/release/',
+        webPrefix: 'pkg/',
+        wasmBindgenName: 'wasm_bindgen',
+      );
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<TimetableRecord> crateApiCrawlerFetchTimetableData(
-      {required String username, required String password});
+  Future<TimetableRecord> crateApiCrawlerFetchTimetableData({
+    required String username,
+    required String password,
+  });
 
-  Future<List<ClassroomSchedule>> crateApiClassroomGetBuildingSchedule(
-      {required String campusId,
-      required String buildingId,
-      required String term,
-      String? username,
-      String? password});
+  Future<ArcSessionManager> crateApiAuthGetAuthorizedSession({
+    String? username,
+    String? password,
+  });
 
-  Future<List<Building>> crateApiClassroomGetBuildings(
-      {required String campusId, String? username, String? password});
+  Future<List<ClassroomSchedule>> crateApiClassroomGetBuildingSchedule({
+    required String campusId,
+    required String buildingId,
+    required String term,
+    String? username,
+    String? password,
+  });
 
-  Future<CampusPageData> crateApiClassroomGetCampuses(
-      {String? username, String? password});
+  Future<List<Building>> crateApiClassroomGetBuildings({
+    required String campusId,
+    String? username,
+    String? password,
+  });
 
-  Future<List<ClassroomAvailability>> crateApiClassroomGetClassroomAvailability(
-      {required String campusId,
-      required String buildingId,
-      required int week,
-      required int weekday,
-      required String term,
-      String? username,
-      String? password});
+  Future<CampusPageData> crateApiClassroomGetCampuses({
+    String? username,
+    String? password,
+  });
 
-  Future<List<Grade>> crateApiGradeGetGrades(
-      {required String username, required String password});
+  Future<List<ClassroomAvailability>>
+  crateApiClassroomGetClassroomAvailability({
+    required String campusId,
+    required String buildingId,
+    required int week,
+    required int weekday,
+    required String term,
+    String? username,
+    String? password,
+  });
+
+  Future<List<Grade>> crateApiGradeGetGrades({
+    required String username,
+    required String password,
+  });
 
   Future<ArcSessionManager> crateApiCrawlerGetSharedSessionManager();
 
@@ -124,13 +138,13 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiCrawlerUpdateProxyConfig({required int port});
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_ArcSessionManager;
+  get rust_arc_increment_strong_count_ArcSessionManager;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_ArcSessionManager;
+  get rust_arc_decrement_strong_count_ArcSessionManager;
 
   CrossPlatformFinalizerArg
-      get rust_arc_decrement_strong_count_ArcSessionManagerPtr;
+  get rust_arc_decrement_strong_count_ArcSessionManagerPtr;
 }
 
 class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
@@ -142,24 +156,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<TimetableRecord> crateApiCrawlerFetchTimetableData(
-      {required String username, required String password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(username, serializer);
-        sse_encode_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 1, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_timetable_record,
-        decodeErrorData: sse_decode_AnyhowException,
+  Future<TimetableRecord> crateApiCrawlerFetchTimetableData({
+    required String username,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(username, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 1,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_timetable_record,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerFetchTimetableDataConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiCrawlerFetchTimetableDataConstMeta,
-      argValues: [username, password],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiCrawlerFetchTimetableDataConstMeta =>
@@ -169,31 +191,74 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<ClassroomSchedule>> crateApiClassroomGetBuildingSchedule(
-      {required String campusId,
-      required String buildingId,
-      required String term,
-      String? username,
-      String? password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(campusId, serializer);
-        sse_encode_String(buildingId, serializer);
-        sse_encode_String(term, serializer);
-        sse_encode_opt_String(username, serializer);
-        sse_encode_opt_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 2, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_classroom_schedule,
-        decodeErrorData: sse_decode_AnyhowException,
+  Future<ArcSessionManager> crateApiAuthGetAuthorizedSession({
+    String? username,
+    String? password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_String(username, serializer);
+          sse_encode_opt_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 2,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiAuthGetAuthorizedSessionConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiClassroomGetBuildingScheduleConstMeta,
-      argValues: [campusId, buildingId, term, username, password],
-      apiImpl: this,
-    ));
+    );
+  }
+
+  TaskConstMeta get kCrateApiAuthGetAuthorizedSessionConstMeta =>
+      const TaskConstMeta(
+        debugName: "get_authorized_session",
+        argNames: ["username", "password"],
+      );
+
+  @override
+  Future<List<ClassroomSchedule>> crateApiClassroomGetBuildingSchedule({
+    required String campusId,
+    required String buildingId,
+    required String term,
+    String? username,
+    String? password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(campusId, serializer);
+          sse_encode_String(buildingId, serializer);
+          sse_encode_String(term, serializer);
+          sse_encode_opt_String(username, serializer);
+          sse_encode_opt_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 3,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_classroom_schedule,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiClassroomGetBuildingScheduleConstMeta,
+        argValues: [campusId, buildingId, term, username, password],
+        apiImpl: this,
+      ),
+    );
   }
 
   TaskConstMeta get kCrateApiClassroomGetBuildingScheduleConstMeta =>
@@ -203,25 +268,34 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<Building>> crateApiClassroomGetBuildings(
-      {required String campusId, String? username, String? password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(campusId, serializer);
-        sse_encode_opt_String(username, serializer);
-        sse_encode_opt_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 3, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_building,
-        decodeErrorData: sse_decode_AnyhowException,
+  Future<List<Building>> crateApiClassroomGetBuildings({
+    required String campusId,
+    String? username,
+    String? password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(campusId, serializer);
+          sse_encode_opt_String(username, serializer);
+          sse_encode_opt_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 4,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_building,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiClassroomGetBuildingsConstMeta,
+        argValues: [campusId, username, password],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiClassroomGetBuildingsConstMeta,
-      argValues: [campusId, username, password],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiClassroomGetBuildingsConstMeta =>
@@ -231,24 +305,32 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<CampusPageData> crateApiClassroomGetCampuses(
-      {String? username, String? password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_opt_String(username, serializer);
-        sse_encode_opt_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 4, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_campus_page_data,
-        decodeErrorData: sse_decode_AnyhowException,
+  Future<CampusPageData> crateApiClassroomGetCampuses({
+    String? username,
+    String? password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_opt_String(username, serializer);
+          sse_encode_opt_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_campus_page_data,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiClassroomGetCampusesConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiClassroomGetCampusesConstMeta,
-      argValues: [username, password],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiClassroomGetCampusesConstMeta =>
@@ -258,43 +340,51 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<ClassroomAvailability>> crateApiClassroomGetClassroomAvailability(
-      {required String campusId,
-      required String buildingId,
-      required int week,
-      required int weekday,
-      required String term,
-      String? username,
-      String? password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(campusId, serializer);
-        sse_encode_String(buildingId, serializer);
-        sse_encode_u_32(week, serializer);
-        sse_encode_u_32(weekday, serializer);
-        sse_encode_String(term, serializer);
-        sse_encode_opt_String(username, serializer);
-        sse_encode_opt_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 5, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_classroom_availability,
-        decodeErrorData: sse_decode_AnyhowException,
+  Future<List<ClassroomAvailability>>
+  crateApiClassroomGetClassroomAvailability({
+    required String campusId,
+    required String buildingId,
+    required int week,
+    required int weekday,
+    required String term,
+    String? username,
+    String? password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(campusId, serializer);
+          sse_encode_String(buildingId, serializer);
+          sse_encode_u_32(week, serializer);
+          sse_encode_u_32(weekday, serializer);
+          sse_encode_String(term, serializer);
+          sse_encode_opt_String(username, serializer);
+          sse_encode_opt_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_classroom_availability,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiClassroomGetClassroomAvailabilityConstMeta,
+        argValues: [
+          campusId,
+          buildingId,
+          week,
+          weekday,
+          term,
+          username,
+          password,
+        ],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiClassroomGetClassroomAvailabilityConstMeta,
-      argValues: [
-        campusId,
-        buildingId,
-        week,
-        weekday,
-        term,
-        username,
-        password
-      ],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiClassroomGetClassroomAvailabilityConstMeta =>
@@ -307,53 +397,67 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           "weekday",
           "term",
           "username",
-          "password"
+          "password",
         ],
       );
 
   @override
-  Future<List<Grade>> crateApiGradeGetGrades(
-      {required String username, required String password}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_String(username, serializer);
-        sse_encode_String(password, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 6, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_list_grade,
-        decodeErrorData: null,
+  Future<List<Grade>> crateApiGradeGetGrades({
+    required String username,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(username, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_grade,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiGradeGetGradesConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiGradeGetGradesConstMeta,
-      argValues: [username, password],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiGradeGetGradesConstMeta => const TaskConstMeta(
-        debugName: "get_grades",
-        argNames: ["username", "password"],
-      );
+    debugName: "get_grades",
+    argNames: ["username", "password"],
+  );
 
   @override
   Future<ArcSessionManager> crateApiCrawlerGetSharedSessionManager() {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 7, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData:
-            sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager,
-        decodeErrorData: sse_decode_AnyhowException,
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData:
+              sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerGetSharedSessionManagerConstMeta,
+        argValues: [],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiCrawlerGetSharedSessionManagerConstMeta,
-      argValues: [],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiCrawlerGetSharedSessionManagerConstMeta =>
@@ -364,44 +468,54 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateApiSimpleInitApp() {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 8, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: null,
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 9,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiSimpleInitAppConstMeta,
+        argValues: [],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiSimpleInitAppConstMeta,
-      argValues: [],
-      apiImpl: this,
-    ));
+    );
   }
 
-  TaskConstMeta get kCrateApiSimpleInitAppConstMeta => const TaskConstMeta(
-        debugName: "init_app",
-        argNames: [],
-      );
+  TaskConstMeta get kCrateApiSimpleInitAppConstMeta =>
+      const TaskConstMeta(debugName: "init_app", argNames: []);
 
   @override
   Future<void> crateApiCrawlerInitOcrEngine({required List<int> modelBytes}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_list_prim_u_8_loose(modelBytes, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 9, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: sse_decode_AnyhowException,
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_list_prim_u_8_loose(modelBytes, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 10,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerInitOcrEngineConstMeta,
+        argValues: [modelBytes],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiCrawlerInitOcrEngineConstMeta,
-      argValues: [modelBytes],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiCrawlerInitOcrEngineConstMeta =>
@@ -412,61 +526,67 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @override
   Future<void> crateApiCrawlerRunProxyServer({required int port}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_u_16(port, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 10, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: null,
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(port, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 11,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiCrawlerRunProxyServerConstMeta,
+        argValues: [port],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiCrawlerRunProxyServerConstMeta,
-      argValues: [port],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiCrawlerRunProxyServerConstMeta =>
-      const TaskConstMeta(
-        debugName: "run_proxy_server",
-        argNames: ["port"],
-      );
+      const TaskConstMeta(debugName: "run_proxy_server", argNames: ["port"]);
 
   @override
   Future<void> crateApiCrawlerUpdateProxyConfig({required int port}) {
-    return handler.executeNormal(NormalTask(
-      callFfi: (port_) {
-        final serializer = SseSerializer(generalizedFrbRustBinding);
-        sse_encode_u_16(port, serializer);
-        pdeCallFfi(generalizedFrbRustBinding, serializer,
-            funcId: 11, port: port_);
-      },
-      codec: SseCodec(
-        decodeSuccessData: sse_decode_unit,
-        decodeErrorData: null,
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_u_16(port, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 12,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: null,
+        ),
+        constMeta: kCrateApiCrawlerUpdateProxyConfigConstMeta,
+        argValues: [port],
+        apiImpl: this,
       ),
-      constMeta: kCrateApiCrawlerUpdateProxyConfigConstMeta,
-      argValues: [port],
-      apiImpl: this,
-    ));
+    );
   }
 
   TaskConstMeta get kCrateApiCrawlerUpdateProxyConfigConstMeta =>
-      const TaskConstMeta(
-        debugName: "update_proxy_config",
-        argNames: ["port"],
-      );
+      const TaskConstMeta(debugName: "update_proxy_config", argNames: ["port"]);
 
   RustArcIncrementStrongCountFnType
-      get rust_arc_increment_strong_count_ArcSessionManager => wire
-          .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
+  get rust_arc_increment_strong_count_ArcSessionManager => wire
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
 
   RustArcDecrementStrongCountFnType
-      get rust_arc_decrement_strong_count_ArcSessionManager => wire
-          .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
+  get rust_arc_decrement_strong_count_ArcSessionManager => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
 
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw) {
@@ -476,16 +596,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   ArcSessionManager
-      dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          dynamic raw) {
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcSessionManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
 
   @protected
   ArcSessionManager
-      dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          dynamic raw) {
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return ArcSessionManagerImpl.frbInternalDcoDecode(raw as List<dynamic>);
   }
@@ -634,7 +756,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<ClassroomAvailability> dco_decode_list_classroom_availability(
-      dynamic raw) {
+    dynamic raw,
+  ) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>)
         .map(dco_decode_classroom_availability)
@@ -771,20 +894,26 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   ArcSessionManager
-      sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          SseDeserializer deserializer) {
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ArcSessionManagerImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
   }
 
   @protected
   ArcSessionManager
-      sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          SseDeserializer deserializer) {
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return ArcSessionManagerImpl.frbInternalSseDecode(
-        sse_decode_usize(deserializer), sse_decode_i_32(deserializer));
+      sse_decode_usize(deserializer),
+      sse_decode_i_32(deserializer),
+    );
   }
 
   @protected
@@ -826,22 +955,28 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   ClassroomAvailability sse_decode_classroom_availability(
-      SseDeserializer deserializer) {
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_classroomName = sse_decode_String(deserializer);
     var var_availability = sse_decode_list_bool(deserializer);
     return ClassroomAvailability(
-        classroomName: var_classroomName, availability: var_availability);
+      classroomName: var_classroomName,
+      availability: var_availability,
+    );
   }
 
   @protected
   ClassroomSchedule sse_decode_classroom_schedule(
-      SseDeserializer deserializer) {
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_classroomName = sse_decode_String(deserializer);
     var var_occupiedSlots = sse_decode_list_occupied_slot(deserializer);
     return ClassroomSchedule(
-        classroomName: var_classroomName, occupiedSlots: var_occupiedSlots);
+      classroomName: var_classroomName,
+      occupiedSlots: var_occupiedSlots,
+    );
   }
 
   @protected
@@ -858,16 +993,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_stage = sse_decode_String(deserializer);
     var var_slots = sse_decode_list_time_slot(deserializer);
     return CourseRow(
-        courseId: var_courseId,
-        order: var_order,
-        courseName: var_courseName,
-        teacher: var_teacher,
-        timeText: var_timeText,
-        credit: var_credit,
-        location: var_location,
-        courseType: var_courseType,
-        stage: var_stage,
-        slots: var_slots);
+      courseId: var_courseId,
+      order: var_order,
+      courseName: var_courseName,
+      teacher: var_teacher,
+      timeText: var_timeText,
+      credit: var_credit,
+      location: var_location,
+      courseType: var_courseType,
+      stage: var_stage,
+      slots: var_slots,
+    );
   }
 
   @protected
@@ -890,16 +1026,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_courseAttribute = sse_decode_String(deserializer);
     var var_courseNature = sse_decode_String(deserializer);
     return Grade(
-        term: var_term,
-        courseCode: var_courseCode,
-        courseName: var_courseName,
-        score: var_score,
-        scoreMark: var_scoreMark,
-        credits: var_credits,
-        totalHours: var_totalHours,
-        assessmentMethod: var_assessmentMethod,
-        courseAttribute: var_courseAttribute,
-        courseNature: var_courseNature);
+      term: var_term,
+      courseCode: var_courseCode,
+      courseName: var_courseName,
+      score: var_score,
+      scoreMark: var_scoreMark,
+      credits: var_credits,
+      totalHours: var_totalHours,
+      assessmentMethod: var_assessmentMethod,
+      courseAttribute: var_courseAttribute,
+      courseNature: var_courseNature,
+    );
   }
 
   @protected
@@ -952,7 +1089,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<ClassroomAvailability> sse_decode_list_classroom_availability(
-      SseDeserializer deserializer) {
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -965,7 +1103,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<ClassroomSchedule> sse_decode_list_classroom_schedule(
-      SseDeserializer deserializer) {
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1002,7 +1141,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   List<OccupiedSlot> sse_decode_list_occupied_slot(
-      SseDeserializer deserializer) {
+    SseDeserializer deserializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
     var len_ = sse_decode_i_32(deserializer);
@@ -1047,10 +1187,11 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_weekday = sse_decode_u_32(deserializer);
     var var_slotIndex = sse_decode_u_32(deserializer);
     return OccupiedSlot(
-        startWeek: var_startWeek,
-        endWeek: var_endWeek,
-        weekday: var_weekday,
-        slotIndex: var_slotIndex);
+      startWeek: var_startWeek,
+      endWeek: var_endWeek,
+      weekday: var_weekday,
+      slotIndex: var_slotIndex,
+    );
   }
 
   @protected
@@ -1074,12 +1215,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_endWeek = sse_decode_u_32(deserializer);
     var var_weekText = sse_decode_String(deserializer);
     return TimeSlot(
-        weekday: var_weekday,
-        startSection: var_startSection,
-        endSection: var_endSection,
-        startWeek: var_startWeek,
-        endWeek: var_endWeek,
-        weekText: var_weekText);
+      weekday: var_weekday,
+      startSection: var_startSection,
+      endSection: var_endSection,
+      startWeek: var_startWeek,
+      endWeek: var_endWeek,
+      weekText: var_weekText,
+    );
   }
 
   @protected
@@ -1089,9 +1231,10 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var var_rows = sse_decode_list_course_row(deserializer);
     var var_loginLikelySuccess = sse_decode_bool(deserializer);
     return TimetableRecord(
-        headers: var_headers,
-        rows: var_rows,
-        loginLikelySuccess: var_loginLikelySuccess);
+      headers: var_headers,
+      rows: var_rows,
+      loginLikelySuccess: var_loginLikelySuccess,
+    );
   }
 
   @protected
@@ -1131,29 +1274,37 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_AnyhowException(
-      AnyhowException self, SseSerializer serializer) {
+    AnyhowException self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.message, serializer);
   }
 
   @protected
   void
-      sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          ArcSessionManager self, SseSerializer serializer) {
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    ArcSessionManager self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-        (self as ArcSessionManagerImpl).frbInternalSseEncode(move: true),
-        serializer);
+      (self as ArcSessionManagerImpl).frbInternalSseEncode(move: true),
+      serializer,
+    );
   }
 
   @protected
   void
-      sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
-          ArcSessionManager self, SseSerializer serializer) {
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    ArcSessionManager self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_usize(
-        (self as ArcSessionManagerImpl).frbInternalSseEncode(move: null),
-        serializer);
+      (self as ArcSessionManagerImpl).frbInternalSseEncode(move: null),
+      serializer,
+    );
   }
 
   @protected
@@ -1184,7 +1335,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_campus_page_data(
-      CampusPageData self, SseSerializer serializer) {
+    CampusPageData self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_campus(self.campuses, serializer);
     sse_encode_String(self.currentTerm, serializer);
@@ -1192,7 +1345,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_classroom_availability(
-      ClassroomAvailability self, SseSerializer serializer) {
+    ClassroomAvailability self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.classroomName, serializer);
     sse_encode_list_bool(self.availability, serializer);
@@ -1200,7 +1355,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_classroom_schedule(
-      ClassroomSchedule self, SseSerializer serializer) {
+    ClassroomSchedule self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_String(self.classroomName, serializer);
     sse_encode_list_occupied_slot(self.occupiedSlots, serializer);
@@ -1280,7 +1437,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_classroom_availability(
-      List<ClassroomAvailability> self, SseSerializer serializer) {
+    List<ClassroomAvailability> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1290,7 +1449,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_classroom_schedule(
-      List<ClassroomSchedule> self, SseSerializer serializer) {
+    List<ClassroomSchedule> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1300,7 +1461,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_course_row(
-      List<CourseRow> self, SseSerializer serializer) {
+    List<CourseRow> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1319,7 +1482,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_occupied_slot(
-      List<OccupiedSlot> self, SseSerializer serializer) {
+    List<OccupiedSlot> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1329,16 +1494,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_prim_u_8_loose(
-      List<int> self, SseSerializer serializer) {
+    List<int> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
-    serializer.buffer
-        .putUint8List(self is Uint8List ? self : Uint8List.fromList(self));
+    serializer.buffer.putUint8List(
+      self is Uint8List ? self : Uint8List.fromList(self),
+    );
   }
 
   @protected
   void sse_encode_list_prim_u_8_strict(
-      Uint8List self, SseSerializer serializer) {
+    Uint8List self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     serializer.buffer.putUint8List(self);
@@ -1346,7 +1516,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_list_time_slot(
-      List<TimeSlot> self, SseSerializer serializer) {
+    List<TimeSlot> self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
@@ -1386,7 +1558,9 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 
   @protected
   void sse_encode_timetable_record(
-      TimetableRecord self, SseSerializer serializer) {
+    TimetableRecord self,
+    SseSerializer serializer,
+  ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_String(self.headers, serializer);
     sse_encode_list_course_row(self.rows, serializer);
@@ -1433,12 +1607,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
 class ArcSessionManagerImpl extends RustOpaque implements ArcSessionManager {
   // Not to be used by end users
   ArcSessionManagerImpl.frbInternalDcoDecode(List<dynamic> wire)
-      : super.frbInternalDcoDecode(wire, _kStaticData);
+    : super.frbInternalDcoDecode(wire, _kStaticData);
 
   // Not to be used by end users
   ArcSessionManagerImpl.frbInternalSseDecode(
-      BigInt ptr, int externalSizeOnNative)
-      : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
+    BigInt ptr,
+    int externalSizeOnNative,
+  ) : super.frbInternalSseDecode(ptr, externalSizeOnNative, _kStaticData);
 
   static final _kStaticData = RustArcStaticData(
     rustArcIncrementStrongCount:
@@ -1446,6 +1621,8 @@ class ArcSessionManagerImpl extends RustOpaque implements ArcSessionManager {
     rustArcDecrementStrongCount:
         RustLib.instance.api.rust_arc_decrement_strong_count_ArcSessionManager,
     rustArcDecrementStrongCountPtr: RustLib
-        .instance.api.rust_arc_decrement_strong_count_ArcSessionManagerPtr,
+        .instance
+        .api
+        .rust_arc_decrement_strong_count_ArcSessionManagerPtr,
   );
 }

@@ -31,7 +31,6 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
       backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
-          // Standard M3 surface background
           Positioned.fill(
             child: Container(
               color: colorScheme.surface,
@@ -325,9 +324,9 @@ class _DateSelector extends StatelessWidget {
 }
 
 class _BuildingSelector extends StatelessWidget {
-  final List<BuildingEntity> buildings;
-  final BuildingEntity? selectedBuilding;
-  final ValueChanged<BuildingEntity> onSelected;
+  final List<Building> buildings;
+  final Building? selectedBuilding;
+  final ValueChanged<Building> onSelected;
 
   const _BuildingSelector({required this.buildings, this.selectedBuilding, required this.onSelected});
 
@@ -403,15 +402,15 @@ class _SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 48; // Increased slightly from 44
+  double get maxExtent => 48;
   @override
-  double get minExtent => 48; // Consistent height
+  double get minExtent => 48;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
 }
 
 class _ClassroomSliverList extends StatelessWidget {
-  final List<ClassroomAvailabilityEntity> results;
+  final List<ClassroomAvailability> results;
   const _ClassroomSliverList({required this.results});
 
   @override
@@ -586,9 +585,9 @@ class _ErrorView extends StatelessWidget {
 }
 
 class _CampusSelector extends StatelessWidget {
-  final List<CampusEntity> campuses;
-  final CampusEntity? selectedCampus;
-  final ValueChanged<CampusEntity> onSelected;
+  final List<Campus> campuses;
+  final Campus? selectedCampus;
+  final ValueChanged<Campus> onSelected;
 
   const _CampusSelector({required this.campuses, this.selectedCampus, required this.onSelected});
 

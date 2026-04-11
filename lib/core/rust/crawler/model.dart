@@ -10,10 +10,7 @@ class Building {
   final String id;
   final String name;
 
-  const Building({
-    required this.id,
-    required this.name,
-  });
+  const Building({required this.id, required this.name});
 
   @override
   int get hashCode => id.hashCode ^ name.hashCode;
@@ -31,10 +28,7 @@ class Campus {
   final String id;
   final String name;
 
-  const Campus({
-    required this.id,
-    required this.name,
-  });
+  const Campus({required this.id, required this.name});
 
   @override
   int get hashCode => id.hashCode ^ name.hashCode;
@@ -53,10 +47,7 @@ class CampusPageData {
   final List<Campus> campuses;
   final String currentTerm;
 
-  const CampusPageData({
-    required this.campuses,
-    required this.currentTerm,
-  });
+  const CampusPageData({required this.campuses, required this.currentTerm});
 
   @override
   int get hashCode => campuses.hashCode ^ currentTerm.hashCode;

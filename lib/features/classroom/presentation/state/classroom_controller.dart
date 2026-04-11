@@ -1,36 +1,17 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_curriculum_table/features/classroom/data/datasources/classroom_remote_datasource.dart';
-import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
-import 'package:li_curriculum_table/features/classroom/data/repositories/classroom_repository_impl.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/campus.dart';
-import 'package:li_curriculum_table/features/classroom/domain/repositories/classroom_repository.dart';
+import 'package:li_curriculum_table/features/classroom/presentation/providers/classroom_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-final classroomRemoteDataSourceProvider = Provider<ClassroomRemoteDataSource>((ref) {
-  return ClassroomRemoteDataSourceImpl();
-});
+part 'classroom_controller.g.dart';
 
-final classroomLocalDataSourceProvider = Provider<ClassroomLocalDataSource>((ref) {
-  final store = ref.watch(secureStorageStoreProvider);
-  return ClassroomLocalDataSource(store);
-});
-
-final classroomRepositoryProvider = Provider<ClassroomRepository>((ref) {
-  final remote = ref.watch(classroomRemoteDataSourceProvider);
-  final local = ref.watch(classroomLocalDataSourceProvider);
-  return ClassroomRepositoryImpl(remote, local);
-});
-
-final classroomControllerProvider =
-    NotifierProvider<ClassroomController, ClassroomState>(
-  ClassroomController.new,
-);
-
-class ClassroomController extends Notifier<ClassroomState> {
+@riverpod
+class ClassroomController extends _$ClassroomController {
   @override
   ClassroomState build() {
     return ClassroomState(selectedDate: DateTime.now());
@@ -45,10 +26,10 @@ class ClassroomController extends Notifier<ClassroomState> {
 
   Future<(String?, String?)> _getCredentials() async {
     try {
-      final useCase = ref.read(loadCachedCredentialsUseCaseProvider);
-      final creds = await useCase();
+      final repository = ref.read(credentialsRepositoryProvider);
+      final creds = await repository.loadCredentials();
       if (creds != null && !creds.isEmpty) {
-        return (creds.username, creds.password);
+        return (creds.username as String?, creds.password as String?);
       }
     } catch (_) {}
     return (null, null);
@@ -113,7 +94,7 @@ class ClassroomController extends Notifier<ClassroomState> {
     }
   }
 
-  Future<void> setCampus(CampusEntity campus) async {
+  Future<void> setCampus(Campus campus) async {
     state = state.copyWith(selectedCampus: campus, buildings: [], selectedBuilding: null, results: []);
     await ref.read(classroomLocalDataSourceProvider).saveLastCampusId(campus.id);
     await fetchBuildings();
@@ -155,7 +136,7 @@ class ClassroomController extends Notifier<ClassroomState> {
     }
   }
 
-  void selectBuilding(BuildingEntity building) {
+  void selectBuilding(Building building) {
     state = state.copyWith(selectedBuilding: building);
     ref.read(classroomLocalDataSourceProvider).saveLastBuildingId(building.id);
     fetchAvailability();
@@ -209,15 +190,12 @@ class ClassroomController extends Notifier<ClassroomState> {
     await fetchAvailability(forceRefresh: true);
   }
 
-  /// Only syncs data for the current view (active campus and building)
-  /// and potentially basic metadata (campus list, term info).
   Future<void> syncCurrentContext() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
 
-      // 1. Ensure basic campus/term context is loaded
       if (state.campuses.isEmpty || state.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
@@ -226,7 +204,6 @@ class ClassroomController extends Notifier<ClassroomState> {
         );
         state = state.copyWith(campuses: campuses, currentTerm: term);
         
-        // Pick a selection if none exists
         if (state.selectedCampus == null && campuses.isNotEmpty) {
           final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
           final selection = campuses.any((e) => e.id == lastId)
@@ -236,10 +213,8 @@ class ClassroomController extends Notifier<ClassroomState> {
         }
       }
 
-      // 2. Refresh active building schedule ONLY
       final campus = state.selectedCampus;
       if (campus != null) {
-        // Ensure buildings are loaded for this campus
         if (state.buildings.isEmpty) {
           final buildings = await repository.getBuildings(
             campus.id,
@@ -259,17 +234,12 @@ class ClassroomController extends Notifier<ClassroomState> {
           }
         }
 
-        // Now refresh the specific visibility schedule for the current view
         if (state.selectedBuilding != null) {
           await fetchAvailability(forceRefresh: true);
         }
       }
 
       state = state.copyWith(isLoading: false);
-      
-      // OPTIONAL: Trigger full sync in the background for other buildings
-      // without awaiting it, if we want eventual consistency
-      // _triggerBackgroundFullSync(); 
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -281,7 +251,6 @@ class ClassroomController extends Notifier<ClassroomState> {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
 
-      // Ensure we have current term info first if missing
       if (state.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
@@ -297,9 +266,8 @@ class ClassroomController extends Notifier<ClassroomState> {
         password: pass,
       );
 
-      // Refresh current view if possible
       if (state.selectedCampus != null && state.selectedBuilding != null) {
-        await fetchAvailability(forceRefresh: false); // Load the newly cached data
+        await fetchAvailability(forceRefresh: false);
       }
       
       state = state.copyWith(isLoading: false);

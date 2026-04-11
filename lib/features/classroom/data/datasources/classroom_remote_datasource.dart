@@ -5,9 +5,9 @@ import 'package:li_curriculum_table/features/classroom/domain/models/classroom_a
 import 'package:li_curriculum_table/features/classroom/domain/models/classroom_schedule.dart';
 
 abstract class ClassroomRemoteDataSource {
-  Future<(List<CampusEntity>, String)> getCampuses({String? username, String? password});
-  Future<List<BuildingEntity>> getBuildings(String campusId, {String? username, String? password});
-  Future<List<ClassroomAvailabilityEntity>> getClassroomAvailability({
+  Future<(List<Campus>, String)> getCampuses({String? username, String? password});
+  Future<List<Building>> getBuildings(String campusId, {String? username, String? password});
+  Future<List<ClassroomAvailability>> getClassroomAvailability({
     required String campusId,
     required String buildingId,
     required int week,
@@ -16,32 +16,31 @@ abstract class ClassroomRemoteDataSource {
     String? username,
     String? password,
   });
-  Future<List<ClassroomScheduleEntity>> getBuildingSchedule({
+  Future<List<ClassroomSchedule>> getBuildingSchedule({
     required String campusId,
     required String buildingId,
     required String term,
     String? username,
     String? password,
   });
-
 }
 
 class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
   @override
-  Future<(List<CampusEntity>, String)> getCampuses({String? username, String? password}) async {
+  Future<(List<Campus>, String)> getCampuses({String? username, String? password}) async {
     final data = await rust.getCampuses(username: username, password: password);
-    final campuses = data.campuses.map((c) => CampusEntity(id: c.id, name: c.name)).toList();
+    final campuses = data.campuses.map((c) => Campus(id: c.id, name: c.name)).toList();
     return (campuses, data.currentTerm);
   }
 
   @override
-  Future<List<BuildingEntity>> getBuildings(String campusId, {String? username, String? password}) async {
+  Future<List<Building>> getBuildings(String campusId, {String? username, String? password}) async {
     final buildings = await rust.getBuildings(campusId: campusId, username: username, password: password);
-    return buildings.map((b) => BuildingEntity(id: b.id, name: b.name)).toList();
+    return buildings.map((b) => Building(id: b.id, name: b.name)).toList();
   }
 
   @override
-  Future<List<ClassroomAvailabilityEntity>> getClassroomAvailability({
+  Future<List<ClassroomAvailability>> getClassroomAvailability({
     required String campusId,
     required String buildingId,
     required int week,
@@ -60,16 +59,15 @@ class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
       password: password,
     );
     return results
-        .map((r) => ClassroomAvailabilityEntity(
+        .map((r) => ClassroomAvailability(
               classroomName: r.classroomName,
               availability: r.availability,
             ))
         .toList();
   }
 
-
   @override
-  Future<List<ClassroomScheduleEntity>> getBuildingSchedule({
+  Future<List<ClassroomSchedule>> getBuildingSchedule({
     required String campusId,
     required String buildingId,
     required String term,
@@ -84,10 +82,10 @@ class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
       password: password,
     );
     return results
-        .map((s) => ClassroomScheduleEntity(
+        .map((s) => ClassroomSchedule(
               classroomName: s.classroomName,
               occupiedSlots: s.occupiedSlots
-                  .map((o) => OccupiedSlotEntity(
+                  .map((o) => OccupiedSlot(
                         startWeek: o.startWeek,
                         endWeek: o.endWeek,
                         weekday: o.weekday,
@@ -97,5 +95,4 @@ class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
             ))
         .toList();
   }
-
 }

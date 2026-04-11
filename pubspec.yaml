@@ -4,7 +4,7 @@ publish_to: "none"
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.5.0 <4.0.0"
+  sdk: ">=3.8.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -15,7 +15,7 @@ dependencies:
   flutter_rust_bridge: 2.12.0
   intl: ^0.20.2
   riverpod: ^3.2.1
-  flutter_riverpod: ^3.0.3
+  flutter_riverpod: ^3.3.1
   window_manager: ^0.5.1
   dynamic_color: ^1.8.1
   flex_color_scheme: ^8.4.0
@@ -25,6 +25,9 @@ dependencies:
   infinite_calendar_view: ^2.11.3
   auto_size_text: ^3.0.0
   pool: ^1.5.2
+  riverpod_annotation: ^4.0.2
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.11.0
 
 dev_dependencies:
   flutter_test:
@@ -37,6 +40,10 @@ dev_dependencies:
       url: https://github.com/devmil/flutter_launcher_icons.git
   flutter_native_splash: ^2.4.4
   msix: ^3.16.13
+  riverpod_generator: ^4.0.3
+  freezed: ^3.2.5
+  json_serializable: ^6.13.0
+  build_runner: ^2.4.15
 
 flutter:
   uses-material-design: true

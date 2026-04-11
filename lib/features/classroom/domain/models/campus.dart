@@ -1,32 +1,14 @@
-class CampusEntity {
-  final String id;
-  final String name;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  const CampusEntity({
-    required this.id,
-    required this.name,
-  });
+part 'campus.freezed.dart';
+part 'campus.g.dart';
 
-  factory CampusEntity.fromJson(Map<String, dynamic> json) {
-    return CampusEntity(
-      id: json['id'] as String,
-      name: json['name'] as String,
-    );
-  }
+@freezed
+abstract class Campus with _$Campus {
+  const factory Campus({
+    required String id,
+    required String name,
+  }) = _Campus;
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-      };
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is CampusEntity &&
-          runtimeType == other.runtimeType &&
-          id == other.id &&
-          name == other.name;
-
-  @override
-  int get hashCode => id.hashCode ^ name.hashCode;
+  factory Campus.fromJson(Map<String, dynamic> json) => _$CampusFromJson(json);
 }

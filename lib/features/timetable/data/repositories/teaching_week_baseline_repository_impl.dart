@@ -9,12 +9,12 @@ class TeachingWeekBaselineRepositoryImpl
   final SecureTeachingWeekBaselineLocalDataSource _localDataSource;
 
   @override
-  Future<TeachingWeekBaseline?> readBaseline() {
+  Future<TeachingWeekBaseline?> loadBaseline() {
     return _localDataSource.readBaseline();
   }
 
   @override
-  Future<void> saveBaseline(TeachingWeekBaseline baseline) {
+  Future<void> cacheBaseline(TeachingWeekBaseline baseline) {
     return _localDataSource.saveBaseline(baseline);
   }
 

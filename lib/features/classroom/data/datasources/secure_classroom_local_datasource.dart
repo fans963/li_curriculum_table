@@ -33,7 +33,7 @@ class ClassroomLocalDataSource {
   String _bulkScheduleKey(String campusId, String buildingId) =>
       'classroom.cache.bulk_schedule.$campusId.$buildingId';
 
-  Future<(List<CampusEntity>, String)?> readCampuses() async {
+  Future<(List<Campus>, String)?> readCampuses() async {
     try {
       final data = await _store.readAll([_campusesKey]);
       final jsonStr = data[_campusesKey];
@@ -50,7 +50,7 @@ class ClassroomLocalDataSource {
         
         final campuses = campusesRaw
             .whereType<Map<String, dynamic>>()
-            .map((e) => CampusEntity.fromJson(e))
+            .map((e) => Campus.fromJson(e))
             .toList();
         return (campuses, term);
       });
@@ -59,7 +59,7 @@ class ClassroomLocalDataSource {
     }
   }
 
-  Future<void> saveCampuses(List<CampusEntity> campuses, String currentTerm) async {
+  Future<void> saveCampuses(List<Campus> campuses, String currentTerm) async {
     final jsonStr = await _runTask(() {
       final payload = {
         'campuses': campuses.map((e) => e.toJson()).toList(),
@@ -70,7 +70,7 @@ class ClassroomLocalDataSource {
     await _store.writeAll({_campusesKey: jsonStr});
   }
 
-  Future<List<BuildingEntity>?> readBuildings(String campusId) async {
+  Future<List<Building>?> readBuildings(String campusId) async {
     try {
       final key = _buildingsKey(campusId);
       final data = await _store.readAll([key]);
@@ -82,7 +82,7 @@ class ClassroomLocalDataSource {
         if (decoded is! List) return null;
         return decoded
             .whereType<Map<String, dynamic>>()
-            .map((e) => BuildingEntity.fromJson(e))
+            .map((e) => Building.fromJson(e))
             .toList();
       });
     } catch (e) {
@@ -90,7 +90,7 @@ class ClassroomLocalDataSource {
     }
   }
 
-  Future<void> saveBuildings(String campusId, List<BuildingEntity> buildings) async {
+  Future<void> saveBuildings(String campusId, List<Building> buildings) async {
     final key = _buildingsKey(campusId);
     final jsonStr = await _runTask(() {
       return jsonEncode(buildings.map((e) => e.toJson()).toList());
@@ -98,7 +98,7 @@ class ClassroomLocalDataSource {
     await _store.writeAll({key: jsonStr});
   }
 
-  Future<List<ClassroomAvailabilityEntity>?> readAvailability({
+  Future<List<ClassroomAvailability>?> readAvailability({
     required String campusId,
     required String buildingId,
     required int week,
@@ -115,7 +115,7 @@ class ClassroomLocalDataSource {
         if (decoded is! List) return null;
         return decoded
             .whereType<Map<String, dynamic>>()
-            .map((e) => ClassroomAvailabilityEntity.fromJson(e))
+            .map((e) => ClassroomAvailability.fromJson(e))
             .toList();
       });
     } catch (e) {
@@ -128,13 +128,12 @@ class ClassroomLocalDataSource {
     required String buildingId,
     required int week,
     required int weekday,
-    required List<ClassroomAvailabilityEntity> results,
+    required List<ClassroomAvailability> results,
   }) async {
     // This is now handled by the bulk schedule cache in typical flows.
-    // In a full implementation, we'd prefix all keys and use a store that supports prefix deletion.
   }
 
-  Future<List<ClassroomScheduleEntity>?> readBuildingSchedule({
+  Future<List<ClassroomSchedule>?> readBuildingSchedule({
     required String campusId,
     required String buildingId,
   }) async {
@@ -145,14 +144,14 @@ class ClassroomLocalDataSource {
     
     return await _runTask(() {
       final List<dynamic> decoded = jsonDecode(jsonStr);
-      return decoded.map((e) => ClassroomScheduleEntity.fromJson(e)).toList();
+      return decoded.map((e) => ClassroomSchedule.fromJson(e)).toList();
     });
   }
 
   Future<void> saveBuildingSchedule({
     required String campusId,
     required String buildingId,
-    required List<ClassroomScheduleEntity> schedule,
+    required List<ClassroomSchedule> schedule,
   }) async {
     final key = _bulkScheduleKey(campusId, buildingId);
     final jsonStr = await _runTask(() {
@@ -162,11 +161,6 @@ class ClassroomLocalDataSource {
   }
 
   Future<void> clearAll() async {
-    // This is a bit inefficient without prefix support in SecureStorageStore,
-    // but we can at least clear the main entry points we know about.
-    // However, the new deleteAllExcept in SecureStorageStore is the preferred way 
-    // for a "Clear Everything" feature.
-    // For a specific feature clear, we'd need to track all building/availability keys.
     await _store.deleteAll([_campusesKey]);
   }
 

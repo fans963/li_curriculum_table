@@ -8,40 +8,49 @@ import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
 Future<CampusPageData> getCampuses({String? username, String? password}) =>
-    RustLib.instance.api
-        .crateApiClassroomGetCampuses(username: username, password: password);
+    RustLib.instance.api.crateApiClassroomGetCampuses(
+      username: username,
+      password: password,
+    );
 
-Future<List<Building>> getBuildings(
-        {required String campusId, String? username, String? password}) =>
-    RustLib.instance.api.crateApiClassroomGetBuildings(
-        campusId: campusId, username: username, password: password);
+Future<List<Building>> getBuildings({
+  required String campusId,
+  String? username,
+  String? password,
+}) => RustLib.instance.api.crateApiClassroomGetBuildings(
+  campusId: campusId,
+  username: username,
+  password: password,
+);
 
-Future<List<ClassroomAvailability>> getClassroomAvailability(
-        {required String campusId,
-        required String buildingId,
-        required int week,
-        required int weekday,
-        required String term,
-        String? username,
-        String? password}) =>
-    RustLib.instance.api.crateApiClassroomGetClassroomAvailability(
-        campusId: campusId,
-        buildingId: buildingId,
-        week: week,
-        weekday: weekday,
-        term: term,
-        username: username,
-        password: password);
+Future<List<ClassroomAvailability>> getClassroomAvailability({
+  required String campusId,
+  required String buildingId,
+  required int week,
+  required int weekday,
+  required String term,
+  String? username,
+  String? password,
+}) => RustLib.instance.api.crateApiClassroomGetClassroomAvailability(
+  campusId: campusId,
+  buildingId: buildingId,
+  week: week,
+  weekday: weekday,
+  term: term,
+  username: username,
+  password: password,
+);
 
-Future<List<ClassroomSchedule>> getBuildingSchedule(
-        {required String campusId,
-        required String buildingId,
-        required String term,
-        String? username,
-        String? password}) =>
-    RustLib.instance.api.crateApiClassroomGetBuildingSchedule(
-        campusId: campusId,
-        buildingId: buildingId,
-        term: term,
-        username: username,
-        password: password);
+Future<List<ClassroomSchedule>> getBuildingSchedule({
+  required String campusId,
+  required String buildingId,
+  required String term,
+  String? username,
+  String? password,
+}) => RustLib.instance.api.crateApiClassroomGetBuildingSchedule(
+  campusId: campusId,
+  buildingId: buildingId,
+  term: term,
+  username: username,
+  password: password,
+);

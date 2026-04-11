@@ -17,7 +17,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
   ClassroomRepositoryImpl(this._remoteDataSource, this._localDataSource);
 
   @override
-  Future<(List<CampusEntity>, String)> getCampuses({
+  Future<(List<Campus>, String)> getCampuses({
     String? username,
     String? password,
     bool forceRefresh = false,
@@ -39,7 +39,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
   }
 
   @override
-  Future<List<BuildingEntity>> getBuildings(
+  Future<List<Building>> getBuildings(
     String campusId, {
     String? username,
     String? password,
@@ -62,7 +62,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
   }
 
   @override
-  Future<List<ClassroomAvailabilityEntity>> getClassroomAvailability({
+  Future<List<ClassroomAvailability>> getClassroomAvailability({
     required String campusId,
     required String buildingId,
     required int week,
@@ -72,7 +72,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     String? password,
     bool forceRefresh = false,
   }) async {
-    List<ClassroomScheduleEntity>? schedule;
+    List<ClassroomSchedule>? schedule;
 
     if (!forceRefresh) {
       schedule = await _localDataSource.readBuildingSchedule(
@@ -98,7 +98,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     }
 
     // Filter by week and weekday locally
-    final List<ClassroomAvailabilityEntity> results = [];
+    final List<ClassroomAvailability> results = [];
     for (final s in schedule) {
       final availability = List.filled(5, true);
       for (final slot in s.occupiedSlots) {
@@ -110,12 +110,11 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
           }
         }
       }
-      results.add(ClassroomAvailabilityEntity(
+      results.add(ClassroomAvailability(
         classroomName: s.classroomName,
         availability: availability,
         hasNoClassesThisTerm: s.occupiedSlots.isEmpty,
       ));
-
     }
 
     // Sort by name for consistency
@@ -138,7 +137,7 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     );
 
     // 2. For each campus, get buildings (force refresh)
-    final allBuildingsByCampus = <String, List<BuildingEntity>>{};
+    final allBuildingsByCampus = <String, List<Building>>{};
     for (final campus in campuses) {
       final buildings = await getBuildings(
         campus.id,
@@ -170,7 +169,6 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
             );
           } catch (e) {
             // Log and continue - we don't want one building to kill the whole sync
-            print('Failed to sync building ${building.name}: $e');
           }
         }));
       }
@@ -180,4 +178,3 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     await Future.wait(fetchTasks);
   }
 }
-

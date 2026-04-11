@@ -8,12 +8,12 @@ class TimetableCacheRepositoryImpl implements TimetableCacheRepository {
   final SecureTimetableLocalDataSource _localDataSource;
 
   @override
-  Future<CachedTimetable?> readCachedTimetable() {
+  Future<CachedTimetable?> loadTimetable() {
     return _localDataSource.readCachedTimetable();
   }
 
   @override
-  Future<void> saveCachedTimetable(CachedTimetable cached) {
+  Future<void> cacheTimetable(CachedTimetable cached) {
     return _localDataSource.saveCachedTimetable(cached);
   }
 

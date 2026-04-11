@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class CourseOccurrence {
-  const CourseOccurrence({
-    required this.courseName,
-    required this.teacher,
-    required this.location,
-    required this.credit,
-    required this.courseType,
-    required this.stage,
-    required this.start,
-    required this.end,
-    this.startWeek,
-    this.endWeek,
-    this.weekText = '',
-    required this.color,
-  });
+part 'course_occurrence.freezed.dart';
+part 'course_occurrence.g.dart';
 
-  final String courseName;
-  final String teacher;
-  final String location;
-  final String credit;
-  final String courseType;
-  final String stage;
-  final DateTime start;
-  final DateTime end;
-  final int? startWeek;
-  final int? endWeek;
-  final String weekText;
-  final Color color;
+class ColorConverter implements JsonConverter<Color, int> {
+  const ColorConverter();
+
+  @override
+  Color fromJson(int json) => Color(json);
+
+  @override
+  int toJson(Color object) => object.value;
+}
+
+@freezed
+abstract class CourseOccurrence with _$CourseOccurrence {
+  const factory CourseOccurrence({
+    required String courseName,
+    required String teacher,
+    required String location,
+    required String credit,
+    required String courseType,
+    required String stage,
+    required DateTime start,
+    required DateTime end,
+    int? startWeek,
+    int? endWeek,
+    @Default('') String weekText,
+    @ColorConverter() required Color color,
+  }) = _CourseOccurrence;
+
+  factory CourseOccurrence.fromJson(Map<String, dynamic> json) =>
+      _$CourseOccurrenceFromJson(json);
 }

@@ -123,12 +123,26 @@ impl SessionManager {
             println!("Crawler: Submitting shared login credentials...");
             let html = self.submit_login(username, password, verify_code).await?;
 
-            if html.contains("个人中心") || html.contains("理论课表") || html.contains("main.jsp")
+            if html.contains("个人中心") || html.contains("理论课表") || html.contains("main.jsp") || html.contains("logout")
             {
                 println!("Crawler: Shared Login successful!");
                 return Ok(());
             }
-            println!("Crawler: Shared Login failed (HTML check), retrying...");
+
+            if html.contains("用户名或密码错误") || html.contains("密码错误") || html.contains("账号不存在") {
+                return Err(CrawlerError::InvalidCredentials);
+            }
+
+            if html.contains("验证码错误") {
+                println!("Crawler: Verification code error, retrying (attempt {}/{})...", attempt, max_attempts);
+                continue;
+            }
+
+            if html.contains("系统维护") || html.contains("maintenance") {
+                return Err(CrawlerError::Maintenance);
+            }
+
+            println!("Crawler: Shared Login failed (unknown reason, HTML check), retrying...");
         }
 
         Err(CrawlerError::LoginFailed(max_attempts))
