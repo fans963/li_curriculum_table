@@ -15,11 +15,9 @@ impl DdddOcr {
         );
         let mut model_cursor = Cursor::new(model_bytes);
         println!("OCR: Initializing tract engine (this may take a few seconds on Web)...");
-        let base_model = tract_onnx::onnx()
+        let model = tract_onnx::onnx()
             .model_for_read(&mut model_cursor)?
-            .into_typed()?;
-
-        let model = base_model.into_optimized()?.into_runnable()?;
+            .into_typed()?.into_optimized()?.into_runnable()?;
 
         let charset = vec![
             "", "6", "f", "p", "L", "Y", "w", "3", "F", "m", "X", "G", "x", "i", "T", "N", "v",
