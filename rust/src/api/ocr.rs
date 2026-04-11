@@ -12,10 +12,16 @@ impl DdddOcr {
         println!("OCR: Initializing from external bytes (len: {})...", model_bytes.len());
         let mut model_cursor = Cursor::new(model_bytes);
         println!("OCR: Initializing tract engine (this may take a few seconds on Web)...");
-        let model = tract_onnx::onnx()
+        let base_model = tract_onnx::onnx()
             .model_for_read(&mut model_cursor)?
-            .into_optimized()?
-            .into_runnable()?;
+            .into_typed()?;
+
+        let model = if cfg!(target_os = "android") {
+            println!("OCR: Android detected, skipping heavy optimization for fast startup.");
+            base_model.into_runnable()?
+        } else {
+            base_model.into_optimized()?.into_runnable()?
+        };
 
         let charset = vec![
             "", "6", "f", "p", "L", "Y", "w", "3", "F", "m", "X", "G", "x", "i", "T", "N", "v", "c", "B", "n", "Q", "H", "K", "W", "P", "r", "l", "E", "Z", "s", "2", "z", "D", "O", "4", "1", "t", "b", "o", "u", "9", "j", "0", "8", "5", "e", "A", "R", "g", "k", "S", "I", "7", "d", "V", "J", "a", "h", "q", "U", "M", "y", "C"

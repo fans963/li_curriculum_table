@@ -1,11 +1,15 @@
 use crate::api::ocr::DdddOcr;
 use crate::crawler::error::{CrawlerError, CrawlerResult};
-use crate::crawler::model::{CrawlerConfig, ProxySession};
+use crate::crawler::model::CrawlerConfig;
+#[cfg(target_arch = "wasm32")]
+use crate::crawler::model::ProxySession;
+#[cfg(target_arch = "wasm32")]
 use base64::Engine;
 use encoding_rs::GBK;
 use image::load_from_memory;
 use reqwest::{Client, Method};
 use std::sync::Arc;
+use tokio::sync::Mutex;
 
 #[cfg(target_arch = "wasm32")]
 const PROXY_URL: &str = "https://www.fans963blog.asia/";
@@ -14,6 +18,7 @@ pub struct SessionManager {
     pub client: Client,
     pub config: CrawlerConfig,
     pub ocr: Arc<DdddOcr>,
+    pub login_lock: Mutex<()>,
     #[cfg(target_arch = "wasm32")]
     pub session: Arc<std::sync::Mutex<ProxySession>>,
 }
@@ -35,6 +40,7 @@ impl SessionManager {
             client,
             config: CrawlerConfig::default(),
             ocr,
+            login_lock: Mutex::new(()),
             #[cfg(target_arch = "wasm32")]
             session: Arc::new(std::sync::Mutex::new(ProxySession::default())),
         }
@@ -46,14 +52,22 @@ impl SessionManager {
         password: &str,
         max_attempts: u32,
     ) -> CrawlerResult<()> {
+        // Quick check without lock
+        if self.check_session().await {
+            return Ok(());
+        }
+
+        // Acquire lock to ensure only one login attempt happens at a time
+        let _lock = self.login_lock.lock().await;
+
+        // Double check after acquiring lock (another task might have finished login)
         if self.check_session().await {
             return Ok(());
         }
 
         for attempt in 1..=max_attempts {
-            println!("Crawler: Login attempt {}/{}", attempt, max_attempts);
+            println!("Crawler: Shared Login attempt {}/{}", attempt, max_attempts);
             let captcha_bytes = self.get_captcha().await?;
-            println!("Crawler: Captcha fetched ({} bytes)", captcha_bytes.len());
             
             let img = load_from_memory(&captcha_bytes)
                 .map_err(|e| CrawlerError::Ocr(format!("Failed to load image: {}", e)))?;
@@ -64,22 +78,22 @@ impl SessionManager {
                 .map_err(|e| CrawlerError::Ocr(format!("OCR failed: {}", e)))?;
 
             let verify_code = verify_code.trim();
-            println!("Crawler: OCR result: '{}'", verify_code);
+            println!("Crawler: Shared OCR result: '{}'", verify_code);
             
             if verify_code.len() != 4 || !verify_code.chars().all(|c| c.is_alphanumeric()) {
                 println!("Crawler: Invalid verification code format, retrying...");
                 continue;
             }
 
-            println!("Crawler: Submitting login credentials...");
+            println!("Crawler: Submitting shared login credentials...");
             let html = self.submit_login(username, password, verify_code).await?;
 
             if html.contains("个人中心") || html.contains("理论课表") || html.contains("main.jsp")
             {
-                println!("Crawler: Login successful!");
+                println!("Crawler: Shared Login successful!");
                 return Ok(());
             }
-            println!("Crawler: Login failed (HTML check), retrying...");
+            println!("Crawler: Shared Login failed (HTML check), retrying...");
         }
 
         Err(CrawlerError::LoginFailed(max_attempts))
@@ -89,9 +103,16 @@ impl SessionManager {
         let url = format!("{}/main.jsp", self.config.get_portal_url());
         match self.fetch_text(&url, Method::GET, None, None).await {
             Ok(html) => {
-                html.contains("个人中心") || html.contains("理论课表") || html.contains("logout")
+                let success = html.contains("个人中心") || html.contains("理论课表") || html.contains("logout");
+                if !success {
+                    log::debug!("Crawler: Session check failed (invalid keywords). HTML length: {}", html.len());
+                }
+                success
             }
-            Err(_) => false,
+            Err(e) => {
+                println!("Crawler: Session check error: {}", e);
+                false
+            }
         }
     }
 

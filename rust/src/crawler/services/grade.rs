@@ -45,6 +45,10 @@ impl GradeService {
             .fetch_text(&target_url, Method::POST, Some(body), Some(&query_url))
             .await?;
 
+        if html.len() < 500 {
+            log::warn!("GradeService: Received short HTML response (len={}): {}", html.len(), html);
+        }
+
         // 3. Parse
         let record = parse_grades(&html)?;
         Ok(record)

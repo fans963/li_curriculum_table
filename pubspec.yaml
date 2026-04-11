@@ -24,6 +24,7 @@ dependencies:
   calendar_view: ^2.0.0
   infinite_calendar_view: ^2.11.3
   auto_size_text: ^3.0.0
+  pool: ^1.5.2
 
 dev_dependencies:
   flutter_test:

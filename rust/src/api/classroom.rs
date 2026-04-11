@@ -1,18 +1,15 @@
-use crate::api::crawler::get_ocr_engine;
-use crate::crawler::core::SessionManager;
+use crate::api::crawler::get_shared_session_manager;
 use crate::crawler::model::{
     Building, CampusPageData, ClassroomAvailability, ClassroomSchedule,
 };
 use crate::crawler::services::classroom::ClassroomService;
 use anyhow::Result;
-use std::sync::Arc;
 
 pub async fn get_campuses(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<CampusPageData> {
-    let ocr = get_ocr_engine().await?;
-    let session = Arc::new(SessionManager::new(ocr));
+    let session = get_shared_session_manager().await?;
 
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
@@ -32,8 +29,7 @@ pub async fn get_buildings(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<Building>> {
-    let ocr = get_ocr_engine().await?;
-    let session = Arc::new(SessionManager::new(ocr));
+    let session = get_shared_session_manager().await?;
 
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
@@ -57,8 +53,7 @@ pub async fn get_classroom_availability(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<ClassroomAvailability>> {
-    let ocr = get_ocr_engine().await?;
-    let session = Arc::new(SessionManager::new(ocr));
+    let session = get_shared_session_manager().await?;
 
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;
@@ -80,8 +75,7 @@ pub async fn get_building_schedule(
     username: Option<String>,
     password: Option<String>,
 ) -> Result<Vec<ClassroomSchedule>> {
-    let ocr = get_ocr_engine().await?;
-    let session = Arc::new(SessionManager::new(ocr));
+    let session = get_shared_session_manager().await?;
 
     if let (Some(u), Some(p)) = (username, password) {
         let _ = session.login_if_needed(&u, &p, 3).await;

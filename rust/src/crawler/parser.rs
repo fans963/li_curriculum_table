@@ -574,6 +574,11 @@ pub fn parse_grades(html: &str) -> CrawlerResult<GradeRecord> {
                 grades.push(grade);
             }
         }
+    } else {
+        log::warn!("Parser: table#dataList not found in grades HTML. Session might be invalid.");
+        if html.contains("logon") || html.contains("Logon") {
+            log::warn!("Parser: HTML appears to be a login page. length: {}", html.len());
+        }
     }
 
     Ok(GradeRecord { grades })

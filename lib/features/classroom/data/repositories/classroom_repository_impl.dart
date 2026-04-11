@@ -1,3 +1,4 @@
+import 'package:pool/pool.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/classroom_remote_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
@@ -9,6 +10,9 @@ import 'package:li_curriculum_table/features/classroom/domain/repositories/class
 class ClassroomRepositoryImpl implements ClassroomRepository {
   final ClassroomRemoteDataSource _remoteDataSource;
   final ClassroomLocalDataSource _localDataSource;
+
+  // Use a pool to limit concurrent network/Isolate tasks
+  final _pool = Pool(5);
 
   ClassroomRepositoryImpl(this._remoteDataSource, this._localDataSource);
 
@@ -145,13 +149,12 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
       allBuildingsByCampus[campus.id] = buildings;
     }
 
-    // 3. For each building across all campuses, fetch schedule in parallel
-    // We use a small batch size to avoid overwhelming the server/proxy
+    // 3. For each building across all campuses, fetch schedule in parallel with throttling
     final List<Future<void>> fetchTasks = [];
     for (final campusId in allBuildingsByCampus.keys) {
       final buildings = allBuildingsByCampus[campusId]!;
       for (final building in buildings) {
-        fetchTasks.add(() async {
+        fetchTasks.add(_pool.withResource(() async {
           try {
             final schedule = await _remoteDataSource.getBuildingSchedule(
               campusId: campusId,
@@ -169,11 +172,11 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
             // Log and continue - we don't want one building to kill the whole sync
             print('Failed to sync building ${building.name}: $e');
           }
-        }());
+        }));
       }
     }
 
-    // Process in parallel
+    // Process tasks with 5-way concurrency
     await Future.wait(fetchTasks);
   }
 }

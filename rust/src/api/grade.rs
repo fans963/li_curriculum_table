@@ -1,17 +1,14 @@
-use crate::api::crawler::get_ocr_engine;
-use crate::crawler::core::SessionManager;
+use crate::api::crawler::get_shared_session_manager;
 use crate::crawler::services::GradeService;
-use std::sync::Arc;
 
 pub async fn get_grades(username: String, password: String) -> Vec<crate::crawler::model::Grade> {
-    let ocr = match get_ocr_engine().await {
-        Ok(engine) => engine,
+    let session = match get_shared_session_manager().await {
+        Ok(s) => s,
         Err(e) => {
-            log::error!("API: get_grades failed to get OCR: {}", e);
+            log::error!("API: get_grades failed to get session: {}", e);
             return vec![];
         }
     };
-    let session = Arc::new(SessionManager::new(ocr));
     let service = GradeService::new(session);
 
     match service.fetch_grades(&username, &password, 3).await {
