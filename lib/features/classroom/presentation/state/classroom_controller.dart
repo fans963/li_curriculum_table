@@ -28,6 +28,7 @@ class ClassroomController extends _$ClassroomController {
     try {
       final repository = ref.read(credentialsRepositoryProvider);
       final creds = await repository.loadCredentials();
+      if (!ref.mounted) return (null, null);
       if (creds != null && !creds.isEmpty) {
         return (creds.username as String?, creds.password as String?);
       }
@@ -40,6 +41,7 @@ class ClassroomController extends _$ClassroomController {
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
+      if (!ref.mounted) return;
 
       // If no credentials available and no local cache, show login prompt instead of crashing.
       if (user == null || pass == null) {
@@ -47,9 +49,11 @@ class ClassroomController extends _$ClassroomController {
           // Try loading from cache even without credentials
           try {
             final result = await repository.getCampuses(forceRefresh: false);
+            if (!ref.mounted) return;
             final (campuses, term) = result;
             if (campuses.isNotEmpty) {
               final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+              if (!ref.mounted) return;
               final selection = campuses.any((e) => e.id == lastId)
                   ? campuses.firstWhere((e) => e.id == lastId)
                   : campuses.first;
@@ -73,7 +77,9 @@ class ClassroomController extends _$ClassroomController {
         password: pass,
         forceRefresh: forceRefresh,
       );
+      if (!ref.mounted) return;
       final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+      if (!ref.mounted) return;
       final selection = campuses.any((e) => e.id == lastId)
           ? campuses.firstWhere((e) => e.id == lastId)
           : (campuses.isNotEmpty ? campuses.first : null);
@@ -97,6 +103,7 @@ class ClassroomController extends _$ClassroomController {
   Future<void> setCampus(Campus campus) async {
     state = state.copyWith(selectedCampus: campus, buildings: [], selectedBuilding: null, results: []);
     await ref.read(classroomLocalDataSourceProvider).saveLastCampusId(campus.id);
+    if (!ref.mounted) return;
     await fetchBuildings();
   }
 
@@ -114,8 +121,10 @@ class ClassroomController extends _$ClassroomController {
         password: pass,
         forceRefresh: forceRefresh,
       );
+      if (!ref.mounted) return;
 
       final lastBId = await ref.read(classroomLocalDataSourceProvider).readLastBuildingId();
+      if (!ref.mounted) return;
       final selection = buildings.any((e) => e.id == lastBId)
           ? buildings.firstWhere((e) => e.id == lastBId)
           : (buildings.isNotEmpty ? buildings.first : null);
@@ -179,6 +188,7 @@ class ClassroomController extends _$ClassroomController {
         password: pass,
         forceRefresh: forceRefresh,
       );
+      if (!ref.mounted) return;
 
       state = state.copyWith(results: results, isLoading: false);
     } catch (e) {
@@ -195,6 +205,7 @@ class ClassroomController extends _$ClassroomController {
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
+      if (!ref.mounted) return;
 
       if (state.campuses.isEmpty || state.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
@@ -202,10 +213,12 @@ class ClassroomController extends _$ClassroomController {
           password: pass,
           forceRefresh: true,
         );
+        if (!ref.mounted) return;
         state = state.copyWith(campuses: campuses, currentTerm: term);
         
         if (state.selectedCampus == null && campuses.isNotEmpty) {
           final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+          if (!ref.mounted) return;
           final selection = campuses.any((e) => e.id == lastId)
               ? campuses.firstWhere((e) => e.id == lastId)
               : campuses.first;
@@ -222,10 +235,12 @@ class ClassroomController extends _$ClassroomController {
             password: pass,
             forceRefresh: true,
           );
+          if (!ref.mounted) return;
           state = state.copyWith(buildings: buildings);
           
           if (state.selectedBuilding == null && buildings.isNotEmpty) {
             final lastBId = await ref.read(classroomLocalDataSourceProvider).readLastBuildingId();
+            if (!ref.mounted) return;
             state = state.copyWith(
               selectedBuilding: buildings.any((e) => e.id == lastBId)
                   ? buildings.firstWhere((e) => e.id == lastBId)
@@ -250,6 +265,7 @@ class ClassroomController extends _$ClassroomController {
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final (user, pass) = await _getCredentials();
+      if (!ref.mounted) return;
 
       if (state.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
@@ -257,6 +273,7 @@ class ClassroomController extends _$ClassroomController {
           password: pass,
           forceRefresh: true,
         );
+        if (!ref.mounted) return;
         state = state.copyWith(campuses: campuses, currentTerm: term);
       }
 
@@ -265,6 +282,7 @@ class ClassroomController extends _$ClassroomController {
         username: user,
         password: pass,
       );
+      if (!ref.mounted) return;
 
       if (state.selectedCampus != null && state.selectedBuilding != null) {
         await fetchAvailability(forceRefresh: false);
