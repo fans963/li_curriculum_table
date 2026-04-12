@@ -46,3 +46,6 @@ app.*.map.json
 
 .cache
 dist
+
+# FVM Version Cache
+.fvm/
