@@ -15,7 +15,7 @@ jobs:
         include:
           - os: ubuntu-latest
             job_name: "Android & Linux"
-            fastforge_jobs: "android-apk,linux-pacman,linux-appimage,linux-deb"
+            fastforge_jobs: "android-apk,linux-pacman,linux-appimage,linux-deb,linux-rpm"
             
           - os: windows-latest
             job_name: "Windows"
@@ -35,7 +35,13 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev bsdtar
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev bsdtar rpm patchelf libfuse2 mlocate
+          sudo updatedb
+      - name: Install AppImageTool
+        if: runner.os == 'Linux'
+        run: |
+          sudo wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
+          sudo chmod +x /usr/local/bin/appimagetool
 
       # 2. 基础环境：Rust & Flutter
       - name: Setup Build Env
@@ -60,6 +66,11 @@ jobs:
           # 确保环境变量生效
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
           echo "${{ github.workspace }}/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Install macOS Packaging Tools
+        if: runner.os == 'macOS'
+        run: |
+          npm install -g appdmg
 
       # 4. 运行生成 (FRB + Build Runner)
       - name: Codegen

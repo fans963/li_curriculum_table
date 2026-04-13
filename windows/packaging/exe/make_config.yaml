@@ -1,0 +1,8 @@
+app_id: 7A3E9F2B-1C4D-4B5A-8E6F-0D9A8B7C6E5F
+publisher_name: fan
+publisher_url: https://github.com/fans963/li_curriculum_table
+display_name: 🍐课表
+create_desktop_icon: true
+launch_at_startup: false
+locales:
+  - zh

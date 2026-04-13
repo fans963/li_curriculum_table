@@ -1,0 +1,27 @@
+icon: assets/icon/icon.png
+summary: 一款轻盈优雅的跨平台课表应用
+group: Application/Education
+vendor: fan
+packager: fan
+packagerEmail: fan@example.com
+license: MIT
+url: https://github.com/fans963/li_curriculum_table
+
+display_name: 🍐课表
+
+keywords:
+  - 课表
+  - timetable
+  - 教务
+  - 成绩
+  - 空闲教室
+
+generic_name: Curriculum Timetable
+
+metainfo: linux/packaging/li_curriculum_table.appdata.xml
+
+categories:
+  - Education
+  - Utility
+
+startup_notify: true

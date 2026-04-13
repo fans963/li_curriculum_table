@@ -37,6 +37,12 @@ releases:
           target: deb
           build_args:
             release: true
+      - name: linux-rpm
+        package:
+          platform: linux
+          target: rpm
+          build_args:
+            release: true
       - name: macos-dmg
         package:
           platform: macos

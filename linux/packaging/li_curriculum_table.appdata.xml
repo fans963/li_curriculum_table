@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>li_curriculum_table</id>
+    <metadata_license>CC0-1.0</metadata_license>
+    <project_license>MIT</project_license>
+    <name>🍐课表</name>
+    <summary>一款轻盈优雅的跨平台课表应用</summary>
+    <description>
+        <p>🍐课表是一款基于 Flutter 的跨平台课表应用，支持课表查看、空闲教室查询和成绩查询。所有登录操作均在本地完成，账号密码使用系统级加密存储，验证码通过内置 AI 模型本地识别，确保数据安全。</p>
+    </description>
+    <launchable type="desktop-id">li_curriculum_table.desktop</launchable>
+    <url type="homepage">https://github.com/fans963/li_curriculum_table</url>
+    <releases>
+        <release version="1.0.0" date="2026-04-13"/>
+    </releases>
+    <provides>
+        <id>li_curriculum_table.desktop</id>
+    </provides>
+    <content_rating type="oars-1.0" />
+    <developer id="io.github.fans963">
+        <name>fan</name>
+    </developer>
+</component>
