@@ -8,12 +8,6 @@ import 'package:li_curriculum_table/features/classroom/presentation/pages/classr
 import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_tab.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
-import 'package:li_curriculum_table/util/util.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
-import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
-import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
 
 import 'package:li_curriculum_table/features/navigation/presentation/state/global_sync_controller.dart';

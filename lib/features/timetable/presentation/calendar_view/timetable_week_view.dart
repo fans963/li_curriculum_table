@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/calendar_view_adapter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 

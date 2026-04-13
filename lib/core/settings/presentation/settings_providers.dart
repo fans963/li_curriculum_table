@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';

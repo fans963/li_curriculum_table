@@ -270,7 +270,7 @@ class _SelectionHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          if (trailing != null) trailing!,
+          ?trailing,
         ],
       ),
     );
@@ -338,7 +338,7 @@ class _BuildingSelector extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
         itemCount: buildings.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final b = buildings[index];
           final isSelected = b.id == selectedBuilding?.id;
@@ -489,13 +489,13 @@ class _StatusIndicator extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: isFree 
-            ? colorScheme.primary.withOpacity(0.15) 
-            : colorScheme.error.withOpacity(0.08),
+            ? colorScheme.primary.withValues(alpha: 0.15) 
+            : colorScheme.error.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isFree 
-              ? colorScheme.primary.withOpacity(0.3) 
-              : colorScheme.error.withOpacity(0.15),
+              ? colorScheme.primary.withValues(alpha: 0.3) 
+              : colorScheme.error.withValues(alpha: 0.15),
           width: 1,
         ),
       ),
@@ -507,7 +507,7 @@ class _StatusIndicator extends StatelessWidget {
             shape: BoxShape.circle,
             color: isFree 
                 ? colorScheme.primary 
-                : colorScheme.error.withOpacity(0.3),
+                : colorScheme.error.withValues(alpha: 0.3),
           ),
         ),
       ),
@@ -599,7 +599,7 @@ class _CampusSelector extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         scrollDirection: Axis.horizontal,
         itemCount: campuses.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           final c = campuses[index];
           final isSelected = c.id == selectedCampus?.id;

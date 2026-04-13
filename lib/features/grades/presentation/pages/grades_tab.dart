@@ -43,14 +43,14 @@ class GradesTab extends ConsumerWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            colorScheme.primary.withOpacity(0.05),
-            colorScheme.secondary.withOpacity(0.05),
+            colorScheme.primary.withValues(alpha: 0.05),
+            colorScheme.secondary.withValues(alpha: 0.05),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -69,7 +69,7 @@ class GradesTab extends ConsumerWidget {
             Container(
               height: 40,
               width: 1,
-              color: colorScheme.outlineVariant.withOpacity(0.5),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
             Expanded(
               child: _buildStatItem(
@@ -323,8 +323,9 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     final score = grade.numericScore;
     
     Color scoreColor;
-    if (score >= 90) scoreColor = Colors.green;
-    else if (score >= 80) scoreColor = colorScheme.primary;
+    if (score >= 90) {
+      scoreColor = Colors.green;
+    } else if (score >= 80) scoreColor = colorScheme.primary;
     else if (score >= 70) scoreColor = Colors.orange;
     else if (score >= 60) scoreColor = Colors.blue;
     else scoreColor = colorScheme.error;
@@ -339,11 +340,11 @@ class _GradeItemCardState extends State<_GradeItemCard> {
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
             boxShadow: [
               if (!_isPressed)
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -390,9 +391,9 @@ class _GradeItemCardState extends State<_GradeItemCard> {
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     constraints: const BoxConstraints(minWidth: 64),
                     decoration: BoxDecoration(
-                      color: scoreColor.withOpacity(0.08),
+                      color: scoreColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scoreColor.withOpacity(0.2)),
+                      border: Border.all(color: scoreColor.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -407,7 +408,7 @@ class _GradeItemCardState extends State<_GradeItemCard> {
                         Text(
                           'GRADE',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: scoreColor.withOpacity(0.6),
+                            color: scoreColor.withValues(alpha: 0.6),
                             fontWeight: FontWeight.bold,
                             fontSize: 8,
                           ),
@@ -429,7 +430,7 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant.withOpacity(0.5),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

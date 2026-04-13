@@ -38,9 +38,6 @@ class SecureTimetableLocalDataSource {
           return null;
         }
         final row = CourseRow.fromJson(entry);
-        if (row == null) {
-          return null;
-        }
         rows.add(row);
       }
 

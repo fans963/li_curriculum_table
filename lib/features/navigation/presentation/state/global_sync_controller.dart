@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
 

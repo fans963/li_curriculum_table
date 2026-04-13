@@ -22,13 +22,15 @@ class TimetableControlPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return Card(
       elevation: 0,
       color: colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        side: BorderSide(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -60,6 +62,7 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
             ),
+            const SizedBox(height: 12),
             TextFormField(
               readOnly: true,
               controller: TextEditingController(
@@ -117,17 +120,17 @@ class TimetableStatusBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isError = _looksLikeError(status);
-    
+
     final backgroundColor = isError
         ? colorScheme.errorContainer
         : hasData
-            ? colorScheme.secondaryContainer.withOpacity(0.4)
-            : colorScheme.surfaceContainerHighest;
+        ? colorScheme.secondaryContainer.withValues(alpha: 0.4)
+        : colorScheme.surfaceContainerHighest;
     final foregroundColor = isError
         ? colorScheme.onErrorContainer
         : hasData
-            ? colorScheme.onSecondaryContainer
-            : colorScheme.onSurfaceVariant;
+        ? colorScheme.onSecondaryContainer
+        : colorScheme.onSurfaceVariant;
 
     if (!isError && !isLoading && status.isEmpty) {
       return const SizedBox.shrink();
@@ -224,7 +227,6 @@ class TimetableSummaryChip extends StatelessWidget {
   }
 }
 
-
 class TimetableEmptyCalendarTip extends StatelessWidget {
   const TimetableEmptyCalendarTip({super.key});
 
@@ -245,4 +247,3 @@ class TimetableEmptyCalendarTip extends StatelessWidget {
     );
   }
 }
-
