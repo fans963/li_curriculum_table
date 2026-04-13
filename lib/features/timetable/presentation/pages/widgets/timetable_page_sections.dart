@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TimetableControlPanel extends StatelessWidget {
   const TimetableControlPanel({
@@ -8,18 +8,16 @@ class TimetableControlPanel extends StatelessWidget {
     required this.passwordController,
     required this.isLoading,
     required this.currentTeachingWeek,
-    required this.onTeachingWeekChanged,
-    required this.minWeek,
-    required this.maxWeek,
+    required this.termStartMonday,
+    required this.onTermStartDateChanged,
   });
 
   final TextEditingController usernameController;
   final TextEditingController passwordController;
   final bool isLoading;
   final int currentTeachingWeek;
-  final int minWeek;
-  final int maxWeek;
-  final ValueChanged<int> onTeachingWeekChanged;
+  final DateTime? termStartMonday;
+  final ValueChanged<DateTime> onTermStartDateChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -62,42 +60,38 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
             ),
-            const SizedBox(height: 12),
-            // Dynamically generated based on crawl data
-            Builder(
-              builder: (context) {
-                final weekOptions = List<int>.generate(
-                  maxWeek - minWeek + 1,
-                  (index) => minWeek + index,
+            TextFormField(
+              readOnly: true,
+              controller: TextEditingController(
+                text: termStartMonday != null
+                    ? DateFormat('yyyy-MM-dd').format(termStartMonday!)
+                    : '未设置',
+              ),
+              enabled: !isLoading,
+              decoration: InputDecoration(
+                labelText: '本学期开学日期 (第一周周一)',
+                prefixIcon: const Icon(Icons.calendar_month_outlined),
+                suffixIcon: const Icon(Icons.edit_calendar_outlined, size: 20),
+                helperText: '当前推算为第 $currentTeachingWeek 周',
+                helperStyle: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+                filled: true,
+                fillColor: colorScheme.surface,
+              ),
+              onTap: () async {
+                final initialDate = termStartMonday ?? DateTime.now();
+                final pickedDate = await showDatePicker(
+                  context: context,
+                  initialDate: initialDate,
+                  firstDate: DateTime(initialDate.year - 1),
+                  lastDate: DateTime(initialDate.year + 1),
+                  helpText: '选择开学日期 (第一周周一)',
                 );
-                final selectedWeek = weekOptions.contains(currentTeachingWeek)
-                    ? currentTeachingWeek
-                    : (weekOptions.isNotEmpty ? weekOptions.first : 1);
-
-                return DropdownButtonFormField<int>(
-                  value: selectedWeek,
-                  items: weekOptions
-                      .map(
-                        (week) => DropdownMenuItem<int>(
-                          value: week,
-                          child: Text('第 $week 周'),
-                        ),
-                      )
-                      .toList(growable: false),
-                  decoration: InputDecoration(
-                    labelText: '当前教学周',
-                    prefixIcon: const Icon(Icons.calendar_today_outlined),
-                    filled: true,
-                    fillColor: colorScheme.surface,
-                  ),
-                  onChanged: isLoading
-                      ? null
-                      : (value) {
-                          if (value != null) {
-                            onTeachingWeekChanged(value);
-                          }
-                        },
-                );
+                if (pickedDate != null) {
+                  onTermStartDateChanged(pickedDate);
+                }
               },
             ),
           ],

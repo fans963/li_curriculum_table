@@ -1,25 +1,27 @@
 #!/bin/bash
 set -e
 
-# Usage: ./fix_pacman.sh <path_to_pacman_file>
+# Usage: ./fix_pacman.sh [path_to_pacman_file]
 
 PACMAN_FILE=$1
 
 if [ -z "$PACMAN_FILE" ]; then
-    echo "Usage: $0 <path_to_pacman_file>"
-    exit 1
+    echo "No file provided, searching in dist/..."
+    # Find the .pacman file, usually in dist/1.0.1/
+    PACMAN_FILE=$(find dist -name "*.pacman" | head -n 1)
 fi
 
-if [ ! -f "$PACMAN_FILE" ]; then
-    echo "Error: File $PACMAN_FILE not found"
+if [ -z "$PACMAN_FILE" ] || [ ! -f "$PACMAN_FILE" ]; then
+    echo "Error: Pacman file not found. Usage: $0 <path_to_pacman_file>"
     exit 1
 fi
 
 DEST_DIR=$(dirname "$PACMAN_FILE")
 TEMP_DIR=$(mktemp -d)
-echo "Rebuilding pacman package in $TEMP_DIR..."
+echo "Rebuilding pacman package $PACMAN_FILE in $TEMP_DIR..."
 
 # 1. Extract the original package
+# FastForge generated .pacman is actually a .pkg.tar.xz (or similar tar xz)
 xz -d -c "$PACMAN_FILE" | bsdtar -xf - -C "$TEMP_DIR"
 
 pushd "$TEMP_DIR" > /dev/null
@@ -31,7 +33,10 @@ pushd "$TEMP_DIR" > /dev/null
 # - Rename groups to group (standard PKGINFO field)
 sed -i 's/(//g; s/)//g' .PKGINFO
 sed -i 's/=/ = /g' .PKGINFO
-sed -i 's/^pkgver = \(.*\)/pkgver = \1-1/' .PKGINFO
+# Ensure pkgver doesn't already have -1
+if [[ ! $(grep "^pkgver =" .PKGINFO) =~ -[0-9]+ ]]; then
+    sed -i 's/^pkgver = \(.*\)/pkgver = \1-1/' .PKGINFO
+fi
 sed -i 's/^groups =/group =/' .PKGINFO
 
 # Read metadata for naming

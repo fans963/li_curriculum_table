@@ -19,11 +19,8 @@ class TimetableController extends _$TimetableController {
   @override
   TimetableState build() => initialTimetableState;
 
-  void setCurrentTeachingWeek(int week) {
-    if (week < 1) return;
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    _setBaselineAndInfer(referenceDate: today, referenceWeek: week);
+  void setTermStartDate(DateTime date) {
+    _setBaselineAndInfer(referenceDate: date, referenceWeek: 1);
   }
 
   void updateDisplayWeek(int week) {
@@ -35,12 +32,9 @@ class TimetableController extends _$TimetableController {
     final repository = ref.read(teachingWeekBaselineRepositoryProvider);
     final baseline = await repository.loadBaseline();
     if (baseline == null) {
-      // Default to week 7 on first launch if no cache
+      // Default to March 1st of current year if no cache
       final now = DateTime.now();
-      _setBaselineAndInfer(
-        referenceDate: DateTime(now.year, now.month, now.day),
-        referenceWeek: 7,
-      );
+      setTermStartDate(DateTime(now.year, 3, 1));
       return;
     }
 
@@ -220,10 +214,7 @@ class TimetableController extends _$TimetableController {
 
       if (state.termStartMonday == null) {
         final now = DateTime.now();
-        _setBaselineAndInfer(
-          referenceDate: DateTime(now.year, now.month, now.day),
-          referenceWeek: 7,
-        );
+        setTermStartDate(DateTime(now.year, 3, 1));
       }
     } catch (e) {
       final err = e.toString();

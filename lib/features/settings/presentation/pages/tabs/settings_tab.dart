@@ -92,12 +92,11 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                   passwordController: _passwordController,
                   isLoading: state.isLoading,
                   currentTeachingWeek: state.currentTeachingWeek,
-                  minWeek: state.minWeek,
-                  maxWeek: state.maxWeek,
-                  onTeachingWeekChanged: (week) {
+                  termStartMonday: state.termStartMonday,
+                  onTermStartDateChanged: (date) {
                     ref
                         .read(timetableControllerProvider.notifier)
-                        .setCurrentTeachingWeek(week);
+                        .setTermStartDate(date);
                   },
                 ),
                 const SizedBox(height: 24),
