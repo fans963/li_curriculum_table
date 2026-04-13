@@ -118,6 +118,8 @@ class ClassroomController extends _$ClassroomController {
     try {
       final repository = ref.read(classroomRepositoryProvider);
       final localDataSource = ref.read(classroomLocalDataSourceProvider);
+      final (user, pass) = await _getCredentials();
+      if (!ref.mounted) return;
       final buildings = await repository.getBuildings(
         campus.id,
         username: user,
@@ -207,6 +209,7 @@ class ClassroomController extends _$ClassroomController {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final repository = ref.read(classroomRepositoryProvider);
+      final localDataSource = ref.read(classroomLocalDataSourceProvider);
       final (user, pass) = await _getCredentials();
       if (!ref.mounted) return;
 
@@ -220,7 +223,7 @@ class ClassroomController extends _$ClassroomController {
         state = state.copyWith(campuses: campuses, currentTerm: term);
         
         if (state.selectedCampus == null && campuses.isNotEmpty) {
-          final lastId = await ref.read(classroomLocalDataSourceProvider).readLastCampusId();
+          final lastId = await localDataSource.readLastCampusId();
           if (!ref.mounted) return;
           final selection = campuses.any((e) => e.id == lastId)
               ? campuses.firstWhere((e) => e.id == lastId)
@@ -242,7 +245,7 @@ class ClassroomController extends _$ClassroomController {
           state = state.copyWith(buildings: buildings);
           
           if (state.selectedBuilding == null && buildings.isNotEmpty) {
-            final lastBId = await ref.read(classroomLocalDataSourceProvider).readLastBuildingId();
+            final lastBId = await localDataSource.readLastBuildingId();
             if (!ref.mounted) return;
             state = state.copyWith(
               selectedBuilding: buildings.any((e) => e.id == lastBId)
