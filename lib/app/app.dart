@@ -1,3 +1,4 @@
+import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
@@ -88,22 +89,25 @@ class CurriculumTableApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return DynamicColorBuilder(
-      builder: (lightDynamic, darkDynamic) {
-        return MaterialApp(
-          title: '',
-          themeMode: ThemeMode.system,
-          theme: _buildTheme(
-            brightness: Brightness.light,
-            dynamicScheme: lightDynamic,
-          ),
-          darkTheme: _buildTheme(
-            brightness: Brightness.dark,
-            dynamicScheme: darkDynamic,
-          ),
-          home: const MainScreen(),
-        );
-      },
+    return BetterFeedback(
+      localeOverride: const Locale('zh', 'CN'),
+      child: DynamicColorBuilder(
+        builder: (lightDynamic, darkDynamic) {
+          return MaterialApp(
+            title: '',
+            themeMode: ThemeMode.system,
+            theme: _buildTheme(
+              brightness: Brightness.light,
+              dynamicScheme: lightDynamic,
+            ),
+            darkTheme: _buildTheme(
+              brightness: Brightness.dark,
+              dynamicScheme: darkDynamic,
+            ),
+            home: const MainScreen(),
+          );
+        },
+      ),
     );
   }
 }

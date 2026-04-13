@@ -3,12 +3,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/app/app.dart';
+import 'package:li_curriculum_table/util/feedback_handler.dart';
 
 class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
@@ -131,6 +133,23 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 const SizedBox(height: 8),
                 const _ProxySettingsSection(),
                 const SizedBox(height: 32),
+                const _SectionHeader(
+                  title: '反馈与建议',
+                  icon: Icons.feedback_outlined,
+                ),
+                const SizedBox(height: 8),
+                ListTile(
+                  title: const Text('发送反馈'),
+                  subtitle: const Text('遇到问题或有更好的建议？点击这里告诉我们（支持屏幕截图与标注）'),
+                  leading: const Icon(Icons.mark_as_unread_rounded),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    BetterFeedback.of(context).show(
+                      (feedback) => FeedbackHandler.shareFeedback(feedback),
+                    );
+                  },
+                ),
+                const SizedBox(height: 32),
                 _buildInfoSection(context),
               ],
             ),
@@ -169,7 +188,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   }
 
   Widget _buildInfoSection(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         const Divider(height: 1),
@@ -186,7 +204,6 @@ class _ProxySettingsSection extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final notifier = ref.read(settingsControllerProvider.notifier);
 
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
