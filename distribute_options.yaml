@@ -43,6 +43,12 @@ releases:
           target: rpm
           build_args:
             release: true
+      - name: linux-zip
+        package:
+          platform: linux
+          target: zip
+          build_args:
+            release: true
       - name: macos-dmg
         package:
           platform: macos
@@ -56,9 +62,21 @@ releases:
           target: pkg
           build_args:
             release: true
+      - name: macos-zip
+        package:
+          platform: macos
+          target: zip
+          build_args:
+            release: true
       - name: windows-exe
         package:
           platform: windows
           target: exe
+          build_args:
+            release: true
+      - name: windows-zip
+        package:
+          platform: windows
+          target: zip
           build_args:
             release: true

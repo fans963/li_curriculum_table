@@ -1,0 +1,11 @@
+version: 1
+
+project:
+  name: li_curriculum_table
+  app_id: com.example.curriculumTable
+  description: 一款轻盈优雅的跨平台课表应用。
+
+output: dist/
+
+defaults:
+  artifact_name: "{{name}}-{{build_name}}.{{ext}}"

@@ -25,7 +25,7 @@ keywords:
 
 generic_name: Curriculum Timetable
 
-metainfo: linux/packaging/li_curriculum_table.appdata.xml
+metainfo: .fastforge/packaging/linux/li_curriculum_table.appdata.xml
 
 categories:
   - Education
