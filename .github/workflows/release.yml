@@ -19,13 +19,25 @@ jobs:
             
           - os: windows-latest
             job_name: "Windows"
-            fastforge_jobs: "windows-exe"
+            fastforge_jobs: "windows-exe,windows-msix"
             
           - os: macos-latest
             job_name: "macOS" # 不发 TestFlight，所以去掉 iOS
             fastforge_jobs: "macos-dmg,macos-pkg"
 
     steps:
+      - name: Free Disk Space (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: false
+          android: false # We need Android tools
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - uses: actions/checkout@v4
         with:
           lfs: true
@@ -77,6 +89,12 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           npm install -g appdmg
+
+      - name: Install Windows Packaging Tools
+        if: runner.os == 'Windows'
+        run: |
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/jrsoftware/issrc/main/Files/Languages/Unofficial/ChineseSimplified.isl" -OutFile "C:\Program Files (x86)\Inno Setup 6\Languages\ChineseSimplified.isl"
+        shell: pwsh
 
       # 4. 运行生成 (FRB + Build Runner)
       - name: Codegen

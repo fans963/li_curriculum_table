@@ -74,6 +74,12 @@ releases:
           target: exe
           build_args:
             release: true
+      - name: windows-msix
+        package:
+          platform: windows
+          target: msix
+          build_args:
+            release: true
       - name: windows-zip
         package:
           platform: windows

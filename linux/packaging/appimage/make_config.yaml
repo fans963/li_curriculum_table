@@ -1,19 +1,5 @@
 display_name: 🍐课表
 
-package_name: li-curriculum-table
-
-maintainer:
-  name: fan
-  email: fan@example.com
-
-licenses:
-  - MIT
-
-groups:
-  - education
-
-installed_size: 30000
-
 icon: assets/icon/icon.png
 
 keywords:
@@ -25,10 +11,12 @@ keywords:
 
 generic_name: Curriculum Timetable
 
-metainfo: .fastforge/packaging/linux/li_curriculum_table.appdata.xml
+metainfo: linux/packaging/li_curriculum_table.appdata.xml
 
 categories:
   - Education
   - Utility
 
 startup_notify: true
+
+include: []
