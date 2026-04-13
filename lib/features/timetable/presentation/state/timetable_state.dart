@@ -22,9 +22,10 @@ abstract class TimetableState with _$TimetableState {
 const initialTimetableState = TimetableState(
   isLoading: false,
   status: '',
-  currentTeachingWeek: 1,
-  displayWeek: 1,
-  referenceWeek: 1,
+  currentTeachingWeek: 7,
+  displayWeek: 7,
+  referenceWeek: 7,
   minWeek: 1,
   maxWeek: 18,
 );
+

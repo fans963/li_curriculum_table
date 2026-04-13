@@ -34,7 +34,15 @@ class TimetableController extends _$TimetableController {
   Future<void> restoreCachedTeachingWeekBaseline() async {
     final repository = ref.read(teachingWeekBaselineRepositoryProvider);
     final baseline = await repository.loadBaseline();
-    if (baseline == null) return;
+    if (baseline == null) {
+      // Default to week 7 on first launch if no cache
+      final now = DateTime.now();
+      _setBaselineAndInfer(
+        referenceDate: DateTime(now.year, now.month, now.day),
+        referenceWeek: 7,
+      );
+      return;
+    }
 
     final anchor = mondayOfTermWeekOne(
       referenceWeek: baseline.referenceWeek,
@@ -214,7 +222,7 @@ class TimetableController extends _$TimetableController {
         final now = DateTime.now();
         _setBaselineAndInfer(
           referenceDate: DateTime(now.year, now.month, now.day),
-          referenceWeek: 6,
+          referenceWeek: 7,
         );
       }
     } catch (e) {
