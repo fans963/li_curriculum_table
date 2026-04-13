@@ -72,7 +72,7 @@ class TimetableControlPanel extends StatelessWidget {
               ),
               enabled: !isLoading,
               decoration: InputDecoration(
-                labelText: '本学期开学日期 (第一周周一)',
+                labelText: '本学期开学日期',
                 prefixIcon: const Icon(Icons.calendar_month_outlined),
                 suffixIcon: const Icon(Icons.edit_calendar_outlined, size: 20),
                 helperText: '当前推算为第 $currentTeachingWeek 周',

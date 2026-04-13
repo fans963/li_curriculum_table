@@ -15,11 +15,6 @@ pub struct TimeSlot {
     pub week_text: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-pub struct ProxySession {
-    pub jsession8080: String,
-    pub jsession9080: String,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CourseRow {
@@ -125,7 +120,6 @@ pub struct CrawlerConfig {
     pub target_url: String,
 }
 
-pub const PROXY_URL: &str = "https://www.fans963blog.asia/";
 
 impl CrawlerConfig {
     pub fn get_portal_url(&self) -> String {

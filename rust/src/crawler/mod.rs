@@ -6,7 +6,7 @@ pub mod services;
 
 pub use core::SessionManager;
 pub use error::{CrawlerError, CrawlerResult};
-pub use model::{Building, ClassroomAvailability, CrawlerConfig, ProxySession, TimetableRecord};
+pub use model::{Building, ClassroomAvailability, CrawlerConfig, TimetableRecord};
 pub use services::classroom::ClassroomService;
 pub use services::timetable::TimetableService;
 

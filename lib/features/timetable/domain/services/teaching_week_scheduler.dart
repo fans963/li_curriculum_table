@@ -8,14 +8,23 @@ DateTime mondayOfDate(DateTime date) {
   ).subtract(Duration(days: date.weekday - DateTime.monday));
 }
 
+DateTime nextMondayOnOrAfter(DateTime date) {
+  if (date.weekday == DateTime.monday) {
+    return DateTime(date.year, date.month, date.day);
+  }
+  return DateTime(date.year, date.month, date.day)
+      .add(Duration(days: 8 - date.weekday));
+}
+
 DateTime mondayOfTermWeekOne({
   required int referenceWeek,
   required DateTime referenceDate,
 }) {
   final safeWeek = referenceWeek < 1 ? 1 : referenceWeek;
-  final refMonday = mondayOfDate(referenceDate);
+  final refMonday = nextMondayOnOrAfter(referenceDate);
   return refMonday.subtract(Duration(days: (safeWeek - 1) * 7));
 }
+
 
 int calculateWeekIndex(DateTime viewedDate, DateTime termStartMonday) {
   final viewedMonday = mondayOfDate(viewedDate);
