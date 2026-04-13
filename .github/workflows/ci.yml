@@ -1,0 +1,60 @@
+name: Development CI
+
+on:
+  push:
+    branches: [ develop ]
+  pull_request:
+    branches: [ develop, main ]
+
+jobs:
+  check:
+    name: Code Quality & Build Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup Build Env
+        uses: dtolnay/rust-toolchain@nightly
+        with:
+          targets: aarch64-linux-android
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'beta'
+          cache: true
+
+      - name: Install Development Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev libsecret-1-dev
+          dart pub global activate fastforge
+          cargo install flutter_rust_bridge_codegen
+          echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
+
+      - name: Codegen
+        shell: bash
+        run: |
+          if [ ! -f env.json ]; then echo "{}" > env.json; fi
+          flutter_rust_bridge_codegen generate
+          flutter pub get
+          # We don't necessarily need build_runner for a quick CI check 
+          # unless models are broken. But safely running it:
+          # dart run build_runner build --delete-conflicting-outputs
+
+      - name: Static Analysis
+        run: |
+          flutter analyze
+          cd rust && cargo check
+
+      - name: Smoke Build (Android APK)
+        run: fastforge release --name release --jobs android-apk
+        
+      - name: Archive CI Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-android-apk
+          path: dist/*.apk

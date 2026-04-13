@@ -21,7 +21,7 @@ dependencies:
   flex_color_scheme: ^8.4.0
   web: ^1.1.1
   flutter_secure_storage: ^10.0.0
-  calendar_view: ^2.0.0
+
   infinite_calendar_view: ^2.11.3
   auto_size_text: ^3.0.0
   pool: ^1.5.2
