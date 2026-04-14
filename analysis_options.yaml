@@ -1,4 +1,8 @@
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    - "rust_builder/**"
+
 linter:
   rules:
