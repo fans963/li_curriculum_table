@@ -43,7 +43,7 @@ jobs:
           flutter pub get
           # We don't necessarily need build_runner for a quick CI check 
           # unless models are broken. But safely running it:
-          # dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build --delete-conflicting-outputs
 
       - name: Static Analysis
         run: |

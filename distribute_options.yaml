@@ -12,6 +12,7 @@ releases:
           build_args:
             target-platform: android-arm,android-arm64,android-x64
             release: true
+            split-per-abi: true
       - name: ios-ipa
         package:
           platform: ios

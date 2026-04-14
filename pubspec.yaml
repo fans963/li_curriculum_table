@@ -1,7 +1,7 @@
 name: li_curriculum_table
 description: "一款轻盈优雅的跨平台课表应用。"
 publish_to: "none"
-version: 1.0.1
+version: 1.0.2
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -48,7 +48,7 @@ dev_dependencies:
   freezed: ^3.2.5
   json_serializable: ^6.13.0
   build_runner: ^2.4.15
-  fastforge: ^0.0.1
+  fastforge: ^0.6.6
 
 flutter:
   uses-material-design: true

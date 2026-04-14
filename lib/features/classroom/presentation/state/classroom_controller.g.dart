@@ -42,7 +42,7 @@ final class ClassroomControllerProvider
 }
 
 String _$classroomControllerHash() =>
-    r'8eac956154c0aa8fcc483a63fc50dab09d2deaba';
+    r'6f9659fbe74cbcca75c0c0ea181b4a84a9d4b3ec';
 
 abstract class _$ClassroomController extends $Notifier<ClassroomState> {
   ClassroomState build();

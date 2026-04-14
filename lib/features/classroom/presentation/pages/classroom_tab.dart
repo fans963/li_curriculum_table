@@ -500,15 +500,12 @@ class _StatusIndicator extends StatelessWidget {
         ),
       ),
       child: Center(
-        child: Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isFree 
-                ? colorScheme.primary 
-                : colorScheme.error.withValues(alpha: 0.3),
-          ),
+        child: Icon(
+          isFree ? Icons.check_rounded : Icons.close_rounded,
+          size: 16,
+          color: isFree 
+              ? colorScheme.primary 
+              : colorScheme.error.withValues(alpha: 0.6),
         ),
       ),
     );
