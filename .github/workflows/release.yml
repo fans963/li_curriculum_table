@@ -15,7 +15,7 @@ jobs:
         include:
           - os: ubuntu-latest
             job_name: "Android & Linux"
-            fastforge_jobs: "android-apk,linux-pacman,linux-appimage,linux-deb,linux-rpm"
+            fastforge_jobs: "android-universal-apk,android-arm64-apk,android-arm-apk,android-x64-apk,linux-pacman,linux-appimage,linux-deb,linux-rpm"
           - os: windows-latest
             job_name: "Windows"
             fastforge_jobs: "windows-exe"

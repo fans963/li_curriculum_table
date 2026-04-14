@@ -51,7 +51,7 @@ jobs:
           cd rust && cargo check
 
       - name: Smoke Build (Android APK)
-        run: fastforge release --name release --jobs android-apk
+        run: fastforge release --name release --jobs android-arm64-apk
         
       - name: Archive CI Artifacts
         uses: actions/upload-artifact@v4
