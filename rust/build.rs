@@ -25,7 +25,11 @@ fn main() {
     // --- 3. Weight Quantization (Manual F32 -> F16 for storage) ---
     if bpk_path.exists() {
         let original_size = fs::metadata(&bpk_path).unwrap().len();
-        let mut store = BurnpackStore::from_file(&bpk_path);
+        
+        // Load the BPK from memory instead of mapping the file to avoid locking issues on Windows
+        let bpk_bytes = fs::read(&bpk_path).expect("Failed to read BPK");
+        let mut store = BurnpackStore::from_bytes(Some(burn::tensor::Bytes::from_bytes_vec(bpk_bytes)));
+        
         let snapshots = store
             .get_all_snapshots()
             .expect("Failed to get snapshots from BPK");
