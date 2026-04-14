@@ -3,8 +3,7 @@ use burn::prelude::*;
 use burn_flex::Flex;
 use image::GenericImageView;
 
-const COMPRESSED_MODEL_BYTES: &[u8] =
-    include_bytes!(concat!(env!("OUT_DIR"), "/model/common_pruned.bpk.zstd"));
+const MODEL_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/model/common_pruned.bpk"));
 
 // Universal backend: Flex (Fast & Portable CPU)
 type B = Flex;
@@ -18,29 +17,19 @@ pub struct DdddOcr {
 impl DdddOcr {
     pub fn new() -> Self {
         use burn_store::ModuleSnapshot;
-        use std::io::Read;
         let device = Default::default();
 
-        // Decompress F16 model weights at runtime
-        let mut decoder =
-            ruzstd::decoding::StreamingDecoder::new(std::io::Cursor::new(COMPRESSED_MODEL_BYTES))
-                .expect("Failed to initialize zstd decoder");
-        let mut decompressed = Vec::new();
-        decoder
-            .read_to_end(&mut decompressed)
-            .expect("Failed to decompress OCR model weights");
-
-        // Load F16 weights and cast back to F32 for Flex backend compatibility
+        // Load F16 weights directly (already quantized in build.rs)
         let mut store = burn_store::BurnpackStore::from_bytes(Some(
-            burn::tensor::Bytes::from_bytes_vec(decompressed),
+            burn::tensor::Bytes::from_bytes_vec(MODEL_BYTES.to_vec()),
         ));
-        
+
         // We use the HalfPrecisionAdapter to ensure F16 -> F32 conversion during load.
         // For the pruned model, we want to make sure it handles all possible weights.
         let mut adapter = burn_store::HalfPrecisionAdapter::new();
         // Add all likely module names if they are custom
-        adapter = adapter.with_module("Model"); 
-        
+        adapter = adapter.with_module("Model");
+
         store = store.with_from_adapter(adapter);
 
         let mut model = Model::new(&device);
@@ -49,7 +38,7 @@ impl DdddOcr {
             .expect("Failed to load OCR model from bytes");
 
         Self { model, device }
-    } 
+    }
 
     pub fn recognize(&self, img_bytes: &[u8]) -> String {
         let mut img = image::load_from_memory(img_bytes).unwrap();
