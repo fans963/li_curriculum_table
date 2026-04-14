@@ -32,17 +32,16 @@ dependencies:
   path_provider: ^2.1.5
   share_plus: ^12.0.2
   cross_file: ^0.3.4+2
+  collection: ^1.19.1
+  flutter_native_splash: ^2.4.4
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  integration_test:
-    sdk: flutter
   flutter_launcher_icons:
     git:
       url: https://github.com/devmil/flutter_launcher_icons.git
-  flutter_native_splash: ^2.4.4
   msix: ^3.16.13
   riverpod_generator: ^4.0.3
   freezed: ^3.2.5

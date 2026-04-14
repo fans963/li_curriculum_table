@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' show Notifier, NotifierProvider;
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';

@@ -1,18 +1,41 @@
 output: dist/
+artifact_name: "{{name}}-{{build_name}}{{#channel}}-{{channel}}{{/channel}}.{{ext}}"
 variables:
-  # FLUTTER_ROOT: ~/fvm/versions/3.16.5
-  # PGYER_API_KEY: your api key
 releases:
   - name: release
     jobs:
-      - name: android-apk
+      - name: android-universal-apk
         package:
           platform: android
           target: apk
+          channel: universal
           build_args:
             target-platform: android-arm,android-arm64,android-x64
             release: true
-            split-per-abi: true
+      - name: android-arm64-apk
+        package:
+          platform: android
+          target: apk
+          channel: arm64
+          build_args:
+            target-platform: android-arm64
+            release: true
+      - name: android-arm-apk
+        package:
+          platform: android
+          target: apk
+          channel: arm
+          build_args:
+            target-platform: android-arm
+            release: true
+      - name: android-x64-apk
+        package:
+          platform: android
+          target: apk
+          channel: x64
+          build_args:
+            target-platform: android-x64
+            release: true
       - name: ios-ipa
         package:
           platform: ios
