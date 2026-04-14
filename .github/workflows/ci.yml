@@ -70,6 +70,19 @@ jobs:
 
       - name: Smoke Build (Android APK)
         run: fastforge release --name release --jobs android-arm64-apk
+
+      - name: Verify APK Signature
+        run: |
+          APK_PATH=$(find dist -name "*.apk" | head -n 1)
+          if [ -n "$APK_PATH" ]; then
+            echo "Verifying $APK_PATH..."
+            # Find the latest build-tools and run apksigner
+            BUILD_TOOLS_VERSION=$(ls $ANDROID_SDK_ROOT/build-tools | sort -r | head -n 1)
+            $ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION/apksigner verify --verbose --print-certs "$APK_PATH"
+          else
+            echo "No APK found to verify."
+            exit 1
+          fi
         
       - name: Archive CI Artifacts
         uses: actions/upload-artifact@v4
