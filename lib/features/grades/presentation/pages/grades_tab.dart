@@ -325,10 +325,15 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     Color scoreColor;
     if (score >= 90) {
       scoreColor = Colors.green;
-    } else if (score >= 80) scoreColor = colorScheme.primary;
-    else if (score >= 70) scoreColor = Colors.orange;
-    else if (score >= 60) scoreColor = Colors.blue;
-    else scoreColor = colorScheme.error;
+    } else if (score >= 80) {
+      scoreColor = colorScheme.primary;
+    } else if (score >= 70) {
+      scoreColor = Colors.orange;
+    } else if (score >= 60) {
+      scoreColor = Colors.blue;
+    } else {
+      scoreColor = colorScheme.error;
+    }
 
     return Center(
       child: AnimatedScale(

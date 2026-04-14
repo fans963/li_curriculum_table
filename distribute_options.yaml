@@ -12,6 +12,7 @@ releases:
           build_args:
             target-platform: android-arm,android-arm64,android-x64
             release: true
+            split-per-abi: true
       - name: android-arm64-apk
         package:
           platform: android
@@ -20,6 +21,7 @@ releases:
           build_args:
             target-platform: android-arm64
             release: true
+            split-per-abi: true
       - name: android-arm-apk
         package:
           platform: android
@@ -28,6 +30,7 @@ releases:
           build_args:
             target-platform: android-arm
             release: true
+            split-per-abi: true
       - name: android-x64-apk
         package:
           platform: android
@@ -36,6 +39,7 @@ releases:
           build_args:
             target-platform: android-x64
             release: true
+            split-per-abi: true
       - name: ios-ipa
         package:
           platform: ios

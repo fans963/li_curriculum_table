@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Notifier, NotifierProvider;
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
@@ -106,7 +107,9 @@ class GlobalSyncController extends Notifier<GlobalSyncState> {
       // Fire-and-forget others to keep them updating in the background
       for (final task in backgroundTasks) {
         task.catchError((e) {
-          print("Background sync error: $e");
+          if (kDebugMode) {
+            print("Background sync error: $e");
+          }
           return null;
         });
       }

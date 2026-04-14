@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/app/app.dart';
-import 'package:li_curriculum_table/core/rust/frb_generated.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as crawler;
 import 'package:li_curriculum_table/core/settings/data/settings_repository_impl.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
@@ -50,12 +50,12 @@ class SettingsController extends Notifier<AppSettings> {
   /// Syncs current Dart state with the Rust background service
   void _syncWithRust() {
     // Always sync the port to Rust's global state (especially for Web probe)
-    RustLib.instance.api.crateApiCrawlerUpdateProxyConfig(port: state.proxyPort.toInt());
+    crawler.updateProxyConfig(port: state.proxyPort.toInt());
 
     if (isWeb) return;
     
     if (state.proxyEnabled) {
-      RustLib.instance.api.crateApiCrawlerRunProxyServer(port: state.proxyPort.toInt());
+      crawler.runProxyServer(port: state.proxyPort.toInt());
     } 
   }
 }
