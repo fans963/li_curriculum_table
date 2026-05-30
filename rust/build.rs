@@ -25,35 +25,41 @@ fn main() {
     // --- 3. Weight Quantization (Manual F32 -> F16 for storage) ---
     if bpk_path.exists() {
         let original_size = fs::metadata(&bpk_path).unwrap().len();
-        let mut store = BurnpackStore::from_file(&bpk_path);
-        let snapshots = store
-            .get_all_snapshots()
-            .expect("Failed to get snapshots from BPK");
 
-        let mut quantized_snapshots = Vec::with_capacity(snapshots.len());
+        // Read, quantize and serialize inside a block so the store (memory-mapped
+        // file) is dropped before we write back — Windows forbids writing to a
+        // file that still has a user-mapped section open (error 1224).
+        let quantized_bpk_bytes = {
+            let mut store = BurnpackStore::from_file(&bpk_path);
+            let snapshots = store
+                .get_all_snapshots()
+                .expect("Failed to get snapshots from BPK");
 
-        for s in snapshots.values() {
-            if s.dtype == DType::F32 {
-                let data = s.to_data().expect("Failed to get data");
-                let f16_data = data.convert::<half::f16>();
+            let mut quantized_snapshots = Vec::with_capacity(snapshots.len());
 
-                let s_f16 = TensorSnapshot::from_data(
-                    f16_data,
-                    s.path_stack.clone().unwrap_or_default(),
-                    s.container_stack.clone().unwrap_or_default(),
-                    s.tensor_id.unwrap_or_default(),
-                );
-                quantized_snapshots.push(s_f16);
-            } else {
-                quantized_snapshots.push(s.clone());
+            for s in snapshots.values() {
+                if s.dtype == DType::F32 {
+                    let data = s.to_data().expect("Failed to get data");
+                    let f16_data = data.convert::<half::f16>();
+
+                    let s_f16 = TensorSnapshot::from_data(
+                        f16_data,
+                        s.path_stack.clone().unwrap_or_default(),
+                        s.container_stack.clone().unwrap_or_default(),
+                        s.tensor_id.unwrap_or_default(),
+                    );
+                    quantized_snapshots.push(s_f16);
+                } else {
+                    quantized_snapshots.push(s.clone());
+                }
             }
-        }
 
-        // Write the quantized snapshots to a new Burnpack binary
-        let writer = BurnpackWriter::new(quantized_snapshots);
-        let quantized_bpk_bytes = writer
-            .to_bytes()
-            .expect("Failed to serialize quantized Burnpack");
+            let writer = BurnpackWriter::new(quantized_snapshots);
+            writer
+                .to_bytes()
+                .expect("Failed to serialize quantized Burnpack")
+        }; // store dropped here — releases the memory-mapped file on Windows
+
         let quantized_bpk: &[u8] = quantized_bpk_bytes.as_ref();
         let new_size = quantized_bpk.len() as u64;
 
