@@ -158,6 +158,45 @@ class CourseRow {
           slots == other.slots;
 }
 
+class Exam {
+  final String session;
+  final String courseCode;
+  final String courseName;
+  final String examTime;
+  final String location;
+  final String seatNumber;
+
+  const Exam({
+    required this.session,
+    required this.courseCode,
+    required this.courseName,
+    required this.examTime,
+    required this.location,
+    required this.seatNumber,
+  });
+
+  @override
+  int get hashCode =>
+      session.hashCode ^
+      courseCode.hashCode ^
+      courseName.hashCode ^
+      examTime.hashCode ^
+      location.hashCode ^
+      seatNumber.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Exam &&
+          runtimeType == other.runtimeType &&
+          session == other.session &&
+          courseCode == other.courseCode &&
+          courseName == other.courseName &&
+          examTime == other.examTime &&
+          location == other.location &&
+          seatNumber == other.seatNumber;
+}
+
 class Grade {
   final String term;
   final String courseCode;

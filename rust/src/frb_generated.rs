@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 1665529287;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -1112469664;
 
 // Section: executor
 
@@ -296,6 +296,44 @@ fn wire__crate__api__classroom__get_classroom_availability_impl(
                             api_password,
                         )
                         .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__exam__get_exams_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "get_exams",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_username = <String>::sse_decode(&mut deserializer);
+            let api_password = <String>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::exam::get_exams(api_username, api_password).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -662,6 +700,26 @@ impl SseDecode for crate::crawler::model::CourseRow {
     }
 }
 
+impl SseDecode for crate::crawler::model::Exam {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_session = <String>::sse_decode(deserializer);
+        let mut var_courseCode = <String>::sse_decode(deserializer);
+        let mut var_courseName = <String>::sse_decode(deserializer);
+        let mut var_examTime = <String>::sse_decode(deserializer);
+        let mut var_location = <String>::sse_decode(deserializer);
+        let mut var_seatNumber = <String>::sse_decode(deserializer);
+        return crate::crawler::model::Exam {
+            session: var_session,
+            course_code: var_courseCode,
+            course_name: var_courseName,
+            exam_time: var_examTime,
+            location: var_location,
+            seat_number: var_seatNumber,
+        };
+    }
+}
+
 impl SseDecode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -780,6 +838,18 @@ impl SseDecode for Vec<crate::crawler::model::CourseRow> {
         let mut ans_ = Vec::with_capacity(len_ as usize);
         for idx_ in 0..len_ {
             ans_.push(<crate::crawler::model::CourseRow>::sse_decode(deserializer));
+        }
+        return ans_;
+    }
+}
+
+impl SseDecode for Vec<crate::crawler::model::Exam> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut len_ = <i32>::sse_decode(deserializer);
+        let mut ans_ = Vec::with_capacity(len_ as usize);
+        for idx_ in 0..len_ {
+            ans_.push(<crate::crawler::model::Exam>::sse_decode(deserializer));
         }
         return ans_;
     }
@@ -963,17 +1033,18 @@ fn pde_ffi_dispatcher_primary_impl(
             rust_vec_len,
             data_len,
         ),
-        7 => wire__crate__api__grade__get_grades_impl(port, ptr, rust_vec_len, data_len),
-        8 => wire__crate__api__crawler__get_shared_session_manager_impl(
+        7 => wire__crate__api__exam__get_exams_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__grade__get_grades_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__crawler__get_shared_session_manager_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        9 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__crawler__init_ocr_engine_impl(port, ptr, rust_vec_len, data_len),
-        11 => wire__crate__api__crawler__run_proxy_server_impl(port, ptr, rust_vec_len, data_len),
-        12 => {
+        10 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__crawler__init_ocr_engine_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__crawler__run_proxy_server_impl(port, ptr, rust_vec_len, data_len),
+        13 => {
             wire__crate__api__crawler__update_proxy_config_impl(port, ptr, rust_vec_len, data_len)
         }
         _ => unreachable!(),
@@ -1140,6 +1211,28 @@ impl flutter_rust_bridge::IntoIntoDart<crate::crawler::model::CourseRow>
     for crate::crawler::model::CourseRow
 {
     fn into_into_dart(self) -> crate::crawler::model::CourseRow {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::crawler::model::Exam {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.session.into_into_dart().into_dart(),
+            self.course_code.into_into_dart().into_dart(),
+            self.course_name.into_into_dart().into_dart(),
+            self.exam_time.into_into_dart().into_dart(),
+            self.location.into_into_dart().into_dart(),
+            self.seat_number.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::crawler::model::Exam {}
+impl flutter_rust_bridge::IntoIntoDart<crate::crawler::model::Exam>
+    for crate::crawler::model::Exam
+{
+    fn into_into_dart(self) -> crate::crawler::model::Exam {
         self
     }
 }
@@ -1335,6 +1428,18 @@ impl SseEncode for crate::crawler::model::CourseRow {
     }
 }
 
+impl SseEncode for crate::crawler::model::Exam {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.session, serializer);
+        <String>::sse_encode(self.course_code, serializer);
+        <String>::sse_encode(self.course_name, serializer);
+        <String>::sse_encode(self.exam_time, serializer);
+        <String>::sse_encode(self.location, serializer);
+        <String>::sse_encode(self.seat_number, serializer);
+    }
+}
+
 impl SseEncode for f64 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1424,6 +1529,16 @@ impl SseEncode for Vec<crate::crawler::model::CourseRow> {
         <i32>::sse_encode(self.len() as _, serializer);
         for item in self {
             <crate::crawler::model::CourseRow>::sse_encode(item, serializer);
+        }
+    }
+}
+
+impl SseEncode for Vec<crate::crawler::model::Exam> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <i32>::sse_encode(self.len() as _, serializer);
+        for item in self {
+            <crate::crawler::model::Exam>::sse_encode(item, serializer);
         }
     }
 }

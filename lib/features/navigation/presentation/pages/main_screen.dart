@@ -6,6 +6,7 @@ import 'package:li_curriculum_table/util/util.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_tab.dart';
 import 'package:li_curriculum_table/features/grades/presentation/pages/grades_tab.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/pages/exam_schedule_tab.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
@@ -27,6 +28,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     TimetableTab(),
     ClassroomTab(),
     GradesTab(),
+    ExamScheduleTab(),
     SettingsTab(),
   ];
 
@@ -64,7 +66,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           ),
         ],
       ),
-      floatingActionButton: (currentIndex == 3) // No refresh button on Settings
+      floatingActionButton: (currentIndex == 4) // No refresh button on Settings
         ? null
         : FloatingActionButton(
             onPressed: syncState.isSyncing 
@@ -106,6 +108,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             icon: Icon(Icons.grade_outlined),
             selectedIcon: Icon(Icons.grade),
             label: '成绩',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.assignment_outlined),
+            selectedIcon: Icon(Icons.assignment),
+            label: '考试',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),

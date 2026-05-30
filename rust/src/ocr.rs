@@ -7,7 +7,7 @@ const MODEL_BYTES: &[u8] = include_bytes!(concat!(env!("OUT_DIR"), "/model/commo
 
 // Universal backend: Flex (Fast & Portable CPU)
 type B = Flex;
-type Dev = <B as Backend>::Device;
+type Dev = <B as burn::tensor::backend::BackendTypes>::Device;
 
 pub struct DdddOcr {
     model: Model<B>,

@@ -20,17 +20,17 @@ dependencies:
   dynamic_color: ^1.8.1
   flex_color_scheme: ^8.4.0
   web: ^1.1.1
-  flutter_secure_storage: ^10.0.0
+  flutter_secure_storage: ^10.3.1
 
-  infinite_calendar_view: ^2.11.3
+  infinite_calendar_view: ^2.11.5
   auto_size_text: ^3.0.0
   pool: ^1.5.2
   riverpod_annotation: ^4.0.2
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.11.0
+  json_annotation: ^4.12.0
   feedback: ^3.2.0
   path_provider: ^2.1.5
-  share_plus: ^12.0.2
+  share_plus: ^13.1.0
   cross_file: ^0.3.4+2
   collection: ^1.19.1
   flutter_native_splash: ^2.4.4
@@ -45,8 +45,8 @@ dev_dependencies:
   msix: ^3.16.13
   riverpod_generator: ^4.0.3
   freezed: ^3.2.5
-  json_serializable: ^6.13.0
-  build_runner: ^2.4.15
+  json_serializable: ^6.14.0
+  build_runner: ^2.15.0
   fastforge: ^0.6.6
 
 flutter:

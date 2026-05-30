@@ -1,7 +1,7 @@
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::{
-    Campus, ClassroomSchedule, CourseRow, Grade, GradeRecord, KbtableWeekHint,
-    OccupiedSlot, TimeSlot, TimetableRecord,
+    Campus, ClassroomSchedule, CourseRow, Exam, ExamRecord, Grade, GradeRecord,
+    KbtableWeekHint, OccupiedSlot, TimeSlot, TimetableRecord,
 };
 use regex::Regex;
 use scraper::{Html, Selector};
@@ -582,6 +582,98 @@ pub fn parse_grades(html: &str) -> CrawlerResult<GradeRecord> {
     }
 
     Ok(GradeRecord { grades })
+}
+
+/// Parse the current term from the exam query page.
+/// Looks for select[name='xnxqid'] with a selected option.
+pub fn parse_exam_query_term(html: &str) -> Option<String> {
+    let document = Html::parse_document(html);
+
+    // Try select[name='xnxqid'] with selected option first
+    let selected_sel = match Selector::parse("select[name='xnxqid'] option[selected]") {
+        Ok(s) => s,
+        Err(_) => return None,
+    };
+    if let Some(opt) = document.select(&selected_sel).next() {
+        let val = opt.value().attr("value").unwrap_or_default().to_string();
+        if !val.is_empty() {
+            log::info!("parse_exam_query_term: found selected term='{}'", val);
+            return Some(val);
+        }
+    }
+
+    // Fallback: first option with a non-empty value
+    let option_sel = match Selector::parse("select[name='xnxqid'] option") {
+        Ok(s) => s,
+        Err(_) => return None,
+    };
+    for opt in document.select(&option_sel) {
+        let val = opt.value().attr("value").unwrap_or_default().to_string();
+        if !val.is_empty() {
+            log::info!("parse_exam_query_term: using first option term='{}'", val);
+            return Some(val);
+        }
+    }
+
+    log::warn!("parse_exam_query_term: no term found");
+    None
+}
+
+pub fn parse_exams(html: &str) -> CrawlerResult<ExamRecord> {
+    log::info!("parse_exams: HTML length={}", html.len());
+    // Debug: always write HTML for inspection
+    let _ = std::fs::write("/tmp/exam_parse_input.html", html);
+
+    let document = Html::parse_document(html);
+    let table_selector =
+        Selector::parse("table#dataList").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+    let row_selector = Selector::parse("tr").map_err(|e| CrawlerError::Parse(e.to_string()))?;
+
+    let mut exams = Vec::new();
+
+    if let Some(table) = document.select(&table_selector).next() {
+        let rows: Vec<_> = table.select(&row_selector).collect();
+        log::info!("parse_exams: Found table#dataList with {} rows (including header)", rows.len());
+
+        // Skip header row
+        for (i, row) in rows.iter().enumerate().skip(1) {
+            let cells: Vec<_> = row.select(&Selector::parse("td").unwrap()).collect();
+            log::info!("parse_exams: Row {} has {} cells", i, cells.len());
+            if cells.len() < 7 {
+                log::warn!("parse_exams: Row {} skipped, only {} cells (need 7)", i, cells.len());
+                continue;
+            }
+
+            let exam = Exam {
+                session: cells[1].text().collect::<String>().trim().to_string(),
+                course_code: cells[2].text().collect::<String>().trim().to_string(),
+                course_name: cells[3].text().collect::<String>().trim().to_string(),
+                exam_time: cells[4].text().collect::<String>().trim().to_string(),
+                location: cells[5].text().collect::<String>().trim().to_string(),
+                seat_number: cells[6].text().collect::<String>().trim().to_string(),
+            };
+
+            log::info!(
+                "parse_exams: Parsed exam: name='{}', time='{}', location='{}'",
+                exam.course_name, exam.exam_time, exam.location
+            );
+
+            if !exam.course_name.is_empty() {
+                exams.push(exam);
+            }
+        }
+    } else {
+        log::warn!("parse_exams: table#dataList NOT found in HTML");
+        if html.contains("logon") || html.contains("Logon") || html.contains("登录") {
+            log::warn!("parse_exams: HTML appears to be a login page");
+        }
+        // Log first 300 chars for debugging
+        let snippet: String = html.chars().take(300).collect();
+        log::warn!("parse_exams: HTML snippet: {}", snippet);
+    }
+
+    log::info!("parse_exams: Returning {} exams", exams.len());
+    Ok(ExamRecord { exams })
 }
 
 #[cfg(test)]

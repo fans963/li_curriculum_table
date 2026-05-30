@@ -1,0 +1,5 @@
+{
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "cmake.sourceDirectory": "/home/fan/workspace/flutter/curriculum_table/linux",
+  "dart.flutterSdkPath": ".fvm/versions/beta"
+}

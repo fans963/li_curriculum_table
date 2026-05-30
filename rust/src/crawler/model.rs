@@ -106,6 +106,25 @@ pub struct ClassroomSchedule {
     pub occupied_slots: Vec<OccupiedSlot>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Exam {
+    pub session: String,
+    #[serde(rename = "courseCode")]
+    pub course_code: String,
+    #[serde(rename = "courseName")]
+    pub course_name: String,
+    #[serde(rename = "examTime")]
+    pub exam_time: String,
+    pub location: String,
+    #[serde(rename = "seatNumber")]
+    pub seat_number: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ExamRecord {
+    pub exams: Vec<Exam>,
+}
+
 pub struct KbtableWeekHint {
     pub course_name: String,
     pub weekday: u32,

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' show Notifier, NotifierProvider;
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
@@ -45,6 +46,10 @@ class GlobalSyncController extends Notifier<GlobalSyncState> {
         await ref.read(gradeControllerProvider.notifier).loadGrades(forceRefresh: true);
       }
 
+      Future<void> syncExams() async {
+        await ref.read(examControllerProvider.notifier).loadExams(forceRefresh: true);
+      }
+
       Future<void> syncClassroom() async {
         final classroom = ref.read(classroomControllerProvider);
         // If we have no campuses cached at all, we must do a basic sync first.
@@ -71,22 +76,32 @@ class GlobalSyncController extends Notifier<GlobalSyncState> {
         case 0: // Timetable
           priorityTask = syncTimetable();
           backgroundTasks.add(syncGrades());
+          backgroundTasks.add(syncExams());
           backgroundTasks.add(syncClassroom());
           break;
         case 1: // Classroom
           priorityTask = syncClassroom();
           backgroundTasks.add(syncTimetable());
           backgroundTasks.add(syncGrades());
+          backgroundTasks.add(syncExams());
           break;
         case 2: // Grades
           priorityTask = syncGrades();
           backgroundTasks.add(syncTimetable());
+          backgroundTasks.add(syncExams());
+          backgroundTasks.add(syncClassroom());
+          break;
+        case 3: // Exams
+          priorityTask = syncExams();
+          backgroundTasks.add(syncTimetable());
+          backgroundTasks.add(syncGrades());
           backgroundTasks.add(syncClassroom());
           break;
         default:
           // Just run everything in background if we're on settings/other
           backgroundTasks.add(syncTimetable());
           backgroundTasks.add(syncGrades());
+          backgroundTasks.add(syncExams());
           backgroundTasks.add(syncClassroom());
           break;
       }

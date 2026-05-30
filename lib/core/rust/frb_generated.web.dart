@@ -9,6 +9,7 @@
 import 'api/auth.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
+import 'api/exam.dart';
 import 'api/grade.dart';
 import 'crawler/model.dart';
 import 'dart:async';
@@ -68,6 +69,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CourseRow dco_decode_course_row(dynamic raw);
 
   @protected
+  Exam dco_decode_exam(dynamic raw);
+
+  @protected
   double dco_decode_f_64(dynamic raw);
 
   @protected
@@ -95,6 +99,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<CourseRow> dco_decode_list_course_row(dynamic raw);
+
+  @protected
+  List<Exam> dco_decode_list_exam(dynamic raw);
 
   @protected
   List<Grade> dco_decode_list_grade(dynamic raw);
@@ -180,6 +187,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CourseRow sse_decode_course_row(SseDeserializer deserializer);
 
   @protected
+  Exam sse_decode_exam(SseDeserializer deserializer);
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer);
 
   @protected
@@ -209,6 +219,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<CourseRow> sse_decode_list_course_row(SseDeserializer deserializer);
+
+  @protected
+  List<Exam> sse_decode_list_exam(SseDeserializer deserializer);
 
   @protected
   List<Grade> sse_decode_list_grade(SseDeserializer deserializer);
@@ -311,6 +324,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_course_row(CourseRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_exam(Exam self, SseSerializer serializer);
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer);
 
   @protected
@@ -345,6 +361,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
     List<CourseRow> self,
     SseSerializer serializer,
   );
+
+  @protected
+  void sse_encode_list_exam(List<Exam> self, SseSerializer serializer);
 
   @protected
   void sse_encode_list_grade(List<Grade> self, SseSerializer serializer);

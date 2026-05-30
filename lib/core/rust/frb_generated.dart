@@ -6,6 +6,7 @@
 import 'api/auth.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
+import 'api/exam.dart';
 import 'api/grade.dart';
 import 'crawler/model.dart';
 import 'dart:async';
@@ -70,7 +71,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => 1665529287;
+  int get rustContentHash => -1112469664;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -120,6 +121,11 @@ abstract class RustLibApi extends BaseApi {
     required String term,
     String? username,
     String? password,
+  });
+
+  Future<List<Exam>> crateApiExamGetExams({
+    required String username,
+    required String password,
   });
 
   Future<List<Grade>> crateApiGradeGetGrades({
@@ -402,7 +408,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
-  Future<List<Grade>> crateApiGradeGetGrades({
+  Future<List<Exam>> crateApiExamGetExams({
     required String username,
     required String password,
   }) {
@@ -416,6 +422,40 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 7,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_exam,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiExamGetExamsConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiExamGetExamsConstMeta => const TaskConstMeta(
+    debugName: "get_exams",
+    argNames: ["username", "password"],
+  );
+
+  @override
+  Future<List<Grade>> crateApiGradeGetGrades({
+    required String username,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(username, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
             port: port_,
           );
         },
@@ -444,7 +484,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 8,
+            funcId: 9,
             port: port_,
           );
         },
@@ -475,7 +515,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 10,
             port: port_,
           );
         },
@@ -503,7 +543,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 11,
             port: port_,
           );
         },
@@ -534,7 +574,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 12,
             port: port_,
           );
         },
@@ -562,7 +602,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 13,
             port: port_,
           );
         },
@@ -705,6 +745,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Exam dco_decode_exam(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 6)
+      throw Exception('unexpected arr length: expect 6 but see ${arr.length}');
+    return Exam(
+      session: dco_decode_String(arr[0]),
+      courseCode: dco_decode_String(arr[1]),
+      courseName: dco_decode_String(arr[2]),
+      examTime: dco_decode_String(arr[3]),
+      location: dco_decode_String(arr[4]),
+      seatNumber: dco_decode_String(arr[5]),
+    );
+  }
+
+  @protected
   double dco_decode_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as double;
@@ -774,6 +830,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<CourseRow> dco_decode_list_course_row(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_course_row).toList();
+  }
+
+  @protected
+  List<Exam> dco_decode_list_exam(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_exam).toList();
   }
 
   @protected
@@ -1007,6 +1069,25 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  Exam sse_decode_exam(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_session = sse_decode_String(deserializer);
+    var var_courseCode = sse_decode_String(deserializer);
+    var var_courseName = sse_decode_String(deserializer);
+    var var_examTime = sse_decode_String(deserializer);
+    var var_location = sse_decode_String(deserializer);
+    var var_seatNumber = sse_decode_String(deserializer);
+    return Exam(
+      session: var_session,
+      courseCode: var_courseCode,
+      courseName: var_courseName,
+      examTime: var_examTime,
+      location: var_location,
+      seatNumber: var_seatNumber,
+    );
+  }
+
+  @protected
   double sse_decode_f_64(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getFloat64();
@@ -1123,6 +1204,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <CourseRow>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_course_row(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<Exam> sse_decode_list_exam(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <Exam>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_exam(deserializer));
     }
     return ans_;
   }
@@ -1379,6 +1472,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_exam(Exam self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.session, serializer);
+    sse_encode_String(self.courseCode, serializer);
+    sse_encode_String(self.courseName, serializer);
+    sse_encode_String(self.examTime, serializer);
+    sse_encode_String(self.location, serializer);
+    sse_encode_String(self.seatNumber, serializer);
+  }
+
+  @protected
   void sse_encode_f_64(double self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putFloat64(self);
@@ -1468,6 +1572,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_course_row(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_exam(List<Exam> self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_exam(item, serializer);
     }
   }
 
