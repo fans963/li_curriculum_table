@@ -15,8 +15,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$ClassroomAvailability {
 
- String get classroomName; List<bool> get availability;// List of 5 bools for the sessions
- bool get hasNoClassesThisTerm;
+ String get classroomName; List<bool> get availability; bool get hasNoClassesThisTerm;
 /// Create a copy of ClassroomAvailability
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -223,7 +222,6 @@ class _ClassroomAvailability extends ClassroomAvailability {
   return EqualUnmodifiableListView(_availability);
 }
 
-// List of 5 bools for the sessions
 @override@JsonKey() final  bool hasNoClassesThisTerm;
 
 /// Create a copy of ClassroomAvailability

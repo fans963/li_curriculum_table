@@ -2,8 +2,11 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:feedback/feedback.dart';
+import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
+import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
@@ -188,11 +191,115 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   }
 
   Widget _buildInfoSection(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Column(
       children: [
         const Divider(height: 1),
+        const SizedBox(height: 16),
+        FutureBuilder<PackageInfo>(
+          future: PackageInfo.fromPlatform(),
+          builder: (context, snapshot) {
+            final version = snapshot.data?.version ?? '...';
+            final buildNumber = snapshot.data?.buildNumber ?? '';
+
+            return Column(
+              children: [
+                // App icon and name
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  ),
+                  child: Image.asset(
+                    'assets/icon/icon.png',
+                    width: 56,
+                    height: 56,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  '🍐 课表',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Check for update button
+                SizedBox(
+                  width: 200,
+                  child: FilledButton.tonalIcon(
+                    icon: const Icon(Icons.system_update_rounded, size: 18),
+                    label: const Text('检查更新'),
+                    onPressed: () => _checkForUpdateManually(context),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  '一款轻盈优雅的跨平台课表应用',
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            );
+          },
+        ),
       ],
     );
+  }
+
+  Future<void> _checkForUpdateManually(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final overlay = Overlay.of(context);
+
+    // Show loading indicator
+    late OverlayEntry loadingEntry;
+    loadingEntry = OverlayEntry(
+      builder: (_) => Center(
+        child: Card(
+          elevation: 8,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: const [
+                CircularProgressIndicator(),
+                SizedBox(height: 12),
+                Text('正在检查更新...'),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(loadingEntry);
+
+    try {
+      final updateInfo = await UpdateService().checkForUpdate();
+      loadingEntry.remove();
+
+      if (mounted) {
+        await showUpdateDialogIfNeeded(context, updateInfo, silent: false);
+      }
+    } catch (e) {
+      loadingEntry.remove();
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('检查更新失败，请稍后重试')),
+        );
+      }
+    }
   }
 }
 

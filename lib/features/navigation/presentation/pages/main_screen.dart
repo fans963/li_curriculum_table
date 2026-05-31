@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
+import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_tab.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
 import 'package:li_curriculum_table/util/util.dart';
@@ -37,9 +39,23 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.initState();
     // Remove the native splash screen after the first frame
     FlutterNativeSplash.remove();
-    
+
     final initialIndex = ref.read(navigationControllerProvider);
     _pageController = PageController(initialPage: initialIndex);
+
+    // Auto-check for updates after the first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final updateInfo = await UpdateService().checkForUpdate();
+      if (mounted) {
+        await showUpdateDialogIfNeeded(context, updateInfo, silent: true);
+      }
+    } catch (_) {
+      // Silently ignore update check failures
+    }
   }
 
   @override
