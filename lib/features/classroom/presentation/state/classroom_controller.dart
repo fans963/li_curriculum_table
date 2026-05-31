@@ -17,6 +17,46 @@ class ClassroomController extends _$ClassroomController {
     return ClassroomState(selectedDate: DateTime.now());
   }
 
+  Campus? _findDefaultCampus(List<Campus> campuses, String? lastId) {
+    if (campuses.isEmpty) return null;
+    if (lastId != null && campuses.any((e) => e.id == lastId)) {
+      return campuses.firstWhere((e) => e.id == lastId);
+    }
+    return campuses.cast<Campus?>().firstWhere(
+      (e) => e != null && e.name.contains('孝陵卫'),
+      orElse: () => campuses.first,
+    );
+  }
+
+  List<Building> _sortBuildings(List<Building> buildings, Campus? campus) {
+    if (campus == null || !campus.name.contains('孝陵卫')) return buildings;
+    final sorted = List<Building>.from(buildings);
+    
+    int getPriority(String name) {
+      if (name.contains('Ⅳ') || name.contains('IV') || name.contains('第四') || name.contains('四号')) {
+        return 4;
+      }
+      if (name.contains('Ⅲ') || name.contains('III') || name.contains('第三') || name.contains('三号')) {
+        return 3;
+      }
+      if (name.contains('Ⅱ') || name.contains('II') || name.contains('第二') || name.contains('二号')) {
+        return 2;
+      }
+      if (name.contains('Ⅰ') || name.contains('I') || name.contains('第一') || name.contains('一号')) {
+        return 1;
+      }
+      return 999;
+    }
+
+    sorted.sort((a, b) {
+      final pA = getPriority(a.name);
+      final pB = getPriority(b.name);
+      if (pA != pB) return pA.compareTo(pB);
+      return buildings.indexOf(a).compareTo(buildings.indexOf(b));
+    });
+    return sorted;
+  }
+
   Future<void> init() async {
     // Proactively ensure OCR is initialized, but do not block tab switching.
     ref.read(ocrInitializerProvider).ensureInitialized();
@@ -55,9 +95,7 @@ class ClassroomController extends _$ClassroomController {
             if (campuses.isNotEmpty) {
               final lastId = await localDataSource.readLastCampusId();
               if (!ref.mounted) return;
-              final selection = campuses.any((e) => e.id == lastId)
-                  ? campuses.firstWhere((e) => e.id == lastId)
-                  : campuses.first;
+              final selection = _findDefaultCampus(campuses, lastId);
 
               state = state.copyWith(
                 campuses: campuses,
@@ -83,9 +121,7 @@ class ClassroomController extends _$ClassroomController {
       if (!ref.mounted) return;
       final lastId = await localDataSource.readLastCampusId();
       if (!ref.mounted) return;
-      final selection = campuses.any((e) => e.id == lastId)
-          ? campuses.firstWhere((e) => e.id == lastId)
-          : (campuses.isNotEmpty ? campuses.first : null);
+      final selection = _findDefaultCampus(campuses, lastId);
 
       state = state.copyWith(
         campuses: campuses,
@@ -128,14 +164,15 @@ class ClassroomController extends _$ClassroomController {
       );
       if (!ref.mounted) return;
 
+      final sortedBuildings = _sortBuildings(buildings, campus);
       final lastBId = await localDataSource.readLastBuildingId();
       if (!ref.mounted) return;
-      final selection = buildings.any((e) => e.id == lastBId)
-          ? buildings.firstWhere((e) => e.id == lastBId)
-          : (buildings.isNotEmpty ? buildings.first : null);
+      final selection = sortedBuildings.any((e) => e.id == lastBId)
+          ? sortedBuildings.firstWhere((e) => e.id == lastBId)
+          : (sortedBuildings.isNotEmpty ? sortedBuildings.first : null);
 
       state = state.copyWith(
-        buildings: buildings,
+        buildings: sortedBuildings,
         selectedBuilding: (forceRefresh || state.selectedBuilding == null) 
             ? selection 
             : state.selectedBuilding,
@@ -225,9 +262,7 @@ class ClassroomController extends _$ClassroomController {
         if (state.selectedCampus == null && campuses.isNotEmpty) {
           final lastId = await localDataSource.readLastCampusId();
           if (!ref.mounted) return;
-          final selection = campuses.any((e) => e.id == lastId)
-              ? campuses.firstWhere((e) => e.id == lastId)
-              : campuses.first;
+          final selection = _findDefaultCampus(campuses, lastId);
           state = state.copyWith(selectedCampus: selection);
         }
       }
@@ -242,15 +277,16 @@ class ClassroomController extends _$ClassroomController {
             forceRefresh: true,
           );
           if (!ref.mounted) return;
-          state = state.copyWith(buildings: buildings);
+          final sortedBuildings = _sortBuildings(buildings, campus);
+          state = state.copyWith(buildings: sortedBuildings);
           
-          if (state.selectedBuilding == null && buildings.isNotEmpty) {
+          if (state.selectedBuilding == null && sortedBuildings.isNotEmpty) {
             final lastBId = await localDataSource.readLastBuildingId();
             if (!ref.mounted) return;
             state = state.copyWith(
-              selectedBuilding: buildings.any((e) => e.id == lastBId)
-                  ? buildings.firstWhere((e) => e.id == lastBId)
-                  : buildings.first,
+              selectedBuilding: sortedBuildings.any((e) => e.id == lastBId)
+                  ? sortedBuildings.firstWhere((e) => e.id == lastBId)
+                  : sortedBuildings.first,
             );
           }
         }

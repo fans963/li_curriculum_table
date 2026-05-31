@@ -4,3 +4,4 @@ pub mod crawler;
 pub mod exam;
 pub mod grade;
 pub mod simple;
+pub mod book;

@@ -11,6 +11,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_state.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
+import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
+import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 
 part 'timetable_controller.g.dart';
 
@@ -206,9 +209,8 @@ class TimetableController extends _$TimetableController {
       }
 
       state = state.copyWith(
-        isLoading: false,
         data: data,
-        status: '抓取完成: 表格行=${data.rows.length}，可展示时段=${data.occurrences.length}',
+        status: '课表同步成功，正在拉取教室、成绩与考试信息...',
       );
       _updateWeekRange(data);
 
@@ -216,6 +218,41 @@ class TimetableController extends _$TimetableController {
         final now = DateTime.now();
         setTermStartDate(DateTime(now.year, 3, 1));
       }
+
+      // --- Sync Classrooms ---
+      try {
+        state = state.copyWith(status: '正在同步教室信息...');
+        await ref.read(classroomControllerProvider.notifier).syncCurrentContext();
+      } catch (e, st) {
+        if (kDebugMode) {
+          print('Classroom sync failed: $e\n$st');
+        }
+      }
+
+      // --- Sync Grades ---
+      try {
+        state = state.copyWith(status: '正在同步成绩信息...');
+        await ref.read(gradeControllerProvider.notifier).loadGrades(forceRefresh: true);
+      } catch (e, st) {
+        if (kDebugMode) {
+          print('Grades sync failed: $e\n$st');
+        }
+      }
+
+      // --- Sync Exams ---
+      try {
+        state = state.copyWith(status: '正在同步考试信息...');
+        await ref.read(examControllerProvider.notifier).loadExams(forceRefresh: true);
+      } catch (e, st) {
+        if (kDebugMode) {
+          print('Exams sync failed: $e\n$st');
+        }
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        status: '所有信息（课表、教室、成绩、考试）同步成功！',
+      );
     } catch (e) {
       final err = e.toString();
       var message = '抓取失败，请稍后重试。';
