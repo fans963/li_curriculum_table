@@ -1,21 +1,24 @@
 import 'package:feedback/feedback.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const bool isWeb = kIsWeb;
 
-class CurriculumTableApp extends StatelessWidget {
+class CurriculumTableApp extends ConsumerWidget {
   const CurriculumTableApp({super.key});
 
   ThemeData _buildTheme({
     required Brightness brightness,
+    required Color seedColor,
     ColorScheme? dynamicScheme,
   }) {
     final fallbackScheme = ColorScheme.fromSeed(
-      seedColor: const Color(0xFF0A7C6D),
+      seedColor: seedColor,
       brightness: brightness,
     );
     final scheme = dynamicScheme ?? fallbackScheme;
@@ -51,7 +54,6 @@ class CurriculumTableApp extends StatelessWidget {
     );
 
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
-    // Material Icons are a separate bundled font and remain unaffected.
     const String? webFontFamily = kIsWeb
         ? 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif'
         : null;
@@ -88,21 +90,31 @@ class CurriculumTableApp extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsControllerProvider);
+
     return BetterFeedback(
       localeOverride: const Locale('zh', 'CN'),
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
+          // Use dynamic color only when enabled and available
+          final ColorScheme? lightScheme =
+              settings.useDynamicColor ? lightDynamic : null;
+          final ColorScheme? darkScheme =
+              settings.useDynamicColor ? darkDynamic : null;
+
           return MaterialApp(
             title: '',
-            themeMode: ThemeMode.system,
+            themeMode: settings.themeMode,
             theme: _buildTheme(
               brightness: Brightness.light,
-              dynamicScheme: lightDynamic,
+              seedColor: settings.seedColor,
+              dynamicScheme: lightScheme,
             ),
             darkTheme: _buildTheme(
               brightness: Brightness.dark,
-              dynamicScheme: darkDynamic,
+              seedColor: settings.seedColor,
+              dynamicScheme: darkScheme,
             ),
             home: const MainScreen(),
           );

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 
@@ -7,20 +8,36 @@ class SecureSettingsLocalDataSource {
   static const _kProxyEnabled = 'proxy_enabled';
   static const _kProxyPort = 'proxy_port';
   static const _kWeeklyScroll = 'weekly_scroll';
+  static const _kThemeMode = 'theme_mode';
+  static const _kSeedColor = 'seed_color';
+  static const _kUseDynamicColor = 'use_dynamic_color';
 
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
-    final data = await _store.readAll([_kProxyEnabled, _kProxyPort, _kWeeklyScroll]);
-    
+    final data = await _store.readAll([
+      _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
+      _kThemeMode, _kSeedColor, _kUseDynamicColor,
+    ]);
+
     final enabled = data[_kProxyEnabled] == 'true';
     final port = int.tryParse(data[_kProxyPort] ?? '9999') ?? 9999;
     final weekly = data[_kWeeklyScroll] == 'true';
+
+    final themeMode = ThemeMode.values.firstWhere(
+      (e) => e.name == data[_kThemeMode],
+      orElse: () => ThemeMode.system,
+    );
+    final seedColor = Color(int.tryParse(data[_kSeedColor] ?? '') ?? 0xFF0A7C6D);
+    final useDynamic = data[_kUseDynamicColor] != 'false'; // default true
 
     return AppSettings(
       proxyEnabled: enabled,
       proxyPort: port,
       weeklyScroll: weekly,
+      themeMode: themeMode,
+      seedColor: seedColor,
+      useDynamicColor: useDynamic,
     );
   }
 
@@ -29,6 +46,9 @@ class SecureSettingsLocalDataSource {
       _kProxyEnabled: settings.proxyEnabled.toString(),
       _kProxyPort: settings.proxyPort.toString(),
       _kWeeklyScroll: settings.weeklyScroll.toString(),
+      _kThemeMode: settings.themeMode.name,
+      _kSeedColor: settings.seedColor.toARGB32().toString(),
+      _kUseDynamicColor: settings.useDynamicColor.toString(),
     });
   }
 }

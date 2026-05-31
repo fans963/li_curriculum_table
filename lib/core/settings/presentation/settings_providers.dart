@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/core/rust/api/crawler.dart' as crawler;
@@ -44,6 +45,21 @@ class SettingsController extends Notifier<AppSettings> {
 
   Future<void> setWeeklyScroll(bool enabled) async {
     state = state.copyWith(weeklyScroll: enabled);
+    await _save();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    state = state.copyWith(themeMode: mode);
+    await _save();
+  }
+
+  Future<void> setSeedColor(Color color) async {
+    state = state.copyWith(seedColor: color);
+    await _save();
+  }
+
+  Future<void> setUseDynamicColor(bool enabled) async {
+    state = state.copyWith(useDynamicColor: enabled);
     await _save();
   }
 

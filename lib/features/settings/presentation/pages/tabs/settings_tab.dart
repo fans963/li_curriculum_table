@@ -130,6 +130,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 ),
                 const SizedBox(height: 32),
                 const _SectionHeader(
+                  title: '外观',
+                  icon: Icons.palette_outlined,
+                ),
+                const SizedBox(height: 8),
+                const _ThemeSettingsSection(),
+                const SizedBox(height: 32),
+                const _SectionHeader(
                   title: '增强功能：本地代理',
                   icon: Icons.lan_outlined,
                 ),
@@ -307,6 +314,132 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
         );
       }
     }
+  }
+}
+
+class _ThemeSettingsSection extends ConsumerWidget {
+  const _ThemeSettingsSection();
+
+  static const _seedColors = [
+    Color(0xFF0A7C6D), // Teal (default)
+    Color(0xFF6750A4), // Purple
+    Color(0xFF0061A4), // Blue
+    Color(0xFF006E1C), // Green
+    Color(0xFF904D00), // Orange
+    Color(0xFFBA1A1A), // Red
+    Color(0xFF5C6200), // Olive
+    Color(0xFF006493), // Cyan
+    Color(0xFF8B5000), // Amber
+    Color(0xFF5E5B8E), // Indigo Grey
+  ];
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsControllerProvider);
+    final notifier = ref.read(settingsControllerProvider.notifier);
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      children: [
+        // Theme mode
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('主题模式', style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 8),
+              SegmentedButton<ThemeMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    icon: Icon(Icons.brightness_auto_rounded),
+                    label: Text('跟随系统'),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    icon: Icon(Icons.light_mode_rounded),
+                    label: Text('浅色'),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    icon: Icon(Icons.dark_mode_rounded),
+                    label: Text('深色'),
+                  ),
+                ],
+                selected: {settings.themeMode},
+                onSelectionChanged: (modes) => notifier.setThemeMode(modes.first),
+                showSelectedIcon: false,
+              ),
+            ],
+          ),
+        ),
+        const Divider(height: 1),
+        // Dynamic color
+        SwitchListTile(
+          title: const Text('动态取色'),
+          subtitle: const Text('从壁纸或系统提取主题色（仅部分设备支持）'),
+          value: settings.useDynamicColor,
+          onChanged: (val) => notifier.setUseDynamicColor(val),
+          secondary: const Icon(Icons.color_lens_outlined),
+        ),
+        // Seed color picker
+        if (!settings.useDynamicColor) ...[
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('主题色', style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: _seedColors.map((color) {
+                    final isSelected = settings.seedColor.toARGB32() == color.toARGB32();
+                    return GestureDetector(
+                      onTap: () => notifier.setSeedColor(color),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
+                          border: isSelected
+                              ? Border.all(
+                                  color: colorScheme.onSurface,
+                                  width: 3,
+                                )
+                              : null,
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: color.withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: isSelected
+                            ? Icon(Icons.check_rounded,
+                                color: color.computeLuminance() > 0.5
+                                    ? Colors.black87
+                                    : Colors.white,
+                                size: 22)
+                            : null,
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
   }
 }
 
