@@ -6,22 +6,29 @@ class SecureSettingsLocalDataSource {
 
   static const _kProxyEnabled = 'proxy_enabled';
   static const _kProxyPort = 'proxy_port';
+  static const _kWeeklyScroll = 'weekly_scroll';
 
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
-    final data = await _store.readAll([_kProxyEnabled, _kProxyPort]);
+    final data = await _store.readAll([_kProxyEnabled, _kProxyPort, _kWeeklyScroll]);
     
     final enabled = data[_kProxyEnabled] == 'true';
     final port = int.tryParse(data[_kProxyPort] ?? '9999') ?? 9999;
+    final weekly = data[_kWeeklyScroll] == 'true';
 
-    return AppSettings(proxyEnabled: enabled, proxyPort: port);
+    return AppSettings(
+      proxyEnabled: enabled,
+      proxyPort: port,
+      weeklyScroll: weekly,
+    );
   }
 
   Future<void> saveSettings(AppSettings settings) async {
     await _store.writeAll({
       _kProxyEnabled: settings.proxyEnabled.toString(),
       _kProxyPort: settings.proxyPort.toString(),
+      _kWeeklyScroll: settings.weeklyScroll.toString(),
     });
   }
 }

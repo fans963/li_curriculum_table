@@ -42,6 +42,11 @@ class SettingsController extends Notifier<AppSettings> {
     _syncWithRust();
   }
 
+  Future<void> setWeeklyScroll(bool enabled) async {
+    state = state.copyWith(weeklyScroll: enabled);
+    await _save();
+  }
+
   Future<void> _save() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveSettings(state);

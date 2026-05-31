@@ -6,6 +6,7 @@ import 'package:li_curriculum_table/features/timetable/domain/entities/course_oc
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
 class TimetableWeekView extends ConsumerStatefulWidget {
   const TimetableWeekView({
@@ -57,6 +58,7 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
     final controller = ref.watch(infiniteTimetableEventControllerProvider);
     final timetableState = ref.watch(timetableControllerProvider);
     final termStart = timetableState.termStartMonday;
+    final weeklyScroll = ref.watch(settingsControllerProvider).weeklyScroll;
 
     if (termStart != _lastTermStart) {
       _lastTermStart = termStart;
@@ -97,6 +99,7 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
             minVerticalScrollOffset: 480 * widget.pixelsPerMinute,
             maxPreviousDays: maxPreviousDays,
             maxNextDays: maxNextDays,
+            horizontalScrollPhysics: weeklyScroll ? const PageScrollPhysics() : null,
             onDayChange: (date) {
               if (widget.onPageChange != null) {
                 final anchor = termStart;

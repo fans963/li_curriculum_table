@@ -137,6 +137,13 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                 const _ProxySettingsSection(),
                 const SizedBox(height: 32),
                 const _SectionHeader(
+                  title: '课表显示设置',
+                  icon: Icons.display_settings_rounded,
+                ),
+                const SizedBox(height: 8),
+                const _TimetableDisplaySettingsSection(),
+                const SizedBox(height: 32),
+                const _SectionHeader(
                   title: '反馈与建议',
                   icon: Icons.feedback_outlined,
                 ),
@@ -375,6 +382,28 @@ class _ProxySettingsSection extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TimetableDisplaySettingsSection extends ConsumerWidget {
+  const _TimetableDisplaySettingsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settings = ref.watch(settingsControllerProvider);
+    final notifier = ref.read(settingsControllerProvider.notifier);
+
+    return Column(
+      children: [
+        SwitchListTile(
+          title: const Text('按星期滑动'),
+          subtitle: const Text('开启后，课表页面将以整周为单位左右对齐滑动；关闭则恢复自由无极滑动。'),
+          value: settings.weeklyScroll,
+          onChanged: (val) => notifier.setWeeklyScroll(val),
+          secondary: const Icon(Icons.view_week_rounded),
+        ),
+      ],
     );
   }
 }

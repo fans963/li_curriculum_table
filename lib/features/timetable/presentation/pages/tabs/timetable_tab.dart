@@ -8,6 +8,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/calendar_vie
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
 // UI Constants
 const double _pixelsPerMinute = 0.78;
@@ -65,6 +66,30 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surface,
+        actions: [
+          IconButton(
+            icon: Icon(
+              ref.watch(settingsControllerProvider).weeklyScroll
+                  ? Icons.view_week_rounded
+                  : Icons.view_week_outlined,
+            ),
+            tooltip: ref.watch(settingsControllerProvider).weeklyScroll
+                ? '当前：按星期滑动'
+                : '当前：无极滑动',
+            onPressed: () {
+              final currentVal = ref.read(settingsControllerProvider).weeklyScroll;
+              ref.read(settingsControllerProvider.notifier).setWeeklyScroll(!currentVal);
+              
+              ScaffoldMessenger.of(context).clearSnackBars();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(!currentVal ? '已开启按星期滑动' : '已恢复无极滑动'),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
