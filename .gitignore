@@ -49,3 +49,6 @@ dist
 
 # FVM Version Cache
 .fvm/
+# Android signing
+android/key.properties
+android/app/release.jks
