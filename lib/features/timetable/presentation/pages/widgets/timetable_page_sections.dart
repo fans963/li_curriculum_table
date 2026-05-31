@@ -10,6 +10,7 @@ class TimetableControlPanel extends StatelessWidget {
     required this.currentTeachingWeek,
     required this.termStartMonday,
     required this.onTermStartDateChanged,
+    this.onLoginPressed,
   });
 
   final TextEditingController usernameController;
@@ -18,6 +19,7 @@ class TimetableControlPanel extends StatelessWidget {
   final int currentTeachingWeek;
   final DateTime? termStartMonday;
   final ValueChanged<DateTime> onTermStartDateChanged;
+  final VoidCallback? onLoginPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +64,27 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
             ),
+            if (onLoginPressed != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  icon: isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.cloud_sync_rounded),
+                  label: Text(isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息'),
+                  onPressed: isLoading ? null : onLoginPressed,
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             TextFormField(
               readOnly: true,

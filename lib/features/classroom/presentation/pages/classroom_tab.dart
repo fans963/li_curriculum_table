@@ -43,12 +43,14 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _TopAppBar(
+                    const _TopAppBar(),
+                    _QuickDateSelector(
                       selectedDate: state.selectedDate,
                       onDateSelected: (date) => ref
                           .read(classroomControllerProvider.notifier)
                           .selectDate(date),
                     ),
+                    const SizedBox(height: 12),
                     Expanded(
                       child: AnimatedSwitcher(
                         duration: kDefaultAnimationDuration,
@@ -128,27 +130,18 @@ class _ClassroomTabState extends ConsumerState<ClassroomTab> {
 }
 
 class _TopAppBar extends StatelessWidget {
-  final DateTime selectedDate;
-  final ValueChanged<DateTime> onDateSelected;
-
-  const _TopAppBar({required this.selectedDate, required this.onDateSelected});
+  const _TopAppBar();
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
-      child: Row(
-        children: [
-          Text(
-            '空闲教室',
-            style: textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const Spacer(),
-          _DateSelector(selectedDate: selectedDate, onDateSelected: onDateSelected),
-        ],
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Text(
+        '空闲教室',
+        style: textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
@@ -277,47 +270,74 @@ class _SelectionHeader extends StatelessWidget {
   }
 }
 
-class _DateSelector extends StatelessWidget {
+class _QuickDateSelector extends StatelessWidget {
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
 
-  const _DateSelector({required this.selectedDate, required this.onDateSelected});
+  const _QuickDateSelector({
+    required this.selectedDate,
+    required this.onDateSelected,
+  });
+
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: selectedDate,
-          firstDate: DateTime.now().subtract(const Duration(days: 30)),
-          lastDate: DateTime.now().add(const Duration(days: 90)),
-        );
-        if (date != null) onDateSelected(date);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHigh,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outlineVariant),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_month_rounded, size: 18, color: colorScheme.primary),
-            const SizedBox(width: 8),
-            Text(
-              DateFormat('MM-dd').format(selectedDate),
-              style: textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.onSurfaceVariant,
+    final now = DateTime.now();
+    
+    // Generate dates: today, tomorrow, after-tomorrow, 3-days-later
+    final dates = List.generate(4, (index) => now.add(Duration(days: index)));
+    final labels = ['今天', '明天', '后天', '大后天'];
+
+    return SizedBox(
+      height: 48,
+      child: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        scrollDirection: Axis.horizontal,
+        itemCount: dates.length + 1, // 4 quick dates + 1 custom date picker
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          if (index < 4) {
+            final date = dates[index];
+            final label = labels[index];
+            final isSelected = _isSameDay(selectedDate, date);
+            final dateString = DateFormat('MM-dd').format(date);
+            
+            return ChoiceChip(
+              label: Text('$label ($dateString)'),
+              selected: isSelected,
+              onSelected: (_) => onDateSelected(date),
+              showCheckmark: false,
+            );
+          } else {
+            // The custom date picker
+            final isQuickDate = dates.any((d) => _isSameDay(selectedDate, d));
+            final dateString = DateFormat('MM-dd').format(selectedDate);
+            
+            return ChoiceChip(
+              avatar: Icon(
+                Icons.calendar_month_rounded,
+                size: 16,
+                color: !isQuickDate ? colorScheme.primary : colorScheme.onSurfaceVariant,
               ),
-            ),
-          ],
-        ),
+              label: Text(!isQuickDate ? '其他: $dateString' : '选择日期...'),
+              selected: !isQuickDate,
+              showCheckmark: false,
+              onSelected: (_) async {
+                final date = await showDatePicker(
+                  context: context,
+                  initialDate: selectedDate,
+                  firstDate: DateTime.now().subtract(const Duration(days: 30)),
+                  lastDate: DateTime.now().add(const Duration(days: 90)),
+                );
+                if (date != null) onDateSelected(date);
+              },
+            );
+          }
+        },
       ),
     );
   }

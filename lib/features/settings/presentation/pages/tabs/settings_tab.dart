@@ -103,6 +103,20 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
                         .read(timetableControllerProvider.notifier)
                         .setTermStartDate(date);
                   },
+                  onLoginPressed: () async {
+                    final u = _usernameController.text.trim();
+                    final p = _passwordController.text;
+                    if (u.isEmpty || p.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('请输入学号和密码')),
+                      );
+                      return;
+                    }
+                    FocusScope.of(context).unfocus();
+                    await ref
+                        .read(timetableControllerProvider.notifier)
+                        .fetchAndBuild(username: u, password: p);
+                  },
                 ),
                 const SizedBox(height: 24),
                 const _SectionHeader(
