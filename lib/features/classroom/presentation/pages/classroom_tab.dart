@@ -298,7 +298,7 @@ class _QuickDateSelector extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
         itemCount: dates.length + 1, // 4 quick dates + 1 custom date picker
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
           if (index < 4) {
             final date = dates[index];
