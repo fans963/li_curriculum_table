@@ -296,7 +296,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final updateInfo = await UpdateService().checkForUpdate();
       loadingEntry.remove();
 
-      if (mounted) {
+      if (context.mounted) {
         await showUpdateDialogIfNeeded(context, updateInfo, silent: false);
       }
     } catch (e) {

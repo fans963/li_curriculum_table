@@ -99,7 +99,7 @@ class TimetableWeekViewState extends ConsumerState<TimetableWeekView> {
             minVerticalScrollOffset: 480 * widget.pixelsPerMinute,
             maxPreviousDays: maxPreviousDays,
             maxNextDays: maxNextDays,
-            horizontalScrollPhysics: weeklyScroll ? const PageScrollPhysics() : null,
+            horizontalScrollPhysics: weeklyScroll ? const PageScrollPhysics() : const BouncingScrollPhysics(),
             onDayChange: (date) {
               if (widget.onPageChange != null) {
                 final anchor = termStart;
