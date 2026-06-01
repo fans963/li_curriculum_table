@@ -8,24 +8,19 @@ import '../frb_generated.dart';
 import 'auth.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `get_authorized_session`
 
-Future<void> initOcrEngine() =>
-    RustLib.instance.api.crateApiCrawlerInitOcrEngine();
+            // These functions are ignored because they are not marked as `pub`: `get_authorized_session`
 
-Future<TimetableRecord> fetchTimetableData({
-  required String username,
-  required String password,
-}) => RustLib.instance.api.crateApiCrawlerFetchTimetableData(
-  username: username,
-  password: password,
-);
 
-Future<ArcSessionManager> getSharedSessionManager() =>
-    RustLib.instance.api.crateApiCrawlerGetSharedSessionManager();
+            Future<void>  initOcrEngine() => RustLib.instance.api.crateApiCrawlerInitOcrEngine();
 
-Future<void> updateProxyConfig({required int port}) =>
-    RustLib.instance.api.crateApiCrawlerUpdateProxyConfig(port: port);
+Future<TimetableRecord>  fetchTimetableData({required String username , required String password }) => RustLib.instance.api.crateApiCrawlerFetchTimetableData(username: username, password: password);
 
-Future<void> runProxyServer({required int port}) =>
-    RustLib.instance.api.crateApiCrawlerRunProxyServer(port: port);
+Future<ArcSessionManager>  getSharedSessionManager() => RustLib.instance.api.crateApiCrawlerGetSharedSessionManager();
+
+Future<void>  updateProxyConfig({required int port }) => RustLib.instance.api.crateApiCrawlerUpdateProxyConfig(port: port);
+
+Future<void>  runProxyServer({required int port }) => RustLib.instance.api.crateApiCrawlerRunProxyServer(port: port);
+
+            
+            
