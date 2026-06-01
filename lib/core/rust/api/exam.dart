@@ -7,10 +7,10 @@ import '../crawler/model.dart';
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-
-            
-
-            Future<List<Exam>>  getExams({required String username , required String password }) => RustLib.instance.api.crateApiExamGetExams(username: username, password: password);
-
-            
-            
+Future<List<Exam>> getExams({
+  required String username,
+  required String password,
+}) => RustLib.instance.api.crateApiExamGetExams(
+  username: username,
+  password: password,
+);

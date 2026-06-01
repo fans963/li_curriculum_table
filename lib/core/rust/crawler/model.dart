@@ -6,300 +6,343 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+class Building {
+  final String id;
+  final String name;
 
-            
+  const Building({required this.id, required this.name});
 
-            
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
 
-            class Building  {
-                final String id;
-final String name;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Building &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+}
 
-                const Building({required this.id ,required this.name ,});
+class Campus {
+  final String id;
+  final String name;
 
-                
-                
+  const Campus({required this.id, required this.name});
 
-                
-        @override
-        int get hashCode => id.hashCode^name.hashCode;
-        
+  @override
+  int get hashCode => id.hashCode ^ name.hashCode;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Building &&
-                runtimeType == other.runtimeType
-                && id == other.id&& name == other.name;
-        
-            }
-
-class Campus  {
-                final String id;
-final String name;
-
-                const Campus({required this.id ,required this.name ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => id.hashCode^name.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Campus &&
-                runtimeType == other.runtimeType
-                && id == other.id&& name == other.name;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Campus &&
+          runtimeType == other.runtimeType &&
+          id == other.id &&
+          name == other.name;
+}
 
 /// Bundled response from the classroom page: campuses + server-selected current term.
-class CampusPageData  {
-                final List<Campus> campuses;
-final String currentTerm;
+class CampusPageData {
+  final List<Campus> campuses;
+  final String currentTerm;
 
-                const CampusPageData({required this.campuses ,required this.currentTerm ,});
+  const CampusPageData({required this.campuses, required this.currentTerm});
 
-                
-                
+  @override
+  int get hashCode => campuses.hashCode ^ currentTerm.hashCode;
 
-                
-        @override
-        int get hashCode => campuses.hashCode^currentTerm.hashCode;
-        
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CampusPageData &&
+          runtimeType == other.runtimeType &&
+          campuses == other.campuses &&
+          currentTerm == other.currentTerm;
+}
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is CampusPageData &&
-                runtimeType == other.runtimeType
-                && campuses == other.campuses&& currentTerm == other.currentTerm;
-        
-            }
+class ClassroomAvailability {
+  final String classroomName;
+  final List<bool> availability;
 
-class ClassroomAvailability  {
-                final String classroomName;
-final List<bool> availability;
+  const ClassroomAvailability({
+    required this.classroomName,
+    required this.availability,
+  });
 
-                const ClassroomAvailability({required this.classroomName ,required this.availability ,});
+  @override
+  int get hashCode => classroomName.hashCode ^ availability.hashCode;
 
-                
-                
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassroomAvailability &&
+          runtimeType == other.runtimeType &&
+          classroomName == other.classroomName &&
+          availability == other.availability;
+}
 
-                
-        @override
-        int get hashCode => classroomName.hashCode^availability.hashCode;
-        
+class ClassroomSchedule {
+  final String classroomName;
+  final List<OccupiedSlot> occupiedSlots;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is ClassroomAvailability &&
-                runtimeType == other.runtimeType
-                && classroomName == other.classroomName&& availability == other.availability;
-        
-            }
+  const ClassroomSchedule({
+    required this.classroomName,
+    required this.occupiedSlots,
+  });
 
-class ClassroomSchedule  {
-                final String classroomName;
-final List<OccupiedSlot> occupiedSlots;
+  @override
+  int get hashCode => classroomName.hashCode ^ occupiedSlots.hashCode;
 
-                const ClassroomSchedule({required this.classroomName ,required this.occupiedSlots ,});
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ClassroomSchedule &&
+          runtimeType == other.runtimeType &&
+          classroomName == other.classroomName &&
+          occupiedSlots == other.occupiedSlots;
+}
 
-                
-                
+class CourseRow {
+  final String courseId;
+  final String order;
+  final String courseName;
+  final String teacher;
+  final String timeText;
+  final String credit;
+  final String location;
+  final String courseType;
+  final String stage;
+  final List<TimeSlot> slots;
 
-                
-        @override
-        int get hashCode => classroomName.hashCode^occupiedSlots.hashCode;
-        
+  const CourseRow({
+    required this.courseId,
+    required this.order,
+    required this.courseName,
+    required this.teacher,
+    required this.timeText,
+    required this.credit,
+    required this.location,
+    required this.courseType,
+    required this.stage,
+    required this.slots,
+  });
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is ClassroomSchedule &&
-                runtimeType == other.runtimeType
-                && classroomName == other.classroomName&& occupiedSlots == other.occupiedSlots;
-        
-            }
+  @override
+  int get hashCode =>
+      courseId.hashCode ^
+      order.hashCode ^
+      courseName.hashCode ^
+      teacher.hashCode ^
+      timeText.hashCode ^
+      credit.hashCode ^
+      location.hashCode ^
+      courseType.hashCode ^
+      stage.hashCode ^
+      slots.hashCode;
 
-class CourseRow  {
-                final String courseId;
-final String order;
-final String courseName;
-final String teacher;
-final String timeText;
-final String credit;
-final String location;
-final String courseType;
-final String stage;
-final List<TimeSlot> slots;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CourseRow &&
+          runtimeType == other.runtimeType &&
+          courseId == other.courseId &&
+          order == other.order &&
+          courseName == other.courseName &&
+          teacher == other.teacher &&
+          timeText == other.timeText &&
+          credit == other.credit &&
+          location == other.location &&
+          courseType == other.courseType &&
+          stage == other.stage &&
+          slots == other.slots;
+}
 
-                const CourseRow({required this.courseId ,required this.order ,required this.courseName ,required this.teacher ,required this.timeText ,required this.credit ,required this.location ,required this.courseType ,required this.stage ,required this.slots ,});
+class Exam {
+  final String session;
+  final String courseCode;
+  final String courseName;
+  final String examTime;
+  final String location;
+  final String seatNumber;
 
-                
-                
+  const Exam({
+    required this.session,
+    required this.courseCode,
+    required this.courseName,
+    required this.examTime,
+    required this.location,
+    required this.seatNumber,
+  });
 
-                
-        @override
-        int get hashCode => courseId.hashCode^order.hashCode^courseName.hashCode^teacher.hashCode^timeText.hashCode^credit.hashCode^location.hashCode^courseType.hashCode^stage.hashCode^slots.hashCode;
-        
+  @override
+  int get hashCode =>
+      session.hashCode ^
+      courseCode.hashCode ^
+      courseName.hashCode ^
+      examTime.hashCode ^
+      location.hashCode ^
+      seatNumber.hashCode;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is CourseRow &&
-                runtimeType == other.runtimeType
-                && courseId == other.courseId&& order == other.order&& courseName == other.courseName&& teacher == other.teacher&& timeText == other.timeText&& credit == other.credit&& location == other.location&& courseType == other.courseType&& stage == other.stage&& slots == other.slots;
-        
-            }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Exam &&
+          runtimeType == other.runtimeType &&
+          session == other.session &&
+          courseCode == other.courseCode &&
+          courseName == other.courseName &&
+          examTime == other.examTime &&
+          location == other.location &&
+          seatNumber == other.seatNumber;
+}
 
-class Exam  {
-                final String session;
-final String courseCode;
-final String courseName;
-final String examTime;
-final String location;
-final String seatNumber;
+class Grade {
+  final String term;
+  final String courseCode;
+  final String courseName;
+  final String score;
+  final String scoreMark;
+  final double credits;
+  final int totalHours;
+  final String assessmentMethod;
+  final String courseAttribute;
+  final String courseNature;
 
-                const Exam({required this.session ,required this.courseCode ,required this.courseName ,required this.examTime ,required this.location ,required this.seatNumber ,});
+  const Grade({
+    required this.term,
+    required this.courseCode,
+    required this.courseName,
+    required this.score,
+    required this.scoreMark,
+    required this.credits,
+    required this.totalHours,
+    required this.assessmentMethod,
+    required this.courseAttribute,
+    required this.courseNature,
+  });
 
-                
-                
+  @override
+  int get hashCode =>
+      term.hashCode ^
+      courseCode.hashCode ^
+      courseName.hashCode ^
+      score.hashCode ^
+      scoreMark.hashCode ^
+      credits.hashCode ^
+      totalHours.hashCode ^
+      assessmentMethod.hashCode ^
+      courseAttribute.hashCode ^
+      courseNature.hashCode;
 
-                
-        @override
-        int get hashCode => session.hashCode^courseCode.hashCode^courseName.hashCode^examTime.hashCode^location.hashCode^seatNumber.hashCode;
-        
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Grade &&
+          runtimeType == other.runtimeType &&
+          term == other.term &&
+          courseCode == other.courseCode &&
+          courseName == other.courseName &&
+          score == other.score &&
+          scoreMark == other.scoreMark &&
+          credits == other.credits &&
+          totalHours == other.totalHours &&
+          assessmentMethod == other.assessmentMethod &&
+          courseAttribute == other.courseAttribute &&
+          courseNature == other.courseNature;
+}
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Exam &&
-                runtimeType == other.runtimeType
-                && session == other.session&& courseCode == other.courseCode&& courseName == other.courseName&& examTime == other.examTime&& location == other.location&& seatNumber == other.seatNumber;
-        
-            }
+class OccupiedSlot {
+  final int startWeek;
+  final int endWeek;
+  final int weekday;
+  final int slotIndex;
 
-class Grade  {
-                final String term;
-final String courseCode;
-final String courseName;
-final String score;
-final String scoreMark;
-final double credits;
-final int totalHours;
-final String assessmentMethod;
-final String courseAttribute;
-final String courseNature;
+  const OccupiedSlot({
+    required this.startWeek,
+    required this.endWeek,
+    required this.weekday,
+    required this.slotIndex,
+  });
 
-                const Grade({required this.term ,required this.courseCode ,required this.courseName ,required this.score ,required this.scoreMark ,required this.credits ,required this.totalHours ,required this.assessmentMethod ,required this.courseAttribute ,required this.courseNature ,});
+  @override
+  int get hashCode =>
+      startWeek.hashCode ^
+      endWeek.hashCode ^
+      weekday.hashCode ^
+      slotIndex.hashCode;
 
-                
-                
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is OccupiedSlot &&
+          runtimeType == other.runtimeType &&
+          startWeek == other.startWeek &&
+          endWeek == other.endWeek &&
+          weekday == other.weekday &&
+          slotIndex == other.slotIndex;
+}
 
-                
-        @override
-        int get hashCode => term.hashCode^courseCode.hashCode^courseName.hashCode^score.hashCode^scoreMark.hashCode^credits.hashCode^totalHours.hashCode^assessmentMethod.hashCode^courseAttribute.hashCode^courseNature.hashCode;
-        
+class TimeSlot {
+  final int weekday;
+  final int startSection;
+  final int endSection;
+  final int startWeek;
+  final int endWeek;
+  final String weekText;
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is Grade &&
-                runtimeType == other.runtimeType
-                && term == other.term&& courseCode == other.courseCode&& courseName == other.courseName&& score == other.score&& scoreMark == other.scoreMark&& credits == other.credits&& totalHours == other.totalHours&& assessmentMethod == other.assessmentMethod&& courseAttribute == other.courseAttribute&& courseNature == other.courseNature;
-        
-            }
+  const TimeSlot({
+    required this.weekday,
+    required this.startSection,
+    required this.endSection,
+    required this.startWeek,
+    required this.endWeek,
+    required this.weekText,
+  });
 
-class OccupiedSlot  {
-                final int startWeek;
-final int endWeek;
-final int weekday;
-final int slotIndex;
+  @override
+  int get hashCode =>
+      weekday.hashCode ^
+      startSection.hashCode ^
+      endSection.hashCode ^
+      startWeek.hashCode ^
+      endWeek.hashCode ^
+      weekText.hashCode;
 
-                const OccupiedSlot({required this.startWeek ,required this.endWeek ,required this.weekday ,required this.slotIndex ,});
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TimeSlot &&
+          runtimeType == other.runtimeType &&
+          weekday == other.weekday &&
+          startSection == other.startSection &&
+          endSection == other.endSection &&
+          startWeek == other.startWeek &&
+          endWeek == other.endWeek &&
+          weekText == other.weekText;
+}
 
-                
-                
+class TimetableRecord {
+  final List<String> headers;
+  final List<CourseRow> rows;
+  final bool loginLikelySuccess;
 
-                
-        @override
-        int get hashCode => startWeek.hashCode^endWeek.hashCode^weekday.hashCode^slotIndex.hashCode;
-        
+  const TimetableRecord({
+    required this.headers,
+    required this.rows,
+    required this.loginLikelySuccess,
+  });
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is OccupiedSlot &&
-                runtimeType == other.runtimeType
-                && startWeek == other.startWeek&& endWeek == other.endWeek&& weekday == other.weekday&& slotIndex == other.slotIndex;
-        
-            }
+  @override
+  int get hashCode =>
+      headers.hashCode ^ rows.hashCode ^ loginLikelySuccess.hashCode;
 
-class TimeSlot  {
-                final int weekday;
-final int startSection;
-final int endSection;
-final int startWeek;
-final int endWeek;
-final String weekText;
-
-                const TimeSlot({required this.weekday ,required this.startSection ,required this.endSection ,required this.startWeek ,required this.endWeek ,required this.weekText ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => weekday.hashCode^startSection.hashCode^endSection.hashCode^startWeek.hashCode^endWeek.hashCode^weekText.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TimeSlot &&
-                runtimeType == other.runtimeType
-                && weekday == other.weekday&& startSection == other.startSection&& endSection == other.endSection&& startWeek == other.startWeek&& endWeek == other.endWeek&& weekText == other.weekText;
-        
-            }
-
-class TimetableRecord  {
-                final List<String> headers;
-final List<CourseRow> rows;
-final bool loginLikelySuccess;
-
-                const TimetableRecord({required this.headers ,required this.rows ,required this.loginLikelySuccess ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => headers.hashCode^rows.hashCode^loginLikelySuccess.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is TimetableRecord &&
-                runtimeType == other.runtimeType
-                && headers == other.headers&& rows == other.rows&& loginLikelySuccess == other.loginLikelySuccess;
-        
-            }
-            
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TimetableRecord &&
+          runtimeType == other.runtimeType &&
+          headers == other.headers &&
+          rows == other.rows &&
+          loginLikelySuccess == other.loginLikelySuccess;
+}

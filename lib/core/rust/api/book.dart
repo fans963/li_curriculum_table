@@ -6,64 +6,71 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
 
-            // These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
+Future<List<BookInfo>> searchBooks({required String title}) =>
+    RustLib.instance.api.crateApiBookSearchBooks(title: title);
 
+Future<List<BookLocation>> fetchBookLocations({required String detailUrl}) =>
+    RustLib.instance.api.crateApiBookFetchBookLocations(detailUrl: detailUrl);
 
-            Future<List<BookInfo>>  searchBooks({required String title }) => RustLib.instance.api.crateApiBookSearchBooks(title: title);
+class BookInfo {
+  final String title;
+  final String author;
+  final String publisher;
+  final String callNo;
+  final String docType;
+  final String holdingsSummary;
+  final String detailUrl;
 
-Future<List<BookLocation>>  fetchBookLocations({required String detailUrl }) => RustLib.instance.api.crateApiBookFetchBookLocations(detailUrl: detailUrl);
+  const BookInfo({
+    required this.title,
+    required this.author,
+    required this.publisher,
+    required this.callNo,
+    required this.docType,
+    required this.holdingsSummary,
+    required this.detailUrl,
+  });
 
-            class BookInfo  {
-                final String title;
-final String author;
-final String publisher;
-final String callNo;
-final String docType;
-final String holdingsSummary;
-final String detailUrl;
+  @override
+  int get hashCode =>
+      title.hashCode ^
+      author.hashCode ^
+      publisher.hashCode ^
+      callNo.hashCode ^
+      docType.hashCode ^
+      holdingsSummary.hashCode ^
+      detailUrl.hashCode;
 
-                const BookInfo({required this.title ,required this.author ,required this.publisher ,required this.callNo ,required this.docType ,required this.holdingsSummary ,required this.detailUrl ,});
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BookInfo &&
+          runtimeType == other.runtimeType &&
+          title == other.title &&
+          author == other.author &&
+          publisher == other.publisher &&
+          callNo == other.callNo &&
+          docType == other.docType &&
+          holdingsSummary == other.holdingsSummary &&
+          detailUrl == other.detailUrl;
+}
 
-                
-                
+class BookLocation {
+  final String location;
+  final String status;
 
-                
-        @override
-        int get hashCode => title.hashCode^author.hashCode^publisher.hashCode^callNo.hashCode^docType.hashCode^holdingsSummary.hashCode^detailUrl.hashCode;
-        
+  const BookLocation({required this.location, required this.status});
 
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is BookInfo &&
-                runtimeType == other.runtimeType
-                && title == other.title&& author == other.author&& publisher == other.publisher&& callNo == other.callNo&& docType == other.docType&& holdingsSummary == other.holdingsSummary&& detailUrl == other.detailUrl;
-        
-            }
+  @override
+  int get hashCode => location.hashCode ^ status.hashCode;
 
-class BookLocation  {
-                final String location;
-final String status;
-
-                const BookLocation({required this.location ,required this.status ,});
-
-                
-                
-
-                
-        @override
-        int get hashCode => location.hashCode^status.hashCode;
-        
-
-                
-        @override
-        bool operator ==(Object other) =>
-            identical(this, other) ||
-            other is BookLocation &&
-                runtimeType == other.runtimeType
-                && location == other.location&& status == other.status;
-        
-            }
-            
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BookLocation &&
+          runtimeType == other.runtimeType &&
+          location == other.location &&
+          status == other.status;
+}

@@ -6,17 +6,13 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
+Future<ArcSessionManager> getAuthorizedSession({
+  String? username,
+  String? password,
+}) => RustLib.instance.api.crateApiAuthGetAuthorizedSession(
+  username: username,
+  password: password,
+);
 
-            
-
-            Future<ArcSessionManager>  getAuthorizedSession({String? username , String? password }) => RustLib.instance.api.crateApiAuthGetAuthorizedSession(username: username, password: password);
-
-            
-                // Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < SessionManager >>>
-                abstract class ArcSessionManager implements RustOpaqueInterface {
-                    
-
-                    
-                }
-                
-            
+// Rust type: RustOpaqueMoi<flutter_rust_bridge::for_generated::RustAutoOpaqueInner<Arc < SessionManager >>>
+abstract class ArcSessionManager implements RustOpaqueInterface {}

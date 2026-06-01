@@ -3,7 +3,6 @@
 
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
-
 // Static analysis wrongly picks the IO variant, thus ignore this
 // ignore_for_file: argument_type_not_assignable
 
@@ -19,276 +18,476 @@ import 'dart:convert';
 import 'frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_web.dart';
 
+abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
+  RustLibApiImplPlatform({
+    required super.handler,
+    required super.wire,
+    required super.generalizedFrbRustBinding,
+    required super.portManager,
+  });
 
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_ArcSessionManagerPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
 
+  @protected
+  AnyhowException dco_decode_AnyhowException(dynamic raw);
 
-                abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
-                  RustLibApiImplPlatform({
-                    required super.handler,
-                    required super.wire,
-                    required super.generalizedFrbRustBinding,
-                    required super.portManager,
-                  });
+  @protected
+  ArcSessionManager
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    dynamic raw,
+  );
 
-                  CrossPlatformFinalizerArg get rust_arc_decrement_strong_count_ArcSessionManagerPtr => wire.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
+  @protected
+  ArcSessionManager
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    dynamic raw,
+  );
 
+  @protected
+  String dco_decode_String(dynamic raw);
 
+  @protected
+  BookInfo dco_decode_book_info(dynamic raw);
 
-                  @protected AnyhowException dco_decode_AnyhowException(dynamic raw);
+  @protected
+  BookLocation dco_decode_book_location(dynamic raw);
 
-@protected ArcSessionManager dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(dynamic raw);
+  @protected
+  bool dco_decode_bool(dynamic raw);
 
-@protected ArcSessionManager dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(dynamic raw);
+  @protected
+  Building dco_decode_building(dynamic raw);
 
-@protected String dco_decode_String(dynamic raw);
+  @protected
+  Campus dco_decode_campus(dynamic raw);
 
-@protected BookInfo dco_decode_book_info(dynamic raw);
+  @protected
+  CampusPageData dco_decode_campus_page_data(dynamic raw);
 
-@protected BookLocation dco_decode_book_location(dynamic raw);
+  @protected
+  ClassroomAvailability dco_decode_classroom_availability(dynamic raw);
 
-@protected bool dco_decode_bool(dynamic raw);
+  @protected
+  ClassroomSchedule dco_decode_classroom_schedule(dynamic raw);
 
-@protected Building dco_decode_building(dynamic raw);
+  @protected
+  CourseRow dco_decode_course_row(dynamic raw);
 
-@protected Campus dco_decode_campus(dynamic raw);
+  @protected
+  Exam dco_decode_exam(dynamic raw);
 
-@protected CampusPageData dco_decode_campus_page_data(dynamic raw);
+  @protected
+  double dco_decode_f_64(dynamic raw);
 
-@protected ClassroomAvailability dco_decode_classroom_availability(dynamic raw);
+  @protected
+  Grade dco_decode_grade(dynamic raw);
 
-@protected ClassroomSchedule dco_decode_classroom_schedule(dynamic raw);
+  @protected
+  List<String> dco_decode_list_String(dynamic raw);
 
-@protected CourseRow dco_decode_course_row(dynamic raw);
+  @protected
+  List<BookInfo> dco_decode_list_book_info(dynamic raw);
 
-@protected Exam dco_decode_exam(dynamic raw);
+  @protected
+  List<BookLocation> dco_decode_list_book_location(dynamic raw);
 
-@protected double dco_decode_f_64(dynamic raw);
+  @protected
+  List<bool> dco_decode_list_bool(dynamic raw);
 
-@protected Grade dco_decode_grade(dynamic raw);
+  @protected
+  List<Building> dco_decode_list_building(dynamic raw);
 
-@protected List<String> dco_decode_list_String(dynamic raw);
+  @protected
+  List<Campus> dco_decode_list_campus(dynamic raw);
 
-@protected List<BookInfo> dco_decode_list_book_info(dynamic raw);
+  @protected
+  List<ClassroomAvailability> dco_decode_list_classroom_availability(
+    dynamic raw,
+  );
 
-@protected List<BookLocation> dco_decode_list_book_location(dynamic raw);
+  @protected
+  List<ClassroomSchedule> dco_decode_list_classroom_schedule(dynamic raw);
 
-@protected List<bool> dco_decode_list_bool(dynamic raw);
+  @protected
+  List<CourseRow> dco_decode_list_course_row(dynamic raw);
 
-@protected List<Building> dco_decode_list_building(dynamic raw);
+  @protected
+  List<Exam> dco_decode_list_exam(dynamic raw);
 
-@protected List<Campus> dco_decode_list_campus(dynamic raw);
+  @protected
+  List<Grade> dco_decode_list_grade(dynamic raw);
 
-@protected List<ClassroomAvailability> dco_decode_list_classroom_availability(dynamic raw);
+  @protected
+  List<OccupiedSlot> dco_decode_list_occupied_slot(dynamic raw);
 
-@protected List<ClassroomSchedule> dco_decode_list_classroom_schedule(dynamic raw);
+  @protected
+  Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
 
-@protected List<CourseRow> dco_decode_list_course_row(dynamic raw);
+  @protected
+  List<TimeSlot> dco_decode_list_time_slot(dynamic raw);
 
-@protected List<Exam> dco_decode_list_exam(dynamic raw);
+  @protected
+  OccupiedSlot dco_decode_occupied_slot(dynamic raw);
 
-@protected List<Grade> dco_decode_list_grade(dynamic raw);
+  @protected
+  String? dco_decode_opt_String(dynamic raw);
 
-@protected List<OccupiedSlot> dco_decode_list_occupied_slot(dynamic raw);
+  @protected
+  TimeSlot dco_decode_time_slot(dynamic raw);
 
-@protected Uint8List dco_decode_list_prim_u_8_strict(dynamic raw);
+  @protected
+  TimetableRecord dco_decode_timetable_record(dynamic raw);
 
-@protected List<TimeSlot> dco_decode_list_time_slot(dynamic raw);
+  @protected
+  int dco_decode_u_16(dynamic raw);
 
-@protected OccupiedSlot dco_decode_occupied_slot(dynamic raw);
+  @protected
+  int dco_decode_u_32(dynamic raw);
 
-@protected String? dco_decode_opt_String(dynamic raw);
+  @protected
+  int dco_decode_u_8(dynamic raw);
 
-@protected TimeSlot dco_decode_time_slot(dynamic raw);
+  @protected
+  void dco_decode_unit(dynamic raw);
 
-@protected TimetableRecord dco_decode_timetable_record(dynamic raw);
+  @protected
+  BigInt dco_decode_usize(dynamic raw);
 
-@protected int dco_decode_u_16(dynamic raw);
+  @protected
+  AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
 
-@protected int dco_decode_u_32(dynamic raw);
+  @protected
+  ArcSessionManager
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    SseDeserializer deserializer,
+  );
 
-@protected int dco_decode_u_8(dynamic raw);
+  @protected
+  ArcSessionManager
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    SseDeserializer deserializer,
+  );
 
-@protected void dco_decode_unit(dynamic raw);
+  @protected
+  String sse_decode_String(SseDeserializer deserializer);
 
-@protected BigInt dco_decode_usize(dynamic raw);
+  @protected
+  BookInfo sse_decode_book_info(SseDeserializer deserializer);
 
-@protected AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
+  @protected
+  BookLocation sse_decode_book_location(SseDeserializer deserializer);
 
-@protected ArcSessionManager sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(SseDeserializer deserializer);
+  @protected
+  bool sse_decode_bool(SseDeserializer deserializer);
 
-@protected ArcSessionManager sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(SseDeserializer deserializer);
+  @protected
+  Building sse_decode_building(SseDeserializer deserializer);
 
-@protected String sse_decode_String(SseDeserializer deserializer);
+  @protected
+  Campus sse_decode_campus(SseDeserializer deserializer);
 
-@protected BookInfo sse_decode_book_info(SseDeserializer deserializer);
+  @protected
+  CampusPageData sse_decode_campus_page_data(SseDeserializer deserializer);
 
-@protected BookLocation sse_decode_book_location(SseDeserializer deserializer);
+  @protected
+  ClassroomAvailability sse_decode_classroom_availability(
+    SseDeserializer deserializer,
+  );
 
-@protected bool sse_decode_bool(SseDeserializer deserializer);
+  @protected
+  ClassroomSchedule sse_decode_classroom_schedule(SseDeserializer deserializer);
 
-@protected Building sse_decode_building(SseDeserializer deserializer);
+  @protected
+  CourseRow sse_decode_course_row(SseDeserializer deserializer);
 
-@protected Campus sse_decode_campus(SseDeserializer deserializer);
+  @protected
+  Exam sse_decode_exam(SseDeserializer deserializer);
 
-@protected CampusPageData sse_decode_campus_page_data(SseDeserializer deserializer);
+  @protected
+  double sse_decode_f_64(SseDeserializer deserializer);
 
-@protected ClassroomAvailability sse_decode_classroom_availability(SseDeserializer deserializer);
+  @protected
+  Grade sse_decode_grade(SseDeserializer deserializer);
 
-@protected ClassroomSchedule sse_decode_classroom_schedule(SseDeserializer deserializer);
+  @protected
+  List<String> sse_decode_list_String(SseDeserializer deserializer);
 
-@protected CourseRow sse_decode_course_row(SseDeserializer deserializer);
+  @protected
+  List<BookInfo> sse_decode_list_book_info(SseDeserializer deserializer);
 
-@protected Exam sse_decode_exam(SseDeserializer deserializer);
+  @protected
+  List<BookLocation> sse_decode_list_book_location(
+    SseDeserializer deserializer,
+  );
 
-@protected double sse_decode_f_64(SseDeserializer deserializer);
+  @protected
+  List<bool> sse_decode_list_bool(SseDeserializer deserializer);
 
-@protected Grade sse_decode_grade(SseDeserializer deserializer);
+  @protected
+  List<Building> sse_decode_list_building(SseDeserializer deserializer);
 
-@protected List<String> sse_decode_list_String(SseDeserializer deserializer);
+  @protected
+  List<Campus> sse_decode_list_campus(SseDeserializer deserializer);
 
-@protected List<BookInfo> sse_decode_list_book_info(SseDeserializer deserializer);
+  @protected
+  List<ClassroomAvailability> sse_decode_list_classroom_availability(
+    SseDeserializer deserializer,
+  );
 
-@protected List<BookLocation> sse_decode_list_book_location(SseDeserializer deserializer);
+  @protected
+  List<ClassroomSchedule> sse_decode_list_classroom_schedule(
+    SseDeserializer deserializer,
+  );
 
-@protected List<bool> sse_decode_list_bool(SseDeserializer deserializer);
+  @protected
+  List<CourseRow> sse_decode_list_course_row(SseDeserializer deserializer);
 
-@protected List<Building> sse_decode_list_building(SseDeserializer deserializer);
+  @protected
+  List<Exam> sse_decode_list_exam(SseDeserializer deserializer);
 
-@protected List<Campus> sse_decode_list_campus(SseDeserializer deserializer);
+  @protected
+  List<Grade> sse_decode_list_grade(SseDeserializer deserializer);
 
-@protected List<ClassroomAvailability> sse_decode_list_classroom_availability(SseDeserializer deserializer);
+  @protected
+  List<OccupiedSlot> sse_decode_list_occupied_slot(
+    SseDeserializer deserializer,
+  );
 
-@protected List<ClassroomSchedule> sse_decode_list_classroom_schedule(SseDeserializer deserializer);
+  @protected
+  Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
 
-@protected List<CourseRow> sse_decode_list_course_row(SseDeserializer deserializer);
+  @protected
+  List<TimeSlot> sse_decode_list_time_slot(SseDeserializer deserializer);
 
-@protected List<Exam> sse_decode_list_exam(SseDeserializer deserializer);
+  @protected
+  OccupiedSlot sse_decode_occupied_slot(SseDeserializer deserializer);
 
-@protected List<Grade> sse_decode_list_grade(SseDeserializer deserializer);
+  @protected
+  String? sse_decode_opt_String(SseDeserializer deserializer);
 
-@protected List<OccupiedSlot> sse_decode_list_occupied_slot(SseDeserializer deserializer);
+  @protected
+  TimeSlot sse_decode_time_slot(SseDeserializer deserializer);
 
-@protected Uint8List sse_decode_list_prim_u_8_strict(SseDeserializer deserializer);
+  @protected
+  TimetableRecord sse_decode_timetable_record(SseDeserializer deserializer);
 
-@protected List<TimeSlot> sse_decode_list_time_slot(SseDeserializer deserializer);
+  @protected
+  int sse_decode_u_16(SseDeserializer deserializer);
 
-@protected OccupiedSlot sse_decode_occupied_slot(SseDeserializer deserializer);
+  @protected
+  int sse_decode_u_32(SseDeserializer deserializer);
 
-@protected String? sse_decode_opt_String(SseDeserializer deserializer);
+  @protected
+  int sse_decode_u_8(SseDeserializer deserializer);
 
-@protected TimeSlot sse_decode_time_slot(SseDeserializer deserializer);
+  @protected
+  void sse_decode_unit(SseDeserializer deserializer);
 
-@protected TimetableRecord sse_decode_timetable_record(SseDeserializer deserializer);
+  @protected
+  BigInt sse_decode_usize(SseDeserializer deserializer);
 
-@protected int sse_decode_u_16(SseDeserializer deserializer);
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
 
-@protected int sse_decode_u_32(SseDeserializer deserializer);
+  @protected
+  void sse_encode_AnyhowException(
+    AnyhowException self,
+    SseSerializer serializer,
+  );
 
-@protected int sse_decode_u_8(SseDeserializer deserializer);
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    ArcSessionManager self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_decode_unit(SseDeserializer deserializer);
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    ArcSessionManager self,
+    SseSerializer serializer,
+  );
 
-@protected BigInt sse_decode_usize(SseDeserializer deserializer);
+  @protected
+  void sse_encode_String(String self, SseSerializer serializer);
 
-@protected int sse_decode_i_32(SseDeserializer deserializer);
+  @protected
+  void sse_encode_book_info(BookInfo self, SseSerializer serializer);
 
-@protected void sse_encode_AnyhowException(AnyhowException self, SseSerializer serializer);
+  @protected
+  void sse_encode_book_location(BookLocation self, SseSerializer serializer);
 
-@protected void sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(ArcSessionManager self, SseSerializer serializer);
+  @protected
+  void sse_encode_bool(bool self, SseSerializer serializer);
 
-@protected void sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(ArcSessionManager self, SseSerializer serializer);
+  @protected
+  void sse_encode_building(Building self, SseSerializer serializer);
 
-@protected void sse_encode_String(String self, SseSerializer serializer);
+  @protected
+  void sse_encode_campus(Campus self, SseSerializer serializer);
 
-@protected void sse_encode_book_info(BookInfo self, SseSerializer serializer);
+  @protected
+  void sse_encode_campus_page_data(
+    CampusPageData self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_book_location(BookLocation self, SseSerializer serializer);
+  @protected
+  void sse_encode_classroom_availability(
+    ClassroomAvailability self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_bool(bool self, SseSerializer serializer);
+  @protected
+  void sse_encode_classroom_schedule(
+    ClassroomSchedule self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_building(Building self, SseSerializer serializer);
+  @protected
+  void sse_encode_course_row(CourseRow self, SseSerializer serializer);
 
-@protected void sse_encode_campus(Campus self, SseSerializer serializer);
+  @protected
+  void sse_encode_exam(Exam self, SseSerializer serializer);
 
-@protected void sse_encode_campus_page_data(CampusPageData self, SseSerializer serializer);
+  @protected
+  void sse_encode_f_64(double self, SseSerializer serializer);
 
-@protected void sse_encode_classroom_availability(ClassroomAvailability self, SseSerializer serializer);
+  @protected
+  void sse_encode_grade(Grade self, SseSerializer serializer);
 
-@protected void sse_encode_classroom_schedule(ClassroomSchedule self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
-@protected void sse_encode_course_row(CourseRow self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_book_info(List<BookInfo> self, SseSerializer serializer);
 
-@protected void sse_encode_exam(Exam self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_book_location(
+    List<BookLocation> self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_f_64(double self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_bool(List<bool> self, SseSerializer serializer);
 
-@protected void sse_encode_grade(Grade self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_building(List<Building> self, SseSerializer serializer);
 
-@protected void sse_encode_list_String(List<String> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_campus(List<Campus> self, SseSerializer serializer);
 
-@protected void sse_encode_list_book_info(List<BookInfo> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_classroom_availability(
+    List<ClassroomAvailability> self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_book_location(List<BookLocation> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_classroom_schedule(
+    List<ClassroomSchedule> self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_bool(List<bool> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_course_row(
+    List<CourseRow> self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_building(List<Building> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_exam(List<Exam> self, SseSerializer serializer);
 
-@protected void sse_encode_list_campus(List<Campus> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_grade(List<Grade> self, SseSerializer serializer);
 
-@protected void sse_encode_list_classroom_availability(List<ClassroomAvailability> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_occupied_slot(
+    List<OccupiedSlot> self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_classroom_schedule(List<ClassroomSchedule> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_prim_u_8_strict(
+    Uint8List self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_course_row(List<CourseRow> self, SseSerializer serializer);
+  @protected
+  void sse_encode_list_time_slot(List<TimeSlot> self, SseSerializer serializer);
 
-@protected void sse_encode_list_exam(List<Exam> self, SseSerializer serializer);
+  @protected
+  void sse_encode_occupied_slot(OccupiedSlot self, SseSerializer serializer);
 
-@protected void sse_encode_list_grade(List<Grade> self, SseSerializer serializer);
+  @protected
+  void sse_encode_opt_String(String? self, SseSerializer serializer);
 
-@protected void sse_encode_list_occupied_slot(List<OccupiedSlot> self, SseSerializer serializer);
+  @protected
+  void sse_encode_time_slot(TimeSlot self, SseSerializer serializer);
 
-@protected void sse_encode_list_prim_u_8_strict(Uint8List self, SseSerializer serializer);
+  @protected
+  void sse_encode_timetable_record(
+    TimetableRecord self,
+    SseSerializer serializer,
+  );
 
-@protected void sse_encode_list_time_slot(List<TimeSlot> self, SseSerializer serializer);
+  @protected
+  void sse_encode_u_16(int self, SseSerializer serializer);
 
-@protected void sse_encode_occupied_slot(OccupiedSlot self, SseSerializer serializer);
+  @protected
+  void sse_encode_u_32(int self, SseSerializer serializer);
 
-@protected void sse_encode_opt_String(String? self, SseSerializer serializer);
+  @protected
+  void sse_encode_u_8(int self, SseSerializer serializer);
 
-@protected void sse_encode_time_slot(TimeSlot self, SseSerializer serializer);
+  @protected
+  void sse_encode_unit(void self, SseSerializer serializer);
 
-@protected void sse_encode_timetable_record(TimetableRecord self, SseSerializer serializer);
+  @protected
+  void sse_encode_usize(BigInt self, SseSerializer serializer);
 
-@protected void sse_encode_u_16(int self, SseSerializer serializer);
-
-@protected void sse_encode_u_32(int self, SseSerializer serializer);
-
-@protected void sse_encode_u_8(int self, SseSerializer serializer);
-
-@protected void sse_encode_unit(void self, SseSerializer serializer);
-
-@protected void sse_encode_usize(BigInt self, SseSerializer serializer);
-
-@protected void sse_encode_i_32(int self, SseSerializer serializer);
-                }
-                
-
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+}
 
 // Section: wire_class
 
 class RustLibWire implements BaseWire {
-            RustLibWire.fromExternalLibrary(ExternalLibrary lib);
+  RustLibWire.fromExternalLibrary(ExternalLibrary lib);
 
-            void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(int ptr) => wasmModule.rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(ptr);
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+        ptr,
+      );
 
-void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(int ptr) => wasmModule.rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(ptr);
-        }
-        @JS('wasm_bindgen') external RustLibWasmModule get wasmModule;
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+        ptr,
+      );
+}
 
-        @JS() @anonymous extension type RustLibWasmModule._(JSObject _) implements JSObject {
-            external void rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(int ptr);
+@JS('wasm_bindgen')
+external RustLibWasmModule get wasmModule;
 
-external void rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(int ptr);
-        }
-        
+@JS()
+@anonymous
+extension type RustLibWasmModule._(JSObject _) implements JSObject {
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    int ptr,
+  );
+}
