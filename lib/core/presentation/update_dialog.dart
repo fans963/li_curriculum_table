@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:markdown_widget/markdown_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 
@@ -57,82 +57,87 @@ class UpdateDialog extends StatelessWidget {
       ),
       content: SizedBox(
         width: double.maxFinite,
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Version info
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Version info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'v${updateInfo.currentVersion}',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Icon(Icons.arrow_forward_rounded,
+                        size: 18, color: colorScheme.primary),
+                  ),
+                  Text(
+                    'v${updateInfo.latestVersion}',
+                    style: textTheme.titleMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Release notes
+            if (updateInfo.releaseNotes.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Text('更新日志', style: textTheme.labelLarge),
+              const SizedBox(height: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                constraints: const BoxConstraints(maxHeight: 260),
                 decoration: BoxDecoration(
-                  color:
-                      colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                  border: Border.all(color: colorScheme.outlineVariant),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  children: [
-                    Text(
-                      'v${updateInfo.currentVersion}',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Icon(Icons.arrow_forward_rounded,
-                          size: 18, color: colorScheme.primary),
-                    ),
-                    Text(
-                      'v${updateInfo.latestVersion}',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              // Release notes
-              if (updateInfo.releaseNotes.isNotEmpty) ...[
-                Text('更新日志', style: textTheme.labelLarge),
-                const SizedBox(height: 8),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 260),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colorScheme.outlineVariant),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Markdown(
-                      data: updateInfo.releaseNotes,
-                      shrinkWrap: true,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(12),
-                      styleSheet: MarkdownStyleSheet(
-                        p: textTheme.bodySmall,
-                        h1: textTheme.titleSmall,
-                        h2: textTheme.titleSmall,
-                        h3: textTheme.titleSmall,
-                        code: textTheme.bodySmall?.copyWith(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: MarkdownWidget(
+                    data: updateInfo.releaseNotes,
+                    shrinkWrap: true,
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.all(12),
+                    config: MarkdownConfig(configs: [
+                      PConfig(textStyle: textTheme.bodySmall ?? const TextStyle()),
+                      H1Config(style: const TextStyle(fontWeight: FontWeight.bold)),
+                      H2Config(style: const TextStyle(fontWeight: FontWeight.bold)),
+                      H3Config(style: const TextStyle(fontWeight: FontWeight.bold)),
+                      CodeConfig(
+                        style: TextStyle(
+                          backgroundColor: colorScheme.surfaceContainerHighest,
                           fontFamily: 'monospace',
-                          backgroundColor:
-                              colorScheme.surfaceContainerHighest,
+                          fontSize: 12,
                         ),
-                        codeblockDecoration: BoxDecoration(
+                      ),
+                      PreConfig(
+                        textStyle: textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          fontSize: 12,
+                        ) ?? const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                        decoration: BoxDecoration(
                           color: colorScheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    ),
+                    ]),
                   ),
                 ),
-              ],
+              ),
             ],
-          ),
+          ],
         ),
       ),
       actions: [
