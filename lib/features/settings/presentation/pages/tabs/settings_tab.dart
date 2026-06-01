@@ -329,11 +329,10 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       }
     } catch (e) {
       loadingEntry.remove();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('检查更新失败，请稍后重试')),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('检查更新失败，请稍后重试')),
+      );
     }
   }
 }
@@ -720,7 +719,7 @@ class _SettingsTile extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) trailing!,
+          ?trailing,
           if (trailing == null && onTap != null)
             Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
         ],
