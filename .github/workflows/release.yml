@@ -73,8 +73,8 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: >-
-            ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || 
-                matrix.os == 'ubuntu-latest' && 'aarch64-linux-android,x86_64-unknown-linux-gnu' || 
+            ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' ||
+                matrix.os == 'ubuntu-latest' && 'aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,x86_64-unknown-linux-gnu' ||
                 'x86_64-pc-windows-msvc' }}
 
       - name: Setup Flutter
@@ -111,7 +111,7 @@ jobs:
           if [ ! -f env.json ]; then echo "{}" > env.json; fi
           flutter_rust_bridge_codegen generate
           flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
 
       - name: Run Fastforge
         run: fastforge release --name release --jobs ${{ matrix.fastforge_jobs }}
