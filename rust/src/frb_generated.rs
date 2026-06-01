@@ -508,13 +508,11 @@ fn wire__crate__api__crawler__init_ocr_engine_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api__model_bytes = <Vec<u8>>::sse_decode(&mut deserializer);
             deserializer.end();
             move |context| async move {
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
-                        let output_ok =
-                            crate::api::crawler::init_ocr_engine(api__model_bytes).await?;
+                        let output_ok = crate::api::crawler::init_ocr_engine().await?;
                         Ok(output_ok)
                     })()
                     .await,

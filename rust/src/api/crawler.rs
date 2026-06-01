@@ -7,7 +7,7 @@ use tokio::sync::Mutex;
 
 static SHARED_SESSION_MANAGER: OnceLock<Arc<SessionManager>> = OnceLock::new();
 
-pub async fn init_ocr_engine(_model_bytes: Vec<u8>) -> anyhow::Result<()> {
+pub async fn init_ocr_engine() -> anyhow::Result<()> {
     let ocr = Arc::new(Mutex::new(DdddOcr::new()));
     let manager = SessionManager::new(ocr).await;
     let arc_manager = Arc::new(manager);

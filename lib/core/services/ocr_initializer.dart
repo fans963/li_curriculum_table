@@ -1,4 +1,3 @@
-import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/core/rust/api/crawler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,7 +22,6 @@ class OcrInitializer {
   Future<void> ensureInitialized() async {
     if (_ref.read(ocrInitializedProvider)) return;
     if (_isInitializing) {
-      // Wait for existing initialization to complete by checking the provider
       while (_isInitializing && !_ref.read(ocrInitializedProvider)) {
         await Future.delayed(const Duration(milliseconds: 100));
       }
@@ -32,9 +30,9 @@ class OcrInitializer {
 
     _isInitializing = true;
     try {
-      final ByteData modelData =
-          await rootBundle.load('assets/models/common_pruned.onnx');
-      await initOcrEngine(modelBytes: modelData.buffer.asUint8List());
+      // Model is compiled into the Rust .so at build time via include_bytes!,
+      // so we no longer need to load the ONNX asset at runtime.
+      await initOcrEngine();
       _ref.read(ocrInitializedProvider.notifier).setInitialized(true);
     } finally {
       _isInitializing = false;
