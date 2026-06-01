@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 
@@ -10,7 +10,15 @@ Future<bool> showUpdateDialogIfNeeded(
   UpdateInfo? updateInfo, {
   bool silent = true,
 }) async {
-  if (updateInfo == null || !updateInfo.hasUpdate) {
+  if (updateInfo == null) {
+    if (!silent && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('检查更新失败，请稍后重试')),
+      );
+    }
+    return false;
+  }
+  if (!updateInfo.hasUpdate) {
     if (!silent && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('当前已是最新版本 ✨')),

@@ -73,7 +73,6 @@ panic = "abort"
 strip = true
 debug = false
 debug-assertions = false
-incremental = false
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }
