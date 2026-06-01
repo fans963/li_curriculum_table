@@ -30,9 +30,9 @@ reqwest = { version = "0.13.4", default-features = false, features = [
 ] }
 log = "0.4.30"
 scraper = "0.27.0"
-burn = { version = "0.21.0-pre.3" }
-burn-flex = "0.21.0-pre.3"
-burn-store = "0.21.0-pre.3"
+burn = { version = "0.21.0", default-features = false, features = ["std"] }
+burn-flex = { version = "0.21.0", default-features = false, features = ["std"] }
+burn-store = { version = "0.21.0", default-features = false, features = ["std", "burnpack"] }
 half = { version = "2.7.1", features = ["num-traits"] }
 thiserror = "2.0.18"
 serde = { version = "1.0.228", features = ["derive"] }
@@ -44,7 +44,7 @@ url = "2.5.8"
 encoding_rs = "0.8.35"
 base64 = "0.22.1"
 console_log = "1.0.0"
-mimalloc = "0.1"
+mimalloc = "0.1.52"
 
 [build-dependencies]
 burn-onnx = "0.21.0"
@@ -52,8 +52,8 @@ rmp-serde = "1.3.1"
 rmpv = { version = "1.3.1", features = ["with-serde"] }
 half = { version = "2.7.1", features = ["num-traits", "serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
-burn = { version = "0.21.0-pre.3" }
-burn-store = { version = "0.21.0-pre.3" }
+burn = { version = "0.21.0" }
+burn-store = { version = "0.21.0" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1.51.1", features = ["net", "time"] }
@@ -73,7 +73,6 @@ panic = "abort"
 strip = true
 debug = false
 debug-assertions = false
-incremental = false
 
 [lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(frb_expand)'] }

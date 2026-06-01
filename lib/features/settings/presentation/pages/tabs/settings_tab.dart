@@ -15,6 +15,13 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const _sectionSpacing = 20.0;
+const _cardPadding = EdgeInsets.all(16);
+
+// ─── SettingsTab ─────────────────────────────────────────────────────────────
+
 class SettingsTab extends ConsumerStatefulWidget {
   const SettingsTab({super.key});
 
@@ -36,7 +43,6 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       await notifier.restoreCachedTeachingWeekBaseline();
       await _restoreCachedCredentials();
 
-      // Auto-save credentials when user types (debounced)
       _usernameController.addListener(_onCredentialsChanged);
       _passwordController.addListener(_onCredentialsChanged);
     });
@@ -48,7 +54,9 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
       final u = _usernameController.text.trim();
       final p = _passwordController.text;
       if (u.isNotEmpty && p.isNotEmpty) {
-        ref.read(credentialsRepositoryProvider).cacheCredentials(LoginCredentials(username: u, password: p));
+        ref
+            .read(credentialsRepositoryProvider)
+            .cacheCredentials(LoginCredentials(username: u, password: p));
       }
     });
   }
@@ -74,6 +82,7 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(timetableControllerProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -85,103 +94,102 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 800),
             child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
               children: [
-                const _SectionHeader(
-                  title: '教务系统登录',
+                // ── 教务系统登录 ──
+                _SectionCard(
                   icon: Icons.vpn_key_outlined,
+                  title: '教务系统登录',
+                  subtitle: '登录以同步课表数据',
+                  child: TimetableControlPanel(
+                    usernameController: _usernameController,
+                    passwordController: _passwordController,
+                    isLoading: state.isLoading,
+                    currentTeachingWeek: state.currentTeachingWeek,
+                    termStartMonday: state.termStartMonday,
+                    onTermStartDateChanged: (date) {
+                      ref
+                          .read(timetableControllerProvider.notifier)
+                          .setTermStartDate(date);
+                    },
+                    onLoginPressed: () async {
+                      final u = _usernameController.text.trim();
+                      final p = _passwordController.text;
+                      if (u.isEmpty || p.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('请输入学号和密码')),
+                        );
+                        return;
+                      }
+                      FocusScope.of(context).unfocus();
+                      await ref
+                          .read(timetableControllerProvider.notifier)
+                          .fetchAndBuild(username: u, password: p);
+                    },
+                  ),
                 ),
-                const SizedBox(height: 8),
-                TimetableControlPanel(
-                  usernameController: _usernameController,
-                  passwordController: _passwordController,
-                  isLoading: state.isLoading,
-                  currentTeachingWeek: state.currentTeachingWeek,
-                  termStartMonday: state.termStartMonday,
-                  onTermStartDateChanged: (date) {
-                    ref
-                        .read(timetableControllerProvider.notifier)
-                        .setTermStartDate(date);
-                  },
-                  onLoginPressed: () async {
-                    final u = _usernameController.text.trim();
-                    final p = _passwordController.text;
-                    if (u.isEmpty || p.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('请输入学号和密码')),
-                      );
-                      return;
-                    }
-                    FocusScope.of(context).unfocus();
-                    await ref
-                        .read(timetableControllerProvider.notifier)
-                        .fetchAndBuild(username: u, password: p);
-                  },
-                ),
-                const SizedBox(height: 24),
-                const _SectionHeader(
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 数据同步状态 ──
+                _SectionCard(
+                  icon: Icons.sync_rounded,
                   title: '数据同步状态',
-                  icon: Icons.sync_problem_rounded,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: TimetableStatusBanner(
+                      status: state.status,
+                      isLoading: state.isLoading,
+                      hasData: state.data != null,
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
-                TimetableStatusBanner(
-                  status: state.status,
-                  isLoading: state.isLoading,
-                  hasData: state.data != null,
-                ),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: '存储与缓存',
-                  icon: Icons.storage_rounded,
-                ),
-                const SizedBox(height: 8),
-                ListTile(
-                  title: const Text('清除所有缓存'),
-                  subtitle: const Text('删除本地存储的课表、教室、成绩等缓存数据，保留登录凭据'),
-                  leading: const Icon(Icons.delete_sweep_rounded),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () => _confirmClearCache(context),
-                ),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: '外观',
-                  icon: Icons.palette_outlined,
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 外观 ──
                 const _ThemeSettingsSection(),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: '增强功能：本地代理',
-                  icon: Icons.lan_outlined,
-                ),
-                const SizedBox(height: 8),
-                const _ProxySettingsSection(),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: '课表显示设置',
-                  icon: Icons.display_settings_rounded,
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 课表显示 ──
                 const _TimetableDisplaySettingsSection(),
-                const SizedBox(height: 32),
-                const _SectionHeader(
-                  title: '反馈与建议',
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 本地代理 ──
+                const _ProxySettingsSection(),
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 存储与缓存 ──
+                _SectionCard(
+                  icon: Icons.storage_outlined,
+                  title: '存储与缓存',
+                  child: _SettingsTile(
+                    icon: Icons.delete_sweep_outlined,
+                    title: '清除所有缓存',
+                    subtitle: '删除本地课表、教室、成绩等缓存，保留登录凭据',
+                    onTap: () => _confirmClearCache(context),
+                    iconColor: colorScheme.error,
+                  ),
+                ),
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 反馈 ──
+                _SectionCard(
                   icon: Icons.feedback_outlined,
+                  title: '反馈与建议',
+                  child: _SettingsTile(
+                    icon: Icons.mark_as_unread_outlined,
+                    title: '发送反馈',
+                    subtitle: '遇到问题或有建议？点击这里告诉我们（支持截图标注）',
+                    onTap: () {
+                      BetterFeedback.of(context).show(
+                        (feedback) => FeedbackHandler.shareFeedback(feedback),
+                      );
+                    },
+                  ),
                 ),
-                const SizedBox(height: 8),
-                ListTile(
-                  title: const Text('发送反馈'),
-                  subtitle: const Text('遇到问题或有更好的建议？点击这里告诉我们（支持屏幕截图与标注）'),
-                  leading: const Icon(Icons.mark_as_unread_rounded),
-                  trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    BetterFeedback.of(context).show(
-                      (feedback) => FeedbackHandler.shareFeedback(feedback),
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
-                _buildInfoSection(context),
+                const SizedBox(height: _sectionSpacing),
+
+                // ── 关于 ──
+                _buildAboutCard(context),
               ],
             ),
           ),
@@ -191,11 +199,12 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
   }
 
   Future<void> _confirmClearCache(BuildContext context) async {
+    final colorScheme = Theme.of(context).colorScheme;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('确认清除缓存？'),
-        content: const Text('这将删除所有离线课表和缓存数据。您仍将保持登录状态，但需要重新同步以加载数据。'),
+        content: const Text('将删除所有离线课表和缓存数据。您仍将保持登录状态，但需要重新同步以加载数据。'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -203,8 +212,8 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.error,
-              foregroundColor: Theme.of(context).colorScheme.onError,
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
             ),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('清除'),
@@ -218,85 +227,84 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     }
   }
 
-  Widget _buildInfoSection(BuildContext context) {
+  Widget _buildAboutCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      children: [
-        const Divider(height: 1),
-        const SizedBox(height: 16),
-        FutureBuilder<PackageInfo>(
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Padding(
+        padding: _cardPadding,
+        child: FutureBuilder<PackageInfo>(
           future: PackageInfo.fromPlatform(),
           builder: (context, snapshot) {
             final version = snapshot.data?.version ?? '...';
             final buildNumber = snapshot.data?.buildNumber ?? '';
 
             return Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // App icon and name
+                // App icon
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  width: 64,
+                  height: 64,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: colorScheme.primary.withValues(alpha: 0.15),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Image.asset(
-                    'assets/icon/icon.png',
-                    width: 56,
-                    height: 56,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.asset('assets/icon/icon.png'),
                   ),
                 ),
                 const SizedBox(height: 12),
                 Text(
                   '🍐 课表',
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
-                // Check for update button
-                SizedBox(
-                  width: 200,
-                  child: FilledButton.tonalIcon(
-                    icon: const Icon(Icons.system_update_rounded, size: 18),
-                    label: const Text('检查更新'),
-                    onPressed: () => _checkForUpdateManually(context),
-                  ),
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.system_update_rounded, size: 18),
+                  label: const Text('检查更新'),
+                  onPressed: () => _checkForUpdateManually(context),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 Text(
                   '一款轻盈优雅的跨平台课表应用',
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+                  textAlign: TextAlign.center,
+                  style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
                 ),
-                const SizedBox(height: 32),
               ],
             );
           },
         ),
-      ],
+      ),
     );
   }
 
   Future<void> _checkForUpdateManually(BuildContext context) async {
-    final messenger = ScaffoldMessenger.of(context);
     final overlay = Overlay.of(context);
 
-    // Show loading indicator
     late OverlayEntry loadingEntry;
     loadingEntry = OverlayEntry(
       builder: (_) => Center(
         child: Card(
-          elevation: 8,
+          elevation: 4,
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -316,20 +324,20 @@ class _SettingsTabState extends ConsumerState<SettingsTab> {
     try {
       final updateInfo = await UpdateService().checkForUpdate();
       loadingEntry.remove();
-
       if (context.mounted) {
         await showUpdateDialogIfNeeded(context, updateInfo, silent: false);
       }
     } catch (e) {
       loadingEntry.remove();
-      if (mounted) {
-        messenger.showSnackBar(
-          const SnackBar(content: Text('检查更新失败，请稍后重试')),
-        );
-      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('检查更新失败，请稍后重试')),
+      );
     }
   }
 }
+
+// ─── Theme Settings ──────────────────────────────────────────────────────────
 
 class _ThemeSettingsSection extends ConsumerWidget {
   const _ThemeSettingsSection();
@@ -352,18 +360,24 @@ class _ThemeSettingsSection extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final notifier = ref.read(settingsControllerProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      children: [
-        // Theme mode
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('主题模式', style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 8),
-              SegmentedButton<ThemeMode>(
+    return _SectionCard(
+      icon: Icons.palette_outlined,
+      title: '外观',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Theme mode
+          Center(
+            child: Text('主题模式',
+                style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: SegmentedButton<ThemeMode>(
                 segments: const [
                   ButtonSegment(
                     value: ThemeMode.system,
@@ -385,77 +399,76 @@ class _ThemeSettingsSection extends ConsumerWidget {
                 onSelectionChanged: (modes) => notifier.setThemeMode(modes.first),
                 showSelectedIcon: false,
               ),
-            ],
-          ),
-        ),
-        const Divider(height: 1),
-        // Dynamic color
-        SwitchListTile(
-          title: const Text('动态取色'),
-          subtitle: const Text('从壁纸或系统提取主题色（仅部分设备支持）'),
-          value: settings.useDynamicColor,
-          onChanged: (val) => notifier.setUseDynamicColor(val),
-          secondary: const Icon(Icons.color_lens_outlined),
-        ),
-        // Seed color picker
-        if (!settings.useDynamicColor) ...[
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('主题色', style: Theme.of(context).textTheme.bodyMedium),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 10,
-                  runSpacing: 10,
-                  children: _seedColors.map((color) {
-                    final isSelected = settings.seedColor.toARGB32() == color.toARGB32();
-                    return GestureDetector(
-                      onTap: () => notifier.setSeedColor(color),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: isSelected
-                              ? Border.all(
-                                  color: colorScheme.onSurface,
-                                  width: 3,
-                                )
-                              : null,
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: color.withValues(alpha: 0.4),
-                                    blurRadius: 8,
-                                    spreadRadius: 1,
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: isSelected
-                            ? Icon(Icons.check_rounded,
-                                color: color.computeLuminance() > 0.5
-                                    ? Colors.black87
-                                    : Colors.white,
-                                size: 22)
-                            : null,
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          // Dynamic color toggle
+          _SettingsTile(
+            icon: Icons.color_lens_outlined,
+            title: '动态取色',
+            subtitle: '从壁纸或系统提取主题色（仅部分设备支持）',
+            trailing: Switch(
+              value: settings.useDynamicColor,
+              onChanged: (val) => notifier.setUseDynamicColor(val),
+            ),
+          ),
+
+          // Seed color picker
+          if (!settings.useDynamicColor) ...[
+            const Divider(height: 1),
+            const SizedBox(height: 12),
+            Text('主题色', style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _seedColors.map((color) {
+                final isSelected = settings.seedColor.toARGB32() == color.toARGB32();
+                return GestureDetector(
+                  onTap: () => notifier.setSeedColor(color),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: colorScheme.onSurface, width: 2.5)
+                          : Border.all(
+                              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                      boxShadow: isSelected
+                          ? [
+                              BoxShadow(
+                                color: color.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                                spreadRadius: 1,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: isSelected
+                        ? Icon(Icons.check_rounded,
+                            color: color.computeLuminance() > 0.5
+                                ? Colors.black87
+                                : Colors.white,
+                            size: 20)
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
+
+// ─── Proxy Settings ──────────────────────────────────────────────────────────
 
 class _ProxySettingsSection extends ConsumerWidget {
   const _ProxySettingsSection();
@@ -464,40 +477,62 @@ class _ProxySettingsSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
     final notifier = ref.read(settingsControllerProvider.notifier);
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
-
-    return Column(
-      children: [
-        if (!isWeb) ...[
-          SwitchListTile(
-            title: const Text('开启本地代理网关'),
-            subtitle: const Text('允许其他设备（或本机的网页版）通过此应用中转教务系统请求，实现会话共享与加速。'),
-            value: settings.proxyEnabled,
-            onChanged: (val) => notifier.setProxyEnabled(val),
-            secondary: const Icon(Icons.router_rounded),
-          ),
-          ListTile(
-            title: const Text('服务端监听端口'),
-            subtitle: Text('当前设置: ${settings.proxyPort} (重启服务后生效)'),
-            leading: const Icon(Icons.numbers_rounded),
-            onTap: () => _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
-          ),
-        ] else ...[
-          ListTile(
-            title: const Text('Native 代理探测端口'),
-            subtitle: Text('当前设置: ${settings.proxyPort} (刷新网页后生效)'),
-            leading: const Icon(Icons.radar_rounded),
-            onTap: () => _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
+    return _SectionCard(
+      icon: Icons.lan_outlined,
+      title: '本地代理',
+      subtitle: '允许其他设备通过此应用中转教务系统请求',
+      child: Column(
+        children: [
+          if (!isWeb) ...[
+            _SettingsTile(
+              icon: Icons.router_outlined,
+              title: '开启本地代理网关',
+              subtitle: '其他设备或本机网页版可通过此应用共享会话',
+              trailing: Switch(
+                value: settings.proxyEnabled,
+                onChanged: (val) => notifier.setProxyEnabled(val),
+              ),
+            ),
+            _SettingsTile(
+              icon: Icons.numbers_outlined,
+              title: '服务端监听端口',
+              subtitle: '${settings.proxyPort}（重启服务后生效）',
+              onTap: () =>
+                  _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
+            ),
+          ] else ...[
+            _SettingsTile(
+              icon: Icons.radar_outlined,
+              title: 'Native 代理探测端口',
+              subtitle: '${settings.proxyPort}（刷新网页后生效）',
+              onTap: () =>
+                  _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
+            ),
+          ],
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline, size: 14, color: colorScheme.onSurfaceVariant),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '设置正确的端口可让网页版自动识别并使用手机端的登录状态，无需重复验证。',
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Text(
-            '注：设置正确的端口可让网页版自动识别并使用手机端的登录状态，无需重复验证。',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -517,7 +552,7 @@ class _ProxySettingsSection extends ConsumerWidget {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          TextButton(
+          FilledButton(
             onPressed: () {
               final port = int.tryParse(controller.text);
               if (port != null && port >= 1024 && port <= 65535) {
@@ -533,6 +568,8 @@ class _ProxySettingsSection extends ConsumerWidget {
   }
 }
 
+// ─── Timetable Display Settings ──────────────────────────────────────────────
+
 class _TimetableDisplaySettingsSection extends ConsumerWidget {
   const _TimetableDisplaySettingsSection();
 
@@ -541,47 +578,161 @@ class _TimetableDisplaySettingsSection extends ConsumerWidget {
     final settings = ref.watch(settingsControllerProvider);
     final notifier = ref.read(settingsControllerProvider.notifier);
 
-    return Column(
-      children: [
-        SwitchListTile(
-          title: const Text('按星期滑动'),
-          subtitle: const Text('开启后，课表页面将以整周为单位左右对齐滑动；关闭则恢复自由无极滑动。'),
+    return _SectionCard(
+      icon: Icons.view_week_outlined,
+      title: '课表显示',
+      child: _SettingsTile(
+        icon: Icons.swap_horiz_rounded,
+        title: '按星期滑动',
+        subtitle: '开启后，课表以整周为单位左右对齐滑动；关闭则自由无极滑动',
+        trailing: Switch(
           value: settings.weeklyScroll,
           onChanged: (val) => notifier.setWeeklyScroll(val),
-          secondary: const Icon(Icons.view_week_rounded),
         ),
-      ],
+      ),
     );
   }
 }
 
-class _SectionHeader extends StatelessWidget {
-  final String title;
-  final IconData icon;
+// ─── Shared UI Components ────────────────────────────────────────────────────
 
-  const _SectionHeader({required this.title, required this.icon});
+/// A card that wraps a settings section with a header.
+class _SectionCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final Widget child;
+
+  const _SectionCard({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 8),
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Padding(
+        padding: _cardPadding,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              children: [
+                Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(icon, size: 18, color: colorScheme.primary),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A consistent settings list tile with icon, title, subtitle, and optional switch or chevron.
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Widget? trailing;
+  final VoidCallback? onTap;
+  final Color? iconColor;
+
+  const _SettingsTile({
+    required this.icon,
+    required this.title,
+    this.subtitle = '',
+    this.trailing,
+    this.onTap,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final effectiveIconColor = iconColor ?? colorScheme.onSurfaceVariant;
+
+    final tile = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: colorScheme.primary),
-          const SizedBox(width: 8),
-          Text(
-            title.toUpperCase(),
-            style: textTheme.labelLarge?.copyWith(
-              color: colorScheme.primary,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.2,
+          Icon(icon, size: 20, color: effectiveIconColor),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: textTheme.bodyMedium),
+                if (subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
+          ?trailing,
+          if (trailing == null && onTap != null)
+            Icon(Icons.chevron_right_rounded, size: 20, color: colorScheme.onSurfaceVariant),
         ],
       ),
     );
+
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: tile,
+      );
+    }
+    return tile;
   }
 }
