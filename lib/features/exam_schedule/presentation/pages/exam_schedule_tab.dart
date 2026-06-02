@@ -322,8 +322,6 @@ class _ExamCard extends StatelessWidget {
                                           ? colorScheme.onSurfaceVariant.withValues(alpha: 0.75)
                                           : colorScheme.onSurface,
                                       fontSize: 16,
-                                      decoration: isExpired ? TextDecoration.lineThrough : null,
-                                      decorationColor: colorScheme.outlineVariant,
                                     ),
                                   ),
                                   const SizedBox(height: 3),

@@ -1,3 +1,4 @@
+import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
 
@@ -15,33 +16,67 @@ Widget buildBookCupertino(
   required List<BookInfo> books,
   required void Function(BookInfo book) onBookTap,
 }) {
+  final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: CupertinoColors.systemGroupedBackground,
-    child: CustomScrollView(
-      slivers: [
-        CupertinoSliverNavigationBar(
-          largeTitle: const Text('图书搜寻'),
-          backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
-          border: null,
-        ),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-            child: CupertinoSearchTextField(
-              controller: searchController,
-              placeholder: '输入书名检索馆藏',
-              onSubmitted: (_) => onSearch(),
+    backgroundColor: const Color(0x00000000),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: ColoredBox(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topPadding + 44),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+                    child: CupertinoSearchTextField(
+                      controller: searchController,
+                      placeholder: '输入书名检索馆藏',
+                      onSubmitted: (_) => onSearch(),
+                    ),
+                  ),
+                ),
+                _buildCupertinoContent(
+                  context,
+                  isLoading: isLoading,
+                  hasSearched: hasSearched,
+                  error: error,
+                  books: books,
+                  onSearch: onSearch,
+                  onBookTap: onBookTap,
+                ),
+              ],
             ),
           ),
         ),
-        _buildCupertinoContent(
-          context,
-          isLoading: isLoading,
-          hasSearched: hasSearched,
-          error: error,
-          books: books,
-          onSearch: onSearch,
-          onBookTap: onBookTap,
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+          child: CupertinoLiquidGlass(
+            tintOpacity: 0.15,
+            child: Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: const SizedBox(
+                height: 44,
+                child: Center(
+                  child: Text(
+                    '图书搜寻',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.41,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ),
         ),
       ],
     ),
@@ -78,7 +113,7 @@ Widget _buildCupertinoContent(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(CupertinoIcons.wifi_slash, size: 64, color: CupertinoColors.systemRed),
+            Icon(CupertinoIcons.wifi_slash, size: 64, color: CupertinoColors.systemRed.resolveFrom(context)),
             const SizedBox(height: 16),
             const Text('出现错误', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
@@ -102,11 +137,11 @@ Widget _buildCupertinoContent(
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: CupertinoColors.systemFill,
+                color: CupertinoColors.systemFill.resolveFrom(context),
               ),
-              child: const Icon(CupertinoIcons.collections, size: 72, color: CupertinoColors.systemBlue),
+              child: Icon(CupertinoIcons.collections, size: 72, color: CupertinoColors.systemBlue.resolveFrom(context)),
             ),
             const SizedBox(height: 24),
             const Text(
@@ -125,12 +160,12 @@ Widget _buildCupertinoContent(
   }
 
   if (books.isEmpty) {
-    return const SliverFillRemaining(
+    return SliverFillRemaining(
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(CupertinoIcons.search, size: 64, color: CupertinoColors.systemGrey),
+            Icon(CupertinoIcons.search, size: 64, color: CupertinoColors.systemGrey.resolveFrom(context)),
             SizedBox(height: 16),
             Text('未找到相关书籍', style: TextStyle(fontWeight: FontWeight.w600)),
             SizedBox(height: 8),
@@ -188,12 +223,24 @@ void showCupertinoBookDetailsSheet(BuildContext context, BookInfo book) {
     builder: (context) {
       return Container(
         height: MediaQuery.of(context).size.height * 0.85,
-        decoration: const BoxDecoration(
-          color: CupertinoColors.systemGroupedBackground,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
         ),
         child: Column(
           children: [
+            // Drag handle
+            Padding(
+              padding: const EdgeInsets.only(top: 8, bottom: 4),
+              child: Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.separator.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
+              ),
+            ),
             // Navigation bar with close button
             CupertinoNavigationBar(
               backgroundColor: CupertinoColors.systemGroupedBackground
@@ -210,16 +257,6 @@ void showCupertinoBookDetailsSheet(BuildContext context, BookInfo book) {
                 child: const Icon(CupertinoIcons.xmark_circle_fill),
               ),
               border: null,
-            ),
-            // Drag handle
-            Container(
-              width: 40,
-              height: 5,
-              margin: const EdgeInsets.only(bottom: 8),
-              decoration: BoxDecoration(
-                color: CupertinoColors.separator.resolveFrom(context),
-                borderRadius: BorderRadius.circular(10),
-              ),
             ),
             // Scrollable content
             Expanded(
@@ -258,7 +295,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
             decoration: BoxDecoration(
               color: CupertinoColors.systemBlue.resolveFrom(context)
                   .withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Text(
               book.docType,
@@ -356,7 +393,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
                 color: CupertinoColors.destructiveRed
                     .resolveFrom(context)
                     .withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Row(
                 children: [
@@ -386,7 +423,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: CupertinoColors.systemFill.resolveFrom(context),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(18),
               ),
               child: Center(
                 child: Text(

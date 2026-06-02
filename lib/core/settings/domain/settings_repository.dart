@@ -1,5 +1,86 @@
 import 'package:flutter/material.dart';
 
+/// Color scheme generation type (M3 color harmonization).
+enum ColorSchemeType {
+  /// Default M3 tonalSpot — balanced, harmonious colors
+  tonalSpot,
+
+  /// More vibrant and saturated colors
+  expressive,
+
+  /// Maximum saturation, bold colors
+  vivid,
+
+  /// Warm, cheerful tones
+  jolly,
+
+  /// High contrast for accessibility
+  highContrast,
+
+  /// Muted, neutral tones
+  neutral,
+
+  /// Single hue variations
+  monochrome;
+
+  String get label {
+    switch (this) {
+      case ColorSchemeType.tonalSpot:
+        return 'Tonal Spot';
+      case ColorSchemeType.expressive:
+        return 'Expressive';
+      case ColorSchemeType.vivid:
+        return 'Vivid';
+      case ColorSchemeType.jolly:
+        return 'Jolly';
+      case ColorSchemeType.highContrast:
+        return '高对比度';
+      case ColorSchemeType.neutral:
+        return 'Neutral';
+      case ColorSchemeType.monochrome:
+        return '单色';
+    }
+  }
+
+  String get description {
+    switch (this) {
+      case ColorSchemeType.tonalSpot:
+        return '默认和谐配色';
+      case ColorSchemeType.expressive:
+        return '鲜明活力';
+      case ColorSchemeType.vivid:
+        return '高饱和度';
+      case ColorSchemeType.jolly:
+        return '温暖欢快';
+      case ColorSchemeType.highContrast:
+        return '无障碍高对比';
+      case ColorSchemeType.neutral:
+        return '柔和中性';
+      case ColorSchemeType.monochrome:
+        return '单色系';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case ColorSchemeType.tonalSpot:
+        return Icons.palette;
+      case ColorSchemeType.expressive:
+        return Icons.auto_awesome;
+      case ColorSchemeType.vivid:
+        return Icons.brightness_7;
+      case ColorSchemeType.jolly:
+        return Icons.emoji_emotions;
+      case ColorSchemeType.highContrast:
+        return Icons.contrast;
+      case ColorSchemeType.neutral:
+        return Icons.water_drop;
+      case ColorSchemeType.monochrome:
+        return Icons.gradient;
+    }
+  }
+}
+
 /// Design style for the app UI.
 enum DesignStyle {
   /// Material Design 3 (Android/Google style)
@@ -42,6 +123,7 @@ class AppSettings {
   final Color seedColor;
   final bool useDynamicColor;
   final DesignStyle designStyle;
+  final ColorSchemeType colorSchemeType;
 
   const AppSettings({
     required this.proxyEnabled,
@@ -51,6 +133,7 @@ class AppSettings {
     required this.seedColor,
     required this.useDynamicColor,
     this.designStyle = DesignStyle.system,
+    this.colorSchemeType = ColorSchemeType.tonalSpot,
   });
 
   factory AppSettings.defaultSettings() {
@@ -62,6 +145,7 @@ class AppSettings {
       seedColor: Color(0xFF0A7C6D),
       useDynamicColor: true,
       designStyle: DesignStyle.system,
+      colorSchemeType: ColorSchemeType.tonalSpot,
     );
   }
 
@@ -73,6 +157,7 @@ class AppSettings {
     Color? seedColor,
     bool? useDynamicColor,
     DesignStyle? designStyle,
+    ColorSchemeType? colorSchemeType,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -82,6 +167,7 @@ class AppSettings {
       seedColor: seedColor ?? this.seedColor,
       useDynamicColor: useDynamicColor ?? this.useDynamicColor,
       designStyle: designStyle ?? this.designStyle,
+      colorSchemeType: colorSchemeType ?? this.colorSchemeType,
     );
   }
 }

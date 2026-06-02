@@ -1,3 +1,4 @@
+import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
@@ -5,29 +6,63 @@ import '../state/exam_controller.dart';
 import '../../domain/models/exam.dart';
 
 Widget buildExamScheduleCupertino(BuildContext context, ExamState state) {
+  final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: CupertinoColors.systemGroupedBackground,
-    child: CustomScrollView(
-      slivers: [
-        CupertinoSliverNavigationBar(
-          largeTitle: const Text('考试安排'),
-          backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
-          border: null,
+    backgroundColor: const Color(0x00000000),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: ColoredBox(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topPadding + 44),
+                ),
+                if (state.isLoading && state.exams.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: CupertinoActivityIndicator()),
+                  )
+                else if (state.needsLogin)
+                  SliverFillRemaining(
+                    child: _buildCupertinoNeedsLogin(context),
+                  )
+                else if (state.exams.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('暂无考试安排')),
+                  )
+                else
+                  _buildCupertinoExamList(context, state),
+              ],
+            ),
+          ),
         ),
-        if (state.isLoading && state.exams.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: CupertinoActivityIndicator()),
-          )
-        else if (state.needsLogin)
-          SliverFillRemaining(
-            child: _buildCupertinoNeedsLogin(context),
-          )
-        else if (state.exams.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: Text('暂无考试安排')),
-          )
-        else
-          _buildCupertinoExamList(context, state),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+          child: CupertinoLiquidGlass(
+            tintOpacity: 0.15,
+            child: Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: const SizedBox(
+                height: 44,
+                child: Center(
+                  child: Text(
+                    '考试安排',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.41,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          ),
+        ),
       ],
     ),
   );
@@ -110,13 +145,29 @@ Widget _buildCupertinoExamList(BuildContext context, ExamState state) {
       // Upcoming exams
       if (upcoming.isNotEmpty)
         CupertinoListSection.insetGrouped(
-          header: const Text('待考'),
+          header: Text(
+            '待考',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.08,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+          ),
           children: upcoming.map((exam) => _buildCupertinoExamTile(context, exam)).toList(),
         ),
       // Expired exams
       if (expired.isNotEmpty)
         CupertinoListSection.insetGrouped(
-          header: const Text('已结束'),
+          header: Text(
+            '已结束',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.08,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+          ),
           children: expired.map((exam) => _buildCupertinoExamTile(context, exam)).toList(),
         ),
       const SizedBox(height: 40),
@@ -133,27 +184,34 @@ CupertinoListTile _buildCupertinoExamTile(BuildContext context, ExamEntity exam)
   if (isExpired) {
     accentColor = CupertinoColors.secondaryLabel.resolveFrom(context);
   } else if (isToday) {
-    accentColor = CupertinoColors.systemRed;
+    accentColor = CupertinoColors.systemRed.resolveFrom(context);
   } else if (daysLeft != null && daysLeft <= 3) {
-    accentColor = CupertinoColors.systemOrange;
+    accentColor = CupertinoColors.systemOrange.resolveFrom(context);
   } else if (daysLeft != null && daysLeft <= 7) {
-    accentColor = CupertinoColors.systemBlue;
+    accentColor = CupertinoColors.systemBlue.resolveFrom(context);
   } else {
-    accentColor = CupertinoColors.systemGreen;
+    accentColor = CupertinoColors.systemGreen.resolveFrom(context);
   }
 
   final countdown = exam.countdownText;
 
   return CupertinoListTile(
-    leading: Icon(
-      isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill,
-      size: 29,
-      color: accentColor,
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: accentColor.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Icon(
+        isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill,
+        size: 20,
+        color: accentColor,
+      ),
     ),
     title: Text(
       exam.courseName,
       style: TextStyle(
-        decoration: isExpired ? TextDecoration.lineThrough : null,
         color: isExpired
             ? CupertinoColors.secondaryLabel.resolveFrom(context)
             : null,

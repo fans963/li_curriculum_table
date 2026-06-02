@@ -36,7 +36,7 @@ Widget buildCupertinoAppointmentCard({
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: 0.5),
         ),
         child: Row(
@@ -46,8 +46,8 @@ Widget buildCupertinoAppointmentCard({
               decoration: BoxDecoration(
                 color: tone.accent,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
+                  topLeft: Radius.circular(12),
+                  bottomLeft: Radius.circular(12),
                 ),
               ),
             ),
@@ -115,12 +115,9 @@ CupertinoTone resolveCupertinoTone(BuildContext context, String seedText) {
     CupertinoColors.systemBrown,
   ];
   final accent = colors[seedText.hashCode.abs() % colors.length];
-  final isDark = CupertinoTheme.brightnessOf(context) == Brightness.dark;
   return CupertinoTone(
     accent: accent.resolveFrom(context),
-    background: isDark
-        ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context)
-        : CupertinoColors.white,
+    background: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
     foreground: CupertinoColors.label.resolveFrom(context),
   );
 }
@@ -206,7 +203,7 @@ class CourseDetailsSheet extends StatelessWidget {
 
     return _buildSheet(
       bgColor: bg,
-      topRadius: 14,
+      topRadius: 18,
       hPad: 20,
       handle: Center(
         child: Container(

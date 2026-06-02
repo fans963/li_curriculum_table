@@ -1,3 +1,4 @@
+import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -12,40 +13,74 @@ Widget buildClassroomCupertino(
   SettingsController settingsCtrl,
   ClassroomController notifier,
 ) {
+  final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: CupertinoColors.systemGroupedBackground,
-    child: CustomScrollView(
-      slivers: [
-        CupertinoSliverNavigationBar(
-          largeTitle: const Text('空闲教室'),
-          backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
-          border: null,
-        ),
-        SliverToBoxAdapter(
-          child: _buildCupertinoDateSelector(context, state),
-        ),
-        if (state.campuses.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _buildCupertinoCampusSelector(context, state),
+    backgroundColor: const Color(0x00000000),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: ColoredBox(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topPadding + 44),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildCupertinoDateSelector(context, state),
+                ),
+                if (state.campuses.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _buildCupertinoCampusSelector(context, state),
+                  ),
+                if (state.buildings.isNotEmpty)
+                  SliverToBoxAdapter(
+                    child: _buildCupertinoBuildingSelector(context, state),
+                  ),
+                if (state.isLoading && state.results.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: CupertinoActivityIndicator()),
+                  )
+                else if (state.needsLogin)
+                  SliverFillRemaining(
+                    child: _buildCupertinoNeedsLogin(context),
+                  )
+                else if (state.results.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('暂无搜索结果')),
+                  )
+                else
+                  _buildCupertinoClassroomList(context, state),
+              ],
+            ),
           ),
-        if (state.buildings.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _buildCupertinoBuildingSelector(context, state),
+        ),
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+          child: CupertinoLiquidGlass(
+            tintOpacity: 0.15,
+            child: Padding(
+              padding: EdgeInsets.only(top: topPadding),
+              child: const SizedBox(
+                height: 44,
+                child: Center(
+                  child: Text(
+                    '空闲教室',
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -0.41,
+                    ),
+                  ),
+                ),
+              ),
+            ),
           ),
-        if (state.isLoading && state.results.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: CupertinoActivityIndicator()),
-          )
-        else if (state.needsLogin)
-          SliverFillRemaining(
-            child: _buildCupertinoNeedsLogin(context),
-          )
-        else if (state.results.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: Text('暂无搜索结果')),
-          )
-        else
-          _buildCupertinoClassroomList(context, state),
+          ),
+        ),
       ],
     ),
   );
@@ -101,10 +136,24 @@ Widget _buildCupertinoDateSelector(BuildContext context, ClassroomState state) {
                 await showCupertinoModalPopup<DateTime>(
                   context: context,
                   builder: (ctx) => Container(
-                    height: 260,
-                    color: CupertinoColors.systemBackground.resolveFrom(context),
+                    height: 280,
+                    decoration: BoxDecoration(
+                      color: CupertinoColors.systemBackground.resolveFrom(context),
+                      borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+                    ),
                     child: Column(
                       children: [
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, bottom: 4),
+                          child: Container(
+                            width: 36,
+                            height: 5,
+                            decoration: BoxDecoration(
+                              color: CupertinoColors.separator.resolveFrom(context),
+                              borderRadius: BorderRadius.circular(2.5),
+                            ),
+                          ),
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -153,34 +202,106 @@ Widget _buildCupertinoDateSelector(BuildContext context, ClassroomState state) {
 }
 
 Widget _buildCupertinoCampusSelector(BuildContext context, ClassroomState state) {
-  return CupertinoListSection.insetGrouped(
-    header: const Text('校区'),
-    children: state.campuses.map((campus) {
-      final isSelected = campus.id == state.selectedCampus?.id;
-      return CupertinoListTile(
-        title: Text(campus.name),
-        trailing: isSelected
-            ? const Icon(CupertinoIcons.checkmark, color: CupertinoColors.systemBlue, size: 20)
-            : null,
-        onTap: () => sl<ClassroomController>().setCampus(campus),
-      );
-    }).toList(),
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '校区',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.08,
+            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: state.campuses.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final campus = state.campuses[index];
+              final isSelected = campus.id == state.selectedCampus?.id;
+              return CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                minimumSize: const Size(0, 32),
+                color: isSelected
+                    ? CupertinoColors.systemBlue.resolveFrom(context)
+                    : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () => sl<ClassroomController>().setCampus(campus),
+                child: Text(
+                  campus.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isSelected
+                        ? CupertinoColors.white
+                        : CupertinoColors.label.resolveFrom(context),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
   );
 }
 
 Widget _buildCupertinoBuildingSelector(BuildContext context, ClassroomState state) {
-  return CupertinoListSection.insetGrouped(
-    header: const Text('教学楼'),
-    children: state.buildings.map((building) {
-      final isSelected = building.id == state.selectedBuilding?.id;
-      return CupertinoListTile(
-        title: Text(building.name),
-        trailing: isSelected
-            ? const Icon(CupertinoIcons.checkmark, color: CupertinoColors.systemBlue, size: 20)
-            : null,
-        onTap: () => sl<ClassroomController>().selectBuilding(building),
-      );
-    }).toList(),
+  return Padding(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '教学楼',
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.08,
+            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 36,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: state.buildings.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final building = state.buildings[index];
+              final isSelected = building.id == state.selectedBuilding?.id;
+              return CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                minimumSize: const Size(0, 32),
+                color: isSelected
+                    ? CupertinoColors.systemBlue.resolveFrom(context)
+                    : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+                borderRadius: BorderRadius.circular(8),
+                onPressed: () => sl<ClassroomController>().selectBuilding(building),
+                child: Text(
+                  building.name,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isSelected
+                        ? CupertinoColors.white
+                        : CupertinoColors.label.resolveFrom(context),
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -189,7 +310,7 @@ Widget _buildCupertinoNeedsLogin(BuildContext context) {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(CupertinoIcons.person, size: 64, color: CupertinoColors.systemGrey),
+        Icon(CupertinoIcons.person, size: 64, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
         const SizedBox(height: 16),
         const Text('需要登录'),
         const SizedBox(height: 8),
@@ -223,6 +344,7 @@ Widget _buildCupertinoClassroomList(BuildContext context, ClassroomState state) 
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
+                  letterSpacing: -0.08,
                   color: CupertinoColors.secondaryLabel.resolveFrom(context),
                 ),
               ),

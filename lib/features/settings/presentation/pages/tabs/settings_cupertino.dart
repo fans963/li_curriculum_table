@@ -1,3 +1,4 @@
+import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -13,10 +14,24 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Cupertino Settings — extracted top-level functions
 // ═══════════════════════════════════════════════════════════════════════════════
+
+/// iOS 26 style section header: left-aligned, semibold.
+Widget _cupertinoSectionHeader(BuildContext context, String text) {
+  return Text(
+    text,
+    style: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      letterSpacing: -0.08,
+      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+    ),
+  );
+}
 
 /// Main entry point for the Cupertino (iOS-style) settings page.
 Widget buildSettingsCupertino({
@@ -50,33 +65,89 @@ Widget _buildCupertinoPage({
   required bool mounted,
   required Future<void> Function() onClearCache,
 }) {
+  final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: CupertinoColors.systemGroupedBackground,
-    child: CustomScrollView(
-      slivers: [
-        CupertinoSliverNavigationBar(
-          largeTitle: const Text('设置'),
-          backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
-          border: null,
-          trailing: CupertinoButton(
-            padding: EdgeInsets.zero,
-            onPressed: () {
-              BetterFeedback.of(context).show(
-                (feedback) => FeedbackHandler.shareFeedback(feedback),
-              );
-            },
-            child: const Icon(CupertinoIcons.mail, size: 22),
+    backgroundColor: const Color(0x00000000),
+    child: Stack(
+      children: [
+        Positioned.fill(
+          child: ColoredBox(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            child: CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topPadding + 44),
+                ),
+                SliverToBoxAdapter(
+                  child: buildCupertinoBody(
+                    context: context,
+                    state: state,
+                    settings: settings,
+                    usernameController: usernameController,
+                    passwordController: passwordController,
+                    mounted: mounted,
+                    onClearCache: onClearCache,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        SliverToBoxAdapter(
-          child: buildCupertinoBody(
-            context: context,
-            state: state,
-            settings: settings,
-            usernameController: usernameController,
-            passwordController: passwordController,
-            mounted: mounted,
-            onClearCache: onClearCache,
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: SizedBox(
+            height: topPadding + 44,
+            child: Stack(
+              children: [
+                // Glass background (non-interactive)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CupertinoLiquidGlass(
+                      tintOpacity: 0.15,
+                      child: const SizedBox.expand(),
+                    ),
+                  ),
+                ),
+                // Title
+                Positioned(
+                  top: topPadding,
+                  left: 16,
+                  right: 56,
+                  child: const SizedBox(
+                    height: 44,
+                    child: Center(
+                      child: Text(
+                        '设置',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.41,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // Feedback button (interactive)
+                Positioned(
+                  top: topPadding,
+                  right: 8,
+                  child: SizedBox(
+                    height: 44,
+                    child: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      onPressed: () {
+                        BetterFeedback.of(context).show(
+                          (feedback) => FeedbackHandler.shareFeedback(feedback),
+                        );
+                      },
+                      child: const Icon(CupertinoIcons.mail, size: 22),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -102,7 +173,7 @@ Widget buildCupertinoBody({
       children: [
         // ── 教务系统登录 ──
         CupertinoListSection.insetGrouped(
-          header: const Text('教务系统登录'),
+          header: _cupertinoSectionHeader(context, '教务系统登录'),
           children: [
             CupertinoListTile(
               leading: const Icon(CupertinoIcons.person, size: 29),
@@ -113,7 +184,10 @@ Widget buildCupertinoBody({
                   padding: EdgeInsets.only(left: 8),
                   child: Icon(CupertinoIcons.person, size: 20),
                 ),
-                decoration: const BoxDecoration(),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 clearButtonMode: OverlayVisibilityMode.editing,
               ),
             ),
@@ -127,7 +201,10 @@ Widget buildCupertinoBody({
                   padding: EdgeInsets.only(left: 8),
                   child: Icon(CupertinoIcons.lock, size: 20),
                 ),
-                decoration: const BoxDecoration(),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(8),
+                ),
                 clearButtonMode: OverlayVisibilityMode.editing,
               ),
             ),
@@ -175,7 +252,7 @@ Widget buildCupertinoBody({
 
         // ── 数据同步状态 ──
         CupertinoListSection.insetGrouped(
-          header: const Text('同步状态'),
+          header: _cupertinoSectionHeader(context, '同步状态'),
           children: [
             CupertinoListTile(
               leading: Icon(
@@ -207,7 +284,7 @@ Widget buildCupertinoBody({
 
         // ── 课表显示 ──
         CupertinoListSection.insetGrouped(
-          header: const Text('课表显示'),
+          header: _cupertinoSectionHeader(context, '课表显示'),
           children: [
             CupertinoListTile(
               leading: const Icon(CupertinoIcons.rectangle_grid_1x2, size: 29),
@@ -224,7 +301,7 @@ Widget buildCupertinoBody({
         // ── 本地代理 ──
         if (!isWeb)
           CupertinoListSection.insetGrouped(
-            header: const Text('本地代理'),
+            header: _cupertinoSectionHeader(context, '本地代理'),
             footer: const Text('允许其他设备通过此应用中转教务系统请求。设置正确的端口可让网页版自动识别并使用手机端的登录状态。'),
             children: [
               CupertinoListTile(
@@ -247,7 +324,7 @@ Widget buildCupertinoBody({
 
         // ── 存储与缓存 ──
         CupertinoListSection.insetGrouped(
-          header: const Text('存储与缓存'),
+          header: _cupertinoSectionHeader(context, '存储与缓存'),
           children: [
             CupertinoListTile(
               leading: const Icon(
@@ -266,7 +343,7 @@ Widget buildCupertinoBody({
 
         // ── 反馈 ──
         CupertinoListSection.insetGrouped(
-          header: const Text('反馈与建议'),
+          header: _cupertinoSectionHeader(context, '反馈与建议'),
           children: [
             CupertinoListTile(
               leading: const Icon(CupertinoIcons.mail, size: 29),
@@ -299,7 +376,7 @@ Widget buildCupertinoThemeSection(
   SettingsController notifier,
 ) {
   return CupertinoListSection.insetGrouped(
-    header: const Text('外观'),
+    header: _cupertinoSectionHeader(context, '外观'),
     children: [
       CupertinoListTile(
         leading: const Icon(CupertinoIcons.paintbrush, size: 29),
@@ -317,7 +394,7 @@ Widget buildCupertinoThemeSection(
           onChanged: (val) => notifier.setUseDynamicColor(val),
         ),
       ),
-      if (!settings.useDynamicColor)
+      if (!settings.useDynamicColor) ...[
         CupertinoListTile(
           leading: const Icon(CupertinoIcons.circle_fill, size: 29),
           title: const Text('主题色'),
@@ -333,6 +410,14 @@ Widget buildCupertinoThemeSection(
           trailing: const CupertinoListTileChevron(),
           onTap: () => showCupertinoColorPicker(context, settings.seedColor, notifier),
         ),
+        CupertinoListTile(
+          leading: const Icon(CupertinoIcons.paintbrush_fill, size: 29),
+          title: const Text('配色方案'),
+          additionalInfo: Text(settings.colorSchemeType.label),
+          trailing: const CupertinoListTileChevron(),
+          onTap: () => showCupertinoSchemeTypePicker(context, settings.colorSchemeType, notifier),
+        ),
+      ],
     ],
   );
 }
@@ -345,17 +430,17 @@ Widget buildCupertinoDesignStyleSection(
   SettingsController notifier,
 ) {
   return CupertinoListSection.insetGrouped(
-    header: const Text('设计风格'),
+    header: _cupertinoSectionHeader(context, '设计风格'),
     footer: const Text('切换界面设计风格。Material 为 Android 风格，Cupertino 为 iOS 风格。'),
     children: DesignStyle.values.map((style) {
       final isSelected = settings.designStyle == style;
       return CupertinoListTile(
         leading: Icon(
           style == DesignStyle.material
-              ? CupertinoIcons.device_phone_portrait
+              ? CupertinoIcons.app
               : (style == DesignStyle.cupertino
                   ? CupertinoIcons.device_phone_portrait
-                  : CupertinoIcons.device_phone_portrait),
+                  : CupertinoIcons.gear_alt),
           size: 29,
         ),
         title: Text(style.label),
@@ -372,7 +457,7 @@ Widget buildCupertinoDesignStyleSection(
 
 Widget buildCupertinoAboutSection(BuildContext context) {
   return CupertinoListSection.insetGrouped(
-    header: const Text('关于'),
+    header: _cupertinoSectionHeader(context, '关于'),
     children: [
       CupertinoListTile(
         leading: ClipRRect(
@@ -395,6 +480,16 @@ Widget buildCupertinoAboutSection(BuildContext context) {
         trailing: const CupertinoListTileChevron(),
         onTap: () => checkForUpdateCupertino(context),
       ),
+      CupertinoListTile(
+        leading: const Icon(CupertinoIcons.globe, size: 29),
+        title: const Text('GitHub'),
+        subtitle: const Text('查看源代码'),
+        trailing: const CupertinoListTileChevron(),
+        onTap: () => launchUrl(
+          Uri.parse('https://github.com/fans963/--table'),
+          mode: LaunchMode.externalApplication,
+        ),
+      ),
     ],
   );
 }
@@ -415,9 +510,13 @@ void showCupertinoThemeModePicker(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (current == ThemeMode.system) const Icon(CupertinoIcons.check_mark, size: 18),
+              Icon(CupertinoIcons.gear, size: 18, color: CupertinoColors.systemBlue.resolveFrom(context)),
               const SizedBox(width: 8),
               const Text('跟随系统'),
+              if (current == ThemeMode.system) ...[
+                const SizedBox(width: 8),
+                const Icon(CupertinoIcons.check_mark, size: 18),
+              ],
             ],
           ),
           onPressed: () {
@@ -429,9 +528,13 @@ void showCupertinoThemeModePicker(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (current == ThemeMode.light) const Icon(CupertinoIcons.check_mark, size: 18),
+              Icon(CupertinoIcons.sun_max, size: 18, color: CupertinoColors.systemOrange.resolveFrom(context)),
               const SizedBox(width: 8),
               const Text('浅色'),
+              if (current == ThemeMode.light) ...[
+                const SizedBox(width: 8),
+                const Icon(CupertinoIcons.check_mark, size: 18),
+              ],
             ],
           ),
           onPressed: () {
@@ -443,9 +546,13 @@ void showCupertinoThemeModePicker(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (current == ThemeMode.dark) const Icon(CupertinoIcons.check_mark, size: 18),
+              Icon(CupertinoIcons.moon, size: 18, color: CupertinoColors.systemIndigo.resolveFrom(context)),
               const SizedBox(width: 8),
               const Text('深色'),
+              if (current == ThemeMode.dark) ...[
+                const SizedBox(width: 8),
+                const Icon(CupertinoIcons.check_mark, size: 18),
+              ],
             ],
           ),
           onPressed: () {
@@ -473,32 +580,194 @@ void showCupertinoColorPicker(
     context: context,
     builder: (context) => CupertinoActionSheet(
       title: const Text('选择主题色'),
-      actions: colors.map((color) {
-        return CupertinoActionSheetAction(
+      actions: [
+        ...colors.map((color) {
+          final isSelected = current.toARGB32() == color.toARGB32();
+          return CupertinoActionSheetAction(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: isSelected
+                          ? CupertinoColors.systemBlue
+                          : CupertinoColors.separator,
+                      width: isSelected ? 3 : 0.5,
+                    ),
+                  ),
+                ),
+                if (isSelected) ...[
+                  const SizedBox(width: 12),
+                  const Icon(CupertinoIcons.check_mark, size: 18),
+                ],
+              ],
+            ),
+            onPressed: () {
+              notifier.setSeedColor(color);
+              Navigator.pop(context);
+            },
+          );
+        }),
+        CupertinoActionSheetAction(
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: current.toARGB32() == color.toARGB32()
-                        ? CupertinoColors.systemBlue
-                        : CupertinoColors.separator,
-                    width: current.toARGB32() == color.toARGB32() ? 3 : 0.5,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              if (current.toARGB32() == color.toARGB32())
-                const Icon(CupertinoIcons.check_mark, size: 18),
+              Icon(CupertinoIcons.color_filter, color: CupertinoColors.systemPurple.resolveFrom(context)),
+              const SizedBox(width: 8),
+              const Text('自定义颜色...'),
             ],
           ),
           onPressed: () {
-            notifier.setSeedColor(color);
+            Navigator.pop(context);
+            _showCustomColorPicker(context, current, notifier);
+          },
+        ),
+      ],
+      cancelButton: CupertinoActionSheetAction(
+        isDefaultAction: true,
+        child: const Text('取消'),
+        onPressed: () => Navigator.pop(context),
+      ),
+    ),
+  );
+}
+
+void _showCustomColorPicker(
+  BuildContext context,
+  Color current,
+  SettingsController notifier,
+) {
+  final hsv = HSVColor.fromColor(current);
+  double hue = hsv.hue;
+  double saturation = hsv.saturation;
+  double value = hsv.value;
+
+  showCupertinoDialog(
+    context: context,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          final picked = HSVColor.fromAHSV(1, hue, saturation, value).toColor();
+          return CupertinoAlertDialog(
+            title: const Text('自定义颜色'),
+            content: Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Color preview
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: picked,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: CupertinoColors.separator.resolveFrom(ctx), width: 0.5),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // Hue slider
+                  Row(
+                    children: [
+                      const Text('H', style: TextStyle(fontWeight: FontWeight.w600)),
+                      Expanded(
+                        child: CupertinoSlider(
+                          value: hue,
+                          min: 0,
+                          max: 360,
+                          onChanged: (v) => setState(() => hue = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Saturation slider
+                  Row(
+                    children: [
+                      const Text('S', style: TextStyle(fontWeight: FontWeight.w600)),
+                      Expanded(
+                        child: CupertinoSlider(
+                          value: saturation,
+                          min: 0,
+                          max: 1,
+                          onChanged: (v) => setState(() => saturation = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Value slider
+                  Row(
+                    children: [
+                      const Text('V', style: TextStyle(fontWeight: FontWeight.w600)),
+                      Expanded(
+                        child: CupertinoSlider(
+                          value: value,
+                          min: 0.2,
+                          max: 1,
+                          onChanged: (v) => setState(() => value = v),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              CupertinoDialogAction(
+                child: const Text('取消'),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                child: const Text('确定'),
+                onPressed: () {
+                  notifier.setSeedColor(picked);
+                  Navigator.pop(ctx);
+                },
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
+}
+
+void showCupertinoSchemeTypePicker(
+  BuildContext context,
+  ColorSchemeType current,
+  SettingsController notifier,
+) {
+  showCupertinoModalPopup(
+    context: context,
+    builder: (context) => CupertinoActionSheet(
+      title: const Text('配色方案'),
+      actions: ColorSchemeType.values.map((type) {
+        final isSelected = current == type;
+        return CupertinoActionSheetAction(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
+            children: [
+              Icon(type.icon, size: 20, color: CupertinoColors.systemBlue.resolveFrom(context)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(type.label, style: const TextStyle(fontSize: 17)),
+                    Text(type.description, style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+                  ],
+                ),
+              ),
+              if (isSelected) const Icon(CupertinoIcons.check_mark, size: 18, color: CupertinoColors.systemBlue),
+            ],
+          ),
+          onPressed: () {
+            notifier.setColorSchemeType(type);
             Navigator.pop(context);
           },
         );
@@ -525,6 +794,10 @@ void showCupertinoPortDialog(BuildContext context, int currentPort, Function(int
           keyboardType: TextInputType.number,
           placeholder: '端口号 (1024-65535)',
           autofocus: true,
+          decoration: BoxDecoration(
+            color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+            borderRadius: BorderRadius.circular(8),
+          ),
         ),
       ),
       actions: [

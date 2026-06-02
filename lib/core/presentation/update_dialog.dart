@@ -232,7 +232,6 @@ class _CupertinoUpdateDialog extends StatelessWidget {
     final labelColor = CupertinoColors.label.resolveFrom(context);
     final secondaryLabel =
         CupertinoColors.secondaryLabel.resolveFrom(context);
-    final separator = CupertinoColors.separator.resolveFrom(context);
     final accent = CupertinoColors.systemBlue.resolveFrom(context);
     final bgColor = CupertinoColors.systemGroupedBackground.resolveFrom(context);
     final cardColor =
@@ -251,13 +250,12 @@ class _CupertinoUpdateDialog extends StatelessWidget {
             maxWidth: 480,
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(18),
             child: CupertinoPageScaffold(
               backgroundColor: bgColor,
               navigationBar: CupertinoNavigationBar(
                 backgroundColor: bgColor,
-                border: Border(
-                    bottom: BorderSide(color: separator, width: 0.5)),
+                border: null,
                 leading: CupertinoButton(
                   padding: EdgeInsets.zero,
                   onPressed: () => Navigator.pop(context),
@@ -306,7 +304,7 @@ class _CupertinoUpdateDialog extends StatelessWidget {
                             horizontal: 20, vertical: 14),
                         decoration: BoxDecoration(
                           color: cardColor,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -364,7 +362,7 @@ class _CupertinoUpdateDialog extends StatelessWidget {
                           padding: const EdgeInsets.all(14),
                           decoration: BoxDecoration(
                             color: cardColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
                           child: MarkdownWidget(
                             data: updateInfo.releaseNotes,

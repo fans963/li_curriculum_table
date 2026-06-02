@@ -1,3 +1,4 @@
+import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -6,33 +7,77 @@ import '../../domain/models/grade.dart';
 import 'package:collection/collection.dart';
 
 Widget buildGradesCupertino(BuildContext context, GradeState state) {
+  final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: CupertinoColors.systemGroupedBackground,
-    child: CustomScrollView(
-      slivers: [
-        CupertinoSliverNavigationBar(
-          largeTitle: const Text('成绩查询'),
-          backgroundColor:
-              CupertinoColors.systemGroupedBackground.resolveFrom(context),
-          border: null,
+    backgroundColor: const Color(0x00000000),
+    child: Stack(
+      children: [
+        // Scroll content with background
+        Positioned.fill(
+          child: ColoredBox(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            child: CustomScrollView(
+              slivers: [
+                // Spacer for nav bar height
+                SliverToBoxAdapter(
+                  child: SizedBox(height: topPadding + 44),
+                ),
+                SliverToBoxAdapter(
+                  child: _buildCupertinoSummary(context, state),
+                ),
+                if (state.isLoading && state.grades.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: CupertinoActivityIndicator()),
+                  )
+                else if (state.needsLogin)
+                  SliverFillRemaining(
+                    child: _buildCupertinoNeedsLogin(context),
+                  )
+                else if (state.grades.isEmpty)
+                  const SliverFillRemaining(
+                    child: Center(child: Text('暂无成绩记录')),
+                  )
+                else
+                  _buildCupertinoGradeList(context, state),
+              ],
+            ),
+          ),
         ),
-        SliverToBoxAdapter(
-          child: _buildCupertinoSummary(context, state),
+        // Floating Liquid Glass nav bar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: IgnorePointer(
+          child: CupertinoLiquidGlass(
+            tintOpacity: 0.15,
+            child: Padding(
+              padding: EdgeInsets.only(
+                top: topPadding,
+                left: 16,
+                right: 16,
+              ),
+              child: SizedBox(
+                height: 44,
+                child: Stack(
+                  children: [
+                    const Center(
+                      child: Text(
+                        '成绩查询',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.41,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          ),
         ),
-        if (state.isLoading && state.grades.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: CupertinoActivityIndicator()),
-          )
-        else if (state.needsLogin)
-          SliverFillRemaining(
-            child: _buildCupertinoNeedsLogin(context),
-          )
-        else if (state.grades.isEmpty)
-          const SliverFillRemaining(
-            child: Center(child: Text('暂无成绩记录')),
-          )
-        else
-          _buildCupertinoGradeList(context, state),
       ],
     ),
   );
@@ -46,7 +91,7 @@ Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
       decoration: BoxDecoration(
         color: CupertinoColors.secondarySystemGroupedBackground
             .resolveFrom(context),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
@@ -188,7 +233,15 @@ Widget _buildCupertinoGradeList(
             : 0.0;
 
         return CupertinoListSection.insetGrouped(
-          header: Text(term),
+          header: Text(
+            term,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              letterSpacing: -0.08,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+          ),
           footer: Text(
               '必修均分 ${termCompWavg.toStringAsFixed(2)} · 本期均分 ${termWavg.toStringAsFixed(2)}'),
           children: termGrades.map((grade) {

@@ -26,36 +26,36 @@ class AppIcons {
     cupertino: CupertinoIcons.calendar,
   );
   static IconData classroom(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.room,
-    cupertino: CupertinoIcons.location_fill,
+    material: Icons.meeting_room,
+    cupertino: CupertinoIcons.person_3,
   );
   static IconData classroomOutline(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.room_outlined,
-    cupertino: CupertinoIcons.location,
+    material: Icons.meeting_room_outlined,
+    cupertino: CupertinoIcons.person_3,
   );
   static IconData grade(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.grade,
-    cupertino: CupertinoIcons.star_fill,
+    material: Icons.verified,
+    cupertino: CupertinoIcons.checkmark_seal_fill,
   );
   static IconData gradeOutline(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.grade_outlined,
-    cupertino: CupertinoIcons.star,
+    material: Icons.verified_outlined,
+    cupertino: CupertinoIcons.checkmark_seal,
   );
   static IconData exam(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.assignment,
-    cupertino: CupertinoIcons.doc_text_fill,
+    material: Icons.edit_note,
+    cupertino: CupertinoIcons.pencil_outline,
   );
   static IconData examOutline(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.assignment_outlined,
-    cupertino: CupertinoIcons.doc_text,
+    material: Icons.edit_note_outlined,
+    cupertino: CupertinoIcons.pencil_outline,
   );
   static IconData book(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.bookmark_rounded,
-    cupertino: CupertinoIcons.bookmark_fill,
+    material: Icons.book_rounded,
+    cupertino: CupertinoIcons.book_fill,
   );
   static IconData bookOutline(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.bookmark_outline_rounded,
-    cupertino: CupertinoIcons.bookmark,
+    material: Icons.book_outlined,
+    cupertino: CupertinoIcons.book,
   );
   static IconData settings(DesignStyle s) => adaptiveIcon(s,
     material: Icons.settings,

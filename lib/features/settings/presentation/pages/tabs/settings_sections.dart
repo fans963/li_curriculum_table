@@ -100,41 +100,76 @@ class ThemeSettingsSection extends StatelessWidget {
             Wrap(
               spacing: 10,
               runSpacing: 10,
-              children: seedColors.map((color) {
-                final isSelected = settings.seedColor.toARGB32() == color.toARGB32();
-                return GestureDetector(
-                  onTap: () => notifier.setSeedColor(color),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+              children: [
+                ...seedColors.map((color) {
+                  final isSelected = settings.seedColor.toARGB32() == color.toARGB32();
+                  return GestureDetector(
+                    onTap: () => notifier.setSeedColor(color),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: isSelected
+                            ? Border.all(color: colorScheme.onSurface, width: 2.5)
+                            : Border.all(
+                                color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: color.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: isSelected
+                          ? Icon(Icons.check_rounded,
+                              color: color.computeLuminance() > 0.5
+                                  ? Colors.black87
+                                  : Colors.white,
+                              size: 20)
+                          : null,
+                    ),
+                  );
+                }),
+                // Custom color button
+                GestureDetector(
+                  onTap: () => _showMaterialCustomColorPicker(context, settings.seedColor, notifier),
+                  child: Container(
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: color,
                       shape: BoxShape.circle,
-                      border: isSelected
-                          ? Border.all(color: colorScheme.onSurface, width: 2.5)
-                          : Border.all(
-                              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: color.withValues(alpha: 0.35),
-                                blurRadius: 8,
-                                spreadRadius: 1,
-                              ),
-                            ]
-                          : null,
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                    child: isSelected
-                        ? Icon(Icons.check_rounded,
-                            color: color.computeLuminance() > 0.5
-                                ? Colors.black87
-                                : Colors.white,
-                            size: 20)
-                        : null,
+                    child: Icon(Icons.palette_outlined, size: 20, color: colorScheme.primary),
                   ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Color scheme type
+            Text('配色方案', style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500)),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: ColorSchemeType.values.map((type) {
+                final isSelected = settings.colorSchemeType == type;
+                return ChoiceChip(
+                  label: Text(type.label),
+                  selected: isSelected,
+                  onSelected: (_) => notifier.setColorSchemeType(type),
+                  avatar: Icon(type.icon, size: 18),
                 );
               }).toList(),
             ),
@@ -143,6 +178,99 @@ class ThemeSettingsSection extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showMaterialCustomColorPicker(
+  BuildContext context,
+  Color current,
+  SettingsController notifier,
+) {
+  final hsv = HSVColor.fromColor(current);
+  double hue = hsv.hue;
+  double saturation = hsv.saturation;
+  double value = hsv.value;
+
+  showDialog(
+    context: context,
+    builder: (ctx) {
+      return StatefulBuilder(
+        builder: (ctx, setState) {
+          final picked = HSVColor.fromAHSV(1, hue, saturation, value).toColor();
+          return AlertDialog(
+            title: const Text('自定义颜色'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: picked,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300, width: 0.5),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    const SizedBox(width: 24, child: Text('H', style: TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(
+                      child: Slider(
+                        value: hue,
+                        min: 0,
+                        max: 360,
+                        activeColor: HSVColor.fromAHSV(1, hue, 1, 1).toColor(),
+                        onChanged: (v) => setState(() => hue = v),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const SizedBox(width: 24, child: Text('S', style: TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(
+                      child: Slider(
+                        value: saturation,
+                        min: 0,
+                        max: 1,
+                        onChanged: (v) => setState(() => saturation = v),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const SizedBox(width: 24, child: Text('V', style: TextStyle(fontWeight: FontWeight.w600))),
+                    Expanded(
+                      child: Slider(
+                        value: value,
+                        min: 0.2,
+                        max: 1,
+                        onChanged: (v) => setState(() => value = v),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('取消'),
+              ),
+              FilledButton(
+                onPressed: () {
+                  notifier.setSeedColor(picked);
+                  Navigator.pop(ctx);
+                },
+                child: const Text('确定'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }
 
 // ─── Design Style Settings ───────────────────────────────────────────────────
@@ -391,7 +519,7 @@ class SectionCard extends StatelessWidget {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(28),
         side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.4)),
       ),
       child: Padding(
@@ -407,7 +535,7 @@ class SectionCard extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, size: 18, color: colorScheme.primary),
                 ),

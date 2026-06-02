@@ -252,17 +252,17 @@ class AdaptiveColors {
   }
 }
 
-/// Returns adaptive border radius following iOS/Material conventions.
+/// Returns adaptive border radius following iOS 26 / Material conventions.
 class AdaptiveRadius {
   const AdaptiveRadius._();
 
-  /// Card corner radius. iOS: 12pt, Material: 16pt.
+  /// Card corner radius. iOS 26: 18pt, Material: 16pt.
   static double card(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 12 : 16;
+      AdaptiveStyle.isCupertino(style) ? 18 : 16;
 
-  /// Dialog corner radius. iOS: 14pt, Material: 16pt.
+  /// Dialog corner radius. iOS 26: 18pt, Material: 16pt.
   static double dialog(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 14 : 16;
+      AdaptiveStyle.isCupertino(style) ? 18 : 16;
 
   /// Search bar corner radius. iOS: 10pt, Material: 12pt.
   static double searchBar(DesignStyle style) =>

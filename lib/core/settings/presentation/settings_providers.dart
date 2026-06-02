@@ -14,6 +14,7 @@ class SettingsController {
   late final seedColor = computed(() => _state.value.seedColor);
   late final useDynamicColor = computed(() => _state.value.useDynamicColor);
   late final designStyle = computed(() => _state.value.designStyle);
+  late final colorSchemeType = computed(() => _state.value.colorSchemeType);
   late final weeklyScroll = computed(() => _state.value.weeklyScroll);
   late final proxyEnabled = computed(() => _state.value.proxyEnabled);
   late final proxyPort = computed(() => _state.value.proxyPort);
@@ -59,6 +60,11 @@ class SettingsController {
 
   Future<void> setDesignStyle(DesignStyle style) async {
     _state.value = _state.value.copyWith(designStyle: style);
+    await _save();
+  }
+
+  Future<void> setColorSchemeType(ColorSchemeType type) async {
+    _state.value = _state.value.copyWith(colorSchemeType: type);
     await _save();
   }
 

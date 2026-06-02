@@ -91,8 +91,9 @@ class _ScaffoldBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!isCupertino || !hasAppBar) return child;
-    // CupertinoNavigationBar height is ~44pt + status bar
-    final topPadding = MediaQuery.of(context).padding.top + 44;
+    // CupertinoNavigationBar height (44pt) + status bar
+    final topPadding =
+        MediaQuery.of(context).padding.top + kMinInteractiveDimensionCupertino;
     return Padding(
       padding: EdgeInsets.only(top: topPadding),
       child: child,
@@ -372,9 +373,26 @@ Future<T?> showAdaptiveBottomSheet<T>({
         ),
         decoration: BoxDecoration(
           color: backgroundColor ?? CupertinoColors.systemBackground.resolveFrom(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
         ),
-        child: builder(context),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Center(
+              child: Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.separator.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(2.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Flexible(child: builder(context)),
+          ],
+        ),
       ),
     );
   }

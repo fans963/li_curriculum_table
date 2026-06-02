@@ -12,6 +12,7 @@ class SecureSettingsLocalDataSource {
   static const _kSeedColor = 'seed_color';
   static const _kUseDynamicColor = 'use_dynamic_color';
   static const _kDesignStyle = 'design_style';
+  static const _kColorSchemeType = 'color_scheme_type';
 
   SecureSettingsLocalDataSource(this._store);
 
@@ -19,7 +20,7 @@ class SecureSettingsLocalDataSource {
     final data = await _store.readAll([
       _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
       _kThemeMode, _kSeedColor, _kUseDynamicColor,
-      _kDesignStyle,
+      _kDesignStyle, _kColorSchemeType,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -36,6 +37,10 @@ class SecureSettingsLocalDataSource {
       (e) => e.name == data[_kDesignStyle],
       orElse: () => DesignStyle.system,
     );
+    final colorSchemeType = ColorSchemeType.values.firstWhere(
+      (e) => e.name == data[_kColorSchemeType],
+      orElse: () => ColorSchemeType.tonalSpot,
+    );
 
     return AppSettings(
       proxyEnabled: enabled,
@@ -45,6 +50,7 @@ class SecureSettingsLocalDataSource {
       seedColor: seedColor,
       useDynamicColor: useDynamic,
       designStyle: designStyle,
+      colorSchemeType: colorSchemeType,
     );
   }
 
@@ -57,6 +63,7 @@ class SecureSettingsLocalDataSource {
       _kSeedColor: settings.seedColor.toARGB32().toString(),
       _kUseDynamicColor: settings.useDynamicColor.toString(),
       _kDesignStyle: settings.designStyle.name,
+      _kColorSchemeType: settings.colorSchemeType.name,
     });
   }
 }

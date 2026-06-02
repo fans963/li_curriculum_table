@@ -19,6 +19,7 @@ import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_cupertino.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 
@@ -312,6 +313,15 @@ class _SettingsTabState extends State<SettingsTab> {
                   '一款轻盈优雅的跨平台课表应用',
                   textAlign: TextAlign.center,
                   style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.code_rounded, size: 18),
+                  label: const Text('GitHub'),
+                  onPressed: () => launchUrl(
+                    Uri.parse('https://github.com/fans963/--table'),
+                    mode: LaunchMode.externalApplication,
+                  ),
                 ),
               ],
             );

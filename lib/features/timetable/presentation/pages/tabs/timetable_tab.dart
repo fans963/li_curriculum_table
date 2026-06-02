@@ -139,6 +139,7 @@ class _TimetableTabState extends State<TimetableTab> {
           navigationBar: CupertinoNavigationBar(
             middle: title,
             trailing: scrollToggle,
+            backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context).withValues(alpha: 0.95),
             border: null,
           ),
           child: body,
