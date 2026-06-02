@@ -2,8 +2,44 @@ import 'package:li_curriculum_table/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:window_manager/window_manager.dart';
 
-class TitleBar extends StatelessWidget {
+class TitleBar extends StatefulWidget {
   const TitleBar({super.key});
+
+  @override
+  State<TitleBar> createState() => _TitleBarState();
+}
+
+class _TitleBarState extends State<TitleBar> with WindowListener {
+  bool _isMaximized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    windowManager.addListener(this);
+    _checkMaximized();
+  }
+
+  @override
+  void dispose() {
+    windowManager.removeListener(this);
+    super.dispose();
+  }
+
+  Future<void> _checkMaximized() async {
+    if (!isDesktop) return;
+    final maximized = await windowManager.isMaximized();
+    if (mounted) setState(() => _isMaximized = maximized);
+  }
+
+  @override
+  void onWindowMaximize() {
+    if (mounted) setState(() => _isMaximized = true);
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    if (mounted) setState(() => _isMaximized = false);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,18 +89,28 @@ class TitleBar extends StatelessWidget {
               },
               icon: const Icon(Icons.minimize),
               tooltip: '最小化',
+              iconSize: 18,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(32, 32),
+                padding: EdgeInsets.zero,
+              ),
             ),
             IconButton(
               onPressed: () async {
                 if (!isDesktop) return;
-                if (await windowManager.isMaximized()) {
+                if (_isMaximized) {
                   await windowManager.unmaximize();
                 } else {
                   await windowManager.maximize();
                 }
               },
-              icon: Icon(Icons.fullscreen),
-              tooltip: '最大化',
+              icon: Icon(_isMaximized ? Icons.fullscreen_exit : Icons.fullscreen),
+              tooltip: _isMaximized ? '还原' : '最大化',
+              iconSize: 18,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(32, 32),
+                padding: EdgeInsets.zero,
+              ),
             ),
             IconButton(
               icon: const Icon(Icons.close),
@@ -73,6 +119,12 @@ class TitleBar extends StatelessWidget {
                 await windowManager.close();
               },
               tooltip: '关闭',
+              iconSize: 18,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(32, 32),
+                padding: EdgeInsets.zero,
+                foregroundColor: colorScheme.error,
+              ),
             ),
           ],
         ),

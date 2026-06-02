@@ -1,14 +1,19 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
-class BookTab extends StatefulWidget {
+class BookTab extends ConsumerStatefulWidget {
   const BookTab({super.key});
 
   @override
-  State<BookTab> createState() => _BookTabState();
+  ConsumerState<BookTab> createState() => _BookTabState();
 }
 
-class _BookTabState extends State<BookTab> {
+class _BookTabState extends ConsumerState<BookTab> {
   final _searchController = TextEditingController();
   bool _isLoading = false;
   List<BookInfo> _books = [];
@@ -60,7 +65,19 @@ class _BookTabState extends State<BookTab> {
 
   @override
   Widget build(BuildContext context) {
+    final ds = ref.watch(settingsControllerProvider).designStyle;
+
+    if (AdaptiveStyle.isCupertino(ds)) {
+      return _buildCupertino(context);
+    }
+    return _buildMaterial(context);
+  }
+
+  // ─── Material ──────────────────────────────────────────────────────────────
+
+  Widget _buildMaterial(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final ds = ref.watch(settingsControllerProvider).designStyle;
 
     return Scaffold(
       appBar: AppBar(
@@ -73,52 +90,35 @@ class _BookTabState extends State<BookTab> {
             constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               children: [
-                // Premium Search Bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                   child: SearchBar(
                     controller: _searchController,
                     hintText: '输入书名检索馆藏，例如 "计算机"',
-                    leading: Icon(
-                      Icons.search_rounded,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                    leading: Icon(AppIcons.search(ds), color: colorScheme.onSurfaceVariant),
                     trailing: [
                       if (_searchController.text.isNotEmpty)
                         IconButton(
-                          icon: const Icon(Icons.clear_rounded),
-                          onPressed: () {
-                            _searchController.clear();
-                          },
+                          icon: Icon(AppIcons.clear(ds)),
+                          onPressed: () => _searchController.clear(),
                         ),
                       IconButton(
-                        icon: Icon(
-                          Icons.arrow_forward_rounded,
-                          color: colorScheme.primary,
-                        ),
+                        icon: Icon(AppIcons.arrowForward(ds), color: colorScheme.primary),
                         onPressed: _performSearch,
                       ),
                     ],
                     onSubmitted: (_) => _performSearch(),
                     elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(
-                      colorScheme.surfaceContainerHigh,
-                    ),
+                    backgroundColor: WidgetStateProperty.all(colorScheme.surfaceContainerHigh),
                     shape: WidgetStateProperty.all(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                        ),
+                        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
                       ),
                     ),
                   ),
                 ),
-
-                // Main Content View
-                Expanded(
-                  child: _buildBody(context),
-                ),
+                Expanded(child: _buildMaterialBody(context)),
               ],
             ),
           ),
@@ -127,9 +127,161 @@ class _BookTabState extends State<BookTab> {
     );
   }
 
-  Widget _buildBody(BuildContext context) {
+  // ─── Cupertino ─────────────────────────────────────────────────────────────
+
+  Widget _buildCupertino(BuildContext context) {
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            largeTitle: const Text('图书搜寻'),
+            backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            border: null,
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+              child: CupertinoSearchTextField(
+                controller: _searchController,
+                placeholder: '输入书名检索馆藏',
+                onSubmitted: (_) => _performSearch(),
+              ),
+            ),
+          ),
+          _buildCupertinoContent(context),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCupertinoContent(BuildContext context) {
+    if (_isLoading) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoActivityIndicator(),
+              SizedBox(height: 16),
+              Text('正在检索南理工馆藏图书...'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_error != null) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(CupertinoIcons.wifi_slash, size: 64, color: CupertinoColors.systemRed),
+              const SizedBox(height: 16),
+              const Text('出现错误', style: TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Text(_error!, style: const TextStyle(color: CupertinoColors.secondaryLabel)),
+              const SizedBox(height: 24),
+              CupertinoButton.filled(
+                onPressed: _performSearch,
+                child: const Text('重新尝试'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (!_hasSearched) {
+      return SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: CupertinoColors.systemFill,
+                ),
+                child: const Icon(CupertinoIcons.collections, size: 72, color: CupertinoColors.systemBlue),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                '南理工图书搜寻',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '输入您想查找的书名，即刻查询图书馆馆藏',
+                style: TextStyle(color: CupertinoColors.secondaryLabel),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (_books.isEmpty) {
+      return const SliverFillRemaining(
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(CupertinoIcons.search, size: 64, color: CupertinoColors.systemGrey),
+              SizedBox(height: 16),
+              Text('未找到相关书籍', style: TextStyle(fontWeight: FontWeight.w600)),
+              SizedBox(height: 8),
+              Text('换个简短的关键词再试试', style: TextStyle(color: CupertinoColors.secondaryLabel)),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        CupertinoListSection.insetGrouped(
+          children: _books.map((book) {
+            return CupertinoListTile(
+              leading: Container(
+                width: 44,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemFill.resolveFrom(context),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(CupertinoIcons.book, size: 22),
+              ),
+              title: Text(book.title, maxLines: 2, overflow: TextOverflow.ellipsis),
+              subtitle: Text(
+                '${book.author}\n${book.publisher}',
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              additionalInfo: Text(
+                book.callNo,
+                style: const TextStyle(
+                  fontFamily: 'monospace',
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              trailing: const CupertinoListTileChevron(),
+              onTap: () => _showBookDetailsSheet(context, book),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 40),
+      ]),
+    );
+  }
+
+  Widget _buildMaterialBody(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final ds = ProviderScope.containerOf(context).read(settingsControllerProvider).designStyle;
 
     if (_isLoading) {
       return Center(
@@ -157,7 +309,7 @@ class _BookTabState extends State<BookTab> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.cloud_off_rounded,
+                AppIcons.cloudOff(ds),
                 size: 64,
                 color: colorScheme.error,
               ),
@@ -178,7 +330,7 @@ class _BookTabState extends State<BookTab> {
               ),
               const SizedBox(height: 24),
               FilledButton.icon(
-                icon: const Icon(Icons.refresh_rounded, size: 18),
+                icon: Icon(AppIcons.refresh(ds), size: 18),
                 label: const Text('重新尝试'),
                 onPressed: _performSearch,
               ),
@@ -203,7 +355,7 @@ class _BookTabState extends State<BookTab> {
                   color: colorScheme.primaryContainer.withValues(alpha: 0.2),
                 ),
                 child: Icon(
-                  Icons.library_books_rounded,
+                  AppIcons.libraryBooks(ds),
                   size: 72,
                   color: colorScheme.primary,
                 ),
@@ -239,7 +391,7 @@ class _BookTabState extends State<BookTab> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.search_off_rounded,
+                AppIcons.searchOff(ds),
                 size: 64,
                 color: colorScheme.outline,
               ),
@@ -277,6 +429,7 @@ class _BookTabState extends State<BookTab> {
   Widget _buildBookCard(BuildContext context, BookInfo book) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final ds = ProviderScope.containerOf(context).read(settingsControllerProvider).designStyle;
 
     return Card(
       elevation: 0,
@@ -308,7 +461,7 @@ class _BookTabState extends State<BookTab> {
                   ),
                 ),
                 child: Icon(
-                  Icons.menu_book_rounded,
+                  AppIcons.menuBook(ds),
                   color: colorScheme.onSecondaryContainer,
                   size: 22,
                 ),
@@ -358,7 +511,7 @@ class _BookTabState extends State<BookTab> {
                     Row(
                       children: [
                         Icon(
-                          Icons.person_outline_rounded,
+                          AppIcons.person(ds),
                           size: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -379,7 +532,7 @@ class _BookTabState extends State<BookTab> {
                     Row(
                       children: [
                         Icon(
-                          Icons.business_rounded,
+                          AppIcons.business(ds),
                           size: 14,
                           color: colorScheme.onSurfaceVariant,
                         ),
@@ -415,7 +568,7 @@ class _BookTabState extends State<BookTab> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                Icons.bookmark_outline_rounded,
+                                AppIcons.bookmark(ds),
                                 size: 12,
                                 color: colorScheme.onSurfaceVariant,
                               ),
@@ -454,7 +607,7 @@ class _BookTabState extends State<BookTab> {
               ),
               const SizedBox(width: 4),
               Icon(
-                Icons.chevron_right_rounded,
+                AppIcons.chevronRight(ds),
                 color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
               ),
             ],
@@ -467,6 +620,7 @@ class _BookTabState extends State<BookTab> {
   void _showBookDetailsSheet(BuildContext context, BookInfo book) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final ds = ref.read(settingsControllerProvider).designStyle;
 
     showModalBottomSheet(
       context: context,
@@ -586,7 +740,7 @@ class _BookTabState extends State<BookTab> {
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.error_outline, color: colorScheme.onErrorContainer),
+                              Icon(AppIcons.errorOutline(ds), color: colorScheme.onErrorContainer),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -631,12 +785,12 @@ class _BookTabState extends State<BookTab> {
                                               loc.status.contains('可借') || 
                                               loc.status.contains('在馆');
 
-                          final chipBgColor = isAvailable 
-                              ? Colors.green.shade50
-                              : Colors.orange.shade50;
-                          final chipTextColor = isAvailable 
-                              ? Colors.green.shade800
-                              : Colors.orange.shade800;
+                          final chipBgColor = isAvailable
+                              ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+                              : colorScheme.errorContainer.withValues(alpha: 0.4);
+                          final chipTextColor = isAvailable
+                              ? colorScheme.primary
+                              : colorScheme.error;
 
                           return Container(
                             margin: const EdgeInsets.symmetric(vertical: 4),
@@ -654,7 +808,7 @@ class _BookTabState extends State<BookTab> {
                             child: Row(
                               children: [
                                 Icon(
-                                  Icons.place_rounded,
+                                  AppIcons.place(ds),
                                   color: colorScheme.primary.withValues(alpha: 0.8),
                                   size: 20,
                                 ),

@@ -63,6 +63,11 @@ class SettingsController extends Notifier<AppSettings> {
     await _save();
   }
 
+  Future<void> setDesignStyle(DesignStyle style) async {
+    state = state.copyWith(designStyle: style);
+    await _save();
+  }
+
   Future<void> _save() async {
     final repository = ref.read(settingsRepositoryProvider);
     await repository.saveSettings(state);

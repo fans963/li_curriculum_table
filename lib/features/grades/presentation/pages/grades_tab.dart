@@ -1,5 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import '../state/grade_controller.dart';
@@ -12,10 +16,233 @@ class GradesTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gradeControllerProvider);
+    final isCupertino = AdaptiveStyle.isCupertino(
+      ref.watch(settingsControllerProvider).designStyle,
+    );
 
+    if (isCupertino) {
+      return _buildCupertino(context, ref, state);
+    }
+    return _buildMaterial(context, ref, state);
+  }
+
+  // ─── Material ──────────────────────────────────────────────────────────────
+
+  Widget _buildMaterial(BuildContext context, WidgetRef ref, GradeState state) {
     return Scaffold(
       appBar: _buildHeader(context, ref, state),
       body: _buildBody(context, ref, state),
+    );
+  }
+
+  // ─── Cupertino ─────────────────────────────────────────────────────────────
+
+  Widget _buildCupertino(BuildContext context, WidgetRef ref, GradeState state) {
+    return CupertinoPageScaffold(
+      backgroundColor: CupertinoColors.systemGroupedBackground,
+      child: CustomScrollView(
+        slivers: [
+          CupertinoSliverNavigationBar(
+            largeTitle: const Text('成绩查询'),
+            backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            border: null,
+          ),
+          SliverToBoxAdapter(
+            child: _buildCupertinoSummary(context, state),
+          ),
+          if (state.isLoading && state.grades.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: CupertinoActivityIndicator()),
+            )
+          else if (state.needsLogin)
+            SliverFillRemaining(
+              child: _buildCupertinoNeedsLogin(context),
+            )
+          else if (state.grades.isEmpty)
+            const SliverFillRemaining(
+              child: Center(child: Text('暂无成绩记录')),
+            )
+          else
+            _buildCupertinoGradeList(context, ref, state),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                children: [
+                  Text(
+                    '必修加权均分',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    state.compulsoryWeightedAverage.toStringAsFixed(2),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    '${state.compulsoryCredits.toStringAsFixed(1)} 学分',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Container(
+              width: 0.5,
+              height: 40,
+              color: CupertinoColors.separator.resolveFrom(context),
+            ),
+            Expanded(
+              child: Column(
+                children: [
+                  Text(
+                    '总加权均分',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    state.weightedAverage.toStringAsFixed(2),
+                    style: const TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  Text(
+                    '${state.totalCredits.toStringAsFixed(1)} 学分',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCupertinoNeedsLogin(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            CupertinoIcons.lock,
+            size: 64,
+            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+          ),
+          const SizedBox(height: 16),
+          const Text('需要登录后才能查询成绩'),
+          const SizedBox(height: 8),
+          Text(
+            '请先前往「设置」页面输入账号密码',
+            style: TextStyle(
+              fontSize: 13,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCupertinoGradeList(BuildContext context, WidgetRef ref, GradeState state) {
+    final grouped = groupBy(state.filteredGrades, (GradeEntity g) => g.term);
+    final terms = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+
+    return SliverList(
+      delegate: SliverChildListDelegate([
+        // Search field
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
+          child: CupertinoSearchTextField(
+            placeholder: '搜索课程名称',
+            onChanged: (val) => ref.read(gradeControllerProvider.notifier).setSearchQuery(val),
+          ),
+        ),
+        // Grade sections
+        ...terms.map((term) {
+          final termGrades = grouped[term]!;
+          double termTotalCredits = 0;
+          double termWeightedSum = 0;
+          double termCompulsoryCredits = 0;
+          double termCompulsoryWeightedSum = 0;
+          for (var grade in termGrades) {
+            if (grade.credits > 0) {
+              termTotalCredits += grade.credits;
+              termWeightedSum += grade.numericScore * grade.credits;
+              if (grade.courseAttribute.contains('必修')) {
+                termCompulsoryCredits += grade.credits;
+                termCompulsoryWeightedSum += grade.numericScore * grade.credits;
+              }
+            }
+          }
+          final termWavg = termTotalCredits > 0 ? termWeightedSum / termTotalCredits : 0.0;
+          final termCompWavg = termCompulsoryCredits > 0 ? termCompulsoryWeightedSum / termCompulsoryCredits : 0.0;
+
+          return CupertinoListSection.insetGrouped(
+            header: Text(term),
+            footer: Text('必修均分 ${termCompWavg.toStringAsFixed(2)} · 本期均分 ${termWavg.toStringAsFixed(2)}'),
+            children: termGrades.map((grade) {
+              final score = grade.numericScore;
+              Color scoreColor;
+              if (score >= 90) {
+                scoreColor = CupertinoColors.systemGreen;
+              } else if (score >= 80) {
+                scoreColor = CupertinoColors.systemBlue;
+              } else if (score >= 70) {
+                scoreColor = CupertinoColors.systemOrange;
+              } else if (score >= 60) {
+                scoreColor = CupertinoColors.systemTeal;
+              } else {
+                scoreColor = CupertinoColors.systemRed;
+              }
+
+              return CupertinoListTile(
+                title: Text(grade.courseName),
+                subtitle: Text('${grade.credits} 学分 · ${grade.courseAttribute}'),
+                additionalInfo: Text(
+                  grade.score,
+                  style: TextStyle(
+                    color: scoreColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
+                ),
+              );
+            }).toList(),
+          );
+        }),
+        const SizedBox(height: 40),
+      ]),
     );
   }
 
@@ -28,16 +255,17 @@ class GradesTab extends ConsumerWidget {
           bottom: false,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: _buildSummaryCard(context, state),
+            child: _buildSummaryCard(context, ref, state),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, GradeState state) {
+  Widget _buildSummaryCard(BuildContext context, WidgetRef ref, GradeState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final ds = ref.watch(settingsControllerProvider).designStyle;
     
     return Container(
       decoration: BoxDecoration(
@@ -61,7 +289,7 @@ class GradesTab extends ConsumerWidget {
                 context,
                 '必修加权均分',
                 state.compulsoryWeightedAverage.toStringAsFixed(2),
-                Icons.stars_rounded,
+                AppIcons.stars(ds),
                 '${state.compulsoryCredits.toStringAsFixed(1)} 必修学分',
                 colorScheme.primary,
               ),
@@ -76,7 +304,7 @@ class GradesTab extends ConsumerWidget {
                 context,
                 '总加权均分',
                 state.weightedAverage.toStringAsFixed(2),
-                Icons.analytics_rounded,
+                AppIcons.analytics(ds),
                 '${state.totalCredits.toStringAsFixed(1)} 总学分',
                 colorScheme.secondary,
               ),
@@ -148,15 +376,15 @@ class GradesTab extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
+                Icon(AppIcons.lock(ProviderScope.containerOf(context).read(settingsControllerProvider).designStyle), size: 64, color: Theme.of(context).colorScheme.outline),
                 const SizedBox(height: 16),
                 const Text('需要登录后才能查询成绩'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handled in parent context
-                  },
-                  child: const Text('去设置'),
+                const SizedBox(height: 8),
+                Text(
+                  '请先前往「设置」页面输入账号密码',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -174,7 +402,7 @@ class GradesTab extends ConsumerWidget {
         return Column(
           key: const ValueKey('grades_list'),
           children: [
-            _buildSearchField(ref),
+            _buildSearchField(context, ref),
             Expanded(
               child: ListView.builder(
                 itemCount: terms.length,
@@ -192,16 +420,15 @@ class GradesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSearchField(WidgetRef ref) {
+  Widget _buildSearchField(BuildContext context, WidgetRef ref) {
+    final ds = ref.watch(settingsControllerProvider).designStyle;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: TextField(
         decoration: InputDecoration(
           hintText: '搜索课程名称...',
-          prefixIcon: const Icon(Icons.search),
+          prefixIcon: Icon(AppIcons.search(ds)),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          filled: true,
-          fillColor: Colors.transparent,
         ),
         onChanged: (val) => ref.read(gradeControllerProvider.notifier).setSearchQuery(val),
       ),
@@ -321,16 +548,17 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     final colorScheme = theme.colorScheme;
     final grade = widget.grade;
     final score = grade.numericScore;
+    final ds = ProviderScope.containerOf(context).read(settingsControllerProvider).designStyle;
     
     Color scoreColor;
     if (score >= 90) {
-      scoreColor = Colors.green;
+      scoreColor = colorScheme.tertiary;
     } else if (score >= 80) {
       scoreColor = colorScheme.primary;
     } else if (score >= 70) {
-      scoreColor = Colors.orange;
+      scoreColor = colorScheme.secondary;
     } else if (score >= 60) {
-      scoreColor = Colors.blue;
+      scoreColor = colorScheme.onSurfaceVariant;
     } else {
       scoreColor = colorScheme.error;
     }
@@ -381,11 +609,11 @@ class _GradeItemCardState extends State<_GradeItemCard> {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
-                            _buildChip(context, '${grade.credits} 学分', Icons.star_rounded),
-                            _buildChip(context, grade.courseAttribute, Icons.bookmark_outline_rounded),
-                            _buildChip(context, grade.courseNature, Icons.category_rounded),
+                            _buildChip(context, '${grade.credits} 学分', AppIcons.starOutline(ds)),
+                            _buildChip(context, grade.courseAttribute, AppIcons.bookmark(ds)),
+                            _buildChip(context, grade.courseNature, AppIcons.category(ds)),
                             if (grade.scoreMark.isNotEmpty)
-                              _buildChip(context, grade.scoreMark, Icons.info_rounded),
+                              _buildChip(context, grade.scoreMark, AppIcons.info(ds)),
                           ],
                         ),
                       ],

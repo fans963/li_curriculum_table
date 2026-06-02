@@ -1,8 +1,12 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
@@ -11,7 +15,7 @@ import 'package:li_curriculum_table/util/util.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
 // UI Constants
-const double _pixelsPerMinute = 0.78;
+const double _pixelsPerMinute = 1.0;
 const int _startDisplayHour = 8;
 const int _endDisplayHour = 22;
 
@@ -54,88 +58,103 @@ class _TimetableTabState extends ConsumerState<TimetableTab> {
     final colorScheme = Theme.of(context).colorScheme;
     final state = ref.watch(timetableControllerProvider);
     final displayWeek = state.displayWeek;
+    final settings = ref.watch(settingsControllerProvider);
+    final isCupertino = AdaptiveStyle.isCupertino(settings.designStyle);
+
+    final title = Text(
+      state.data != null ? '第 $displayWeek 周' : '我的课表',
+      style: const TextStyle(fontWeight: FontWeight.w600),
+    );
+
+    final ds = settings.designStyle;
+    final scrollToggle = IconButton(
+      icon: Icon(
+        settings.weeklyScroll
+            ? AppIcons.viewWeekFilled(ds)
+            : AppIcons.viewWeek(ds),
+      ),
+      tooltip: settings.weeklyScroll
+          ? '当前：按星期滑动'
+          : '当前：无极滑动',
+      onPressed: () {
+        final currentVal = settings.weeklyScroll;
+        ref.read(settingsControllerProvider.notifier).setWeeklyScroll(!currentVal);
+        showAdaptiveMessage(
+          context,
+          designStyle: ds,
+          message: !currentVal ? '已开启按星期滑动' : '已恢复无极滑动',
+        );
+      },
+    );
+
+    final body = SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TimetableStatusBanner(
+              status: state.status,
+              isLoading: state.isLoading,
+              hasData: state.data != null,
+            ),
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: kDefaultAnimationDuration,
+              switchInCurve: kDefaultAnimationCurve,
+              switchOutCurve: kDefaultAnimationCurve,
+              child: state.needsLogin
+                  ? _NeedsLoginView(
+                      key: const ValueKey('needs_login'),
+                      onSync: () => ref
+                          .read(timetableControllerProvider.notifier)
+                          .syncFromCache(),
+                    )
+                  : ScrollConfiguration(
+                      key: const ValueKey('timetable_view'),
+                      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (notification) => true,
+                        child: TimetableWeekView(
+                          key: _calendarKey,
+                          startHour: _startDisplayHour,
+                          endHour: _endDisplayHour,
+                          pixelsPerMinute: _pixelsPerMinute,
+                          now: _now,
+                          onPageChange: (date, page) {
+                            _syncDisplayWeekFromDate(date);
+                          },
+                        ),
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (isCupertino) {
+      return CupertinoPageScaffold(
+        navigationBar: CupertinoNavigationBar(
+          middle: title,
+          trailing: scrollToggle,
+          border: null,
+        ),
+        child: body,
+      );
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(
-          state.data != null ? '第 $displayWeek 周' : '我的课表',
-          style: const TextStyle(fontWeight: FontWeight.w600),
-        ),
+        title: title,
         centerTitle: true,
         elevation: 0,
         scrolledUnderElevation: 0,
         backgroundColor: colorScheme.surface,
-        actions: [
-          IconButton(
-            icon: Icon(
-              ref.watch(settingsControllerProvider).weeklyScroll
-                  ? Icons.view_week_rounded
-                  : Icons.view_week_outlined,
-            ),
-            tooltip: ref.watch(settingsControllerProvider).weeklyScroll
-                ? '当前：按星期滑动'
-                : '当前：无极滑动',
-            onPressed: () {
-              final currentVal = ref.read(settingsControllerProvider).weeklyScroll;
-              ref.read(settingsControllerProvider.notifier).setWeeklyScroll(!currentVal);
-              
-              ScaffoldMessenger.of(context).clearSnackBars();
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(!currentVal ? '已开启按星期滑动' : '已恢复无极滑动'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-        ],
+        actions: [scrollToggle],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TimetableStatusBanner(
-                status: state.status,
-                isLoading: state.isLoading,
-                hasData: state.data != null,
-              ),
-            ),
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: kDefaultAnimationDuration,
-                switchInCurve: kDefaultAnimationCurve,
-                switchOutCurve: kDefaultAnimationCurve,
-                child: state.needsLogin
-                    ? _NeedsLoginView(
-                        key: const ValueKey('needs_login'),
-                        onSync: () => ref
-                            .read(timetableControllerProvider.notifier)
-                            .syncFromCache(),
-                      )
-                    : ScrollConfiguration(
-                        key: const ValueKey('timetable_view'),
-                        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (notification) => true,
-                          child: TimetableWeekView(
-                            key: _calendarKey,
-                            startHour: _startDisplayHour,
-                            endHour: _endDisplayHour,
-                            pixelsPerMinute: _pixelsPerMinute,
-                            now: _now,
-                            onPageChange: (date, page) {
-                              _syncDisplayWeekFromDate(date);
-                            },
-                          ),
-                        ),
-                      ),
-              ),
-            ),
-          ],
-        ),
-      ),
+      body: body,
     );
   }
 

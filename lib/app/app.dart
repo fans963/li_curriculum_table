@@ -1,8 +1,10 @@
 import 'package:feedback/feedback.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,9 +56,8 @@ class CurriculumTableApp extends ConsumerWidget {
     );
 
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
-    const String? webFontFamily = kIsWeb
-        ? 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans SC", sans-serif'
-        : null;
+    // Flutter's fontFamily expects a single family name, not a CSS font stack.
+    const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
     return brightness == Brightness.dark
         ? FlexThemeData.dark(
@@ -89,6 +90,24 @@ class CurriculumTableApp extends ConsumerWidget {
           );
   }
 
+  CupertinoThemeData _buildCupertinoTheme({
+    required Brightness brightness,
+    required Color seedColor,
+    ColorScheme? dynamicScheme,
+  }) {
+    final scheme = dynamicScheme ??
+        ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
+    return CupertinoThemeData(
+      brightness: brightness,
+      primaryColor: scheme.primary,
+      scaffoldBackgroundColor: scheme.surface,
+      barBackgroundColor: scheme.surface.withValues(alpha: 0.9),
+      textTheme: CupertinoTextThemeData(
+        primaryColor: scheme.primary,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsControllerProvider);
@@ -97,12 +116,23 @@ class CurriculumTableApp extends ConsumerWidget {
       localeOverride: const Locale('zh', 'CN'),
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
-          // Use dynamic color only when enabled and available
           final ColorScheme? lightScheme =
               settings.useDynamicColor ? lightDynamic : null;
           final ColorScheme? darkScheme =
               settings.useDynamicColor ? darkDynamic : null;
 
+          final isDark = settings.themeMode == ThemeMode.dark ||
+              (settings.themeMode == ThemeMode.system &&
+                  MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+
+          final cupertinoTheme = _buildCupertinoTheme(
+            brightness: isDark ? Brightness.dark : Brightness.light,
+            seedColor: settings.seedColor,
+            dynamicScheme: isDark ? darkScheme : lightScheme,
+          );
+
+          // Always use MaterialApp to preserve ScaffoldMessenger and Navigator.
+          // CupertinoTheme is injected via builder for Cupertino mode.
           return MaterialApp(
             title: '',
             themeMode: settings.themeMode,
@@ -116,6 +146,15 @@ class CurriculumTableApp extends ConsumerWidget {
               seedColor: settings.seedColor,
               dynamicScheme: darkScheme,
             ),
+            builder: (context, child) {
+              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
+                return CupertinoTheme(
+                  data: cupertinoTheme,
+                  child: child!,
+                );
+              }
+              return child!;
+            },
             home: const MainScreen(),
           );
         },

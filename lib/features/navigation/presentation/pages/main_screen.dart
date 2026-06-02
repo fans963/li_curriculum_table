@@ -1,7 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_tab.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
 import 'package:li_curriculum_table/util/util.dart';
@@ -27,25 +32,12 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   late final PageController _pageController;
 
-  final List<Widget> _tabs = [
-    TimetableTab(),
-    ClassroomTab(),
-    GradesTab(),
-    ExamScheduleTab(),
-    const BookTab(),
-    SettingsTab(),
-  ];
-
   @override
   void initState() {
     super.initState();
-    // Remove the native splash screen after the first frame
     FlutterNativeSplash.remove();
-
     final initialIndex = ref.read(navigationControllerProvider);
     _pageController = PageController(initialPage: initialIndex);
-
-    // Auto-check for updates after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
   }
 
@@ -55,9 +47,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       if (mounted) {
         await showUpdateDialogIfNeeded(context, updateInfo, silent: true);
       }
-    } catch (_) {
-      // Silently ignore update check failures
-    }
+    } catch (_) {}
   }
 
   @override
@@ -70,7 +60,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final currentIndex = ref.watch(navigationControllerProvider);
     final syncState = ref.watch(globalSyncControllerProvider);
-    
+    final settings = ref.watch(settingsControllerProvider);
+    final ds = settings.designStyle;
+    final isCupertino = AdaptiveStyle.isCupertino(ds);
+
     return Scaffold(
       body: Column(
         children: [
@@ -79,71 +72,121 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             child: PageView(
               controller: _pageController,
               physics: const NeverScrollableScrollPhysics(),
-              children: _tabs,
+              children: [
+                TimetableTab(),
+                ClassroomTab(),
+                GradesTab(),
+                ExamScheduleTab(),
+                BookTab(),
+                SettingsTab(),
+              ],
             ),
           ),
         ],
       ),
-      floatingActionButton: (currentIndex == 4 || currentIndex == 5) // No refresh button on Book or Settings
-        ? null
-        : FloatingActionButton(
-            onPressed: syncState.isSyncing 
-              ? null 
-              : () => ref.read(globalSyncControllerProvider.notifier).syncGlobal(),
-            child: syncState.isSyncing
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.refresh),
-          ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: currentIndex,
-        onDestinationSelected: (index) {
-          ref.read(navigationControllerProvider.notifier).setIndex(index);
-          _pageController.animateToPage(
-            index,
-            duration: kDefaultAnimationDuration,
-            curve: kDefaultAnimationCurve,
-          );
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.calendar_view_week_outlined),
-            selectedIcon: Icon(Icons.calendar_view_week),
-            label: '课表',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.room_outlined),
-            selectedIcon: Icon(Icons.room),
-            label: '空闲教室',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.grade_outlined),
-            selectedIcon: Icon(Icons.grade),
-            label: '成绩',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assignment_outlined),
-            selectedIcon: Icon(Icons.assignment),
-            label: '考试',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.bookmark_outline_rounded),
-            selectedIcon: Icon(Icons.bookmark_rounded),
-            label: '图书',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: '设置',
-          ),
-        ],
-      ),
+      floatingActionButton: (currentIndex == 4 || currentIndex == 5)
+          ? null
+          : FloatingActionButton(
+              onPressed: syncState.isSyncing
+                  ? null
+                  : () => ref.read(globalSyncControllerProvider.notifier).syncGlobal(),
+              child: syncState.isSyncing
+                  ? adaptiveActivityIndicator(
+                      designStyle: ds,
+                      size: 24,
+                      color: isCupertino
+                          ? CupertinoColors.white
+                          : Theme.of(context).colorScheme.onPrimaryContainer,
+                    )
+                  : Icon(isCupertino ? CupertinoIcons.arrow_clockwise : Icons.refresh),
+            ),
+      bottomNavigationBar: isCupertino
+          ? CupertinoTabBar(
+              currentIndex: currentIndex,
+              onTap: (index) {
+                ref.read(navigationControllerProvider.notifier).setIndex(index);
+                _pageController.animateToPage(
+                  index,
+                  duration: kDefaultAnimationDuration,
+                  curve: kDefaultAnimationCurve,
+                );
+              },
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.timetableOutline(ds)),
+                  activeIcon: Icon(AppIcons.timetable(ds)),
+                  label: '课表',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.classroomOutline(ds)),
+                  activeIcon: Icon(AppIcons.classroom(ds)),
+                  label: '空闲教室',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.gradeOutline(ds)),
+                  activeIcon: Icon(AppIcons.grade(ds)),
+                  label: '成绩',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.examOutline(ds)),
+                  activeIcon: Icon(AppIcons.exam(ds)),
+                  label: '考试',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.bookOutline(ds)),
+                  activeIcon: Icon(AppIcons.book(ds)),
+                  label: '图书',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(AppIcons.settingsOutline(ds)),
+                  activeIcon: Icon(AppIcons.settings(ds)),
+                  label: '设置',
+                ),
+              ],
+            )
+          : NavigationBar(
+              selectedIndex: currentIndex,
+              onDestinationSelected: (index) {
+                ref.read(navigationControllerProvider.notifier).setIndex(index);
+                _pageController.animateToPage(
+                  index,
+                  duration: kDefaultAnimationDuration,
+                  curve: kDefaultAnimationCurve,
+                );
+              },
+              destinations: [
+                NavigationDestination(
+                  icon: Icon(AppIcons.timetableOutline(ds)),
+                  selectedIcon: Icon(AppIcons.timetable(ds)),
+                  label: '课表',
+                ),
+                NavigationDestination(
+                  icon: Icon(AppIcons.classroomOutline(ds)),
+                  selectedIcon: Icon(AppIcons.classroom(ds)),
+                  label: '空闲教室',
+                ),
+                NavigationDestination(
+                  icon: Icon(AppIcons.gradeOutline(ds)),
+                  selectedIcon: Icon(AppIcons.grade(ds)),
+                  label: '成绩',
+                ),
+                NavigationDestination(
+                  icon: Icon(AppIcons.examOutline(ds)),
+                  selectedIcon: Icon(AppIcons.exam(ds)),
+                  label: '考试',
+                ),
+                NavigationDestination(
+                  icon: Icon(AppIcons.bookOutline(ds)),
+                  selectedIcon: Icon(AppIcons.book(ds)),
+                  label: '图书',
+                ),
+                NavigationDestination(
+                  icon: Icon(AppIcons.settingsOutline(ds)),
+                  selectedIcon: Icon(AppIcons.settings(ds)),
+                  label: '设置',
+                ),
+              ],
+            ),
     );
   }
 }

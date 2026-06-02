@@ -42,7 +42,7 @@ final class TimetableControllerProvider
 }
 
 String _$timetableControllerHash() =>
-    r'4f2b2321575959c3125d3a3b5031d826272d6e49';
+    r'b04d456190ab0f023940b64bcded68f6467287f0';
 
 abstract class _$TimetableController extends $Notifier<TimetableState> {
   TimetableState build();
