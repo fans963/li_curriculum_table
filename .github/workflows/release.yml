@@ -73,8 +73,8 @@ jobs:
         uses: dtolnay/rust-toolchain@nightly
         with:
           targets: >-
-            ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || 
-                matrix.os == 'ubuntu-latest' && 'aarch64-linux-android,x86_64-unknown-linux-gnu' || 
+            ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' ||
+                matrix.os == 'ubuntu-latest' && 'aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android,x86_64-unknown-linux-gnu' ||
                 'x86_64-pc-windows-msvc' }}
 
       - name: Setup Flutter
@@ -111,9 +111,22 @@ jobs:
           if [ ! -f env.json ]; then echo "{}" > env.json; fi
           flutter_rust_bridge_codegen generate
           flutter pub get
-          dart run build_runner build --delete-conflicting-outputs
+          dart run build_runner build
 
-      - name: Run Fastforge
+      - name: Build Android APKs (direct flutter)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          mkdir -p dist
+          flutter build apk --release --split-per-abi --target-platform=android-arm64,android-arm,android-x64
+          cp build/app/outputs/flutter-apk/app-*-release.apk dist/ 2>/dev/null || true
+
+      - name: Run Fastforge (Linux packages)
+        if: runner.os == 'Linux'
+        run: fastforge release --name release --jobs linux-pacman,linux-appimage,linux-deb,linux-rpm
+
+      - name: Run Fastforge (macOS & Windows)
+        if: runner.os != 'Linux'
         run: fastforge release --name release --jobs ${{ matrix.fastforge_jobs }}
 
       - name: Build Unsigned iOS IPA
@@ -176,7 +189,7 @@ jobs:
             This is an automated release triggered by a push to the `main` branch.
             
             ### Included Platforms:
-            - **Android**: .apk
+            - **Android**: .apk (`arm64-v8a` recommended for most devices)
             - **Windows**: .exe, .msix
             - **macOS**: .dmg, .pkg
             - **Linux**: .deb, .rpm, .pacman, .AppImage
