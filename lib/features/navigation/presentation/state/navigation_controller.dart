@@ -1,13 +1,9 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals/signals.dart';
 
-class NavigationController extends Notifier<int> {
-  @override
-  int build() => 0;
+class NavigationController {
+  final currentIndex = signal(0);
 
   void setIndex(int index) {
-    state = index;
+    currentIndex.value = index;
   }
 }
-
-final navigationControllerProvider =
-    NotifierProvider<NavigationController, int>(NavigationController.new);

@@ -1,21 +1,19 @@
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/campus.dart';
-import 'package:li_curriculum_table/features/classroom/presentation/providers/classroom_providers.dart';
+import 'package:li_curriculum_table/features/classroom/domain/repositories/classroom_repository.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
+import 'package:signals/signals.dart';
 
-part 'classroom_controller.g.dart';
+class ClassroomController {
+  final _state = signal(ClassroomState(selectedDate: DateTime.now()));
 
-@riverpod
-class ClassroomController extends _$ClassroomController {
-  @override
-  ClassroomState build() {
-    return ClassroomState(selectedDate: DateTime.now());
-  }
+  ReadonlySignal<ClassroomState> get state => _state;
 
   Campus? _findDefaultCampus(List<Campus> campuses, String? lastId) {
     if (campuses.isEmpty) return null;
@@ -31,18 +29,30 @@ class ClassroomController extends _$ClassroomController {
   List<Building> _sortBuildings(List<Building> buildings, Campus? campus) {
     if (campus == null || !campus.name.contains('孝陵卫')) return buildings;
     final sorted = List<Building>.from(buildings);
-    
+
     int getPriority(String name) {
-      if (name.contains('Ⅳ') || name.contains('IV') || name.contains('第四') || name.contains('四号')) {
+      if (name.contains('Ⅳ') ||
+          name.contains('IV') ||
+          name.contains('第四') ||
+          name.contains('四号')) {
         return 4;
       }
-      if (name.contains('Ⅲ') || name.contains('III') || name.contains('第三') || name.contains('三号')) {
+      if (name.contains('Ⅲ') ||
+          name.contains('III') ||
+          name.contains('第三') ||
+          name.contains('三号')) {
         return 3;
       }
-      if (name.contains('Ⅱ') || name.contains('II') || name.contains('第二') || name.contains('二号')) {
+      if (name.contains('Ⅱ') ||
+          name.contains('II') ||
+          name.contains('第二') ||
+          name.contains('二号')) {
         return 2;
       }
-      if (name.contains('Ⅰ') || name.contains('I') || name.contains('第一') || name.contains('一号')) {
+      if (name.contains('Ⅰ') ||
+          name.contains('I') ||
+          name.contains('第一') ||
+          name.contains('一号')) {
         return 1;
       }
       return 999;
@@ -58,17 +68,16 @@ class ClassroomController extends _$ClassroomController {
   }
 
   Future<void> init() async {
-    // Proactively ensure OCR is initialized, but do not block tab switching.
-    ref.read(ocrInitializerProvider).ensureInitialized();
-    if (state.campuses.isNotEmpty) return;
+    final ocr = sl<OcrInitializer>();
+    ocr.ensureInitialized();
+    if (_state.value.campuses.isNotEmpty) return;
     await fetchCampuses();
   }
 
   Future<(String?, String?)> _getCredentials() async {
     try {
-      final repository = ref.read(credentialsRepositoryProvider);
+      final repository = sl<CredentialsRepository>();
       final creds = await repository.loadCredentials();
-      if (!ref.mounted) return (null, null);
       if (creds != null && !creds.isEmpty) {
         return (creds.username as String?, creds.password as String?);
       }
@@ -77,27 +86,22 @@ class ClassroomController extends _$ClassroomController {
   }
 
   Future<void> fetchCampuses({bool forceRefresh = false}) async {
-    state = state.copyWith(isLoading: true, error: null, needsLogin: false);
+    _state.value =
+        _state.value.copyWith(isLoading: true, error: null, needsLogin: false);
     try {
-      final repository = ref.read(classroomRepositoryProvider);
+      final repository = sl<ClassroomRepository>();
       final (user, pass) = await _getCredentials();
-      if (!ref.mounted) return;
 
-      // If no credentials available and no local cache, show login prompt instead of crashing.
       if (user == null || pass == null) {
         if (!forceRefresh) {
-          // Try loading from cache even without credentials
           try {
-            final localDataSource = ref.read(classroomLocalDataSourceProvider);
+            final localDataSource = sl<ClassroomLocalDataSource>();
             final result = await repository.getCampuses(forceRefresh: false);
-            if (!ref.mounted) return;
             final (campuses, term) = result;
             if (campuses.isNotEmpty) {
               final lastId = await localDataSource.readLastCampusId();
-              if (!ref.mounted) return;
               final selection = _findDefaultCampus(campuses, lastId);
-
-              state = state.copyWith(
+              _state.value = _state.value.copyWith(
                 campuses: campuses,
                 selectedCampus: selection,
                 currentTerm: term,
@@ -107,23 +111,21 @@ class ClassroomController extends _$ClassroomController {
             }
           } catch (_) {}
         }
-        if (!ref.mounted) return;
-        state = state.copyWith(isLoading: false, needsLogin: true);
+        _state.value =
+            _state.value.copyWith(isLoading: false, needsLogin: true);
         return;
       }
 
-      final localDataSource = ref.read(classroomLocalDataSourceProvider);
+      final localDataSource = sl<ClassroomLocalDataSource>();
       final (campuses, term) = await repository.getCampuses(
         username: user,
         password: pass,
         forceRefresh: forceRefresh,
       );
-      if (!ref.mounted) return;
       final lastId = await localDataSource.readLastCampusId();
-      if (!ref.mounted) return;
       final selection = _findDefaultCampus(campuses, lastId);
 
-      state = state.copyWith(
+      _state.value = _state.value.copyWith(
         campuses: campuses,
         selectedCampus: selection,
         currentTerm: term,
@@ -132,92 +134,97 @@ class ClassroomController extends _$ClassroomController {
       if (campuses.isNotEmpty) {
         await fetchBuildings(forceRefresh: forceRefresh);
       } else {
-        state = state.copyWith(isLoading: false);
+        _state.value = _state.value.copyWith(isLoading: false);
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      _state.value =
+          _state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> setCampus(Campus campus) async {
-    state = state.copyWith(selectedCampus: campus, buildings: [], selectedBuilding: null, results: []);
-    await ref.read(classroomLocalDataSourceProvider).saveLastCampusId(campus.id);
-    if (!ref.mounted) return;
+    _state.value = _state.value.copyWith(
+      selectedCampus: campus,
+      buildings: [],
+      selectedBuilding: null,
+      results: [],
+    );
+    await sl<ClassroomLocalDataSource>().saveLastCampusId(campus.id);
     await fetchBuildings();
   }
 
   Future<void> fetchBuildings({bool forceRefresh = false}) async {
-    final campus = state.selectedCampus;
+    final campus = _state.value.selectedCampus;
     if (campus == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    _state.value = _state.value.copyWith(isLoading: true, error: null);
     try {
-      final repository = ref.read(classroomRepositoryProvider);
-      final localDataSource = ref.read(classroomLocalDataSourceProvider);
+      final repository = sl<ClassroomRepository>();
+      final localDataSource = sl<ClassroomLocalDataSource>();
       final (user, pass) = await _getCredentials();
-      if (!ref.mounted) return;
       final buildings = await repository.getBuildings(
         campus.id,
         username: user,
         password: pass,
         forceRefresh: forceRefresh,
       );
-      if (!ref.mounted) return;
 
       final sortedBuildings = _sortBuildings(buildings, campus);
       final lastBId = await localDataSource.readLastBuildingId();
-      if (!ref.mounted) return;
       final selection = sortedBuildings.any((e) => e.id == lastBId)
           ? sortedBuildings.firstWhere((e) => e.id == lastBId)
           : (sortedBuildings.isNotEmpty ? sortedBuildings.first : null);
 
-      state = state.copyWith(
+      _state.value = _state.value.copyWith(
         buildings: sortedBuildings,
-        selectedBuilding: (forceRefresh || state.selectedBuilding == null) 
-            ? selection 
-            : state.selectedBuilding,
+        selectedBuilding:
+            (forceRefresh || _state.value.selectedBuilding == null)
+                ? selection
+                : _state.value.selectedBuilding,
         isLoading: false,
       );
 
-      if (state.selectedBuilding != null) {
+      if (_state.value.selectedBuilding != null) {
         await fetchAvailability(forceRefresh: forceRefresh);
       }
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      _state.value =
+          _state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   void selectBuilding(Building building) {
-    state = state.copyWith(selectedBuilding: building);
-    ref.read(classroomLocalDataSourceProvider).saveLastBuildingId(building.id);
+    _state.value = _state.value.copyWith(selectedBuilding: building);
+    sl<ClassroomLocalDataSource>().saveLastBuildingId(building.id);
     fetchAvailability();
   }
 
   void selectDate(DateTime date) {
-    state = state.copyWith(selectedDate: date);
+    _state.value = _state.value.copyWith(selectedDate: date);
     fetchAvailability();
   }
 
   Future<void> fetchAvailability({bool forceRefresh = false}) async {
-    final campus = state.selectedCampus;
-    final building = state.selectedBuilding;
+    final campus = _state.value.selectedCampus;
+    final building = _state.value.selectedBuilding;
     if (campus == null || building == null) return;
 
-    state = state.copyWith(isLoading: true, error: null);
+    _state.value = _state.value.copyWith(isLoading: true, error: null);
     try {
-      final repository = ref.read(classroomRepositoryProvider);
-      final timetableState = ref.read(timetableControllerProvider);
-      final termStartMonday = timetableState.termStartMonday;
+      final repository = sl<ClassroomRepository>();
+      final timetable = sl<TimetableController>();
+      final termStartMonday = timetable.termStartMonday.value;
 
       int week = 1;
       if (termStartMonday != null) {
-        week = calculateWeekIndex(state.selectedDate, termStartMonday);
+        week = calculateWeekIndex(
+            _state.value.selectedDate, termStartMonday);
       } else {
-        week = timetableState.currentTeachingWeek;
+        week = timetable.currentTeachingWeek.value;
       }
 
       if (week < 1) week = 1;
-      final weekday = state.selectedDate.weekday;
+      final weekday = _state.value.selectedDate.weekday;
 
       final (user, pass) = await _getCredentials();
       final results = await repository.getClassroomAvailability(
@@ -225,16 +232,16 @@ class ClassroomController extends _$ClassroomController {
         buildingId: building.id,
         week: week,
         weekday: weekday,
-        term: state.currentTerm,
+        term: _state.value.currentTerm,
         username: user,
         password: pass,
         forceRefresh: forceRefresh,
       );
-      if (!ref.mounted) return;
 
-      state = state.copyWith(results: results, isLoading: false);
+      _state.value = _state.value.copyWith(results: results, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      _state.value =
+          _state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 
@@ -243,47 +250,46 @@ class ClassroomController extends _$ClassroomController {
   }
 
   Future<void> syncCurrentContext() async {
-    state = state.copyWith(isLoading: true, error: null);
+    _state.value = _state.value.copyWith(isLoading: true, error: null);
     try {
-      final repository = ref.read(classroomRepositoryProvider);
-      final localDataSource = ref.read(classroomLocalDataSourceProvider);
+      final repository = sl<ClassroomRepository>();
+      final localDataSource = sl<ClassroomLocalDataSource>();
       final (user, pass) = await _getCredentials();
-      if (!ref.mounted) return;
 
-      if (state.campuses.isEmpty || state.currentTerm.isEmpty) {
+      if (_state.value.campuses.isEmpty ||
+          _state.value.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
           password: pass,
           forceRefresh: true,
         );
-        if (!ref.mounted) return;
-        state = state.copyWith(campuses: campuses, currentTerm: term);
-        
-        if (state.selectedCampus == null && campuses.isNotEmpty) {
+        _state.value =
+            _state.value.copyWith(campuses: campuses, currentTerm: term);
+
+        if (_state.value.selectedCampus == null && campuses.isNotEmpty) {
           final lastId = await localDataSource.readLastCampusId();
-          if (!ref.mounted) return;
           final selection = _findDefaultCampus(campuses, lastId);
-          state = state.copyWith(selectedCampus: selection);
+          _state.value = _state.value.copyWith(selectedCampus: selection);
         }
       }
 
-      final campus = state.selectedCampus;
+      final campus = _state.value.selectedCampus;
       if (campus != null) {
-        if (state.buildings.isEmpty) {
+        if (_state.value.buildings.isEmpty) {
           final buildings = await repository.getBuildings(
             campus.id,
             username: user,
             password: pass,
             forceRefresh: true,
           );
-          if (!ref.mounted) return;
           final sortedBuildings = _sortBuildings(buildings, campus);
-          state = state.copyWith(buildings: sortedBuildings);
-          
-          if (state.selectedBuilding == null && sortedBuildings.isNotEmpty) {
+          _state.value =
+              _state.value.copyWith(buildings: sortedBuildings);
+
+          if (_state.value.selectedBuilding == null &&
+              sortedBuildings.isNotEmpty) {
             final lastBId = await localDataSource.readLastBuildingId();
-            if (!ref.mounted) return;
-            state = state.copyWith(
+            _state.value = _state.value.copyWith(
               selectedBuilding: sortedBuildings.any((e) => e.id == lastBId)
                   ? sortedBuildings.firstWhere((e) => e.id == lastBId)
                   : sortedBuildings.first,
@@ -291,48 +297,49 @@ class ClassroomController extends _$ClassroomController {
           }
         }
 
-        if (state.selectedBuilding != null) {
+        if (_state.value.selectedBuilding != null) {
           await fetchAvailability(forceRefresh: true);
         }
       }
 
-      state = state.copyWith(isLoading: false);
+      _state.value = _state.value.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      _state.value =
+          _state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   Future<void> bulkSync() async {
-    state = state.copyWith(isLoading: true, error: null);
+    _state.value = _state.value.copyWith(isLoading: true, error: null);
     try {
-      final repository = ref.read(classroomRepositoryProvider);
+      final repository = sl<ClassroomRepository>();
       final (user, pass) = await _getCredentials();
-      if (!ref.mounted) return;
 
-      if (state.currentTerm.isEmpty) {
+      if (_state.value.currentTerm.isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
           password: pass,
           forceRefresh: true,
         );
-        if (!ref.mounted) return;
-        state = state.copyWith(campuses: campuses, currentTerm: term);
+        _state.value =
+            _state.value.copyWith(campuses: campuses, currentTerm: term);
       }
 
       await repository.syncAllSchedules(
-        term: state.currentTerm,
+        term: _state.value.currentTerm,
         username: user,
         password: pass,
       );
-      if (!ref.mounted) return;
 
-      if (state.selectedCampus != null && state.selectedBuilding != null) {
+      if (_state.value.selectedCampus != null &&
+          _state.value.selectedBuilding != null) {
         await fetchAvailability(forceRefresh: false);
       }
-      
-      state = state.copyWith(isLoading: false);
+
+      _state.value = _state.value.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      _state.value =
+          _state.value.copyWith(isLoading: false, error: e.toString());
     }
   }
 }

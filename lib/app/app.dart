@@ -1,4 +1,5 @@
 import 'package:feedback/feedback.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
@@ -7,11 +8,11 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:signals/signals_flutter.dart';
 
 const bool isWeb = kIsWeb;
 
-class CurriculumTableApp extends ConsumerWidget {
+class CurriculumTableApp extends StatelessWidget {
   const CurriculumTableApp({super.key});
 
   ThemeData _buildTheme({
@@ -56,7 +57,6 @@ class CurriculumTableApp extends ConsumerWidget {
     );
 
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
-    // Flutter's fontFamily expects a single family name, not a CSS font stack.
     const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
     return brightness == Brightness.dark
@@ -109,56 +109,59 @@ class CurriculumTableApp extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final settings = ref.watch(settingsControllerProvider);
+  Widget build(BuildContext context) {
+    final settingsCtrl = sl<SettingsController>();
 
-    return BetterFeedback(
-      localeOverride: const Locale('zh', 'CN'),
-      child: DynamicColorBuilder(
-        builder: (lightDynamic, darkDynamic) {
-          final ColorScheme? lightScheme =
-              settings.useDynamicColor ? lightDynamic : null;
-          final ColorScheme? darkScheme =
-              settings.useDynamicColor ? darkDynamic : null;
+    return SignalBuilder(builder: (context) {
+      final settings = settingsCtrl.state.value;
 
-          final isDark = settings.themeMode == ThemeMode.dark ||
-              (settings.themeMode == ThemeMode.system &&
-                  MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+      return BetterFeedback(
+        localeOverride: const Locale('zh', 'CN'),
+        child: DynamicColorBuilder(
+          builder: (lightDynamic, darkDynamic) {
+            final ColorScheme? lightScheme =
+                settings.useDynamicColor ? lightDynamic : null;
+            final ColorScheme? darkScheme =
+                settings.useDynamicColor ? darkDynamic : null;
 
-          final cupertinoTheme = _buildCupertinoTheme(
-            brightness: isDark ? Brightness.dark : Brightness.light,
-            seedColor: settings.seedColor,
-            dynamicScheme: isDark ? darkScheme : lightScheme,
-          );
+            final isDark = settings.themeMode == ThemeMode.dark ||
+                (settings.themeMode == ThemeMode.system &&
+                    MediaQuery.platformBrightnessOf(context) ==
+                        Brightness.dark);
 
-          // Always use MaterialApp to preserve ScaffoldMessenger and Navigator.
-          // CupertinoTheme is injected via builder for Cupertino mode.
-          return MaterialApp(
-            title: '',
-            themeMode: settings.themeMode,
-            theme: _buildTheme(
-              brightness: Brightness.light,
+            final cupertinoTheme = _buildCupertinoTheme(
+              brightness: isDark ? Brightness.dark : Brightness.light,
               seedColor: settings.seedColor,
-              dynamicScheme: lightScheme,
-            ),
-            darkTheme: _buildTheme(
-              brightness: Brightness.dark,
-              seedColor: settings.seedColor,
-              dynamicScheme: darkScheme,
-            ),
-            builder: (context, child) {
-              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-                return CupertinoTheme(
-                  data: cupertinoTheme,
-                  child: child!,
-                );
-              }
-              return child!;
-            },
-            home: const MainScreen(),
-          );
-        },
-      ),
-    );
+              dynamicScheme: isDark ? darkScheme : lightScheme,
+            );
+
+            return MaterialApp(
+              title: '',
+              themeMode: settings.themeMode,
+              theme: _buildTheme(
+                brightness: Brightness.light,
+                seedColor: settings.seedColor,
+                dynamicScheme: lightScheme,
+              ),
+              darkTheme: _buildTheme(
+                brightness: Brightness.dark,
+                seedColor: settings.seedColor,
+                dynamicScheme: darkScheme,
+              ),
+              builder: (context, child) {
+                if (AdaptiveStyle.isCupertino(settings.designStyle)) {
+                  return CupertinoTheme(
+                    data: cupertinoTheme,
+                    child: child!,
+                  );
+                }
+                return child!;
+              },
+              home: const MainScreen(),
+            );
+          },
+        ),
+      );
+    });
   }
 }

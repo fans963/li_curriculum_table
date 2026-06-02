@@ -80,7 +80,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'beta'
+          channel: 'master'
           cache: true
       
       - name: Disable SPM (macOS only)
