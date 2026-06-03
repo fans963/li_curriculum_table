@@ -1,25 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
 import 'package:li_curriculum_table/util/util.dart';
-import '../state/grade_controller.dart';
 import '../../domain/models/grade.dart';
 import 'package:collection/collection.dart';
+import 'package:signals/signals_flutter.dart';
+import 'grades_cupertino.dart';
 
-class GradesTab extends ConsumerWidget {
+class GradesTab extends StatelessWidget {
   const GradesTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(gradeControllerProvider);
+  Widget build(BuildContext context) {
+    return SignalBuilder(builder: (context) {
+      final state = sl<GradeController>().state.value;
+      final isCupertino = AdaptiveStyle.isCupertino(
+        sl<SettingsController>().designStyle.value,
+      );
 
+      if (isCupertino) {
+        return buildGradesCupertino(context, state);
+      }
+      return _buildMaterial(context, state);
+    });
+  }
+
+  // ─── Material ──────────────────────────────────────────────────────────────
+
+  Widget _buildMaterial(BuildContext context, GradeState state) {
     return Scaffold(
-      appBar: _buildHeader(context, ref, state),
-      body: _buildBody(context, ref, state),
+      appBar: _buildHeader(context, state),
+      body: _buildBody(context, state),
     );
   }
 
-  PreferredSizeWidget _buildHeader(BuildContext context, WidgetRef ref, GradeState state) {
+  PreferredSizeWidget _buildHeader(
+      BuildContext context, GradeState state) {
     return AppBar(
       title: const Text('成绩查询'),
       bottom: PreferredSize(
@@ -27,7 +47,8 @@ class GradesTab extends ConsumerWidget {
         child: SafeArea(
           bottom: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
             child: _buildSummaryCard(context, state),
           ),
         ),
@@ -35,10 +56,12 @@ class GradesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSummaryCard(BuildContext context, GradeState state) {
+  Widget _buildSummaryCard(
+      BuildContext context, GradeState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+    final ds = sl<SettingsController>().designStyle.value;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -50,7 +73,8 @@ class GradesTab extends ConsumerWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
@@ -61,7 +85,7 @@ class GradesTab extends ConsumerWidget {
                 context,
                 '必修加权均分',
                 state.compulsoryWeightedAverage.toStringAsFixed(2),
-                Icons.stars_rounded,
+                AppIcons.stars(ds),
                 '${state.compulsoryCredits.toStringAsFixed(1)} 必修学分',
                 colorScheme.primary,
               ),
@@ -76,7 +100,7 @@ class GradesTab extends ConsumerWidget {
                 context,
                 '总加权均分',
                 state.weightedAverage.toStringAsFixed(2),
-                Icons.analytics_rounded,
+                AppIcons.analytics(ds),
                 '${state.totalCredits.toStringAsFixed(1)} 总学分',
                 colorScheme.secondary,
               ),
@@ -88,10 +112,10 @@ class GradesTab extends ConsumerWidget {
   }
 
   Widget _buildStatItem(
-    BuildContext context, 
-    String label, 
-    String value, 
-    IconData icon, 
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
     String subValue,
     Color color,
   ) {
@@ -105,7 +129,7 @@ class GradesTab extends ConsumerWidget {
             Icon(icon, size: 16, color: color),
             const SizedBox(width: 6),
             Text(
-              label, 
+              label,
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
                 fontWeight: FontWeight.w500,
@@ -132,31 +156,37 @@ class GradesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, WidgetRef ref, GradeState state) {
+  Widget _buildBody(BuildContext context, GradeState state) {
     return AnimatedSwitcher(
       duration: kDefaultAnimationDuration,
       switchInCurve: kDefaultAnimationCurve,
       switchOutCurve: kDefaultAnimationCurve,
       child: () {
         if (state.isLoading && state.grades.isEmpty) {
-          return const Center(key: ValueKey('loading'), child: CircularProgressIndicator());
+          return const Center(
+              key: ValueKey('loading'),
+              child: CircularProgressIndicator());
         }
 
         if (state.needsLogin) {
+          final ds = sl<SettingsController>().designStyle.value;
           return Center(
             key: const ValueKey('needs_login'),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.lock_outline, size: 64, color: Colors.grey),
+                Icon(AppIcons.lock(ds),
+                    size: 64,
+                    color: Theme.of(context).colorScheme.outline),
                 const SizedBox(height: 16),
                 const Text('需要登录后才能查询成绩'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    // Handled in parent context
-                  },
-                  child: const Text('去设置'),
+                const SizedBox(height: 8),
+                Text(
+                  '请先前往「设置」页面输入账号密码',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color:
+                            Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
@@ -164,17 +194,19 @@ class GradesTab extends ConsumerWidget {
         }
 
         if (state.grades.isEmpty) {
-          return const Center(key: ValueKey('empty'), child: Text('暂无成绩记录'));
+          return const Center(
+              key: ValueKey('empty'), child: Text('暂无成绩记录'));
         }
 
-        // Group grades by term
-        final grouped = groupBy(state.filteredGrades, (GradeEntity g) => g.term);
-        final terms = grouped.keys.toList()..sort((a, b) => b.compareTo(a)); // Newest first
+        final grouped = groupBy(
+            state.filteredGrades, (GradeEntity g) => g.term);
+        final terms = grouped.keys.toList()
+          ..sort((a, b) => b.compareTo(a));
 
         return Column(
           key: const ValueKey('grades_list'),
           children: [
-            _buildSearchField(ref),
+            _buildSearchField(context),
             Expanded(
               child: ListView.builder(
                 itemCount: terms.length,
@@ -192,26 +224,27 @@ class GradesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildSearchField(WidgetRef ref) {
+  Widget _buildSearchField(BuildContext context) {
+    final ds = sl<SettingsController>().designStyle.value;
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: TextField(
         decoration: InputDecoration(
           hintText: '搜索课程名称...',
-          prefixIcon: const Icon(Icons.search),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          filled: true,
-          fillColor: Colors.transparent,
+          prefixIcon: Icon(AppIcons.search(ds)),
+          border:
+              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
-        onChanged: (val) => ref.read(gradeControllerProvider.notifier).setSearchQuery(val),
+        onChanged: (val) =>
+            sl<GradeController>().setSearchQuery(val),
       ),
     );
   }
 
-  Widget _buildTermSection(BuildContext context, String term, List<GradeEntity> grades) {
+  Widget _buildTermSection(
+      BuildContext context, String term, List<GradeEntity> grades) {
     final theme = Theme.of(context);
-    
-    // Calculate term-specific stats
+
     double termTotalCredits = 0;
     double termWeightedSum = 0;
     double termCompulsoryCredits = 0;
@@ -224,26 +257,32 @@ class GradesTab extends ConsumerWidget {
 
         if (grade.courseAttribute.contains('必修')) {
           termCompulsoryCredits += grade.credits;
-          termCompulsoryWeightedSum += grade.numericScore * grade.credits;
+          termCompulsoryWeightedSum +=
+              grade.numericScore * grade.credits;
         }
       }
     }
 
-    final double termWavg = termTotalCredits > 0 ? termWeightedSum / termTotalCredits : 0.0;
-    final double termCompWavg = termCompulsoryCredits > 0 ? termCompulsoryWeightedSum / termCompulsoryCredits : 0.0;
+    final double termWavg =
+        termTotalCredits > 0 ? termWeightedSum / termTotalCredits : 0.0;
+    final double termCompWavg = termCompulsoryCredits > 0
+        ? termCompulsoryWeightedSum / termCompulsoryCredits
+        : 0.0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+          padding: const EdgeInsets.symmetric(
+              horizontal: 16.0, vertical: 12.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.secondaryContainer,
                       borderRadius: BorderRadius.circular(20),
@@ -266,9 +305,11 @@ class GradesTab extends ConsumerWidget {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  _buildMiniStat(context, '必修均分', termCompWavg.toStringAsFixed(2)),
+                  _buildMiniStat(context, '必修均分',
+                      termCompWavg.toStringAsFixed(2)),
                   const SizedBox(width: 16),
-                  _buildMiniStat(context, '本期均分', termWavg.toStringAsFixed(2)),
+                  _buildMiniStat(context, '本期均分',
+                      termWavg.toStringAsFixed(2)),
                 ],
               ),
             ],
@@ -280,13 +321,15 @@ class GradesTab extends ConsumerWidget {
     );
   }
 
-  Widget _buildMiniStat(BuildContext context, String label, String value) {
+  Widget _buildMiniStat(
+      BuildContext context, String label, String value) {
     final theme = Theme.of(context);
     return Row(
       children: [
         Text(
           '$label: ',
-          style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline),
+          style: theme.textTheme.bodySmall
+              ?.copyWith(color: theme.colorScheme.outline),
         ),
         Text(
           value,
@@ -321,16 +364,17 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     final colorScheme = theme.colorScheme;
     final grade = widget.grade;
     final score = grade.numericScore;
-    
+    final ds = sl<SettingsController>().designStyle.value;
+
     Color scoreColor;
     if (score >= 90) {
-      scoreColor = Colors.green;
+      scoreColor = colorScheme.tertiary;
     } else if (score >= 80) {
       scoreColor = colorScheme.primary;
     } else if (score >= 70) {
-      scoreColor = Colors.orange;
+      scoreColor = colorScheme.secondary;
     } else if (score >= 60) {
-      scoreColor = Colors.blue;
+      scoreColor = colorScheme.onSurfaceVariant;
     } else {
       scoreColor = colorScheme.error;
     }
@@ -345,7 +389,9 @@ class _GradeItemCardState extends State<_GradeItemCard> {
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+            border: Border.all(
+                color:
+                    colorScheme.outlineVariant.withValues(alpha: 0.5)),
             boxShadow: [
               if (!_isPressed)
                 BoxShadow(
@@ -359,7 +405,7 @@ class _GradeItemCardState extends State<_GradeItemCard> {
             onTapDown: (_) => setState(() => _isPressed = true),
             onTapUp: (_) => setState(() => _isPressed = false),
             onTapCancel: () => setState(() => _isPressed = false),
-            onTap: () {}, // For splash effect
+            onTap: () {},
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -381,11 +427,15 @@ class _GradeItemCardState extends State<_GradeItemCard> {
                           spacing: 8,
                           runSpacing: 6,
                           children: [
-                            _buildChip(context, '${grade.credits} 学分', Icons.star_rounded),
-                            _buildChip(context, grade.courseAttribute, Icons.bookmark_outline_rounded),
-                            _buildChip(context, grade.courseNature, Icons.category_rounded),
+                            _buildChip(context, '${grade.credits} 学分',
+                                AppIcons.starOutline(ds)),
+                            _buildChip(context, grade.courseAttribute,
+                                AppIcons.bookmark(ds)),
+                            _buildChip(context, grade.courseNature,
+                                AppIcons.category(ds)),
                             if (grade.scoreMark.isNotEmpty)
-                              _buildChip(context, grade.scoreMark, Icons.info_rounded),
+                              _buildChip(context, grade.scoreMark,
+                                  AppIcons.info(ds)),
                           ],
                         ),
                       ],
@@ -393,12 +443,14 @@ class _GradeItemCardState extends State<_GradeItemCard> {
                   ),
                   const SizedBox(width: 16),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
                     constraints: const BoxConstraints(minWidth: 64),
                     decoration: BoxDecoration(
                       color: scoreColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: scoreColor.withValues(alpha: 0.2)),
+                      border: Border.all(
+                          color: scoreColor.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -430,12 +482,14 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     );
   }
 
-  Widget _buildChip(BuildContext context, String text, IconData icon) {
+  Widget _buildChip(
+      BuildContext context, String text, IconData icon) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        color: theme.colorScheme.surfaceContainerHighest
+            .withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Row(

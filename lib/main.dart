@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:li_curriculum_table/app/app.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -34,17 +34,14 @@ Future<void> main() async {
     });
   }
 
-  final container = ProviderContainer();
+  // Setup dependency injection
+  setupServiceLocator();
+
   // Start loading OCR engine in background to avoid blocking startup
-  container.read(ocrInitializerProvider).ensureInitialized();
+  sl<OcrInitializer>().ensureInitialized();
 
   // Initialize application settings and background services (like proxy server)
-  container.read(settingsControllerProvider);
+  sl<SettingsController>().init();
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const CurriculumTableApp(),
-    ),
-  );
+  runApp(const CurriculumTableApp());
 }

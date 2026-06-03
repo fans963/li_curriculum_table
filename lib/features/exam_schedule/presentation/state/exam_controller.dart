@@ -1,46 +1,30 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
-import '../../domain/repositories/exam_repository.dart';
-import '../../data/repositories/exam_repository_impl.dart';
-import '../../data/datasources/exam_remote_datasource.dart';
-import '../../data/datasources/exam_local_datasource.dart';
-import '../../../timetable/presentation/providers/timetable_providers.dart';
-import 'exam_state.dart';
-import '../../domain/models/exam.dart';
+import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
+import 'package:li_curriculum_table/features/exam_schedule/domain/repositories/exam_repository.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
+import 'package:signals/signals.dart';
 
-final examRemoteDataSourceProvider = Provider((ref) => ExamRemoteDataSource());
+class ExamController {
+  final _state = signal(const ExamState());
 
-final examLocalDataSourceProvider = Provider((ref) {
-  final store = ref.watch(secureStorageStoreProvider);
-  return ExamLocalDataSource(store);
-});
+  ReadonlySignal<ExamState> get state => _state;
 
-final examRepositoryProvider = Provider<ExamRepository>((ref) {
-  final remote = ref.watch(examRemoteDataSourceProvider);
-  final local = ref.watch(examLocalDataSourceProvider);
-  final credentials = ref.watch(secureCredentialsLocalDataSourceProvider);
-  return ExamRepositoryImpl(remote, local, credentials);
-});
-
-class ExamController extends Notifier<ExamState> {
-  @override
-  ExamState build() {
-    // Attempt to load from cache on initialization
-    Future.microtask(() => loadExams());
-    return const ExamState();
+  Future<void> init() async {
+    await loadExams();
   }
 
   Future<void> loadExams({bool forceRefresh = false}) async {
-    // Ensure OCR is ready if we might need to refresh from remote
     if (forceRefresh) {
-      await ref.read(ocrInitializerProvider).ensureInitialized();
+      final ocr = sl<OcrInitializer>();
+      await ocr.ensureInitialized();
     }
 
-    state = state.copyWith(isLoading: true, errorMessage: null);
+    _state.value = _state.value.copyWith(isLoading: true, errorMessage: null);
 
     try {
-      final repository = ref.read(examRepositoryProvider);
+      final repository = sl<ExamRepository>();
       if (kDebugMode) {
         print('[ExamController] loadExams(forceRefresh=$forceRefresh)');
       }
@@ -49,7 +33,8 @@ class ExamController extends Notifier<ExamState> {
       if (kDebugMode) {
         print('[ExamController] Got ${exams.length} exams');
         for (final e in exams) {
-          print('[ExamController]   ${e.courseName} | ${e.examTime} | ${e.location}');
+          print(
+              '[ExamController]   ${e.courseName} | ${e.examTime} | ${e.location}');
         }
       }
 
@@ -60,20 +45,21 @@ class ExamController extends Notifier<ExamState> {
         print('[ExamController] Stack: $st');
       }
       if (e.toString().contains('未登录')) {
-        state = state.copyWith(isLoading: false, needsLogin: true);
+        _state.value = _state.value.copyWith(isLoading: false, needsLogin: true);
       } else {
-        state = state.copyWith(isLoading: false, errorMessage: e.toString());
+        _state.value =
+            _state.value.copyWith(isLoading: false, errorMessage: e.toString());
       }
     }
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query);
+    _state.value = _state.value.copyWith(searchQuery: query);
     _applyFilters();
   }
 
   void _updateExamsState(List<ExamEntity> exams) {
-    state = state.copyWith(
+    _state.value = _state.value.copyWith(
       exams: exams,
       isLoading: false,
       needsLogin: false,
@@ -82,15 +68,16 @@ class ExamController extends Notifier<ExamState> {
   }
 
   void _applyFilters() {
-    if (state.searchQuery.isEmpty) {
-      state = state.copyWith(filteredExams: state.exams);
+    if (_state.value.searchQuery.isEmpty) {
+      _state.value =
+          _state.value.copyWith(filteredExams: _state.value.exams);
     } else {
-      final filtered = state.exams
-          .where((e) => e.courseName.toLowerCase().contains(state.searchQuery.toLowerCase()))
+      final filtered = _state.value.exams
+          .where((e) => e.courseName
+              .toLowerCase()
+              .contains(_state.value.searchQuery.toLowerCase()))
           .toList();
-      state = state.copyWith(filteredExams: filtered);
+      _state.value = _state.value.copyWith(filteredExams: filtered);
     }
   }
 }
-
-final examControllerProvider = NotifierProvider<ExamController, ExamState>(() => ExamController());

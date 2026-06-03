@@ -1,41 +1,54 @@
 import 'dart:async';
 
-import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
+import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/cached_timetable.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
-import 'package:li_curriculum_table/features/timetable/domain/entities/cached_timetable.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
-import 'package:flutter/foundation.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/providers/timetable_providers.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_state.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/teaching_week_baseline_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_mapper.dart';
-import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
-import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
-import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_state.dart';
+import 'package:signals/signals.dart';
 
-part 'timetable_controller.g.dart';
+class TimetableController {
+  final _state = signal(initialTimetableState);
 
-@riverpod
-class TimetableController extends _$TimetableController {
-  @override
-  TimetableState build() => initialTimetableState;
+  ReadonlySignal<TimetableState> get state => _state;
+
+  // Convenience computed signals
+  late final isLoading = computed(() => _state.value.isLoading);
+  late final status = computed(() => _state.value.status);
+  late final displayWeek = computed(() => _state.value.displayWeek);
+  late final currentTeachingWeek = computed(() => _state.value.currentTeachingWeek);
+  late final data = computed(() => _state.value.data);
+  late final needsLogin = computed(() => _state.value.needsLogin);
+  late final termStartMonday = computed(() => _state.value.termStartMonday);
+  late final minWeek = computed(() => _state.value.minWeek);
+  late final maxWeek = computed(() => _state.value.maxWeek);
 
   void setTermStartDate(DateTime date) {
     _setBaselineAndInfer(referenceDate: date, referenceWeek: 1);
   }
 
   void updateDisplayWeek(int week) {
-    if (week < state.minWeek || week > state.maxWeek) return;
-    state = state.copyWith(displayWeek: week);
+    if (week < _state.value.minWeek || week > _state.value.maxWeek) return;
+    _state.value = _state.value.copyWith(displayWeek: week);
   }
 
   Future<void> restoreCachedTeachingWeekBaseline() async {
-    final repository = ref.read(teachingWeekBaselineRepositoryProvider);
+    final repository = sl<TeachingWeekBaselineRepository>();
     final baseline = await repository.loadBaseline();
     if (baseline == null) {
-      // Default to March 1st of current year if no cache
       final now = DateTime.now();
       setTermStartDate(DateTime(now.year, 3, 1));
       return;
@@ -46,9 +59,10 @@ class TimetableController extends _$TimetableController {
       referenceDate: baseline.referenceDate,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor).clamp(state.minWeek, state.maxWeek);
+    final inferred = calculateWeekIndex(DateTime.now(), anchor)
+        .clamp(_state.value.minWeek, _state.value.maxWeek);
 
-    state = state.copyWith(
+    _state.value = _state.value.copyWith(
       referenceWeek: baseline.referenceWeek,
       currentTeachingWeek: inferred,
       displayWeek: inferred,
@@ -58,11 +72,11 @@ class TimetableController extends _$TimetableController {
   }
 
   Future<void> restoreCachedTimetable() async {
-    final cacheRepository = ref.read(timetableCacheRepositoryProvider);
+    final cacheRepository = sl<TimetableCacheRepository>();
     final cachedData = await cacheRepository.loadTimetable();
-    
+
     if (cachedData != null) {
-      state = state.copyWith(
+      _state.value = _state.value.copyWith(
         data: TimetableData(
           rows: cachedData.rows,
           occurrences: buildCourseOccurrences(cachedData.rows),
@@ -71,32 +85,31 @@ class TimetableController extends _$TimetableController {
         status: '',
         needsLogin: false,
       );
-      _updateWeekRange(state.data);
+      _updateWeekRange(_state.value.data);
       return;
     }
 
-    // No cache — check if credentials exist to determine needsLogin state
     try {
-      final credentialsRepository = ref.read(credentialsRepositoryProvider);
+      final credentialsRepository = sl<CredentialsRepository>();
       final creds = await credentialsRepository.loadCredentials();
       if (creds == null || creds.isEmpty) {
-        state = state.copyWith(needsLogin: true);
+        _state.value = _state.value.copyWith(needsLogin: true);
       }
     } catch (_) {
-      state = state.copyWith(needsLogin: true);
+      _state.value = _state.value.copyWith(needsLogin: true);
     }
   }
 
   void _updateWeekRange(TimetableData? data) {
     if (data == null || data.occurrences.isEmpty) {
-      state = state.copyWith(minWeek: 1, maxWeek: 18);
+      _state.value = _state.value.copyWith(minWeek: 1, maxWeek: 18);
       return;
     }
 
     int min = 1;
     int max = 18;
-
     bool initialized = false;
+
     for (final occ in data.occurrences) {
       if (occ.startWeek != null && occ.endWeek != null) {
         if (!initialized) {
@@ -115,7 +128,7 @@ class TimetableController extends _$TimetableController {
       max = 18;
     }
 
-    state = state.copyWith(minWeek: min, maxWeek: max);
+    _state.value = _state.value.copyWith(minWeek: min, maxWeek: max);
   }
 
   void _setBaselineAndInfer({
@@ -128,37 +141,41 @@ class TimetableController extends _$TimetableController {
       referenceWeek: safeWeek,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor).clamp(state.minWeek, state.maxWeek);
+    final inferred = calculateWeekIndex(DateTime.now(), anchor)
+        .clamp(_state.value.minWeek, _state.value.maxWeek);
 
-    state = state.copyWith(
+    _state.value = _state.value.copyWith(
       referenceWeek: safeWeek,
       currentTeachingWeek: inferred,
       displayWeek: inferred,
       termStartMonday: anchor,
     );
 
-    final repository = ref.read(teachingWeekBaselineRepositoryProvider);
+    final repository = sl<TeachingWeekBaselineRepository>();
     unawaited(
-      repository.cacheBaseline(
-        TeachingWeekBaseline(
-          referenceDate: referenceDate,
-          referenceWeek: safeWeek,
-        ),
-      ).catchError((_) {}),
+      repository
+          .cacheBaseline(
+            TeachingWeekBaseline(
+              referenceDate: referenceDate,
+              referenceWeek: safeWeek,
+            ),
+          )
+          .catchError((_) {}),
     );
   }
 
   Future<void> syncFromCache() async {
     try {
-      final repository = ref.read(credentialsRepositoryProvider);
+      final repository = sl<CredentialsRepository>();
       final creds = await repository.loadCredentials();
       if (creds == null || creds.isEmpty) {
-        state = state.copyWith(needsLogin: true, status: '');
+        _state.value = _state.value.copyWith(needsLogin: true, status: '');
         return;
       }
       await fetchAndBuild(username: creds.username, password: creds.password);
     } catch (e) {
-      state = state.copyWith(isLoading: false, status: '同步失败: $e');
+      _state.value =
+          _state.value.copyWith(isLoading: false, status: '同步失败: $e');
     }
   }
 
@@ -168,31 +185,39 @@ class TimetableController extends _$TimetableController {
   }) async {
     final cleanUser = username.trim();
     if (cleanUser.isEmpty || password.isEmpty) {
-      state = state.copyWith(status: '账号和密码不能为空。');
+      _state.value = _state.value.copyWith(status: '账号和密码不能为空。');
       return;
     }
 
-    state = state.copyWith(
+    _state.value = _state.value.copyWith(
       isLoading: true,
       needsLogin: false,
       status: '正在初始化 OCR 引擎 (仅需一次)...',
     );
 
     try {
-      await ref.read(ocrInitializerProvider).ensureInitialized();
+      final ocr = sl<OcrInitializer>();
+      await ocr.ensureInitialized();
     } catch (e) {
-      state = state.copyWith(isLoading: false, status: 'OCR 引擎初始化失败: $e');
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        status: 'OCR 引擎初始化失败: $e',
+      );
       return;
     }
 
-    state = state.copyWith(status: '正在爬取课表并生成对比视图...');
+    _state.value =
+        _state.value.copyWith(status: '正在爬取课表并生成对比视图...');
 
-    final repository = ref.read(timetableRepositoryProvider);
+    final repository = sl<TimetableRepository>();
 
     try {
-      final data = await repository.fetchTimetable(username: cleanUser, password: password);
-      
-      final cacheRepository = ref.read(timetableCacheRepositoryProvider);
+      final data = await repository.fetchTimetable(
+        username: cleanUser,
+        password: password,
+      );
+
+      final cacheRepository = sl<TimetableCacheRepository>();
       try {
         await cacheRepository.cacheTimetable(
           CachedTimetable(rows: data.rows, cachedAt: DateTime.now()),
@@ -200,7 +225,7 @@ class TimetableController extends _$TimetableController {
       } catch (_) {}
 
       if (data.loginLikelySuccess) {
-        final credentialsRepository = ref.read(credentialsRepositoryProvider);
+        final credentialsRepository = sl<CredentialsRepository>();
         try {
           await credentialsRepository.cacheCredentials(
             LoginCredentials(username: cleanUser, password: password),
@@ -208,21 +233,22 @@ class TimetableController extends _$TimetableController {
         } catch (_) {}
       }
 
-      state = state.copyWith(
+      _state.value = _state.value.copyWith(
         data: data,
         status: '课表同步成功，正在拉取教室、成绩与考试信息...',
       );
       _updateWeekRange(data);
 
-      if (state.termStartMonday == null) {
+      if (_state.value.termStartMonday == null) {
         final now = DateTime.now();
         setTermStartDate(DateTime(now.year, 3, 1));
       }
 
       // --- Sync Classrooms ---
       try {
-        state = state.copyWith(status: '正在同步教室信息...');
-        await ref.read(classroomControllerProvider.notifier).syncCurrentContext();
+        _state.value =
+            _state.value.copyWith(status: '正在同步教室信息...');
+        await sl<ClassroomController>().syncCurrentContext();
       } catch (e, st) {
         if (kDebugMode) {
           print('Classroom sync failed: $e\n$st');
@@ -231,8 +257,9 @@ class TimetableController extends _$TimetableController {
 
       // --- Sync Grades ---
       try {
-        state = state.copyWith(status: '正在同步成绩信息...');
-        await ref.read(gradeControllerProvider.notifier).loadGrades(forceRefresh: true);
+        _state.value =
+            _state.value.copyWith(status: '正在同步成绩信息...');
+        await sl<GradeController>().loadGrades(forceRefresh: true);
       } catch (e, st) {
         if (kDebugMode) {
           print('Grades sync failed: $e\n$st');
@@ -241,15 +268,16 @@ class TimetableController extends _$TimetableController {
 
       // --- Sync Exams ---
       try {
-        state = state.copyWith(status: '正在同步考试信息...');
-        await ref.read(examControllerProvider.notifier).loadExams(forceRefresh: true);
+        _state.value =
+            _state.value.copyWith(status: '正在同步考试信息...');
+        await sl<ExamController>().loadExams(forceRefresh: true);
       } catch (e, st) {
         if (kDebugMode) {
           print('Exams sync failed: $e\n$st');
         }
       }
 
-      state = state.copyWith(
+      _state.value = _state.value.copyWith(
         isLoading: false,
         status: '所有信息（课表、教室、成绩、考试）同步成功！',
       );
@@ -259,11 +287,11 @@ class TimetableController extends _$TimetableController {
       final loweredErr = err.toLowerCase();
       final isConnRefused =
           RegExp(r'errno\s*[:=]\s*111\b').hasMatch(err) ||
-          loweredErr.contains('connection refused');
-      final isWebXhrNetworkError =
-          kIsWeb &&
+              loweredErr.contains('connection refused');
+      final isWebXhrNetworkError = kIsWeb &&
           (loweredErr.contains('xmlhttprequest onerror') ||
-              loweredErr.contains('networkerror when attempting to fetch resource') ||
+              loweredErr.contains(
+                  'networkerror when attempting to fetch resource') ||
               loweredErr.contains('dioexception [connection error]'));
 
       if (isConnRefused) {
@@ -272,19 +300,20 @@ class TimetableController extends _$TimetableController {
         message = '抓取失败，代理服务暂不可用，请稍后重试。';
       }
 
-      state = state.copyWith(isLoading: false, status: message);
+      _state.value = _state.value.copyWith(isLoading: false, status: message);
     }
   }
 
   Future<void> clearAllCache() async {
-    state = state.copyWith(isLoading: true, status: '正在清除缓存...');
-    final store = ref.read(secureStorageStoreProvider);
+    _state.value =
+        _state.value.copyWith(isLoading: true, status: '正在清除缓存...');
+    final store = sl<SecureStorageStore>();
     await store.deleteAllExcept([
       'timetable.credentials.username',
       'timetable.credentials.password',
     ]);
 
-    state = initialTimetableState.copyWith(
+    _state.value = initialTimetableState.copyWith(
       needsLogin: false,
       status: '缓存已清除。',
     );

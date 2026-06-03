@@ -29,7 +29,11 @@ reqwest = { version = "0.13.4", default-features = false, features = [
     "form",
 ] }
 log = "0.4.31"
+log = "0.4.31"
 scraper = "0.27.0"
+burn = { version = "0.21.0", default-features = false, features = ["std"] }
+burn-flex = { version = "0.21.0", default-features = false, features = ["std"] }
+burn-store = { version = "0.21.0", default-features = false, features = ["std", "burnpack"] }
 burn = { version = "0.21.0", default-features = false, features = ["std"] }
 burn-flex = { version = "0.21.0", default-features = false, features = ["std"] }
 burn-store = { version = "0.21.0", default-features = false, features = ["std", "burnpack"] }
@@ -54,9 +58,12 @@ half = { version = "2.7.1", features = ["num-traits", "serde"] }
 serde = { version = "1.0.228", features = ["derive"] }
 burn = { version = "0.21.0" }
 burn-store = { version = "0.21.0" }
+burn = { version = "0.21.0" }
+burn-store = { version = "0.21.0" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 tokio = { version = "1.51.1", features = ["net", "time"] }
+mimalloc = "0.1.52"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.4.2", features = ["wasm_js"] }
