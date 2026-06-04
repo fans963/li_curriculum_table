@@ -3,7 +3,9 @@ import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/grades/domain/models/grade.dart';
 import 'package:li_curriculum_table/features/grades/domain/repositories/grade_repository.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
+import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
 
 class GradeController {
   final _state = signal(const GradeState());
@@ -11,7 +13,18 @@ class GradeController {
   ReadonlySignal<GradeState> get state => _state;
 
   Future<void> init() async {
-    await loadGrades();
+    // 1. Load from cache first
+    await loadGrades(forceRefresh: false);
+    // 2. If logged in, automatically pull in the background
+    final credentialsRepository = sl<CredentialsRepository>();
+    final creds = await credentialsRepository.loadCredentials();
+    if (creds != null && !creds.isEmpty) {
+      loadGrades(forceRefresh: true).catchError((e) {
+        if (kDebugMode) {
+          print('Auto remote sync of grades failed: $e');
+        }
+      });
+    }
   }
 
   Future<void> loadGrades({bool forceRefresh = false}) async {

@@ -5,6 +5,8 @@ import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
+import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:window_manager/window_manager.dart';
@@ -42,6 +44,8 @@ Future<void> main() async {
 
   // Initialize application settings and background services (like proxy server)
   sl<SettingsController>().init();
+  sl<GradeController>().init();
+  sl<ExamController>().init();
 
   runApp(const CurriculumTableApp());
 }

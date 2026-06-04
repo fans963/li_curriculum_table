@@ -5,6 +5,7 @@ import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.da
 import 'package:li_curriculum_table/features/exam_schedule/domain/repositories/exam_repository.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
 import 'package:signals/signals.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
 
 class ExamController {
   final _state = signal(const ExamState());
@@ -12,7 +13,18 @@ class ExamController {
   ReadonlySignal<ExamState> get state => _state;
 
   Future<void> init() async {
-    await loadExams();
+    // 1. Load from cache first
+    await loadExams(forceRefresh: false);
+    // 2. If logged in, automatically pull in the background
+    final credentialsRepository = sl<CredentialsRepository>();
+    final creds = await credentialsRepository.loadCredentials();
+    if (creds != null && !creds.isEmpty) {
+      loadExams(forceRefresh: true).catchError((e) {
+        if (kDebugMode) {
+          print('Auto remote sync of exams failed: $e');
+        }
+      });
+    }
   }
 
   Future<void> loadExams({bool forceRefresh = false}) async {
