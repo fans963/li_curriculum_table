@@ -59,29 +59,39 @@ class UpdateService {
   UpdateInfo? _cachedResult;
   DateTime? _lastFetchTime;
 
-  UpdateService({Dio? dio}) : _dio = dio ?? Dio();
+  UpdateService({Dio? dio})
+      : _dio = dio ??
+            Dio(BaseOptions(
+              connectTimeout: const Duration(seconds: 10),
+              receiveTimeout: const Duration(seconds: 10),
+            ));
 
   /// Returns [UpdateInfo] if successful, or null if the check failed
   /// (network error, API rate limit, etc.).
   /// Results are cached for [_cacheDuration] to avoid rate limiting.
   Future<UpdateInfo?> checkForUpdate() async {
-    // Return cached result if still fresh.
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = packageInfo.version;
+
+    // Return cached result if still fresh, but always re-check currentVersion
+    // so we don't report stale version info after an app update.
     if (_cachedResult != null && _lastFetchTime != null) {
       final age = DateTime.now().difference(_lastFetchTime!);
       if (age < _cacheDuration) {
-        return _cachedResult;
+        if (_cachedResult!.currentVersion != currentVersion) {
+          // App was updated — invalidate cache
+          _cachedResult = null;
+        } else {
+          return _cachedResult;
+        }
       }
     }
-
-    final packageInfo = await PackageInfo.fromPlatform();
-    final currentVersion = packageInfo.version;
 
     try {
       final response = await _dio.get(
         _apiUrl,
         options: Options(
           headers: {'Accept': 'application/vnd.github.v3+json'},
-          receiveTimeout: const Duration(seconds: 10),
         ),
       );
 

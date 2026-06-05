@@ -1,5 +1,8 @@
 import '../../domain/models/grade.dart';
 
+/// Sentinel value to distinguish "not provided" from "explicitly set to null".
+const _unset = Object();
+
 class GradeState {
   final List<GradeEntity> grades;
   final List<GradeEntity> filteredGrades;
@@ -29,7 +32,7 @@ class GradeState {
     List<GradeEntity>? grades,
     List<GradeEntity>? filteredGrades,
     bool? isLoading,
-    String? errorMessage,
+    Object? errorMessage = _unset,
     String? searchQuery,
     double? weightedAverage,
     double? totalCredits,
@@ -41,11 +44,14 @@ class GradeState {
       grades: grades ?? this.grades,
       filteredGrades: filteredGrades ?? this.filteredGrades,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
       searchQuery: searchQuery ?? this.searchQuery,
       weightedAverage: weightedAverage ?? this.weightedAverage,
       totalCredits: totalCredits ?? this.totalCredits,
-      compulsoryWeightedAverage: compulsoryWeightedAverage ?? this.compulsoryWeightedAverage,
+      compulsoryWeightedAverage:
+          compulsoryWeightedAverage ?? this.compulsoryWeightedAverage,
       compulsoryCredits: compulsoryCredits ?? this.compulsoryCredits,
       needsLogin: needsLogin ?? this.needsLogin,
     );

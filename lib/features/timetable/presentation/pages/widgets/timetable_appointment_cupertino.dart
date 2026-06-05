@@ -36,7 +36,7 @@ Widget buildCupertinoAppointmentCard({
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor, width: 0.5),
         ),
         child: Row(
@@ -46,8 +46,8 @@ Widget buildCupertinoAppointmentCard({
               decoration: BoxDecoration(
                 color: tone.accent,
                 borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
+                  topLeft: Radius.circular(16),
+                  bottomLeft: Radius.circular(16),
                 ),
               ),
             ),

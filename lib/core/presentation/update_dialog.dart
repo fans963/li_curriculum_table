@@ -95,7 +95,7 @@ class _MaterialUpdateDialog extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       title: Row(
         children: [
           Icon(Icons.system_update_rounded, color: colorScheme.primary),
@@ -208,9 +208,13 @@ class _MaterialUpdateDialog extends StatelessWidget {
           icon: const Icon(Icons.download_rounded, size: 18),
           label: const Text('前往下载'),
           onPressed: () async {
-            final url = Uri.parse(updateInfo.releaseUrl);
-            if (await canLaunchUrl(url)) {
-              await launchUrl(url, mode: LaunchMode.externalApplication);
+            try {
+              final url = Uri.parse(updateInfo.releaseUrl);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              }
+            } catch (e) {
+              debugPrint('Failed to launch URL: $e');
             }
             if (context.mounted) Navigator.pop(context);
           },
@@ -279,10 +283,14 @@ class _CupertinoUpdateDialog extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                   minimumSize: const Size(0, 32),
                   onPressed: () async {
-                    final url = Uri.parse(updateInfo.releaseUrl);
-                    if (await canLaunchUrl(url)) {
-                      await launchUrl(url,
-                          mode: LaunchMode.externalApplication);
+                    try {
+                      final url = Uri.parse(updateInfo.releaseUrl);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url,
+                            mode: LaunchMode.externalApplication);
+                      }
+                    } catch (e) {
+                      debugPrint('Failed to launch URL: $e');
                     }
                     if (context.mounted) Navigator.pop(context);
                   },
@@ -423,8 +431,24 @@ class _CupertinoUpdateDialog extends StatelessWidget {
                                         const EdgeInsets.symmetric(vertical: 8),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(url,
-                                          fit: BoxFit.contain),
+                                      child: Image.network(
+                                        url,
+                                        fit: BoxFit.contain,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                          return Container(
+                                            padding: const EdgeInsets.all(16),
+                                            alignment: Alignment.center,
+                                            child: Icon(
+                                              CupertinoIcons.photo,
+                                              color: CupertinoColors
+                                                  .systemGrey
+                                                  .resolveFrom(context),
+                                              size: 32,
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                                   );
                                 },

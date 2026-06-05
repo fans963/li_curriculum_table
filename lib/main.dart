@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/app/app.dart';
@@ -8,22 +9,34 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
-  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
-  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  WidgetsFlutterBinding.ensureInitialized();
 
-  await RustLib.init();
+  // Global error handler for uncaught exceptions
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    if (kDebugMode) {
+      debugPrint('Flutter error: ${details.exceptionAsString()}');
+    }
+  };
+
+  // Initialize Rust FFI bridge with error handling
+  try {
+    await RustLib.init();
+  } catch (e) {
+    debugPrint('Rust bridge initialization failed: $e');
+    // Continue without Rust — features depending on it will degrade gracefully
+  }
 
   // Hide system status bar for a more unified look on mobile
-  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
 
-    WindowOptions windowOptions = const WindowOptions(
+    const windowOptions = WindowOptions(
       size: Size(1500, 1000),
       center: true,
       backgroundColor: Colors.transparent,
@@ -42,10 +55,16 @@ Future<void> main() async {
   // Start loading OCR engine in background to avoid blocking startup
   sl<OcrInitializer>().ensureInitialized();
 
-  // Initialize application settings and background services (like proxy server)
-  sl<SettingsController>().init();
-  sl<GradeController>().init();
-  sl<ExamController>().init();
+  // Await settings so the first frame renders with persisted theme, not defaults
+  await sl<SettingsController>().init();
+
+  // Fire-and-forget: these load data into signals asynchronously
+  sl<GradeController>().init().catchError((e) {
+    if (kDebugMode) debugPrint('GradeController init error: $e');
+  });
+  sl<ExamController>().init().catchError((e) {
+    if (kDebugMode) debugPrint('ExamController init error: $e');
+  });
 
   runApp(const CurriculumTableApp());
 }

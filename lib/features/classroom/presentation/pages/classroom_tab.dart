@@ -16,7 +16,11 @@ class ClassroomTab extends StatefulWidget {
   State<ClassroomTab> createState() => _ClassroomTabState();
 }
 
-class _ClassroomTabState extends State<ClassroomTab> {
+class _ClassroomTabState extends State<ClassroomTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   void initState() {
     super.initState();
@@ -25,6 +29,7 @@ class _ClassroomTabState extends State<ClassroomTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final notifier = sl<ClassroomController>();
       final state = notifier.state.value;

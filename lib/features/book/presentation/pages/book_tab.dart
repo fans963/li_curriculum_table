@@ -16,7 +16,11 @@ class BookTab extends StatefulWidget {
   State<BookTab> createState() => _BookTabState();
 }
 
-class _BookTabState extends State<BookTab> {
+class _BookTabState extends State<BookTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final _searchController = TextEditingController();
   bool _isLoading = false;
   List<BookInfo> _books = [];
@@ -68,6 +72,7 @@ class _BookTabState extends State<BookTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final ds = sl<SettingsController>().designStyle.value;
 
@@ -178,7 +183,7 @@ class _BookTabState extends State<BookTab> {
       isScrollControlled: true,
       backgroundColor: colorScheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
       ),
       builder: (context) {
         return DraggableScrollableSheet(

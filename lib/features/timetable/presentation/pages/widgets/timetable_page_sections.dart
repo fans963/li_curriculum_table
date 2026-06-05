@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class TimetableControlPanel extends StatelessWidget {
+class TimetableControlPanel extends StatefulWidget {
   const TimetableControlPanel({
     super.key,
     required this.usernameController,
@@ -22,6 +22,39 @@ class TimetableControlPanel extends StatelessWidget {
   final VoidCallback? onLoginPressed;
 
   @override
+  State<TimetableControlPanel> createState() => _TimetableControlPanelState();
+}
+
+class _TimetableControlPanelState extends State<TimetableControlPanel> {
+  late final TextEditingController _termStartController;
+
+  @override
+  void initState() {
+    super.initState();
+    _termStartController = TextEditingController(
+      text: widget.termStartMonday != null
+          ? DateFormat('yyyy-MM-dd').format(widget.termStartMonday!)
+          : '未设置',
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant TimetableControlPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.termStartMonday != widget.termStartMonday) {
+      _termStartController.text = widget.termStartMonday != null
+          ? DateFormat('yyyy-MM-dd').format(widget.termStartMonday!)
+          : '未设置';
+    }
+  }
+
+  @override
+  void dispose() {
+    _termStartController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -39,8 +72,8 @@ class TimetableControlPanel extends StatelessWidget {
         child: Column(
           children: [
             TextField(
-              controller: usernameController,
-              enabled: !isLoading,
+              controller: widget.usernameController,
+              enabled: !widget.isLoading,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: '教务系统账号',
@@ -52,8 +85,8 @@ class TimetableControlPanel extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: passwordController,
-              enabled: !isLoading,
+              controller: widget.passwordController,
+              enabled: !widget.isLoading,
               obscureText: true,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
@@ -64,13 +97,13 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
             ),
-            if (onLoginPressed != null) ...[
+            if (widget.onLoginPressed != null) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: FilledButton.icon(
-                  icon: isLoading
+                  icon: widget.isLoading
                       ? const SizedBox(
                           width: 20,
                           height: 20,
@@ -80,25 +113,21 @@ class TimetableControlPanel extends StatelessWidget {
                           ),
                         )
                       : const Icon(Icons.cloud_sync_rounded),
-                  label: Text(isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息'),
-                  onPressed: isLoading ? null : onLoginPressed,
+                  label: Text(widget.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息'),
+                  onPressed: widget.isLoading ? null : widget.onLoginPressed,
                 ),
               ),
             ],
             const SizedBox(height: 12),
             TextFormField(
               readOnly: true,
-              controller: TextEditingController(
-                text: termStartMonday != null
-                    ? DateFormat('yyyy-MM-dd').format(termStartMonday!)
-                    : '未设置',
-              ),
-              enabled: !isLoading,
+              controller: _termStartController,
+              enabled: !widget.isLoading,
               decoration: InputDecoration(
                 labelText: '本学期开学日期',
                 prefixIcon: const Icon(Icons.calendar_month_outlined),
                 suffixIcon: const Icon(Icons.edit_calendar_outlined, size: 20),
-                helperText: '当前推算为第 $currentTeachingWeek 周',
+                helperText: '当前推算为第 ${widget.currentTeachingWeek} 周',
                 helperStyle: TextStyle(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
@@ -107,7 +136,7 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
               onTap: () async {
-                final initialDate = termStartMonday ?? DateTime.now();
+                final initialDate = widget.termStartMonday ?? DateTime.now();
                 final pickedDate = await showDatePicker(
                   context: context,
                   initialDate: initialDate,
@@ -116,7 +145,7 @@ class TimetableControlPanel extends StatelessWidget {
                   helpText: '选择开学日期 (第一周周一)',
                 );
                 if (pickedDate != null) {
-                  onTermStartDateChanged(pickedDate);
+                  widget.onTermStartDateChanged(pickedDate);
                 }
               },
             ),
@@ -202,71 +231,3 @@ class TimetableStatusBanner extends StatelessWidget {
   }
 }
 
-class TimetableSummaryItem {
-  const TimetableSummaryItem({required this.label, required this.value});
-
-  final String label;
-  final String value;
-}
-
-class TimetableSummaryChip extends StatelessWidget {
-  const TimetableSummaryChip({
-    super.key,
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          children: [
-            TextSpan(text: '$label: '),
-            TextSpan(
-              text: value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class TimetableEmptyCalendarTip extends StatelessWidget {
-  const TimetableEmptyCalendarTip({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.event_note, size: 34, color: Colors.grey.shade500),
-          const SizedBox(height: 8),
-          Text('暂无课表数据', style: textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text('请先输入账号密码并执行抓取。', style: textTheme.bodySmall),
-        ],
-      ),
-    );
-  }
-}

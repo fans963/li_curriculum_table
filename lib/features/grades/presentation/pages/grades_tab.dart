@@ -11,11 +11,21 @@ import 'package:collection/collection.dart';
 import 'package:signals/signals_flutter.dart';
 import 'grades_cupertino.dart';
 
-class GradesTab extends StatelessWidget {
+class GradesTab extends StatefulWidget {
   const GradesTab({super.key});
 
   @override
+  State<GradesTab> createState() => _GradesTabState();
+}
+
+class _GradesTabState extends State<GradesTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final state = sl<GradeController>().state.value;
       final isCupertino = AdaptiveStyle.isCupertino(

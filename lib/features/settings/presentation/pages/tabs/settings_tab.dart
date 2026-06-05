@@ -32,7 +32,11 @@ class SettingsTab extends StatefulWidget {
   State<SettingsTab> createState() => _SettingsTabState();
 }
 
-class _SettingsTabState extends State<SettingsTab> {
+class _SettingsTabState extends State<SettingsTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   Timer? _saveDebounce;
@@ -98,6 +102,7 @@ class _SettingsTabState extends State<SettingsTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final state = sl<TimetableController>().state.value;
       final settings = sl<SettingsController>().state.value;
@@ -377,7 +382,7 @@ class _SettingsTabState extends State<SettingsTab> {
     }
 
     try {
-      final updateInfo = await UpdateService().checkForUpdate();
+      final updateInfo = await sl<UpdateService>().checkForUpdate();
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
       if (context.mounted) {
         await showUpdateDialogIfNeeded(context, updateInfo, silent: false);

@@ -32,13 +32,16 @@ dependencies:
   share_plus: ^13.1.0
   cross_file: ^0.3.4+2
   collection: ^1.19.1
-  flutter_native_splash: ^2.4.4
   package_info_plus: ^10.1.0
   dio: ^5.9.2
   url_launcher: ^6.3.2
   markdown_widget: ^2.3.2+8
   cupertino_icons: ^1.0.9
   cupertino_liquid_glass: ^0.6.0
+  geolocator: ^14.0.2
+
+dependency_overrides:
+  uuid: ^4.5.0
 
 dev_dependencies:
   flutter_test:
@@ -66,11 +69,3 @@ msix_config:
   logo_path: assets/icon/icon.png
   capabilities: internetClient, location, microphone, webcam
 
-flutter_native_splash:
-  color: "#0A7C6D"
-  image: assets/icon/icon.png
-  android_12:
-    color: "#0A7C6D"
-    image: assets/icon/icon.png
-  web: false
-  fullscreen: true

@@ -1,5 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Colors;
 import 'package:intl/intl.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -15,7 +16,7 @@ Widget buildClassroomCupertino(
 ) {
   final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     child: Stack(
       children: [
         Positioned.fill(
@@ -105,7 +106,7 @@ Widget _buildCupertinoDateSelector(BuildContext context, ClassroomState state) {
             final isSelected = isSameDay(state.selectedDate, date);
             return CupertinoButton(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              minimumSize: const Size(0, 32),
+              minimumSize: const Size(0, 44),
               color: isSelected
                   ? CupertinoColors.systemBlue.resolveFrom(context)
                   : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
@@ -127,7 +128,7 @@ Widget _buildCupertinoDateSelector(BuildContext context, ClassroomState state) {
             final isQuickDate = dates.any((d) => isSameDay(state.selectedDate, d));
             return CupertinoButton(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              minimumSize: const Size(0, 32),
+              minimumSize: const Size(0, 44),
               color: !isQuickDate
                   ? CupertinoColors.systemBlue.resolveFrom(context)
                   : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
@@ -228,7 +229,7 @@ Widget _buildCupertinoCampusSelector(BuildContext context, ClassroomState state)
               final isSelected = campus.id == state.selectedCampus?.id;
               return CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                minimumSize: const Size(0, 32),
+                minimumSize: const Size(0, 44),
                 color: isSelected
                     ? CupertinoColors.systemBlue.resolveFrom(context)
                     : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
@@ -280,7 +281,7 @@ Widget _buildCupertinoBuildingSelector(BuildContext context, ClassroomState stat
               final isSelected = building.id == state.selectedBuilding?.id;
               return CupertinoButton(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-                minimumSize: const Size(0, 32),
+                minimumSize: const Size(0, 44),
                 color: isSelected
                     ? CupertinoColors.systemBlue.resolveFrom(context)
                     : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
@@ -314,9 +315,9 @@ Widget _buildCupertinoNeedsLogin(BuildContext context) {
         const SizedBox(height: 16),
         const Text('需要登录'),
         const SizedBox(height: 8),
-        const Text(
+        Text(
           '请先前往「设置」页面输入账号密码',
-          style: TextStyle(color: CupertinoColors.secondaryLabel, fontSize: 13),
+          style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context), fontSize: 13),
         ),
         const SizedBox(height: 24),
         CupertinoButton.filled(

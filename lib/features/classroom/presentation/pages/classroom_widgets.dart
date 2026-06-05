@@ -333,7 +333,7 @@ class ClassroomSliverList extends StatelessWidget {
             margin: const EdgeInsets.only(bottom: 8),
             color: colorScheme.surfaceContainerLowest,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
               side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
             ),
             child: Padding(

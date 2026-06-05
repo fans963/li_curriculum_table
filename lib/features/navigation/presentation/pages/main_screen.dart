@@ -1,5 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
@@ -19,7 +20,6 @@ import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/se
 import 'package:li_curriculum_table/features/timetable/presentation/bar/title_bar.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/timetable_tab.dart';
 import 'package:li_curriculum_table/util/util.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:signals/signals_flutter.dart';
 
 class MainScreen extends StatefulWidget {
@@ -31,6 +31,8 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late final PageController _pageController;
+  // GlobalKey lets Flutter reuse the PageView even when its parent
+  // widget tree changes between Material and Cupertino layouts.
   final _pageViewKey = GlobalKey();
   final _nav = sl<NavigationController>();
   final _sync = sl<GlobalSyncController>();
@@ -39,9 +41,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    FlutterNativeSplash.remove();
     _pageController = PageController(initialPage: _nav.currentIndex.value);
     WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkForUpdate() async {
@@ -50,13 +57,34 @@ class _MainScreenState extends State<MainScreen> {
       if (mounted) {
         await showUpdateDialogIfNeeded(context, updateInfo, silent: true);
       }
-    } catch (_) {}
+    } catch (e) {
+      if (kDebugMode) debugPrint('Update check error: $e');
+    }
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  /// Build the page content once with a GlobalKey so Flutter can match it
+  /// across design style changes regardless of parent widget tree shape.
+  Widget _buildPageContent() {
+    return Column(
+      key: _pageViewKey,
+      children: [
+        if (isDesktop) TitleBar(),
+        Expanded(
+          child: PageView(
+            controller: _pageController,
+            physics: const NeverScrollableScrollPhysics(),
+            children: const [
+              TimetableTab(),
+              ClassroomTab(),
+              GradesTab(),
+              ExamScheduleTab(),
+              BookTab(),
+              SettingsTab(),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -68,36 +96,17 @@ class _MainScreenState extends State<MainScreen> {
       final ds = settings.designStyle;
       final isCupertino = AdaptiveStyle.isCupertino(ds);
 
-      final pageView = PageView(
-        key: _pageViewKey,
-        controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
-        children: [
-          TimetableTab(),
-          ClassroomTab(),
-          GradesTab(),
-          ExamScheduleTab(),
-          BookTab(),
-          SettingsTab(),
-        ],
-      );
-
       if (isCupertino) {
-        // iOS 26: content fills entire screen, floating tab bar on top
+        // Cupertino: liquid glass bar floats OVER the content
         return Scaffold(
           body: Stack(
             children: [
-              Column(
-                children: [
-                  if (isDesktop) TitleBar(),
-                  Expanded(child: pageView),
-                ],
-              ),
+              _buildPageContent(),
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: 0,
-                child: _buildLiquidGlassTabBar(
+                child: _buildCupertinoTabBar(
                   context, currentIndex, ds, isSyncing,
                 ),
               ),
@@ -106,75 +115,71 @@ class _MainScreenState extends State<MainScreen> {
         );
       }
 
+      // Material: standard Scaffold with bottomNavigationBar + FAB
       return Scaffold(
-        body: Column(
-          children: [
-            if (isDesktop) TitleBar(),
-            Expanded(child: pageView),
-          ],
-        ),
+        body: _buildPageContent(),
         floatingActionButton: (currentIndex == 4 || currentIndex == 5)
             ? null
             : FloatingActionButton(
-                onPressed: isSyncing
-                    ? null
-                    : () => _sync.syncGlobal(),
+                onPressed: isSyncing ? null : () => _sync.syncGlobal(),
+                tooltip: '同步数据',
                 child: isSyncing
                     ? adaptiveActivityIndicator(
                         designStyle: ds,
                         size: 24,
-                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        color:
+                            Theme.of(context).colorScheme.onPrimaryContainer,
                       )
                     : const Icon(Icons.refresh),
               ),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: (index) {
-            _nav.setIndex(index);
-            _pageController.animateToPage(
-              index,
-              duration: kDefaultAnimationDuration,
-              curve: kDefaultAnimationCurve,
-            );
-          },
-          destinations: [
-            NavigationDestination(
-              icon: Icon(AppIcons.timetableOutline(ds)),
-              selectedIcon: Icon(AppIcons.timetable(ds)),
-              label: '课表',
-            ),
-            NavigationDestination(
-              icon: Icon(AppIcons.classroomOutline(ds)),
-              selectedIcon: Icon(AppIcons.classroom(ds)),
-              label: '空闲教室',
-            ),
-            NavigationDestination(
-              icon: Icon(AppIcons.gradeOutline(ds)),
-              selectedIcon: Icon(AppIcons.grade(ds)),
-              label: '成绩',
-            ),
-            NavigationDestination(
-              icon: Icon(AppIcons.examOutline(ds)),
-              selectedIcon: Icon(AppIcons.exam(ds)),
-              label: '考试',
-            ),
-            NavigationDestination(
-              icon: Icon(AppIcons.bookOutline(ds)),
-              selectedIcon: Icon(AppIcons.book(ds)),
-              label: '图书',
-            ),
-            NavigationDestination(
-              icon: Icon(AppIcons.settingsOutline(ds)),
-              selectedIcon: Icon(AppIcons.settings(ds)),
-              label: '设置',
-            ),
-          ],
-        ),
+        bottomNavigationBar: _buildMaterialNavBar(currentIndex, ds),
       );
     });
   }
 
-  Widget _buildLiquidGlassTabBar(
+  Widget _buildMaterialNavBar(int currentIndex, DesignStyle ds) {
+    return NavigationBar(
+      selectedIndex: currentIndex,
+      onDestinationSelected: (index) {
+        _nav.setIndex(index);
+        _pageController.jumpToPage(index);
+      },
+      destinations: [
+        NavigationDestination(
+          icon: Icon(AppIcons.timetableOutline(ds)),
+          selectedIcon: Icon(AppIcons.timetable(ds)),
+          label: '课表',
+        ),
+        NavigationDestination(
+          icon: Icon(AppIcons.classroomOutline(ds)),
+          selectedIcon: Icon(AppIcons.classroom(ds)),
+          label: '空闲教室',
+        ),
+        NavigationDestination(
+          icon: Icon(AppIcons.gradeOutline(ds)),
+          selectedIcon: Icon(AppIcons.grade(ds)),
+          label: '成绩',
+        ),
+        NavigationDestination(
+          icon: Icon(AppIcons.examOutline(ds)),
+          selectedIcon: Icon(AppIcons.exam(ds)),
+          label: '考试',
+        ),
+        NavigationDestination(
+          icon: Icon(AppIcons.bookOutline(ds)),
+          selectedIcon: Icon(AppIcons.book(ds)),
+          label: '图书',
+        ),
+        NavigationDestination(
+          icon: Icon(AppIcons.settingsOutline(ds)),
+          selectedIcon: Icon(AppIcons.settings(ds)),
+          label: '设置',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCupertinoTabBar(
     BuildContext context,
     int currentIndex,
     DesignStyle ds,
@@ -185,11 +190,7 @@ class _MainScreenState extends State<MainScreen> {
       currentIndex: currentIndex,
       onTap: (index) {
         _nav.setIndex(index);
-        _pageController.animateToPage(
-          index,
-          duration: kDefaultAnimationDuration,
-          curve: kDefaultAnimationCurve,
-        );
+        _pageController.jumpToPage(index);
       },
       items: [
         LiquidGlassBottomBarItem(

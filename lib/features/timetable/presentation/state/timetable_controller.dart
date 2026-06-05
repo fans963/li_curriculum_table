@@ -36,6 +36,9 @@ class TimetableController {
   late final minWeek = computed(() => _state.value.minWeek);
   late final maxWeek = computed(() => _state.value.maxWeek);
 
+  // Guard against concurrent fetchAndBuild / syncFromCache calls
+  bool _isFetching = false;
+
   void setTermStartDate(DateTime date) {
     _setBaselineAndInfer(referenceDate: date, referenceWeek: 1);
   }
@@ -160,11 +163,17 @@ class TimetableController {
               referenceWeek: safeWeek,
             ),
           )
-          .catchError((_) {}),
+          .catchError((e) {
+        if (kDebugMode) {
+          debugPrint('Failed to cache teaching week baseline: $e');
+        }
+      }),
     );
   }
 
   Future<void> syncFromCache() async {
+    if (_isFetching) return;
+    _isFetching = true;
     try {
       final repository = sl<CredentialsRepository>();
       final creds = await repository.loadCredentials();
@@ -176,6 +185,8 @@ class TimetableController {
     } catch (e) {
       _state.value =
           _state.value.copyWith(isLoading: false, status: '同步失败: $e');
+    } finally {
+      _isFetching = false;
     }
   }
 
@@ -183,9 +194,13 @@ class TimetableController {
     required String username,
     required String password,
   }) async {
+    if (_isFetching) return;
+    _isFetching = true;
+
     final cleanUser = username.trim();
     if (cleanUser.isEmpty || password.isEmpty) {
       _state.value = _state.value.copyWith(status: '账号和密码不能为空。');
+      _isFetching = false;
       return;
     }
 
@@ -203,6 +218,7 @@ class TimetableController {
         isLoading: false,
         status: 'OCR 引擎初始化失败: $e',
       );
+      _isFetching = false;
       return;
     }
 
@@ -222,7 +238,11 @@ class TimetableController {
         await cacheRepository.cacheTimetable(
           CachedTimetable(rows: data.rows, cachedAt: DateTime.now()),
         );
-      } catch (_) {}
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Failed to cache timetable: $e');
+        }
+      }
 
       if (data.loginLikelySuccess) {
         final credentialsRepository = sl<CredentialsRepository>();
@@ -230,7 +250,11 @@ class TimetableController {
           await credentialsRepository.cacheCredentials(
             LoginCredentials(username: cleanUser, password: password),
           );
-        } catch (_) {}
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('Failed to cache credentials: $e');
+          }
+        }
       }
 
       _state.value = _state.value.copyWith(
@@ -244,14 +268,18 @@ class TimetableController {
         setTermStartDate(DateTime(now.year, 3, 1));
       }
 
+      // Track sub-sync failures for accurate status message
+      final List<String> failedSyncs = [];
+
       // --- Sync Classrooms ---
       try {
         _state.value =
             _state.value.copyWith(status: '正在同步教室信息...');
         await sl<ClassroomController>().syncCurrentContext();
       } catch (e, st) {
+        failedSyncs.add('教室');
         if (kDebugMode) {
-          print('Classroom sync failed: $e\n$st');
+          debugPrint('Classroom sync failed: $e\n$st');
         }
       }
 
@@ -261,8 +289,9 @@ class TimetableController {
             _state.value.copyWith(status: '正在同步成绩信息...');
         await sl<GradeController>().loadGrades(forceRefresh: true);
       } catch (e, st) {
+        failedSyncs.add('成绩');
         if (kDebugMode) {
-          print('Grades sync failed: $e\n$st');
+          debugPrint('Grades sync failed: $e\n$st');
         }
       }
 
@@ -272,14 +301,22 @@ class TimetableController {
             _state.value.copyWith(status: '正在同步考试信息...');
         await sl<ExamController>().loadExams(forceRefresh: true);
       } catch (e, st) {
+        failedSyncs.add('考试');
         if (kDebugMode) {
-          print('Exams sync failed: $e\n$st');
+          debugPrint('Exams sync failed: $e\n$st');
         }
+      }
+
+      final String completionMsg;
+      if (failedSyncs.isEmpty) {
+        completionMsg = '所有信息（课表、教室、成绩、考试）同步成功！';
+      } else {
+        completionMsg = '课表同步成功，但${failedSyncs.join('、')}同步失败，请稍后重试。';
       }
 
       _state.value = _state.value.copyWith(
         isLoading: false,
-        status: '所有信息（课表、教室、成绩、考试）同步成功！',
+        status: completionMsg,
       );
     } catch (e) {
       final err = e.toString();
@@ -301,6 +338,8 @@ class TimetableController {
       }
 
       _state.value = _state.value.copyWith(isLoading: false, status: message);
+    } finally {
+      _isFetching = false;
     }
   }
 

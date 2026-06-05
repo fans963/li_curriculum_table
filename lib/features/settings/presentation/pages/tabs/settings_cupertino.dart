@@ -67,7 +67,7 @@ Widget _buildCupertinoPage({
 }) {
   final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     child: Stack(
       children: [
         Positioned.fill(
@@ -290,9 +290,12 @@ Widget buildCupertinoBody({
               leading: const Icon(CupertinoIcons.rectangle_grid_1x2, size: 29),
               title: const Text('按星期滑动'),
               subtitle: const Text('以整周为单位左右对齐滑动'),
-              trailing: CupertinoSwitch(
-                value: settings.weeklyScroll,
-                onChanged: (val) => notifier.setWeeklyScroll(val),
+              onTap: () => notifier.setWeeklyScroll(!settings.weeklyScroll),
+              trailing: IgnorePointer(
+                child: CupertinoSwitch(
+                  value: settings.weeklyScroll,
+                  onChanged: (_) {},
+                ),
               ),
             ),
           ],
@@ -307,9 +310,12 @@ Widget buildCupertinoBody({
               CupertinoListTile(
                 leading: const Icon(CupertinoIcons.wifi, size: 29),
                 title: const Text('开启本地代理网关'),
-                trailing: CupertinoSwitch(
-                  value: settings.proxyEnabled,
-                  onChanged: (val) => notifier.setProxyEnabled(val),
+                onTap: () => notifier.setProxyEnabled(!settings.proxyEnabled),
+                trailing: IgnorePointer(
+                  child: CupertinoSwitch(
+                    value: settings.proxyEnabled,
+                    onChanged: (_) {},
+                  ),
                 ),
               ),
               CupertinoListTile(
@@ -389,9 +395,12 @@ Widget buildCupertinoThemeSection(
         leading: const Icon(CupertinoIcons.color_filter, size: 29),
         title: const Text('动态取色'),
         subtitle: const Text('从壁纸或系统提取主题色'),
-        trailing: CupertinoSwitch(
-          value: settings.useDynamicColor,
-          onChanged: (val) => notifier.setUseDynamicColor(val),
+        onTap: () => notifier.setUseDynamicColor(!settings.useDynamicColor),
+        trailing: IgnorePointer(
+          child: CupertinoSwitch(
+            value: settings.useDynamicColor,
+            onChanged: (_) {},
+          ),
         ),
       ),
       if (!settings.useDynamicColor) ...[
@@ -891,7 +900,7 @@ Future<void> checkForUpdateCupertino(BuildContext context) async {
   );
 
   try {
-    final updateInfo = await UpdateService().checkForUpdate();
+    final updateInfo = await sl<UpdateService>().checkForUpdate();
     if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
     if (context.mounted) {
       await showUpdateDialogIfNeeded(context, updateInfo, silent: false);

@@ -1,5 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Colors;
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
 import '../state/exam_controller.dart';
@@ -8,7 +9,7 @@ import '../../domain/models/exam.dart';
 Widget buildExamScheduleCupertino(BuildContext context, ExamState state) {
   final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     child: Stack(
       children: [
         Positioned.fill(
@@ -125,10 +126,10 @@ Widget _buildCupertinoExamList(BuildContext context, ExamState state) {
           children: [
             Text(
               '${upcoming.length} 场待考',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: CupertinoColors.systemBlue,
+                color: CupertinoColors.systemBlue.resolveFrom(context),
               ),
             ),
             const SizedBox(width: 16),

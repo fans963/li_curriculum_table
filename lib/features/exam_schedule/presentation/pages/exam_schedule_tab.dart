@@ -10,11 +10,21 @@ import '../state/exam_controller.dart';
 import '../../domain/models/exam.dart';
 import 'exam_schedule_cupertino.dart';
 
-class ExamScheduleTab extends StatelessWidget {
+class ExamScheduleTab extends StatefulWidget {
   const ExamScheduleTab({super.key});
 
   @override
+  State<ExamScheduleTab> createState() => _ExamScheduleTabState();
+}
+
+class _ExamScheduleTabState extends State<ExamScheduleTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final state = sl<ExamController>().state.value;
       final isCupertino = AdaptiveStyle.isCupertino(

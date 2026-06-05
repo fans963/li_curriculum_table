@@ -248,10 +248,10 @@ class CurriculumTableApp extends StatelessWidget {
                 if (AdaptiveStyle.isCupertino(settings.designStyle)) {
                   return CupertinoTheme(
                     data: cupertinoTheme,
-                    child: child!,
+                    child: child ?? const SizedBox.shrink(),
                   );
                 }
-                return child!;
+                return child ?? const SizedBox.shrink();
               },
               home: const MainScreen(),
             );

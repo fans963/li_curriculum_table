@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
+import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
@@ -54,50 +55,53 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<SecureStorageStore>(
-    () => SecureStorageStore(sl()),
+    () => SecureStorageStore(sl<FlutterSecureStorage>()),
   );
 
   sl.registerLazySingleton<SecureSettingsLocalDataSource>(
-    () => SecureSettingsLocalDataSource(sl()),
+    () => SecureSettingsLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(sl()),
+    () => SettingsRepositoryImpl(sl<SecureSettingsLocalDataSource>()),
   );
 
   sl.registerLazySingleton<UpdateService>(() => UpdateService());
+  sl.registerLazySingleton<WeatherService>(() => WeatherService());
 
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(
-    () => SecureCredentialsLocalDataSource(sl()),
+    () => SecureCredentialsLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<CredentialsRepository>(
-    () => CredentialsRepositoryImpl(sl()),
+    () => CredentialsRepositoryImpl(sl<SecureCredentialsLocalDataSource>()),
   );
 
   sl.registerLazySingleton<SecureTeachingWeekBaselineLocalDataSource>(
-    () => SecureTeachingWeekBaselineLocalDataSource(sl()),
+    () => SecureTeachingWeekBaselineLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<TeachingWeekBaselineRepository>(
-    () => TeachingWeekBaselineRepositoryImpl(sl()),
+    () => TeachingWeekBaselineRepositoryImpl(
+        sl<SecureTeachingWeekBaselineLocalDataSource>()),
   );
 
   sl.registerLazySingleton<SecureTimetableLocalDataSource>(
-    () => SecureTimetableLocalDataSource(sl()),
+    () => SecureTimetableLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<TimetableCacheRepository>(
-    () => TimetableCacheRepositoryImpl(sl()),
+    () => TimetableCacheRepositoryImpl(sl<SecureTimetableLocalDataSource>()),
   );
 
   sl.registerLazySingleton<TimetableCrawlerClient>(
     () => TimetableCrawlerClient(),
+    dispose: (c) => c.close(),
   );
 
   sl.registerLazySingleton<TimetableRepository>(
-    () => TimetableRepositoryImpl(sl()),
+    () => TimetableRepositoryImpl(sl<TimetableCrawlerClient>()),
   );
 
   // ─── Classroom ─────────────────────────────────────────────────────────
@@ -106,11 +110,14 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<ClassroomLocalDataSource>(
-    () => ClassroomLocalDataSource(sl()),
+    () => ClassroomLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<ClassroomRepository>(
-    () => ClassroomRepositoryImpl(sl(), sl()),
+    () => ClassroomRepositoryImpl(
+      sl<ClassroomRemoteDataSource>(),
+      sl<ClassroomLocalDataSource>(),
+    ),
   );
 
   // ─── Grades ────────────────────────────────────────────────────────────
@@ -119,11 +126,15 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<GradeLocalDataSource>(
-    () => GradeLocalDataSource(sl()),
+    () => GradeLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<GradeRepository>(
-    () => GradeRepositoryImpl(sl(), sl(), sl()),
+    () => GradeRepositoryImpl(
+      sl<GradeRemoteDataSource>(),
+      sl<GradeLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
   );
 
   // ─── Exams ─────────────────────────────────────────────────────────────
@@ -132,11 +143,15 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<ExamLocalDataSource>(
-    () => ExamLocalDataSource(sl()),
+    () => ExamLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<ExamRepository>(
-    () => ExamRepositoryImpl(sl(), sl(), sl()),
+    () => ExamRepositoryImpl(
+      sl<ExamRemoteDataSource>(),
+      sl<ExamLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
   );
 
   // ─── Controllers (signals-based) ───────────────────────────────────────

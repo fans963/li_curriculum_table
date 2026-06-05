@@ -74,7 +74,7 @@ class SettingsController {
   }
 
   void _syncWithRust() {
-    crawler.updateProxyConfig(port: _state.value.proxyPort.toInt());
+    crawler.updateProxyConfig(port: _state.value.proxyPort);
 
     if (isWeb) return;
 

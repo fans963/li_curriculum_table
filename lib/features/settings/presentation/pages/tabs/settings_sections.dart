@@ -481,13 +481,41 @@ class TimetableDisplaySettingsSection extends StatelessWidget {
     return SectionCard(
       icon: AppIcons.viewWeek(ds),
       title: '课表显示',
-      child: SettingsTile(
-        icon: AppIcons.swapHoriz(ds),
-        title: '按星期滑动',
-        subtitle: '开启后，课表以整周为单位左右对齐滑动；关闭则自由无极滑动',
-        trailing: Switch(
-          value: settings.weeklyScroll,
-          onChanged: (val) => notifier.setWeeklyScroll(val),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: () => notifier.setWeeklyScroll(!settings.weeklyScroll),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 2),
+            child: Row(
+              children: [
+                Icon(AppIcons.swapHoriz(ds), size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('按星期滑动', style: Theme.of(context).textTheme.bodyMedium),
+                      const SizedBox(height: 2),
+                      Text(
+                        '开启后，课表以整周为单位左右对齐滑动；关闭则自由无极滑动',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                IgnorePointer(
+                  child: Switch(
+                    value: settings.weeklyScroll,
+                    onChanged: (_) {},
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

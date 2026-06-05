@@ -145,7 +145,7 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                         tone.backgroundAlt,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
                     color: isOngoing ? tone.accent : tone.border,
                     width: isOngoing ? 1.4 : 1,

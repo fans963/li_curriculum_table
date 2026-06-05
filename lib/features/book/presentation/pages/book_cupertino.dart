@@ -1,5 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Colors;
 import 'package:li_curriculum_table/core/rust/api/book.dart';
 
 /// Builds the full Cupertino scaffold for the book search tab.
@@ -18,7 +19,7 @@ Widget buildBookCupertino(
 }) {
   final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     child: Stack(
       children: [
         Positioned.fill(
@@ -117,7 +118,7 @@ Widget _buildCupertinoContent(
             const SizedBox(height: 16),
             const Text('出现错误', style: TextStyle(fontWeight: FontWeight.w600)),
             const SizedBox(height: 8),
-            Text(error, style: const TextStyle(color: CupertinoColors.secondaryLabel)),
+            Text(error, style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context))),
             const SizedBox(height: 24),
             CupertinoButton.filled(
               onPressed: onSearch,
@@ -149,9 +150,9 @@ Widget _buildCupertinoContent(
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               '输入您想查找的书名，即刻查询图书馆馆藏',
-              style: TextStyle(color: CupertinoColors.secondaryLabel),
+              style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context)),
             ),
           ],
         ),
@@ -169,7 +170,7 @@ Widget _buildCupertinoContent(
             SizedBox(height: 16),
             Text('未找到相关书籍', style: TextStyle(fontWeight: FontWeight.w600)),
             SizedBox(height: 8),
-            Text('换个简短的关键词再试试', style: TextStyle(color: CupertinoColors.secondaryLabel)),
+            Text('换个简短的关键词再试试', style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context))),
           ],
         ),
       ),

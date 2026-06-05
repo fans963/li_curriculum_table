@@ -1,5 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show Colors;
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
@@ -9,7 +10,7 @@ import 'package:collection/collection.dart';
 Widget buildGradesCupertino(BuildContext context, GradeState state) {
   final topPadding = MediaQuery.of(context).padding.top;
   return CupertinoPageScaffold(
-    backgroundColor: const Color(0x00000000),
+    backgroundColor: Colors.transparent,
     child: Stack(
       children: [
         // Scroll content with background

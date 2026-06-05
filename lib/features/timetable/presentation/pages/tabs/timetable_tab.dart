@@ -11,7 +11,7 @@ import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/weather_banner.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 
@@ -27,7 +27,10 @@ class TimetableTab extends StatefulWidget {
   State<TimetableTab> createState() => _TimetableTabState();
 }
 
-class _TimetableTabState extends State<TimetableTab> {
+class _TimetableTabState extends State<TimetableTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _calendarKey = GlobalKey<TimetableWeekViewState>();
   Timer? _nowTicker;
   DateTime _now = DateTime.now();
@@ -56,6 +59,7 @@ class _TimetableTabState extends State<TimetableTab> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return SignalBuilder(builder: (context) {
       final colorScheme = Theme.of(context).colorScheme;
       final state = sl<TimetableController>().state.value;
@@ -92,14 +96,7 @@ class _TimetableTabState extends State<TimetableTab> {
       final body = SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TimetableStatusBanner(
-                status: state.status,
-                isLoading: state.isLoading,
-                hasData: state.data != null,
-              ),
-            ),
+            WeatherBanner(designStyle: ds),
             Expanded(
               child: AnimatedSwitcher(
                 duration: kDefaultAnimationDuration,
