@@ -6,6 +6,7 @@ import 'package:li_curriculum_table/features/grades/presentation/state/grade_con
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
 import '../../domain/models/grade.dart';
 import 'package:collection/collection.dart';
+import 'package:li_curriculum_table/util/util.dart';
 
 Widget buildGradesCupertino(BuildContext context, GradeState state) {
   final topPadding = MediaQuery.of(context).padding.top;
@@ -100,7 +101,7 @@ Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
             child: Column(
               children: [
                 Text(
-                  '必修加权均分',
+                  '选中加权均分',
                   style: TextStyle(
                     fontSize: 13,
                     color: CupertinoColors.secondaryLabel
@@ -109,7 +110,7 @@ Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  state.compulsoryWeightedAverage.toStringAsFixed(2),
+                  state.selectedWeightedAverage.toStringAsFixed(2),
                   style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -117,7 +118,7 @@ Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
                   ),
                 ),
                 Text(
-                  '${state.compulsoryCredits.toStringAsFixed(1)} 学分',
+                  '${state.selectedCredits.toStringAsFixed(1)} 学分',
                   style: TextStyle(
                     fontSize: 12,
                     color: CupertinoColors.secondaryLabel
@@ -199,6 +200,9 @@ Widget _buildCupertinoGradeList(
   final grouped =
       groupBy(state.filteredGrades, (GradeEntity g) => g.term);
   final terms = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+  final controller = sl<GradeController>();
+  final allCount = state.grades.length;
+  final selectedCount = state.selectedCourseCodes.length;
 
   return SliverList(
     delegate: SliverChildListDelegate([
@@ -206,7 +210,36 @@ Widget _buildCupertinoGradeList(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
         child: CupertinoSearchTextField(
           placeholder: '搜索课程名称',
-          onChanged: (val) => sl<GradeController>().setSearchQuery(val),
+          onChanged: (val) => controller.setSearchQuery(val),
+        ),
+      ),
+      // Selection preset row
+      Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        child: Row(
+          children: [
+            _buildCupertinoPresetButton(
+              context,
+              label: '必修',
+              isSelected: _isCompulsorySelected(state),
+              onTap: () => controller.selectCompulsory(),
+            ),
+            const SizedBox(width: 8),
+            _buildCupertinoPresetButton(
+              context,
+              label: '全部',
+              isSelected: selectedCount == allCount,
+              onTap: () => controller.selectAll(),
+            ),
+            const Spacer(),
+            Text(
+              '已选 $selectedCount/$allCount 门',
+              style: TextStyle(
+                fontSize: 13,
+                color: CupertinoColors.secondaryLabel.resolveFrom(context),
+              ),
+            ),
+          ],
         ),
       ),
       ...terms.map((term) {
@@ -247,6 +280,8 @@ Widget _buildCupertinoGradeList(
               '必修均分 ${termCompWavg.toStringAsFixed(2)} · 本期均分 ${termWavg.toStringAsFixed(2)}'),
           children: termGrades.map((grade) {
             final score = grade.numericScore;
+            final isSelected =
+                state.selectedCourseCodes.contains(grade.courseCode);
             Color scoreColor;
             if (score >= 90) {
               scoreColor = CupertinoColors.systemGreen;
@@ -260,16 +295,42 @@ Widget _buildCupertinoGradeList(
               scoreColor = CupertinoColors.systemRed;
             }
 
-            return CupertinoListTile(
-              title: Text(grade.courseName),
-              subtitle: Text(
-                  '${grade.credits} 学分 · ${grade.courseAttribute}'),
-              additionalInfo: Text(
-                grade.score,
-                style: TextStyle(
-                  color: scoreColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 17,
+            return GestureDetector(
+              onTap: () =>
+                  controller.toggleCourseSelection(grade.courseCode),
+              child: CupertinoListTile(
+                leading: AnimatedContainer(
+                  duration: kDefaultAnimationDuration,
+                  curve: kSpringCurve,
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected
+                        ? CupertinoColors.activeBlue
+                        : Colors.transparent,
+                    border: Border.all(
+                      color: isSelected
+                          ? CupertinoColors.activeBlue
+                          : CupertinoColors.systemGrey,
+                      width: 2,
+                    ),
+                  ),
+                  child: isSelected
+                      ? const Icon(CupertinoIcons.check_mark,
+                          size: 14, color: CupertinoColors.white)
+                      : null,
+                ),
+                title: Text(grade.courseName),
+                subtitle: Text(
+                    '${grade.credits} 学分 · ${grade.courseAttribute}'),
+                additionalInfo: Text(
+                  grade.score,
+                  style: TextStyle(
+                    color: scoreColor,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 17,
+                  ),
                 ),
               ),
             );
@@ -278,5 +339,46 @@ Widget _buildCupertinoGradeList(
       }),
       const SizedBox(height: 40),
     ]),
+  );
+}
+
+bool _isCompulsorySelected(GradeState state) {
+  final compulsory = state.grades
+      .where((g) => g.courseAttribute.contains('必修'))
+      .map((g) => g.courseCode)
+      .toSet();
+  return state.selectedCourseCodes.containsAll(compulsory) &&
+      state.selectedCourseCodes.length == compulsory.length;
+}
+
+Widget _buildCupertinoPresetButton(
+  BuildContext context, {
+  required String label,
+  required bool isSelected,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: AnimatedContainer(
+      duration: kInteractionDuration,
+      curve: kEmphasizedCurve,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        color: isSelected
+            ? CupertinoColors.activeBlue
+            : CupertinoColors.systemGrey5.resolveFrom(context),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 13,
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+          color: isSelected
+              ? CupertinoColors.white
+              : CupertinoColors.label.resolveFrom(context),
+        ),
+      ),
+    ),
   );
 }

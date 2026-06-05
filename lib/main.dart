@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -57,6 +58,11 @@ Future<void> main() async {
 
   // Await settings so the first frame renders with persisted theme, not defaults
   await sl<SettingsController>().init();
+
+  // Initialize notifications and request permission
+  final notifications = sl<NotificationService>();
+  await notifications.init();
+  await notifications.requestPermission();
 
   // Fire-and-forget: these load data into signals asynchronously
   sl<GradeController>().init().catchError((e) {

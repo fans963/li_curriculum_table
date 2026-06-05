@@ -2,6 +2,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
@@ -68,6 +69,7 @@ void setupServiceLocator() {
 
   sl.registerLazySingleton<UpdateService>(() => UpdateService());
   sl.registerLazySingleton<WeatherService>(() => WeatherService());
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
 
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(

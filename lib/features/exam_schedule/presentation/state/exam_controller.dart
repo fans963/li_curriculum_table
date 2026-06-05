@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/repositories/exam_repository.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
@@ -77,6 +78,11 @@ class ExamController {
       needsLogin: false,
     );
     _applyFilters();
+
+    // Schedule exam notifications (fire-and-forget)
+    sl<NotificationService>().scheduleExamReminders(exams).catchError((e) {
+      if (kDebugMode) debugPrint('Exam notification scheduling failed: $e');
+    });
   }
 
   void _applyFilters() {

@@ -93,10 +93,10 @@ class _GradesTabState extends State<GradesTab>
             Expanded(
               child: _buildStatItem(
                 context,
-                '必修加权均分',
-                state.compulsoryWeightedAverage.toStringAsFixed(2),
+                '选中加权均分',
+                state.selectedWeightedAverage.toStringAsFixed(2),
                 AppIcons.stars(ds),
-                '${state.compulsoryCredits.toStringAsFixed(1)} 必修学分',
+                '${state.selectedCredits.toStringAsFixed(1)} 学分',
                 colorScheme.primary,
               ),
             ),
@@ -216,7 +216,7 @@ class _GradesTabState extends State<GradesTab>
         return Column(
           key: const ValueKey('grades_list'),
           children: [
-            _buildSearchField(context),
+            _buildSearchField(context, state),
             Expanded(
               child: ListView.builder(
                 itemCount: terms.length,
@@ -224,7 +224,7 @@ class _GradesTabState extends State<GradesTab>
                 itemBuilder: (context, index) {
                   final term = terms[index];
                   final termGrades = grouped[term]!;
-                  return _buildTermSection(context, term, termGrades);
+                  return _buildTermSection(context, term, termGrades, state);
                 },
               ),
             ),
@@ -234,25 +234,103 @@ class _GradesTabState extends State<GradesTab>
     );
   }
 
-  Widget _buildSearchField(BuildContext context) {
+  Widget _buildSearchField(BuildContext context, GradeState state) {
     final ds = sl<SettingsController>().designStyle.value;
+    final controller = sl<GradeController>();
+    final allCount = state.grades.length;
+    final selectedCount = state.selectedCourseCodes.length;
+    final isAllSelected = selectedCount == allCount;
+
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: '搜索课程名称...',
-          prefixIcon: Icon(AppIcons.search(ds)),
-          border:
-              OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        children: [
+          TextField(
+            decoration: InputDecoration(
+              hintText: '搜索课程名称...',
+              prefixIcon: Icon(AppIcons.search(ds)),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onChanged: (val) => controller.setSearchQuery(val),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _buildPresetChip(
+                context,
+                label: '必修',
+                isSelected: _isCompulsorySelected(state),
+                onTap: () => controller.selectCompulsory(),
+              ),
+              const SizedBox(width: 8),
+              _buildPresetChip(
+                context,
+                label: '全部',
+                isSelected: isAllSelected,
+                onTap: () => controller.selectAll(),
+              ),
+              const Spacer(),
+              Text(
+                '已选 $selectedCount/$allCount 门',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  bool _isCompulsorySelected(GradeState state) {
+    final compulsory = state.grades
+        .where((g) => g.courseAttribute.contains('必修'))
+        .map((g) => g.courseCode)
+        .toSet();
+    return state.selectedCourseCodes.containsAll(compulsory) &&
+        state.selectedCourseCodes.length == compulsory.length;
+  }
+
+  Widget _buildPresetChip(
+    BuildContext context, {
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? colorScheme.primaryContainer
+              : colorScheme.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: isSelected
+                ? colorScheme.primary.withValues(alpha: 0.3)
+                : colorScheme.outlineVariant.withValues(alpha: 0.3),
+          ),
         ),
-        onChanged: (val) =>
-            sl<GradeController>().setSearchQuery(val),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: isSelected
+                    ? colorScheme.onPrimaryContainer
+                    : colorScheme.onSurfaceVariant,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+        ),
       ),
     );
   }
 
   Widget _buildTermSection(
-      BuildContext context, String term, List<GradeEntity> grades) {
+      BuildContext context, String term, List<GradeEntity> grades,
+      GradeState state) {
     final theme = Theme.of(context);
 
     double termTotalCredits = 0;
@@ -325,7 +403,7 @@ class _GradesTabState extends State<GradesTab>
             ],
           ),
         ),
-        ...grades.map((g) => _buildGradeCard(context, g)),
+        ...grades.map((g) => _buildGradeCard(context, g, state)),
         const SizedBox(height: 16),
       ],
     );
@@ -352,14 +430,26 @@ class _GradesTabState extends State<GradesTab>
     );
   }
 
-  Widget _buildGradeCard(BuildContext context, GradeEntity grade) {
-    return _GradeItemCard(grade: grade);
+  Widget _buildGradeCard(
+      BuildContext context, GradeEntity grade, GradeState state) {
+    final isSelected = state.selectedCourseCodes.contains(grade.courseCode);
+    return _GradeItemCard(
+      grade: grade,
+      isSelected: isSelected,
+      onToggle: () => sl<GradeController>().toggleCourseSelection(grade.courseCode),
+    );
   }
 }
 
 class _GradeItemCard extends StatefulWidget {
   final GradeEntity grade;
-  const _GradeItemCard({required this.grade});
+  final bool isSelected;
+  final VoidCallback onToggle;
+  const _GradeItemCard({
+    required this.grade,
+    required this.isSelected,
+    required this.onToggle,
+  });
 
   @override
   State<_GradeItemCard> createState() => _GradeItemCardState();
@@ -375,6 +465,7 @@ class _GradeItemCardState extends State<_GradeItemCard> {
     final grade = widget.grade;
     final score = grade.numericScore;
     final ds = sl<SettingsController>().designStyle.value;
+    final isSelected = widget.isSelected;
 
     Color scoreColor;
     if (score >= 90) {
@@ -391,17 +482,24 @@ class _GradeItemCardState extends State<_GradeItemCard> {
 
     return Center(
       child: AnimatedScale(
-        scale: _isPressed ? 0.98 : 1.0,
-        duration: const Duration(milliseconds: 100),
-        curve: Curves.easeOutCubic,
-        child: Container(
+        scale: _isPressed ? 0.97 : 1.0,
+        duration: kInteractionDuration,
+        curve: kEmphasizedCurve,
+        child: AnimatedContainer(
+          duration: kDefaultAnimationDuration,
+          curve: kDefaultAnimationCurve,
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
+            color: isSelected
+                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
+                : colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(isSelected ? 20 : 16),
             border: Border.all(
-                color:
-                    colorScheme.outlineVariant.withValues(alpha: 0.5)),
+              color: isSelected
+                  ? colorScheme.primary.withValues(alpha: 0.4)
+                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
+              width: isSelected ? 1.5 : 1,
+            ),
             boxShadow: [
               if (!_isPressed)
                 BoxShadow(
@@ -415,12 +513,35 @@ class _GradeItemCardState extends State<_GradeItemCard> {
             onTapDown: (_) => setState(() => _isPressed = true),
             onTapUp: (_) => setState(() => _isPressed = false),
             onTapCancel: () => setState(() => _isPressed = false),
-            onTap: () {},
+            onTap: widget.onToggle,
             borderRadius: BorderRadius.circular(16),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Row(
                 children: [
+                  // Selection indicator — M3 Expressive spring animation
+                  AnimatedContainer(
+                    duration: kDefaultAnimationDuration,
+                    curve: kSpringCurve,
+                    width: 24,
+                    height: 24,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: isSelected
+                          ? colorScheme.primary
+                          : Colors.transparent,
+                      border: Border.all(
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.outline,
+                        width: 2,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Icon(Icons.check, size: 16, color: colorScheme.onPrimary)
+                        : null,
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

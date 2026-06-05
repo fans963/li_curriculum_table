@@ -185,8 +185,9 @@ class _MainScreenState extends State<MainScreen> {
     DesignStyle ds,
     bool isSyncing,
   ) {
+    // iOS 26 Liquid Glass: subtle tint, content-derived color
     return CupertinoLiquidGlassBottomBar(
-      theme: LiquidGlassThemeData.light().copyWith(tintOpacity: 0.3),
+      theme: LiquidGlassThemeData.light().copyWith(tintOpacity: 0.15),
       currentIndex: currentIndex,
       onTap: (index) {
         _nav.setIndex(index);

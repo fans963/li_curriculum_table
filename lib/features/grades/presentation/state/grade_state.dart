@@ -15,6 +15,9 @@ class GradeState {
   final double compulsoryCredits;
   final bool needsLogin;
 
+  /// Set of courseCodes that are currently selected for weighted average calculation.
+  final Set<String> selectedCourseCodes;
+
   const GradeState({
     this.grades = const [],
     this.filteredGrades = const [],
@@ -26,7 +29,33 @@ class GradeState {
     this.compulsoryWeightedAverage = 0.0,
     this.compulsoryCredits = 0.0,
     this.needsLogin = false,
+    this.selectedCourseCodes = const {},
   });
+
+  /// Weighted average of selected courses.
+  double get selectedWeightedAverage {
+    if (grades.isEmpty) return 0.0;
+    double sum = 0;
+    double credits = 0;
+    for (final g in grades) {
+      if (selectedCourseCodes.contains(g.courseCode) && g.credits > 0) {
+        sum += g.numericScore * g.credits;
+        credits += g.credits;
+      }
+    }
+    return credits > 0 ? sum / credits : 0.0;
+  }
+
+  /// Total credits of selected courses.
+  double get selectedCredits {
+    double credits = 0;
+    for (final g in grades) {
+      if (selectedCourseCodes.contains(g.courseCode)) {
+        credits += g.credits;
+      }
+    }
+    return credits;
+  }
 
   GradeState copyWith({
     List<GradeEntity>? grades,
@@ -39,6 +68,7 @@ class GradeState {
     double? compulsoryWeightedAverage,
     double? compulsoryCredits,
     bool? needsLogin,
+    Set<String>? selectedCourseCodes,
   }) {
     return GradeState(
       grades: grades ?? this.grades,
@@ -54,6 +84,7 @@ class GradeState {
           compulsoryWeightedAverage ?? this.compulsoryWeightedAverage,
       compulsoryCredits: compulsoryCredits ?? this.compulsoryCredits,
       needsLogin: needsLogin ?? this.needsLogin,
+      selectedCourseCodes: selectedCourseCodes ?? this.selectedCourseCodes,
     );
   }
 }

@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
@@ -89,6 +90,7 @@ class TimetableController {
         needsLogin: false,
       );
       _updateWeekRange(_state.value.data);
+      _scheduleNotifications();
       return;
     }
 
@@ -318,6 +320,8 @@ class TimetableController {
         isLoading: false,
         status: completionMsg,
       );
+
+      _scheduleNotifications();
     } catch (e) {
       final err = e.toString();
       var message = '抓取失败，请稍后重试。';
@@ -341,6 +345,26 @@ class TimetableController {
     } finally {
       _isFetching = false;
     }
+  }
+
+  /// Schedule course notifications for the upcoming week.
+  /// Fire-and-forget; errors are logged but never block the UI.
+  void _scheduleNotifications() {
+    final state = _state.value;
+    final data = state.data;
+    final termStart = state.termStartMonday;
+    final week = state.currentTeachingWeek;
+    if (data == null || termStart == null || week < 1) return;
+
+    sl<NotificationService>()
+        .scheduleCourseReminders(
+      templates: data.occurrences,
+      termStartMonday: termStart,
+      currentTeachingWeek: week,
+    )
+        .catchError((e) {
+      if (kDebugMode) debugPrint('Course notification scheduling failed: $e');
+    });
   }
 
   Future<void> clearAllCache() async {

@@ -87,7 +87,20 @@ class WeatherInfo {
 }
 
 class WeatherService {
+  // Simple in-memory cache to avoid re-fetching on every widget rebuild.
+  static const _cacheDuration = Duration(minutes: 30);
+
+  WeatherInfo? _cachedWeather;
+  DateTime? _lastFetchTime;
+
   Future<WeatherInfo?> fetchWeather() async {
+    // Return cached result if still fresh
+    if (_cachedWeather != null && _lastFetchTime != null) {
+      final age = DateTime.now().difference(_lastFetchTime!);
+      if (age < _cacheDuration) {
+        return _cachedWeather;
+      }
+    }
     // Web and some desktop platforms don't support geolocator well
     if (kIsWeb) {
       debugPrint('Weather: skipped on web');
@@ -135,13 +148,15 @@ class WeatherService {
       final weather = WeatherInfo.fromRust(data);
 
       debugPrint('Weather: ${weather.temperature}°C code=${weather.weatherCode}');
+      _cachedWeather = weather;
+      _lastFetchTime = DateTime.now();
       return weather;
     } on LocationServiceDisabledException {
       debugPrint('Weather: location service disabled during fetch');
-      return null;
+      return _cachedWeather; // fall back to stale cache
     } catch (e) {
       debugPrint('Weather error: $e');
-      return null;
+      return _cachedWeather; // fall back to stale cache
     }
   }
 }

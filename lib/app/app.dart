@@ -38,7 +38,8 @@ class CurriculumTableApp extends StatelessWidget {
       error: scheme.error,
     );
 
-    // M3 Expressive: bolder shapes, more vibrant colors, expressive radii
+    // M3 Expressive: bolder shapes, deeper tonal palettes, expressive radii
+    // Shape tokens: large=20, xLarge=28, xxLarge=32 per M3 Expressive spec
     final subThemes = FlexSubThemesData(
       defaultRadius: 28,
       blendOnLevel: 10,
@@ -53,17 +54,20 @@ class CurriculumTableApp extends StatelessWidget {
       inputDecoratorBackgroundAlpha: 5,
       navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
       navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      // Expressive shape hierarchy: cards & dialogs get xxLarge (32)
       cardRadius: 28,
-      popupMenuRadius: 16,
-      dialogRadius: 28,
-      timePickerDialogRadius: 16,
+      dialogRadius: 32,
+      popupMenuRadius: 20,
+      timePickerDialogRadius: 20,
+      // Buttons: large (20) per expressive spec
       chipRadius: 20,
       elevatedButtonRadius: 20,
       filledButtonRadius: 20,
       outlinedButtonRadius: 20,
       textButtonRadius: 20,
       segmentedButtonRadius: 20,
-      snackBarRadius: 16,
+      fabRadius: 28,
+      snackBarRadius: 20,
       appBarBackgroundSchemeColor: SchemeColor.surface,
       tabBarIndicatorSchemeColor: SchemeColor.primary,
     );
@@ -130,6 +134,7 @@ class CurriculumTableApp extends StatelessWidget {
         ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
     final primaryColor = scheme.primary;
 
+    // iOS 26 Liquid Glass typography: monochromatic adaptive, crisp weights
     return CupertinoThemeData(
       brightness: brightness,
       primaryColor: primaryColor,
@@ -153,9 +158,9 @@ class CurriculumTableApp extends StatelessWidget {
           color: primaryColor,
         ),
         tabLabelTextStyle: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.12,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.06,
           color: brightness == Brightness.dark
               ? CupertinoColors.label.darkColor
               : CupertinoColors.label.color,

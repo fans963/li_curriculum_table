@@ -116,8 +116,8 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
         },
         child: AnimatedScale(
           scale: _isPressed ? 0.96 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeOutCubic,
+          duration: kInteractionDuration,
+          curve: kEmphasizedCurve,
           child: Stack(
             clipBehavior: Clip.none,
             children: [
