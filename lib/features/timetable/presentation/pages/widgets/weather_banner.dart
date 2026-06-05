@@ -73,12 +73,18 @@ class _WeatherBannerState extends State<WeatherBanner> {
             children: [
               Icon(w.icon, size: 22, color: w.color),
               const SizedBox(width: 10),
-              Text(
-                '${w.temperature.round()}°C  ${w.description}',
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-              ),
-              const Spacer(),
               Flexible(
+                flex: 2,
+                child: Text(
+                  '${w.temperature.round()}°C ${w.description}',
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                flex: 3,
                 child: Text(
                   w.tip,
                   style: TextStyle(
@@ -116,14 +122,20 @@ class _WeatherBannerState extends State<WeatherBanner> {
             children: [
               Icon(w.icon, size: 22, color: w.color),
               const SizedBox(width: 10),
-              Text(
-                '${w.temperature.round()}°C  ${w.description}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const Spacer(),
               Flexible(
+                flex: 2,
+                child: Text(
+                  '${w.temperature.round()}°C ${w.description}',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Flexible(
+                flex: 3,
                 child: Text(
                   w.tip,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(

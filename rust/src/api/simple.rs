@@ -9,8 +9,17 @@ pub fn init_app() {
         let _ = console_log::init_with_level(log::Level::Info);
     }
 
+    #[cfg(target_os = "android")]
+    {
+        android_logger::init_once(
+            android_logger::Config::default()
+                .with_max_level(log::LevelFilter::Info)
+                .with_tag("Rust"),
+        );
+    }
+
     // Silence verbose logs (like tract TRACE) on Web.
     // This is safe even if log isn't the primary backend.
     log::set_max_level(log::LevelFilter::Info);
-    log::info!("Rust: Logger initialized for Web.");
+    log::info!("Rust: Logger initialized.");
 }

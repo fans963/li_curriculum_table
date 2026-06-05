@@ -1,7 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:li_curriculum_table/core/rust/api/weather.dart' as rust;
 
 class WeatherInfo {
   final double temperature;
@@ -15,6 +15,13 @@ class WeatherInfo {
     required this.isDay,
     this.windSpeed,
   });
+
+  factory WeatherInfo.fromRust(rust.WeatherData data) => WeatherInfo(
+        temperature: data.temperature,
+        weatherCode: data.weatherCode,
+        isDay: data.isDay,
+        windSpeed: data.windSpeed,
+      );
 
   String get description => _weatherDescription(weatherCode);
   IconData get icon => _weatherIcon(weatherCode, isDay);
@@ -80,11 +87,6 @@ class WeatherInfo {
 }
 
 class WeatherService {
-  final Dio _dio = Dio(BaseOptions(
-    connectTimeout: const Duration(seconds: 10),
-    receiveTimeout: const Duration(seconds: 10),
-  ));
-
   Future<WeatherInfo?> fetchWeather() async {
     // Web and some desktop platforms don't support geolocator well
     if (kIsWeb) {
@@ -124,36 +126,16 @@ class WeatherService {
 
       debugPrint('Weather: position ${position.latitude}, ${position.longitude}');
 
-      // Fetch weather from Open-Meteo (free, no API key)
-      final response = await _dio.get(
-        'https://api.open-meteo.com/v1/forecast',
-        queryParameters: {
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'current_weather': true,
-          'timezone': 'auto',
-        },
+      // Fetch weather via Rust bridge
+      final data = await rust.fetchWeather(
+        latitude: position.latitude,
+        longitude: position.longitude,
       );
 
-      final data = response.data;
-      final current = data['current_weather'];
-      if (current == null) {
-        debugPrint('Weather: no current_weather in response');
-        return null;
-      }
-
-      final weather = WeatherInfo(
-        temperature: (current['temperature'] as num).toDouble(),
-        weatherCode: current['weathercode'] as int,
-        isDay: (current['is_day'] as int) == 1,
-        windSpeed: (current['windspeed'] as num?)?.toDouble(),
-      );
+      final weather = WeatherInfo.fromRust(data);
 
       debugPrint('Weather: ${weather.temperature}°C code=${weather.weatherCode}');
       return weather;
-    } on DioException catch (e) {
-      debugPrint('Weather network error: ${e.message}');
-      return null;
     } on LocationServiceDisabledException {
       debugPrint('Weather: location service disabled during fetch');
       return null;

@@ -39,7 +39,7 @@ flutter_rust_bridge::frb_generated_boilerplate!(
     default_rust_auto_opaque = RustAutoOpaqueMoi,
 );
 pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_VERSION: &str = "2.12.0";
-pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = 375234087;
+pub(crate) const FLUTTER_RUST_BRIDGE_CODEGEN_CONTENT_HASH: i32 = -229648540;
 
 // Section: executor
 
@@ -47,6 +47,41 @@ flutter_rust_bridge::frb_generated_default_handler!();
 
 // Section: wire_funcs
 
+fn wire__crate__api__update__check_for_update_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "check_for_update",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok = crate::api::update::check_for_update().await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
 fn wire__crate__api__book__fetch_book_locations_impl(
     port_: flutter_rust_bridge::for_generated::MessagePort,
     ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
@@ -115,6 +150,44 @@ fn wire__crate__api__crawler__fetch_timetable_data_impl(
                         let output_ok =
                             crate::api::crawler::fetch_timetable_data(api_username, api_password)
                                 .await?;
+                        Ok(output_ok)
+                    })()
+                    .await,
+                )
+            }
+        },
+    )
+}
+fn wire__crate__api__weather__fetch_weather_impl(
+    port_: flutter_rust_bridge::for_generated::MessagePort,
+    ptr_: flutter_rust_bridge::for_generated::PlatformGeneralizedUint8ListPtr,
+    rust_vec_len_: i32,
+    data_len_: i32,
+) {
+    FLUTTER_RUST_BRIDGE_HANDLER.wrap_async::<flutter_rust_bridge::for_generated::SseCodec, _, _, _>(
+        flutter_rust_bridge::for_generated::TaskInfo {
+            debug_name: "fetch_weather",
+            port: Some(port_),
+            mode: flutter_rust_bridge::for_generated::FfiCallMode::Normal,
+        },
+        move || {
+            let message = unsafe {
+                flutter_rust_bridge::for_generated::Dart2RustMessageSse::from_wire(
+                    ptr_,
+                    rust_vec_len_,
+                    data_len_,
+                )
+            };
+            let mut deserializer =
+                flutter_rust_bridge::for_generated::SseDeserializer::new(message);
+            let api_latitude = <f64>::sse_decode(&mut deserializer);
+            let api_longitude = <f64>::sse_decode(&mut deserializer);
+            deserializer.end();
+            move |context| async move {
+                transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
+                    (move || async move {
+                        let output_ok =
+                            crate::api::weather::fetch_weather(api_latitude, api_longitude).await?;
                         Ok(output_ok)
                     })()
                     .await,
@@ -860,6 +933,13 @@ impl SseDecode for crate::crawler::model::Grade {
     }
 }
 
+impl SseDecode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+    }
+}
+
 impl SseDecode for Vec<String> {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1061,6 +1141,17 @@ impl SseDecode for Option<String> {
     }
 }
 
+impl SseDecode for Option<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        if (<bool>::sse_decode(deserializer)) {
+            return Some(<f64>::sse_decode(deserializer));
+        } else {
+            return None;
+        }
+    }
+}
+
 impl SseDecode for crate::crawler::model::TimeSlot {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1121,6 +1212,22 @@ impl SseDecode for () {
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {}
 }
 
+impl SseDecode for crate::api::update::UpdateData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_latestVersion = <String>::sse_decode(deserializer);
+        let mut var_releaseUrl = <String>::sse_decode(deserializer);
+        let mut var_releaseNotes = <String>::sse_decode(deserializer);
+        let mut var_publishedAt = <String>::sse_decode(deserializer);
+        return crate::api::update::UpdateData {
+            latest_version: var_latestVersion,
+            release_url: var_releaseUrl,
+            release_notes: var_releaseNotes,
+            published_at: var_publishedAt,
+        };
+    }
+}
+
 impl SseDecode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1128,10 +1235,19 @@ impl SseDecode for usize {
     }
 }
 
-impl SseDecode for i32 {
+impl SseDecode for crate::api::weather::WeatherData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        deserializer.cursor.read_i32::<NativeEndian>().unwrap()
+        let mut var_temperature = <f64>::sse_decode(deserializer);
+        let mut var_weatherCode = <i32>::sse_decode(deserializer);
+        let mut var_isDay = <bool>::sse_decode(deserializer);
+        let mut var_windSpeed = <Option<f64>>::sse_decode(deserializer);
+        return crate::api::weather::WeatherData {
+            temperature: var_temperature,
+            weather_code: var_weatherCode,
+            is_day: var_isDay,
+            wind_speed: var_windSpeed,
+        };
     }
 }
 
@@ -1144,38 +1260,40 @@ fn pde_ffi_dispatcher_primary_impl(
 ) {
     // Codec=Pde (Serialization + dispatch), see doc to use other codecs
     match func_id {
-        1 => wire__crate__api__book__fetch_book_locations_impl(port, ptr, rust_vec_len, data_len),
-        2 => {
+        1 => wire__crate__api__update__check_for_update_impl(port, ptr, rust_vec_len, data_len),
+        2 => wire__crate__api__book__fetch_book_locations_impl(port, ptr, rust_vec_len, data_len),
+        3 => {
             wire__crate__api__crawler__fetch_timetable_data_impl(port, ptr, rust_vec_len, data_len)
         }
-        3 => wire__crate__api__auth__get_authorized_session_impl(port, ptr, rust_vec_len, data_len),
-        4 => wire__crate__api__classroom__get_building_schedule_impl(
+        4 => wire__crate__api__weather__fetch_weather_impl(port, ptr, rust_vec_len, data_len),
+        5 => wire__crate__api__auth__get_authorized_session_impl(port, ptr, rust_vec_len, data_len),
+        6 => wire__crate__api__classroom__get_building_schedule_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        5 => wire__crate__api__classroom__get_buildings_impl(port, ptr, rust_vec_len, data_len),
-        6 => wire__crate__api__classroom__get_campuses_impl(port, ptr, rust_vec_len, data_len),
-        7 => wire__crate__api__classroom__get_classroom_availability_impl(
+        7 => wire__crate__api__classroom__get_buildings_impl(port, ptr, rust_vec_len, data_len),
+        8 => wire__crate__api__classroom__get_campuses_impl(port, ptr, rust_vec_len, data_len),
+        9 => wire__crate__api__classroom__get_classroom_availability_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        8 => wire__crate__api__exam__get_exams_impl(port, ptr, rust_vec_len, data_len),
-        9 => wire__crate__api__grade__get_grades_impl(port, ptr, rust_vec_len, data_len),
-        10 => wire__crate__api__crawler__get_shared_session_manager_impl(
+        10 => wire__crate__api__exam__get_exams_impl(port, ptr, rust_vec_len, data_len),
+        11 => wire__crate__api__grade__get_grades_impl(port, ptr, rust_vec_len, data_len),
+        12 => wire__crate__api__crawler__get_shared_session_manager_impl(
             port,
             ptr,
             rust_vec_len,
             data_len,
         ),
-        11 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
-        12 => wire__crate__api__crawler__init_ocr_engine_impl(port, ptr, rust_vec_len, data_len),
-        13 => wire__crate__api__crawler__run_proxy_server_impl(port, ptr, rust_vec_len, data_len),
-        14 => wire__crate__api__book__search_books_impl(port, ptr, rust_vec_len, data_len),
-        15 => {
+        13 => wire__crate__api__simple__init_app_impl(port, ptr, rust_vec_len, data_len),
+        14 => wire__crate__api__crawler__init_ocr_engine_impl(port, ptr, rust_vec_len, data_len),
+        15 => wire__crate__api__crawler__run_proxy_server_impl(port, ptr, rust_vec_len, data_len),
+        16 => wire__crate__api__book__search_books_impl(port, ptr, rust_vec_len, data_len),
+        17 => {
             wire__crate__api__crawler__update_proxy_config_impl(port, ptr, rust_vec_len, data_len)
         }
         _ => unreachable!(),
@@ -1505,6 +1623,52 @@ impl flutter_rust_bridge::IntoIntoDart<crate::crawler::model::TimetableRecord>
         self
     }
 }
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::update::UpdateData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.latest_version.into_into_dart().into_dart(),
+            self.release_url.into_into_dart().into_dart(),
+            self.release_notes.into_into_dart().into_dart(),
+            self.published_at.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::update::UpdateData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::update::UpdateData>
+    for crate::api::update::UpdateData
+{
+    fn into_into_dart(self) -> crate::api::update::UpdateData {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::weather::WeatherData {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.temperature.into_into_dart().into_dart(),
+            self.weather_code.into_into_dart().into_dart(),
+            self.is_day.into_into_dart().into_dart(),
+            self.wind_speed.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive
+    for crate::api::weather::WeatherData
+{
+}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::weather::WeatherData>
+    for crate::api::weather::WeatherData
+{
+    fn into_into_dart(self) -> crate::api::weather::WeatherData {
+        self
+    }
+}
 
 impl SseEncode for flutter_rust_bridge::for_generated::anyhow::Error {
     // Codec=Sse (Serialization based), see doc to use other codecs
@@ -1654,6 +1818,13 @@ impl SseEncode for crate::crawler::model::Grade {
         <String>::sse_encode(self.assessment_method, serializer);
         <String>::sse_encode(self.course_attribute, serializer);
         <String>::sse_encode(self.course_nature, serializer);
+    }
+}
+
+impl SseEncode for i32 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
     }
 }
 
@@ -1817,6 +1988,16 @@ impl SseEncode for Option<String> {
     }
 }
 
+impl SseEncode for Option<f64> {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <bool>::sse_encode(self.is_some(), serializer);
+        if let Some(value) = self {
+            <f64>::sse_encode(value, serializer);
+        }
+    }
+}
+
 impl SseEncode for crate::crawler::model::TimeSlot {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1864,6 +2045,16 @@ impl SseEncode for () {
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {}
 }
 
+impl SseEncode for crate::api::update::UpdateData {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.latest_version, serializer);
+        <String>::sse_encode(self.release_url, serializer);
+        <String>::sse_encode(self.release_notes, serializer);
+        <String>::sse_encode(self.published_at, serializer);
+    }
+}
+
 impl SseEncode for usize {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
@@ -1874,10 +2065,13 @@ impl SseEncode for usize {
     }
 }
 
-impl SseEncode for i32 {
+impl SseEncode for crate::api::weather::WeatherData {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        serializer.cursor.write_i32::<NativeEndian>(self).unwrap();
+        <f64>::sse_encode(self.temperature, serializer);
+        <i32>::sse_encode(self.weather_code, serializer);
+        <bool>::sse_encode(self.is_day, serializer);
+        <Option<f64>>::sse_encode(self.wind_speed, serializer);
     }
 }
 

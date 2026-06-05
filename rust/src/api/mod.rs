@@ -1,7 +1,9 @@
 pub mod auth;
+pub mod book;
 pub mod classroom;
 pub mod crawler;
 pub mod exam;
 pub mod grade;
 pub mod simple;
-pub mod book;
+pub mod update;
+pub mod weather;

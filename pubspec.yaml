@@ -1,7 +1,7 @@
 name: li_curriculum_table
 description: "一款轻盈优雅的跨平台课表应用。"
 publish_to: "none"
-version: 1.0.7
+version: 1.0.8
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -33,7 +33,6 @@ dependencies:
   cross_file: ^0.3.4+2
   collection: ^1.19.1
   package_info_plus: ^10.1.0
-  dio: ^5.9.2
   url_launcher: ^6.3.2
   markdown_widget: ^2.3.2+8
   cupertino_icons: ^1.0.9
