@@ -88,7 +88,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 abstract class RustLibApi extends BaseApi {
   Future<UpdateData> crateApiUpdateCheckForUpdate();
 
-  Future<List<BookLocation>> crateApiBookFetchBookLocations({
+  Future<BookDetail> crateApiBookFetchBookLocations({
     required String detailUrl,
   });
 
@@ -205,7 +205,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "check_for_update", argNames: []);
 
   @override
-  Future<List<BookLocation>> crateApiBookFetchBookLocations({
+  Future<BookDetail> crateApiBookFetchBookLocations({
     required String detailUrl,
   }) {
     return handler.executeNormal(
@@ -221,7 +221,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           );
         },
         codec: SseCodec(
-          decodeSuccessData: sse_decode_list_book_location,
+          decodeSuccessData: sse_decode_book_detail,
           decodeErrorData: sse_decode_AnyhowException,
         ),
         constMeta: kCrateApiBookFetchBookLocationsConstMeta,
@@ -794,6 +794,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BookDetail dco_decode_book_detail(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 4)
+      throw Exception('unexpected arr length: expect 4 but see ${arr.length}');
+    return BookDetail(
+      isbn: dco_decode_String(arr[0]),
+      price: dco_decode_String(arr[1]),
+      pages: dco_decode_String(arr[2]),
+      locations: dco_decode_list_book_location(arr[3]),
+    );
+  }
+
+  @protected
   BookInfo dco_decode_book_info(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     final arr = raw as List<dynamic>;
@@ -1199,6 +1213,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var inner = sse_decode_list_prim_u_8_strict(deserializer);
     return utf8.decoder.convert(inner);
+  }
+
+  @protected
+  BookDetail sse_decode_book_detail(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_isbn = sse_decode_String(deserializer);
+    var var_price = sse_decode_String(deserializer);
+    var var_pages = sse_decode_String(deserializer);
+    var var_locations = sse_decode_list_book_location(deserializer);
+    return BookDetail(
+      isbn: var_isbn,
+      price: var_price,
+      pages: var_pages,
+      locations: var_locations,
+    );
   }
 
   @protected
@@ -1715,6 +1744,15 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_String(String self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_list_prim_u_8_strict(utf8.encoder.convert(self), serializer);
+  }
+
+  @protected
+  void sse_encode_book_detail(BookDetail self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.isbn, serializer);
+    sse_encode_String(self.price, serializer);
+    sse_encode_String(self.pages, serializer);
+    sse_encode_list_book_location(self.locations, serializer);
   }
 
   @protected

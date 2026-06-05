@@ -1,10 +1,10 @@
 allprojects {
     repositories {
-        google()
-        mavenCentral()
         // Fallback mirrors for faster downloads in China
         maven { url = uri("https://maven.aliyun.com/repository/google") }
         maven { url = uri("https://maven.aliyun.com/repository/public") }
+        google()
+        mavenCentral()
     }
 }
 

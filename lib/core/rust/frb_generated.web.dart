@@ -51,6 +51,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String dco_decode_String(dynamic raw);
 
   @protected
+  BookDetail dco_decode_book_detail(dynamic raw);
+
+  @protected
   BookInfo dco_decode_book_info(dynamic raw);
 
   @protected
@@ -189,6 +192,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  BookDetail sse_decode_book_detail(SseDeserializer deserializer);
 
   @protected
   BookInfo sse_decode_book_info(SseDeserializer deserializer);
@@ -342,6 +348,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_book_detail(BookDetail self, SseSerializer serializer);
 
   @protected
   void sse_encode_book_info(BookInfo self, SseSerializer serializer);

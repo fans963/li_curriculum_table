@@ -6,13 +6,41 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
 
 Future<List<BookInfo>> searchBooks({required String title}) =>
     RustLib.instance.api.crateApiBookSearchBooks(title: title);
 
-Future<List<BookLocation>> fetchBookLocations({required String detailUrl}) =>
+Future<BookDetail> fetchBookLocations({required String detailUrl}) =>
     RustLib.instance.api.crateApiBookFetchBookLocations(detailUrl: detailUrl);
+
+class BookDetail {
+  final String isbn;
+  final String price;
+  final String pages;
+  final List<BookLocation> locations;
+
+  const BookDetail({
+    required this.isbn,
+    required this.price,
+    required this.pages,
+    required this.locations,
+  });
+
+  @override
+  int get hashCode =>
+      isbn.hashCode ^ price.hashCode ^ pages.hashCode ^ locations.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BookDetail &&
+          runtimeType == other.runtimeType &&
+          isbn == other.isbn &&
+          price == other.price &&
+          pages == other.pages &&
+          locations == other.locations;
+}
 
 class BookInfo {
   final String title;

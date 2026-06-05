@@ -346,24 +346,8 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
           ),
         ],
       ),
-      const SizedBox(height: 20),
-
-      // Holdings section header
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Text(
-          '具体馆藏分布与借阅状态',
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.bold,
-            color: CupertinoColors.label.resolveFrom(context),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-
       // Specific holdings list (lazy loaded)
-      FutureBuilder<List<BookLocation>>(
+      FutureBuilder<BookDetail>(
         future: fetchBookLocations(detailUrl: book.detailUrl),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -374,7 +358,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
                   const CupertinoActivityIndicator(),
                   const SizedBox(height: 16),
                   Text(
-                    '正在向南理工图书馆获取实时馆藏位置...',
+                    '正在向南理工图书馆获取实时馆藏位置与详细信息...',
                     style: TextStyle(
                       fontSize: 13,
                       color: CupertinoColors.secondaryLabel
@@ -406,7 +390,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      '获取馆藏位置失败，请重试。',
+                      '获取详细馆藏位置失败，请重试。',
                       style: TextStyle(
                         color: CupertinoColors.destructiveRed,
                       ),
@@ -417,8 +401,8 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
             );
           }
 
-          final locations = snapshot.data ?? [];
-          if (locations.isEmpty) {
+          final detail = snapshot.data;
+          if (detail == null) {
             return Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
@@ -428,7 +412,7 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
               ),
               child: Center(
                 child: Text(
-                  '暂无具体馆藏地点记录。',
+                  '未能获取到书籍详细信息。',
                   style: TextStyle(
                     color: CupertinoColors.secondaryLabel
                         .resolveFrom(context),
@@ -438,45 +422,110 @@ Widget _buildCupertinoDetailsContent(BuildContext context, BookInfo book) {
             );
           }
 
-          return CupertinoListSection.insetGrouped(
-            children: locations.map((loc) {
-              final isAvailable = loc.status.contains('在架') ||
-                  loc.status.contains('可借') ||
-                  loc.status.contains('在馆');
+          final locations = detail.locations;
 
-              final statusColor = isAvailable
-                  ? CupertinoColors.systemGreen
-                  : CupertinoColors.systemRed;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Dynamic Metadata Grouped Section
+              CupertinoListSection.insetGrouped(
+                children: [
+                  _buildCupertinoMetaTile(
+                    context,
+                    icon: CupertinoIcons.barcode,
+                    label: 'ISBN',
+                    value: detail.isbn,
+                  ),
+                  _buildCupertinoMetaTile(
+                    context,
+                    icon: CupertinoIcons.tag,
+                    label: '定价',
+                    value: detail.price,
+                  ),
+                  _buildCupertinoMetaTile(
+                    context,
+                    icon: CupertinoIcons.doc_text,
+                    label: '页数',
+                    value: detail.pages,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
 
-              return CupertinoListTile(
-                leading: Icon(
-                  CupertinoIcons.placemark_fill,
-                  color: CupertinoColors.systemBlue.resolveFrom(context),
-                  size: 20,
+              // Holdings section header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  '具体馆藏分布与借阅状态',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.bold,
+                    color: CupertinoColors.label.resolveFrom(context),
+                  ),
                 ),
-                title: Text(loc.location),
-                additionalInfo: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
+              ),
+              const SizedBox(height: 12),
+
+              if (locations.isEmpty)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: statusColor
-                        .resolveFrom(context)
-                        .withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(6),
+                    color: CupertinoColors.systemFill.resolveFrom(context),
+                    borderRadius: BorderRadius.circular(18),
                   ),
-                  child: Text(
-                    loc.status,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      color: statusColor.resolveFrom(context),
+                  child: Center(
+                    child: Text(
+                      '暂无具体馆藏地点记录。',
+                      style: TextStyle(
+                        color: CupertinoColors.secondaryLabel
+                            .resolveFrom(context),
+                      ),
                     ),
                   ),
+                )
+              else
+                CupertinoListSection.insetGrouped(
+                  children: locations.map((loc) {
+                    final isAvailable = loc.status.contains('在架') ||
+                        loc.status.contains('可借') ||
+                        loc.status.contains('在馆');
+
+                    final statusColor = isAvailable
+                        ? CupertinoColors.systemGreen
+                        : CupertinoColors.systemRed;
+
+                    return CupertinoListTile(
+                      leading: Icon(
+                        CupertinoIcons.placemark_fill,
+                        color: CupertinoColors.systemBlue.resolveFrom(context),
+                        size: 20,
+                      ),
+                      title: Text(loc.location),
+                      additionalInfo: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusColor
+                              .resolveFrom(context)
+                              .withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          loc.status,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: statusColor.resolveFrom(context),
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
                 ),
-              );
-            }).toList(),
+            ],
           );
         },
       ),

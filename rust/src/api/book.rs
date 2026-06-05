@@ -133,9 +133,22 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
     Ok(books)
 }
 
-pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<Vec<BookLocation>> {
+#[derive(Debug, Clone)]
+pub struct BookDetail {
+    pub isbn: String,
+    pub price: String,
+    pub pages: String,
+    pub locations: Vec<BookLocation>,
+}
+
+pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDetail> {
     if detail_url.is_empty() {
-        return Ok(Vec::new());
+        return Ok(BookDetail {
+            isbn: "无".to_string(),
+            price: "无".to_string(),
+            pages: "无".to_string(),
+            locations: Vec::new(),
+        });
     }
 
     let client = reqwest::Client::builder()
@@ -150,6 +163,41 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<Vec<Book
     let html_content = response.text().await?;
     let document = Html::parse_document(&html_content);
     
+    let mut isbn = "无".to_string();
+    let mut price = "无".to_string();
+    let mut pages = "无".to_string();
+
+    let dl_selector = Selector::parse("dl.booklist").unwrap();
+    let dt_selector = Selector::parse("dt").unwrap();
+    let dd_selector = Selector::parse("dd").unwrap();
+
+    for dl in document.select(&dl_selector) {
+        if let (Some(dt), Some(dd)) = (dl.select(&dt_selector).next(), dl.select(&dd_selector).next()) {
+            let dt_text = dt.text().collect::<Vec<_>>().join("").trim().to_string();
+            let dd_text = dd.text().collect::<Vec<_>>().join("").trim().to_string();
+            
+            if dt_text.contains("ISBN及定价") {
+                let parts: Vec<&str> = dd_text.split('/').collect();
+                if !parts.is_empty() {
+                    isbn = parts[0].trim().to_string();
+                }
+                if parts.len() > 1 {
+                    price = parts[1].trim().to_string();
+                }
+            } else if dt_text.contains("载体形态项") {
+                if let Some(idx) = dd_text.find('页') {
+                    pages = dd_text[..idx + '页'.len_utf8()].trim().to_string();
+                } else if let Some(idx) = dd_text.find(" p.") {
+                    pages = dd_text[..idx + 3].trim().to_string();
+                } else if let Some(idx) = dd_text.find("p.") {
+                    pages = dd_text[..idx + 2].trim().to_string();
+                } else {
+                    pages = dd_text.clone();
+                }
+            }
+        }
+    }
+
     let table_selector = Selector::parse("table#item").unwrap();
     let tr_selector = Selector::parse("tr").unwrap();
     let td_selector = Selector::parse("td").unwrap();
@@ -174,5 +222,10 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<Vec<Book
         }
     }
 
-    Ok(locations)
+    Ok(BookDetail {
+        isbn,
+        price,
+        pages,
+        locations,
+    })
 }

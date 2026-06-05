@@ -254,17 +254,9 @@ class _BookTabState extends State<BookTab>
                   buildMetaItem(context, '出版与印刷项', book.publisher),
                   buildMetaItem(context, '馆藏概况', book.holdingsSummary),
 
-                  const SizedBox(height: 20),
-                  Text(
-                    '具体馆藏分布与借阅状态',
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
 
-                  // Specific holdings list (Lazy loaded)
+                  // Specific holdings list & dynamic details (Lazy loaded)
                   buildMaterialHoldings(context, book, ds),
                   const SizedBox(height: 32),
                 ],

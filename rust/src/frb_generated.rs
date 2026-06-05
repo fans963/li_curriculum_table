@@ -748,6 +748,22 @@ impl SseDecode for String {
     }
 }
 
+impl SseDecode for crate::api::book::BookDetail {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        let mut var_isbn = <String>::sse_decode(deserializer);
+        let mut var_price = <String>::sse_decode(deserializer);
+        let mut var_pages = <String>::sse_decode(deserializer);
+        let mut var_locations = <Vec<crate::api::book::BookLocation>>::sse_decode(deserializer);
+        return crate::api::book::BookDetail {
+            isbn: var_isbn,
+            price: var_price,
+            pages: var_pages,
+            locations: var_locations,
+        };
+    }
+}
+
 impl SseDecode for crate::api::book::BookInfo {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
@@ -1333,6 +1349,26 @@ impl flutter_rust_bridge::IntoIntoDart<FrbWrapper<Arc<SessionManager>>> for Arc<
 }
 
 // Codec=Dco (DartCObject based), see doc to use other codecs
+impl flutter_rust_bridge::IntoDart for crate::api::book::BookDetail {
+    fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
+        [
+            self.isbn.into_into_dart().into_dart(),
+            self.price.into_into_dart().into_dart(),
+            self.pages.into_into_dart().into_dart(),
+            self.locations.into_into_dart().into_dart(),
+        ]
+        .into_dart()
+    }
+}
+impl flutter_rust_bridge::for_generated::IntoDartExceptPrimitive for crate::api::book::BookDetail {}
+impl flutter_rust_bridge::IntoIntoDart<crate::api::book::BookDetail>
+    for crate::api::book::BookDetail
+{
+    fn into_into_dart(self) -> crate::api::book::BookDetail {
+        self
+    }
+}
+// Codec=Dco (DartCObject based), see doc to use other codecs
 impl flutter_rust_bridge::IntoDart for crate::api::book::BookInfo {
     fn into_dart(self) -> flutter_rust_bridge::for_generated::DartAbi {
         [
@@ -1699,6 +1735,16 @@ impl SseEncode for String {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         <Vec<u8>>::sse_encode(self.into_bytes(), serializer);
+    }
+}
+
+impl SseEncode for crate::api::book::BookDetail {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        <String>::sse_encode(self.isbn, serializer);
+        <String>::sse_encode(self.price, serializer);
+        <String>::sse_encode(self.pages, serializer);
+        <Vec<crate::api::book::BookLocation>>::sse_encode(self.locations, serializer);
     }
 }
 

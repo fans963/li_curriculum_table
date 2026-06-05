@@ -366,7 +366,7 @@ Widget buildMaterialHoldings(
   final colorScheme = Theme.of(context).colorScheme;
   final textTheme = Theme.of(context).textTheme;
 
-  return FutureBuilder<List<BookLocation>>(
+  return FutureBuilder<BookDetail>(
     future: fetchBookLocations(detailUrl: book.detailUrl),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
@@ -377,7 +377,7 @@ Widget buildMaterialHoldings(
             const SizedBox(height: 16),
             Center(
               child: Text(
-                '正在向南理工图书馆获取实时馆藏位置...',
+                '正在向南理工图书馆获取实时馆藏位置与详细信息...',
                 style: textTheme.bodySmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                 ),
@@ -401,7 +401,7 @@ Widget buildMaterialHoldings(
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  '获取馆藏位置失败，请重试。',
+                  '获取详细馆藏失败，请重试。',
                   style: textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onErrorContainer,
                   ),
@@ -412,8 +412,8 @@ Widget buildMaterialHoldings(
         );
       }
 
-      final locations = snapshot.data ?? [];
-      if (locations.isEmpty) {
+      final detail = snapshot.data;
+      if (detail == null) {
         return Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -423,7 +423,7 @@ Widget buildMaterialHoldings(
           ),
           child: Center(
             child: Text(
-              '暂无具体馆藏地点记录。',
+              '未能获取到书籍详细信息。',
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
               ),
@@ -432,74 +432,108 @@ Widget buildMaterialHoldings(
         );
       }
 
-      return ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: locations.length,
-        itemBuilder: (context, index) {
-          final loc = locations[index];
-          final isAvailable = loc.status.contains('在架') ||
-                              loc.status.contains('可借') ||
-                              loc.status.contains('在馆');
+      final locations = detail.locations;
 
-          final chipBgColor = isAvailable
-              ? colorScheme.primaryContainer.withValues(alpha: 0.4)
-              : colorScheme.errorContainer.withValues(alpha: 0.4);
-          final chipTextColor = isAvailable
-              ? colorScheme.primary
-              : colorScheme.error;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Dynamic Metadata
+          buildMetaItem(context, 'ISBN', detail.isbn, isCode: true),
+          buildMetaItem(context, '定价', detail.price),
+          buildMetaItem(context, '页数', detail.pages),
 
-          return Container(
-            margin: const EdgeInsets.symmetric(vertical: 4),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
+          const SizedBox(height: 20),
+          Text(
+            '具体馆藏分布与借阅状态',
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
             ),
-            decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 12),
+
+          if (locations.isEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(12),
               ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  AppIcons.place(ds),
-                  color: colorScheme.primary.withValues(alpha: 0.8),
-                  size: 20,
+              child: Center(
+                child: Text(
+                  '暂无具体馆藏地点记录。',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    loc.location,
-                    style: textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+              ),
+            )
+          else
+            ...locations.map((loc) {
+              final isAvailable = loc.status.contains('在架') ||
+                                  loc.status.contains('可借') ||
+                                  loc.status.contains('在馆');
+
+              final chipBgColor = isAvailable
+                  ? colorScheme.primaryContainer.withValues(alpha: 0.4)
+                  : colorScheme.errorContainer.withValues(alpha: 0.4);
+              final chipTextColor = isAvailable
+                  ? colorScheme.primary
+                  : colorScheme.error;
+
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      AppIcons.place(ds),
+                      color: colorScheme.primary.withValues(alpha: 0.8),
+                      size: 20,
                     ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: chipBgColor,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    loc.status,
-                    style: textTheme.labelSmall?.copyWith(
-                      color: chipTextColor,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        loc.location,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: chipBgColor,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        loc.status,
+                        style: textTheme.labelSmall?.copyWith(
+                          color: chipTextColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          );
-        },
+              );
+            }),
+        ],
       );
     },
   );
