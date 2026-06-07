@@ -141,6 +141,7 @@ class _MainScreenState extends State<MainScreen> {
     return NavigationBar(
       selectedIndex: currentIndex,
       onDestinationSelected: (index) {
+        FocusScope.of(context).unfocus();
         _nav.setIndex(index);
         _pageController.jumpToPage(index);
       },
@@ -190,6 +191,7 @@ class _MainScreenState extends State<MainScreen> {
       theme: LiquidGlassThemeData.light().copyWith(tintOpacity: 0.15),
       currentIndex: currentIndex,
       onTap: (index) {
+        FocusScope.of(context).unfocus();
         _nav.setIndex(index);
         _pageController.jumpToPage(index);
       },

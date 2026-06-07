@@ -59,8 +59,9 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
         locationLine: locationLine,
         isOngoing: isOngoing,
         onTap: () {
+          FocusScope.of(context).unfocus();
           final tone = resolveAppointmentTone(
-            Theme.of(context).colorScheme,
+            context,
             seedText: title,
           );
           _showDetailsBottomSheet(
@@ -93,7 +94,7 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
     bool isOngoing,
   ) {
     final tone = resolveAppointmentTone(
-      Theme.of(context).colorScheme,
+      context,
       seedText: title,
     );
 
@@ -104,6 +105,7 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
         onTapUp: (_) => setState(() => _isPressed = false),
         onTapCancel: () => setState(() => _isPressed = false),
         onTap: () {
+          FocusScope.of(context).unfocus();
           final designStyle = sl<SettingsController>().state.value.designStyle;
           _showDetailsBottomSheet(
             context,
@@ -145,10 +147,10 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                         tone.backgroundAlt,
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: isOngoing ? tone.accent : tone.border,
-                    width: isOngoing ? 1.4 : 1,
+                    width: isOngoing ? 1.2 : 0.8,
                   ),
                   boxShadow: [
                     BoxShadow(
@@ -157,34 +159,31 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                           : tone.shadow.withValues(
                               alpha: _isPressed ? 0.05 : 0.08,
                             ),
-                      blurRadius: isOngoing ? 14 : (_isPressed ? 6 : 10),
+                      blurRadius: isOngoing ? 12 : (_isPressed ? 5 : 8),
                       offset: isOngoing
-                          ? const Offset(0, 4)
+                          ? const Offset(0, 3)
                           : (_isPressed
                               ? const Offset(0, 1)
-                              : const Offset(0, 3)),
+                              : const Offset(0, 2)),
                     ),
                   ],
                 ),
                 child: Row(
                   children: [
-                    AnimatedContainer(
-                      duration: kDefaultAnimationDuration,
-                      curve: kDefaultAnimationCurve,
-                      width: isOngoing ? 5 : 4,
+                    Container(
+                      width: 3.5,
+                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
                       decoration: BoxDecoration(
                         color: tone.accent,
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(12),
-                          bottomLeft: Radius.circular(12),
-                        ),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
+                        padding: const EdgeInsets.fromLTRB(4, 6, 6, 6),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             AutoSizeText(
                               title,
@@ -201,7 +200,7 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                                   ),
                             ),
                             if (locationLine.isNotEmpty) ...[
-                              const SizedBox(height: 1),
+                              const SizedBox(height: 2),
                               AutoSizeText(
                                 locationLine,
                                 maxLines: 1,
@@ -297,61 +296,49 @@ void _showDetailsBottomSheet(
 }
 
 AppointmentTone resolveAppointmentTone(
-  ColorScheme scheme, {
+  BuildContext context, {
   required String seedText,
 }) {
-  final baseSurface = scheme.surfaceContainerHighest;
-  final shadowBase = scheme.shadow;
-
-  Color tint(Color tintColor, double alpha) {
-    return Color.alphaBlend(tintColor.withValues(alpha: alpha), baseSurface);
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  
+  int hash = 0;
+  for (int i = 0; i < seedText.length; i++) {
+    hash = seedText.codeUnitAt(i) + ((hash << 5) - hash);
   }
-
-  final tones = <AppointmentTone>[
-    AppointmentTone(
-      background: tint(scheme.primary, 0.16),
-      backgroundAlt: tint(scheme.primaryContainer, 0.26),
-      foreground: scheme.onPrimaryContainer,
-      border: scheme.primary.withValues(alpha: 0.36),
-      accent: scheme.primary,
-      shadow: shadowBase.withValues(alpha: 0.08),
-    ),
-    AppointmentTone(
-      background: tint(scheme.secondary, 0.16),
-      backgroundAlt: tint(scheme.secondaryContainer, 0.26),
-      foreground: scheme.onSecondaryContainer,
-      border: scheme.secondary.withValues(alpha: 0.36),
-      accent: scheme.secondary,
-      shadow: shadowBase.withValues(alpha: 0.08),
-    ),
-    AppointmentTone(
-      background: tint(scheme.tertiary, 0.15),
-      backgroundAlt: tint(scheme.tertiaryContainer, 0.24),
-      foreground: scheme.onTertiaryContainer,
-      border: scheme.tertiary.withValues(alpha: 0.34),
-      accent: scheme.tertiary,
-      shadow: shadowBase.withValues(alpha: 0.08),
-    ),
-    AppointmentTone(
-      background: tint(scheme.error, 0.12),
-      backgroundAlt: tint(scheme.errorContainer, 0.2),
-      foreground: scheme.onSurface,
-      border: scheme.error.withValues(alpha: 0.26),
-      accent: scheme.error,
-      shadow: shadowBase.withValues(alpha: 0.08),
-    ),
-    AppointmentTone(
-      background: tint(scheme.primary, 0.08),
-      backgroundAlt: tint(scheme.surfaceTint, 0.12),
-      foreground: scheme.onSurface,
-      border: scheme.outlineVariant,
-      accent: scheme.outline,
-      shadow: shadowBase.withValues(alpha: 0.06),
-    ),
-  ];
-
-  final index = seedText.hashCode.abs() % tones.length;
-  return tones[index];
+  
+  final double hue = (hash.abs() % 360).toDouble();
+  
+  if (isDark) {
+    // Dark mode: soft dark colors
+    final bg = HSLColor.fromAHSL(1.0, hue, 0.40, 0.16).toColor();
+    final bgAlt = HSLColor.fromAHSL(1.0, hue, 0.40, 0.20).toColor();
+    final fg = HSLColor.fromAHSL(1.0, hue, 0.65, 0.88).toColor();
+    final acc = HSLColor.fromAHSL(1.0, hue, 0.75, 0.60).toColor();
+    final brd = HSLColor.fromAHSL(1.0, hue, 0.50, 0.28).toColor();
+    return AppointmentTone(
+      background: bg,
+      backgroundAlt: bgAlt,
+      foreground: fg,
+      border: brd,
+      accent: acc,
+      shadow: Colors.black.withValues(alpha: 0.25),
+    );
+  } else {
+    // Light mode: soft pastel colors
+    final bg = HSLColor.fromAHSL(1.0, hue, 0.50, 0.94).toColor();
+    final bgAlt = HSLColor.fromAHSL(1.0, hue, 0.50, 0.91).toColor();
+    final fg = HSLColor.fromAHSL(1.0, hue, 0.65, 0.24).toColor();
+    final acc = HSLColor.fromAHSL(1.0, hue, 0.70, 0.45).toColor();
+    final brd = HSLColor.fromAHSL(1.0, hue, 0.55, 0.82).toColor();
+    return AppointmentTone(
+      background: bg,
+      backgroundAlt: bgAlt,
+      foreground: fg,
+      border: brd,
+      accent: acc,
+      shadow: acc.withValues(alpha: 0.10),
+    );
+  }
 }
 
 class AppointmentTone {

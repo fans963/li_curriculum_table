@@ -27,7 +27,7 @@ Widget buildCupertinoAppointmentCard({
       : tone.background;
   final borderColor = isOngoing
       ? tone.accent.withValues(alpha: 0.4)
-      : CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3);
+      : tone.accent.withValues(alpha: 0.15);
 
   return Padding(
     padding: const EdgeInsets.all(1.5),
@@ -36,26 +36,25 @@ Widget buildCupertinoAppointmentCard({
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: borderColor, width: 0.5),
         ),
         child: Row(
           children: [
             Container(
               width: 3,
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
               decoration: BoxDecoration(
                 color: tone.accent,
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(16),
-                  bottomLeft: Radius.circular(16),
-                ),
+                borderRadius: BorderRadius.circular(1.5),
               ),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
+                padding: const EdgeInsets.fromLTRB(4, 6, 8, 6),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Row(
                       children: [
@@ -104,21 +103,11 @@ Widget buildCupertinoAppointmentCard({
 }
 
 CupertinoTone resolveCupertinoTone(BuildContext context, String seedText) {
-  const colors = [
-    CupertinoColors.systemBlue,
-    CupertinoColors.systemTeal,
-    CupertinoColors.systemGreen,
-    CupertinoColors.systemIndigo,
-    CupertinoColors.systemPurple,
-    CupertinoColors.systemPink,
-    CupertinoColors.systemOrange,
-    CupertinoColors.systemBrown,
-  ];
-  final accent = colors[seedText.hashCode.abs() % colors.length];
+  final tone = resolveAppointmentTone(context, seedText: seedText);
   return CupertinoTone(
-    accent: accent.resolveFrom(context),
-    background: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-    foreground: CupertinoColors.label.resolveFrom(context),
+    accent: tone.accent,
+    background: tone.background,
+    foreground: tone.foreground,
   );
 }
 

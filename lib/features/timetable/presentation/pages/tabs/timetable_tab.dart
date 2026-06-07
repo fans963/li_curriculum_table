@@ -34,6 +34,8 @@ class _TimetableTabState extends State<TimetableTab>
   final _calendarKey = GlobalKey<TimetableWeekViewState>();
   Timer? _nowTicker;
   DateTime _now = DateTime.now();
+  bool? _localWeeklyScrollOverride;
+  bool _isSwitchingScroll = false;
 
   @override
   void initState() {
@@ -73,24 +75,39 @@ class _TimetableTabState extends State<TimetableTab>
       );
 
       final ds = settings.designStyle;
+      final isWeeklyScrollActive = _localWeeklyScrollOverride ?? settings.weeklyScroll;
       final scrollToggle = IconButton(
         icon: Icon(
-          settings.weeklyScroll
+          isWeeklyScrollActive
               ? AppIcons.viewWeekFilled(ds)
               : AppIcons.viewWeek(ds),
         ),
-        tooltip: settings.weeklyScroll
+        tooltip: isWeeklyScrollActive
             ? '当前：按星期滑动'
             : '当前：无极滑动',
-        onPressed: () {
-          final currentVal = settings.weeklyScroll;
-          sl<SettingsController>().setWeeklyScroll(!currentVal);
-          showAdaptiveMessage(
-            context,
-            designStyle: ds,
-            message: !currentVal ? '已开启按星期滑动' : '已恢复无极滑动',
-          );
-        },
+        onPressed: _isSwitchingScroll
+            ? null
+            : () {
+                final currentVal = settings.weeklyScroll;
+                setState(() {
+                  _localWeeklyScrollOverride = !currentVal;
+                  _isSwitchingScroll = true;
+                });
+                showAdaptiveMessage(
+                  context,
+                  designStyle: ds,
+                  message: !currentVal ? '已开启按星期滑动' : '已恢复无极滑动',
+                );
+                Future.delayed(const Duration(milliseconds: 300), () async {
+                  if (!mounted) return;
+                  await sl<SettingsController>().setWeeklyScroll(!currentVal);
+                  if (!mounted) return;
+                  setState(() {
+                    _localWeeklyScrollOverride = null;
+                    _isSwitchingScroll = false;
+                  });
+                });
+              },
       );
 
       final body = SafeArea(
