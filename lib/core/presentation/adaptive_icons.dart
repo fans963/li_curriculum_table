@@ -101,10 +101,6 @@ class AppIcons {
     material: Icons.person_outline_rounded,
     cupertino: CupertinoIcons.person,
   );
-  static IconData personFilled(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.person,
-    cupertino: CupertinoIcons.person_fill,
-  );
   static IconData school(DesignStyle s) => adaptiveIcon(s,
     material: Icons.school,
     cupertino: CupertinoIcons.book,
@@ -120,10 +116,6 @@ class AppIcons {
   static IconData time(DesignStyle s) => adaptiveIcon(s,
     material: Icons.access_time_filled,
     cupertino: CupertinoIcons.clock_fill,
-  );
-  static IconData timeOutline(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.access_time,
-    cupertino: CupertinoIcons.clock,
   );
   static IconData calendar(DesignStyle s) => adaptiveIcon(s,
     material: Icons.calendar_today_rounded,
@@ -141,10 +133,6 @@ class AppIcons {
     material: Icons.bookmark_outline_rounded,
     cupertino: CupertinoIcons.bookmark,
   );
-  static IconData bookmarkFilled(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.bookmark_rounded,
-    cupertino: CupertinoIcons.bookmark_fill,
-  );
   static IconData category(DesignStyle s) => adaptiveIcon(s,
     material: Icons.category_rounded,
     cupertino: CupertinoIcons.tag,
@@ -156,10 +144,6 @@ class AppIcons {
   static IconData lock(DesignStyle s) => adaptiveIcon(s,
     material: Icons.lock_outline,
     cupertino: CupertinoIcons.lock,
-  );
-  static IconData lockFilled(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.lock,
-    cupertino: CupertinoIcons.lock_fill,
   );
   static IconData login(DesignStyle s) => adaptiveIcon(s,
     material: Icons.login_rounded,
@@ -247,10 +231,6 @@ class AppIcons {
     material: Icons.mark_as_unread_outlined,
     cupertino: CupertinoIcons.mail,
   );
-  static IconData systemUpdate(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.system_update_rounded,
-    cupertino: CupertinoIcons.arrow_down_circle,
-  );
   static IconData errorOutline(DesignStyle s) => adaptiveIcon(s,
     material: Icons.error_outline_rounded,
     cupertino: CupertinoIcons.exclamationmark_triangle,
@@ -271,10 +251,6 @@ class AppIcons {
     material: Icons.check_circle_rounded,
     cupertino: CupertinoIcons.checkmark_circle_fill,
   );
-  static IconData closeCircle(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.close_rounded,
-    cupertino: CupertinoIcons.xmark_circle_fill,
-  );
   static IconData calendarMonth(DesignStyle s) => adaptiveIcon(s,
     material: Icons.calendar_month_rounded,
     cupertino: CupertinoIcons.calendar,
@@ -294,33 +270,5 @@ class AppIcons {
   static IconData stars(DesignStyle s) => adaptiveIcon(s,
     material: Icons.stars_rounded,
     cupertino: CupertinoIcons.star_fill,
-  );
-  static IconData android(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.android,
-    cupertino: CupertinoIcons.device_phone_portrait,
-  );
-  static IconData apple(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.apple,
-    cupertino: CupertinoIcons.device_phone_portrait,
-  );
-  static IconData phone(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.phone_android,
-    cupertino: CupertinoIcons.device_phone_portrait,
-  );
-  static IconData keyboard(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.keyboard,
-    cupertino: CupertinoIcons.keyboard,
-  );
-  static IconData fullscreen(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.fullscreen,
-    cupertino: CupertinoIcons.fullscreen,
-  );
-  static IconData fullscreenExit(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.fullscreen_exit,
-    cupertino: CupertinoIcons.fullscreen_exit,
-  );
-  static IconData minimize(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.minimize,
-    cupertino: CupertinoIcons.minus,
   );
 }

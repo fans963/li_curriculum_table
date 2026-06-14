@@ -1,3 +1,4 @@
+use crate::api::http;
 use scraper::{Html, Selector};
 
 #[derive(Debug, Clone)]
@@ -23,10 +24,7 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
         return Ok(Vec::new());
     }
 
-    let client = reqwest::Client::builder()
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        .timeout(std::time::Duration::from_secs(10))
-        .build()?;
+    let client = http::build_client();
 
     let encoded_title: String = url::form_urlencoded::byte_serialize(clean_title.as_bytes()).collect();
     let target_url = format!(
@@ -91,7 +89,7 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
                     }
 
                     // Remove leading spaces/dashes if any
-                    let call_no = call_no.trim_start_matches(|c| c == ' ' || c == '-' || c == '/' || c == ':').trim().to_string();
+                    let call_no = call_no.trim_start_matches([' ', '-', '/', ':']).trim().to_string();
 
                     let mut holdings_summary = "未知".to_string();
                     let mut author = "未知作者".to_string();
@@ -151,10 +149,7 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDeta
         });
     }
 
-    let client = reqwest::Client::builder()
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        .timeout(std::time::Duration::from_secs(10))
-        .build()?;
+    let client = http::build_client();
 
     let response = client.get(&detail_url)
         .send()

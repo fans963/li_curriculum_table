@@ -100,10 +100,9 @@ impl ClassroomService {
                 if occupied.weekday == weekday
                     && week >= occupied.start_week
                     && week <= occupied.end_week
+                    && occupied.slot_index < 5
                 {
-                    if occupied.slot_index < 5 {
-                        availability[occupied.slot_index as usize] = false;
-                    }
+                    availability[occupied.slot_index as usize] = false;
                 }
             }
             final_list.push(ClassroomAvailability {

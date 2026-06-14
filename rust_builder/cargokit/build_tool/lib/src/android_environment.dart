@@ -186,6 +186,19 @@ class AndroidEnvironment {
     }
 
     var rustFlags = Platform.environment['CARGO_ENCODED_RUSTFLAGS'] ?? '';
+
+    // Merge RUSTFLAGS from parent environment (e.g. Gradle) if set
+    final extraRustflags = Platform.environment['RUSTFLAGS'] ?? '';
+    if (extraRustflags.isNotEmpty) {
+      for (final flag in extraRustflags.split(' ')) {
+        if (flag.isEmpty) continue;
+        if (rustFlags.isNotEmpty) {
+          rustFlags = '$rustFlags\x1f';
+        }
+        rustFlags = '$rustFlags$flag';
+      }
+    }
+
     if (rustFlags.isNotEmpty) {
       rustFlags = '$rustFlags\x1f';
     }

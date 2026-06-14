@@ -1,3 +1,4 @@
+use crate::api::http;
 use crate::ocr::DdddOcr;
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::CrawlerConfig;
@@ -39,15 +40,15 @@ impl SessionManager {
         #[cfg(not(target_arch = "wasm32"))]
         let strategy: NetworkingStrategy;
 
-        let builder = Client::builder();
+        let builder = http::client_builder();
 
         #[cfg(target_arch = "wasm32")]
         {
             let port = get_proxy_port();
             let local_discovery_url = format!("http://localhost:{}/status", port);
             log::info!("Web: Probing for local native proxy at {}...", local_discovery_url);
-            
-            let probe_client = reqwest::Client::builder().build().unwrap_or_default();
+
+            let probe_client = http::build_client();
             if let Ok(resp) = probe_client.get(local_discovery_url).send().await {
                 if resp.status().is_success() {
                     log::info!("Web: Local native proxy discovered! Switching to hyper-speed mode.");

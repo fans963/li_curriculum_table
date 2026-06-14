@@ -1,3 +1,4 @@
+use crate::api::http;
 use anyhow::Result;
 use serde::Deserialize;
 
@@ -18,9 +19,7 @@ pub struct UpdateData {
 }
 
 pub async fn check_for_update() -> Result<UpdateData> {
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()?;
+    let client = http::build_client();
 
     let response = client
         .get("https://api.github.com/repos/fans963/--table/releases/latest")

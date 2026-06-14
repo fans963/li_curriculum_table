@@ -25,7 +25,13 @@ class NotificationService {
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/launcher_icon');
-    const initSettings = InitializationSettings(android: androidSettings);
+    const linuxSettings = LinuxInitializationSettings(
+      defaultActionName: 'Open',
+    );
+    final initSettings = InitializationSettings(
+      android: kIsWeb ? null : androidSettings,
+      linux: kIsWeb ? null : linuxSettings,
+    );
 
     await _plugin.initialize(settings: initSettings);
 
@@ -61,11 +67,11 @@ class NotificationService {
         ));
   }
 
-  /// Request notification permission (Android 13+).
+  /// Request notification permission (Android 13+). Other platforms return true.
   Future<bool> requestPermission() async {
     final android = _plugin.resolvePlatformSpecificImplementation<
         AndroidFlutterLocalNotificationsPlugin>();
-    if (android == null) return false;
+    if (android == null) return true; // Non-Android: no permission needed
     final granted = await android.requestNotificationsPermission();
     return granted ?? false;
   }

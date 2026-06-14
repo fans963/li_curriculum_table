@@ -31,6 +31,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Strip unused locale resources to reduce APK size
+        resConfigs("zh", "zh-rCN", "zh-rTW", "en")
     }
 
     signingConfigs {

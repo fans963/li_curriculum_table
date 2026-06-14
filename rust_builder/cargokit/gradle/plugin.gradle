@@ -80,6 +80,8 @@ abstract class CargoKitBuildTask extends DefaultTask {
             environment "CARGOKIT_MIN_SDK_VERSION", minSdkVersion
             environment "CARGOKIT_TARGET_PLATFORMS", targetPlatforms.join(",")
             environment "CARGOKIT_JAVA_HOME", System.properties['java.home']
+            // Enable FP16 instructions for aarch64 Android (required by gemm-f16/burn)
+            environment "RUSTFLAGS", "-C target-feature=+fp16"
         }
     }
 }

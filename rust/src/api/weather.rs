@@ -1,3 +1,4 @@
+use crate::api::http;
 use anyhow::Result;
 use serde::Deserialize;
 
@@ -25,13 +26,7 @@ pub struct WeatherData {
 pub async fn fetch_weather(latitude: f64, longitude: f64) -> Result<WeatherData> {
     log::info!("fetch_weather: lat={}, lon={}", latitude, longitude);
 
-    let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(10))
-        .build()
-        .map_err(|e| {
-            log::error!("fetch_weather: failed to build client: {}", e);
-            anyhow::anyhow!("Failed to build HTTP client: {}", e)
-        })?;
+    let client = http::build_client();
 
     let url = format!(
         "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&current_weather=true&timezone=auto",

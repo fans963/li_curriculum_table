@@ -14,26 +14,11 @@ const kDefaultAnimationCurve = Curves.easeOutCubic;
 /// Quick interaction duration — iOS 26 recommends <200ms for taps/presses.
 const kInteractionDuration = Duration(milliseconds: 150);
 
-/// Medium transition — M3 Expressive medium3 (350ms).
-const kMediumTransitionDuration = Duration(milliseconds: 350);
-
-/// Large transform — M3 Expressive long1 (450ms), e.g. card → full screen.
-const kLargeTransformDuration = Duration(milliseconds: 450);
-
 /// Spring curve for selection/toggle animations — bouncy feel.
 const kSpringCurve = Curves.elasticOut;
 
 /// Emphasized easing for attention-grabbing transitions.
 const kEmphasizedCurve = Curves.easeOutBack;
-
-// ─── M3 Expressive Shape Tokens ────────────────────────────────────────────
-// Corner radii: large=20dp, xLarge=32dp, xxLarge=48dp, full=100%
-
-const double kShapeSmall = 12;
-const double kShapeMedium = 16;
-const double kShapeLarge = 20;
-const double kShapeXLarge = 28;
-const double kShapeXXLarge = 32;
 
 // ─── Platform check ────────────────────────────────────────────────────────
 

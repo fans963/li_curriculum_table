@@ -54,18 +54,6 @@ Widget adaptiveActivityIndicator({
   );
 }
 
-/// Returns an adaptive progress indicator (indeterminate).
-Widget adaptiveProgressIndicator({
-  required DesignStyle designStyle,
-  Color? color,
-  double? minHeight,
-}) {
-  if (AdaptiveStyle.isCupertino(designStyle)) {
-    return CupertinoActivityIndicator(color: color);
-  }
-  return LinearProgressIndicator(color: color, minHeight: minHeight ?? 4);
-}
-
 /// Shows an adaptive confirmation dialog.
 Future<bool> showAdaptiveConfirmDialog(
   BuildContext context, {

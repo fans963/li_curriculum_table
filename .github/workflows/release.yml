@@ -91,7 +91,7 @@ jobs:
         run: |
           dart pub global activate fastforge
           rustup component add rustfmt
-          cargo install flutter_rust_bridge_codegen
+          cargo install --git https://github.com/fzyzcjy/flutter_rust_bridge.git flutter_rust_bridge_codegen
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
           echo "${{ github.workspace }}/.pub-cache/bin" >> $GITHUB_PATH
 
@@ -118,7 +118,8 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          flutter build apk --release --split-per-abi --target-platform=android-arm64,android-arm,android-x64
+          flutter build apk --release --split-per-abi --target-platform=android-arm64,android-arm,android-x64 \
+            --split-debug-info=build/debug-info --tree-shake-icons
           cp build/app/outputs/flutter-apk/app-*-release.apk dist/ 2>/dev/null || true
 
       - name: Run Fastforge (Linux packages)
@@ -132,7 +133,7 @@ jobs:
       - name: Build Unsigned iOS IPA
         if: matrix.os == 'macos-latest'
         run: |
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign --split-debug-info=build/debug-info --obfuscate --tree-shake-icons
           mkdir -p Payload
           cp -r build/ios/iphoneos/*.app Payload/
           zip -vr "li-curriculum-table-unsigned.ipa" Payload
@@ -151,6 +152,14 @@ jobs:
         with:
           name: li-table-${{ matrix.os }}
           path: dist/
+
+      - name: Upload Debug Symbols
+        if: hashFiles('build/debug-info/**') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-symbols-${{ matrix.os }}
+          path: build/debug-info/
+          retention-days: 30
 
   publish:
     name: Create GitHub Release

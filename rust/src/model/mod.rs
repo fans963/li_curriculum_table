@@ -1,3 +1,3 @@
-pub mod common_pruned {
-    include!(concat!(env!("OUT_DIR"), "/model/common_pruned.rs"));
+pub mod captcha_ocr {
+    include!(concat!(env!("OUT_DIR"), "/model/captcha_ocr.rs"));
 }

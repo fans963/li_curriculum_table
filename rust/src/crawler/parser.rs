@@ -3,7 +3,7 @@ use crate::crawler::model::{
     Campus, ClassroomSchedule, CourseRow, Exam, ExamRecord, Grade, GradeRecord,
     KbtableWeekHint, OccupiedSlot, TimeSlot, TimetableRecord,
 };
-use regex::Regex;
+use regex_lite::Regex;
 use scraper::{Html, Selector};
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -196,10 +196,9 @@ fn merge_week_hints_into_rows(rows: Vec<CourseRow>, hints: Vec<KbtableWeekHint>)
                         for hint in g_hints {
                             if hint.start_section <= slot.end_section
                                 && hint.end_section >= slot.start_section
+                                && !final_matched_hints[idx].contains(&hint.week_text)
                             {
-                                if !final_matched_hints[idx].contains(&hint.week_text) {
-                                    final_matched_hints[idx].push(hint.week_text.clone());
-                                }
+                                final_matched_hints[idx].push(hint.week_text.clone());
                             }
                         }
                     }

@@ -4,6 +4,7 @@ pub mod classroom;
 pub mod crawler;
 pub mod exam;
 pub mod grade;
+pub mod http;
 pub mod simple;
 pub mod update;
 pub mod weather;

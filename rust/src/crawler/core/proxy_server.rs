@@ -123,7 +123,7 @@ async fn handle_proxy_request(
     // Basic query param parsing: /proxy?url=...
     let url_param = path.split("url=").nth(1).unwrap_or("");
     let target_url = url::form_urlencoded::parse(url_param.as_bytes())
-        .map(|(k, v)| if k == "" { v.into_owned() } else { k.into_owned() })
+        .map(|(k, v)| if k.is_empty() { v.into_owned() } else { k.into_owned() })
         .next()
         .unwrap_or_default();
 
