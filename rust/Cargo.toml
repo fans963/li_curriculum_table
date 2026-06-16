@@ -20,7 +20,7 @@ wasm-opt = [
 crate-type = ["cdylib"]
 
 [dependencies]
-flutter_rust_bridge = { version = "=2.13.0-beta.1" }
+flutter_rust_bridge = { git = "https://github.com/fzyzcjy/flutter_rust_bridge.git" }
 image = { version = "0.25.10", default-features = false, features = ["jpeg"] }
 reqwest = { version = "0.13.4", default-features = false, features = [
     "cookies",
@@ -58,10 +58,14 @@ tokio = { version = "1.51.1", features = ["net", "time"] }
 mimalloc = "0.1.52"
 
 [target.'cfg(target_os = "android")'.dependencies]
-reqwest = { version = "0.13.4", default-features = false, features = ["native-tls-vendored"] }
+reqwest = { version = "0.13.4", default-features = false, features = [
+    "native-tls-vendored",
+] }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
-reqwest = { version = "0.13.4", default-features = false, features = ["rustls"] }
+reqwest = { version = "0.13.4", default-features = false, features = [
+    "rustls",
+] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 getrandom = { version = "0.4.2", features = ["wasm_js"] }
