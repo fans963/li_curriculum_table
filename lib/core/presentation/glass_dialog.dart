@@ -47,8 +47,7 @@ class GlassDialog extends StatelessWidget {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: CupertinoColors.secondarySystemGroupedBackground
-                          .resolveFrom(context)
-                          .withValues(alpha: 0.65),
+                          .resolveFrom(context),
                       borderRadius: BorderRadius.circular(borderRadius),
                       border: Border.all(
                         color: CupertinoColors.separator

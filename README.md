@@ -15,12 +15,16 @@
 | 特性 | 说明 |
 |------|------|
 | 🚀 **Rust 驱动核心** | 采用 `flutter_rust_bridge` 将抓取逻辑与 OCR 引擎下沉至 Rust 层，响应丝滑 |
-| 🧠 **高精度 OCR** | 内置基于 Burn 深度学习框架的 OCR 引擎，本地识别验证码，无需联网 |
+| 🧠 **自研 OCR** | 基于 Burn 框架的自研 OCR 模型，仅 200KB，本地识别验证码，无需联网 |
 | 🎨 **双设计风格** | Material Design 3 + Apple Cupertino，运行时一键切换 |
 | 🌈 **动态取色** | 支持根据系统壁纸动态调整 UI 配色（Android 12+） |
 | 🔐 **隐私至上** | 所有数据本地存储，敏感信息通过 `flutter_secure_storage` 硬件级加密 |
 | 🌐 **全平台** | Android / iOS / Windows / macOS / Linux / Web 六端覆盖 |
 | 📡 **本地代理** | Web 端通过跨进程本地网关解决跨域抓取难题 |
+| 📅 **自定义日程** | 支持添加一次性日程到课表，支持当天定时通知提醒，长按即可删除 |
+| 🔔 **智能通知** | 课前 20 分钟、考前 1 天 + 2 小时、成绩发布等多场景提醒 |
+| ☁️ **天气横幅** | 课表顶部展示当日天气信息，一目了然 |
+| 📖 **图书封面** | 图书馆检索支持自动获取豆瓣图书封面（可开关） |
 
 ---
 
@@ -34,16 +38,18 @@ graph TB
         A[Material UI] --> C[SignalBuilder]
         B[Cupertino UI] --> C
         C --> D["Signal / Computed"]
+        C --> Gl["GlassScaffold (navbar)"]
+        C --> We["WeatherBanner"]
     end
 
     subgraph "State Layer"
-        D --> E["Controllers"]
-        E --> F["Service Locator"]
+        D --> E["Controllers<br/>(Timetable/Classroom/Grade/Exam/Settings)"]
+        E --> F["Service Locator (get_it)"]
     end
 
     subgraph "Domain Layer"
         F --> G["Repositories"]
-        G --> H["Entities / Models"]
+        G --> H["Entities / Models<br/>(freezed + Signals)"]
     end
 
     subgraph "Data Layer"
@@ -55,8 +61,13 @@ graph TB
 
     subgraph "Rust Core"
         K --> M[Crawler Engine]
-        K --> N[OCR Engine]
+        K --> N["OCR Engine (200KB)"]
         K --> O[Proxy Server]
+    end
+
+    subgraph "Services"
+        E --> No["NotificationService"]
+        E --> We2["WeatherService"]
     end
 
     style A fill:#4CAF50,color:#fff
@@ -76,6 +87,7 @@ sequenceDiagram
     participant Repo as 📦 Repository
     participant Rust as 🦀 Rust FFI
     participant Storage as 🔒 Secure Storage
+    participant Notif as 🔔 NotificationService
 
     U->>UI: 点击「同步课表」
     UI->>Ctrl: fetchAndBuild(username, password)
@@ -89,11 +101,22 @@ sequenceDiagram
     and
         Ctrl->>Storage: cacheTimetable()
         Storage-->>Ctrl: ✅
+    and
+        Ctrl->>Ctrl: 同步教室/成绩/考试
     end
 
+    Ctrl->>Notif: scheduleCourseReminders()
+    Notif-->>Ctrl: ✅ 课前20分钟提醒已设置
     Ctrl->>Ctrl: state.value = data + success
     Ctrl-->>UI: signal 变化触发重建
-    UI-->>U: ✨ 展示课表
+    UI-->>U: ✨ 展示课表 + 天气横幅
+
+    Note over U,UI: 📅 自定义日程
+    U->>UI: 点击 + 添加日程
+    UI->>Ctrl: addScheduleEvent(event)
+    Ctrl->>Storage: saveScheduleEvents()
+    Ctrl->>Notif: scheduleEventReminder()
+    Ctrl-->>UI: 日程卡片显示在课表
 ```
 
 ### 状态管理 (signals)
@@ -135,6 +158,9 @@ graph TB
         SL --> CC[ClassroomRepository]
         SL --> GR[GradeRepository]
         SL --> ER[ExamRepository]
+        SL --> SE[ScheduleEventsRepository]
+        SL --> NS[NotificationService]
+        SL --> WS[WeatherService]
     end
 
     subgraph "Controllers"
@@ -168,13 +194,15 @@ lib/
 │   └── app.dart                                 # MaterialApp 配置 + 双风格主题
 ├── core/
 │   ├── di/
-│   │   └── service_locator.dart                 # get_it 依赖注入 (26 个注册)
+│   │   └── service_locator.dart                 # get_it 依赖注入 (30+ 注册)
 │   ├── presentation/
 │   │   ├── adaptive_style.dart                  # DesignStyle 枚举 + 运行时切换
 │   │   ├── adaptive_icons.dart                  # 自适应图标 (Material ↔ Cupertino)
 │   │   ├── adaptive_helpers.dart                # 通用工具 (对话框/消息/加载指示器)
 │   │   ├── adaptive_widgets.dart                # 自适应组件 (NavigationBar/Dialog)
-│   │   └── update_dialog.dart                   # 更新提示 (Material + Cupertino 双版本)
+│   │   ├── update_dialog.dart                   # 更新提示 (Material + Cupertino 双版本)
+│   │   ├── glass_scaffold.dart                  # 毛玻璃导航栏容器 (card 已退化为实色)
+│   │   └── glass_dialog.dart                    # 毛玻璃弹窗容器
 │   ├── rust/                                    # flutter_rust_bridge 生成代码
 │   │   ├── api/                                 # Rust → Dart 接口
 │   │   │   ├── auth.dart                        # 登录认证
@@ -186,6 +214,8 @@ lib/
 │   │   └── crawler/
 │   │       └── model.dart                       # Rust 共享数据模型
 │   ├── services/
+│   │   ├── notification_service.dart            # 本地通知 (课程/考试/日程提醒)
+│   │   ├── weather_service.dart                 # 天气查询服务
 │   │   ├── ocr_initializer.dart                 # OCR 引擎初始化 (signal)
 │   │   └── update_service.dart                  # GitHub Release 更新检查 (Dio)
 │   └── settings/
@@ -213,7 +243,8 @@ lib/
 │   │   │   │   ├── cached_timetable.dart        # 缓存课表
 │   │   │   │   ├── login_credentials.dart       # 登录凭据 (freezed)
 │   │   │   │   ├── teaching_week_baseline.dart  # 教学周基准 (freezed)
-│   │   │   │   └── time_slot.dart               # 时间段 (freezed)
+│   │   │   │   ├── time_slot.dart               # 时间段 (freezed)
+│   │   │   │   └── schedule_event.dart          # 自定义日程 (freezed)
 │   │   │   ├── repositories/                    # 抽象接口
 │   │   │   └── services/
 │   │   │       ├── course_mapper.dart           # Rust → Domain 映射
@@ -227,6 +258,7 @@ lib/
 │   │   │   │   ├── secure_credentials_local_datasource.dart
 │   │   │   │   ├── secure_timetable_local_datasource.dart
 │   │   │   │   ├── secure_teaching_week_baseline_local_datasource.dart
+│   │   │   │   ├── secure_schedule_events_local_datasource.dart
 │   │   │   │   └── timetable_crawler_client.dart # Rust 爬虫客户端
 │   │   │   └── repositories/                    # 接口实现
 │   │   └── presentation/
@@ -245,7 +277,9 @@ lib/
 │   │           └── widgets/
 │   │               ├── timetable_appointment_card.dart       # 课程卡片 (Material)
 │   │               ├── timetable_appointment_cupertino.dart  # 课程卡片 (Cupertino)
-│   │               ├── timetable_page_sections.dart          # 状态横幅
+│   │               ├── timetable_page_sections.dart          # 登录面板 + 状态横幅
+│   │               ├── add_schedule_event_sheet.dart         # 添加日程弹窗
+│   │               ├── weather_banner.dart                  # 天气横幅
 │   │               └── timetable_ruler_components.dart       # 时间标尺
 │   │
 │   ├── classroom/                               # 🏫 空闲教室
@@ -310,7 +344,7 @@ lib/
 │   │       ├── book_material.dart               # Material 图书 UI
 │   │       └── book_cupertino.dart              # Cupertino 图书 UI
 │   │
-│   └── settings/                                # ⚙️ 设置
+│   └── settings/                                # ⚙️ 设置 (主题/学期/交互/高级)
 │       └── presentation/pages/tabs/
 │           ├── settings_tab.dart                # 设置 Tab 入口 + 状态管理
 │           ├── settings_sections.dart           # 共享 Section 组件 (5 个)
@@ -357,20 +391,21 @@ rust/
 ```mermaid
 graph LR
     subgraph "Flutter Dart"
-        A["presentation/"] -->|"signal / SignalBuilder"| B["state/"]
+        A["presentation/<br/>(Material + Cupertino)"] -->|"signal / SignalBuilder"| B["state/"]
         B -->|"get_it sl()"| C["data/"]
         C -->|"flutter_rust_bridge"| D["core/rust/api/"]
+        B -->|"sl()"| SVC["services/<br/>(通知 / 天气 / OCR / 更新)"]
     end
 
     subgraph "Rust"
         D --> E["api/"]
         E --> F["crawler/"]
         F --> G["Reqwest + Scraper"]
-        F --> H["OCR Burn"]
+        F --> H["OCR Burn (200KB)"]
         F --> I["Proxy Server"]
     end
 
-    C -->|"SecureStorage"| J[("本地存储")]
+    C -->|"SecureStorage"| J[("本地存储<br/>(课表/日程/设置)")]
 
     style A fill:#4CAF50,color:#fff
     style D fill:#FF5722,color:#fff
@@ -407,13 +442,15 @@ graph LR
 | 组件 | Material | Cupertino |
 |------|----------|-----------|
 | 导航栏 | `NavigationBar` | `CupertinoTabBar` |
-| 页面头 | `AppBar` | `CupertinoSliverNavigationBar` |
-| 刷新按钮 | `FloatingActionButton` | `CupertinoButton.filled` |
-| 列表 | `ListView` + `Card` | `CupertinoListSection` |
+| 页面头 | `AppBar (AppBarM3E)` | `GlassScaffold` (毛玻璃导航栏) |
+| 课程卡片 | `Card` + 阴影 | `Container` + 圆角实色 |
+| 日程添加 | `FilledButton` (FAB) | `CupertinoButton` (导航栏 +) |
+| 列表 | `ListView` + `Card` | `ListView` + `_iosCard` |
 | 对话框 | `AlertDialog` | `CupertinoAlertDialog` |
+| 详情弹窗 | `showModalBottomSheet` | `CupertinoActionSheet` / `GlassDialog` |
 | 选择器 | `SegmentedButton` | `CupertinoActionSheet` |
 | 加载器 | `CircularProgressIndicator` | `CupertinoActivityIndicator` |
-| 消息提示 | `SnackBar` | `CupertinoAlertDialog` (自动消失) |
+| 消息提示 | `SnackBar` (Adaptive) | `CupertinoAlertDialog` (自动消失) |
 
 ---
 
@@ -421,14 +458,15 @@ graph LR
 
 ```mermaid
 graph TD
-    A["用户点击同步"] --> B["GlobalSyncController.syncGlobal"]
+    A["App 启动 或 用户点击同步"] --> B["GlobalSyncController.syncGlobal"]
     B --> C{"当前 Tab?"}
-    C --> |"课表"| D["优先: Timetable"]
+    C --> |"课表"| D["优先: Timetable + 日程"]
     C --> |"教室"| E["优先: Classroom"]
     C --> |"成绩"| F["优先: Grades"]
     C --> |"考试"| G["优先: Exams"]
 
-    D --> H["后台: Grades + Exams + Classroom"]
+    D --> D1["合并自定义日程 → EventsController"]
+    D1 --> H["后台: Grades + Exams + Classroom + 通知调度"]
     E --> I["后台: Timetable + Grades + Exams"]
     F --> J["后台: Timetable + Exams + Classroom"]
     G --> K["后台: Timetable + Grades + Classroom"]
@@ -438,7 +476,7 @@ graph TD
     J --> L
     K --> L
 
-    L --> M["后台任务继续运行"]
+    L --> M["后台任务 + 通知继续运行"]
 
     style A fill:#FF6B35,color:#fff
     style B fill:#FF6B35,color:#fff
