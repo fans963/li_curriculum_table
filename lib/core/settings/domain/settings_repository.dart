@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Color scheme generation type (M3 color harmonization).
@@ -163,27 +164,30 @@ class AppSettings {
     this.autoSizeText = true,
     this.autoSizeMinFontSize = 6.0,
     this.timetableTextMaxLines = 2,
-    this.timetableTextFontSize = 11.0,
+    this.timetableTextFontSize = 11.0, // overridden on mobile in defaultSettings()
     this.daysVisibleCount = 7,
     this.termsAccepted = false,
   });
 
   factory AppSettings.defaultSettings() {
-    return const AppSettings(
+    final isMobile = !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    return AppSettings(
       proxyEnabled: false,
       proxyPort: 9999,
       weeklyScroll: false,
       themeMode: ThemeMode.system,
-      seedColor: Color(0xFF0A7C6D),
+      seedColor: const Color(0xFF0A7C6D),
       useDynamicColor: true,
       designStyle: DesignStyle.system,
       colorSchemeType: ColorSchemeType.tonalSpot,
       enableBookCover: false,
       currentTerm: '',
-      autoSizeText: true,
+      autoSizeText: !isMobile,
       autoSizeMinFontSize: 6.0,
-      timetableTextMaxLines: 2,
-      timetableTextFontSize: 13.0,
+      timetableTextMaxLines: isMobile ? 3 : 2,
+      timetableTextFontSize: isMobile ? 8.0 : 11.0,
       daysVisibleCount: 7,
       termsAccepted: false,
     );

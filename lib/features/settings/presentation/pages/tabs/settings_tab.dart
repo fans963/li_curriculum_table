@@ -325,7 +325,8 @@ class _SettingsTabState extends State<SettingsTab>
       if (count == null) return; // user cancelled
       if (!mounted) return;
       showAdaptiveMessage(context, designStyle: ds, message: '已导入 $count 条数据');
-      // Reload timetable to reflect imported data
+      // Reload all cached data to reflect imported state
+      await sl<SettingsController>().init();
       await sl<TimetableController>().restoreCachedTimetable();
       await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
       await sl<CourseColorService>().reload();

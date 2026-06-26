@@ -423,8 +423,9 @@ class TimetableController {
       'proxy_enabled', 'proxy_port', 'weekly_scroll',
       'theme_mode', 'seed_color', 'use_dynamic_color',
       'design_style', 'color_scheme_type', 'enable_book_cover',
-      'current_term', 'auto_size_text', 'days_visible_count',
-      'terms_accepted',
+      'current_term', 'auto_size_text', 'auto_size_min_font_size',
+      'timetable_text_max_lines', 'timetable_text_font_size',
+      'days_visible_count', 'terms_accepted',
     ]);
 
     _state.value = initialTimetableState.copyWith(

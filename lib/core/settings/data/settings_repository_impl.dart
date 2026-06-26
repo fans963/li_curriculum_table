@@ -28,8 +28,9 @@ class SecureSettingsLocalDataSource {
       _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
       _kThemeMode, _kSeedColor, _kUseDynamicColor,
       _kDesignStyle, _kColorSchemeType, _kEnableBookCover,
-      _kCurrentTerm, _kAutoSizeText, _kDaysVisibleCount,
-      _kTermsAccepted,
+      _kCurrentTerm, _kAutoSizeText, _kAutoSizeMinFontSize,
+      _kTimetableTextMaxLines, _kTimetableTextFontSize,
+      _kDaysVisibleCount, _kTermsAccepted,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';

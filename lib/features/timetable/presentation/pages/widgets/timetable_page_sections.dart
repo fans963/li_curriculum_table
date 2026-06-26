@@ -165,9 +165,8 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                 filled: true,
                 fillColor: colorScheme.surface,
               ),
-              onSubmitted: (value) {
-                final trimmed = value.trim();
-                widget.onCurrentTermChanged(trimmed);
+              onChanged: (value) {
+                widget.onCurrentTermChanged(value.trim());
               },
             ),
             const SizedBox(height: 12),

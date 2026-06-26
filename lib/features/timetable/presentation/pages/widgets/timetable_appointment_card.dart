@@ -360,70 +360,64 @@ AppointmentTone resolveAppointmentTone(
   required String seedText,
   Color? customColor,
 }) {
-  final cs = Theme.of(context).colorScheme;
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  // Derive a per-course hue from the course name hash for visual variety,
-  // or use the custom color's hue if overridden.
-  final double courseHue;
+  // Resolve the accent color for this course.
+  // Custom color: use directly. Default: pick from a high-contrast palette.
+  final Color accent;
   if (customColor != null) {
-    courseHue = HSLColor.fromColor(customColor).hue;
+    accent = customColor;
   } else {
-    int hash = 0;
-    for (int i = 0; i < seedText.length; i++) {
-      hash = seedText.codeUnitAt(i) + ((hash << 5) - hash);
-    }
-    courseHue = (hash.abs() % 360).toDouble();
+    accent = _courseAccentFromPalette(seedText);
   }
 
-  Color tintSurface(Color base, double saturation, double lightness) {
-    final baseHsl = HSLColor.fromColor(base);
-    final tinted = HSLColor.fromAHSL(
-      1.0,
-      courseHue,
-      (baseHsl.saturation + saturation).clamp(0.0, 1.0),
-      (baseHsl.lightness + lightness).clamp(0.0, 1.0),
-    ).toColor();
-    return Color.alphaBlend(tinted.withValues(alpha: 0.35), base);
-  }
-
-  // Custom color: derive tones directly from the picked color, no blending with surface.
-  if (customColor != null) {
-    final hsl = HSLColor.fromColor(customColor);
-    final accent = customColor;
-    final bg = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.7, isDark ? 0.20 : 0.92).toColor();
-    final bgAlt = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.6, isDark ? 0.24 : 0.88).toColor();
-    final fg = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.5, isDark ? 0.85 : 0.15).toColor();
-    final border = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.4, isDark ? 0.35 : 0.75).toColor();
-    return AppointmentTone(
-      background: bg,
-      backgroundAlt: bgAlt,
-      foreground: fg,
-      border: border,
-      accent: accent,
-      shadow: accent.withValues(alpha: isDark ? 0.3 : 0.15),
-    );
-  }
+  final hsl = HSLColor.fromColor(accent);
 
   if (isDark) {
     return AppointmentTone(
-      background: tintSurface(cs.surfaceContainerLow, 0.10, -0.04),
-      backgroundAlt: tintSurface(cs.surfaceContainer, 0.10, -0.02),
-      foreground: tintSurface(cs.onSurface, 0.20, 0.05),
-      border: tintSurface(cs.outlineVariant, 0.08, 0.0),
-      accent: tintSurface(cs.primary, 0.08, 0.0),
-      shadow: Colors.black.withValues(alpha: 0.25),
+      background: HSLColor.fromAHSL(1.0, hsl.hue, 0.35, 0.16).toColor(),
+      backgroundAlt: HSLColor.fromAHSL(1.0, hsl.hue, 0.30, 0.20).toColor(),
+      foreground: HSLColor.fromAHSL(1.0, hsl.hue, 0.25, 0.88).toColor(),
+      border: HSLColor.fromAHSL(1.0, hsl.hue, 0.25, 0.30).toColor(),
+      accent: accent,
+      shadow: accent.withValues(alpha: 0.3),
     );
   } else {
     return AppointmentTone(
-      background: tintSurface(cs.surfaceContainerLow, 0.10, 0.02),
-      backgroundAlt: tintSurface(cs.surfaceContainerLow, 0.10, -0.01),
-      foreground: tintSurface(cs.onSurface, 0.25, -0.10),
-      border: tintSurface(cs.outlineVariant, 0.08, 0.04),
-      accent: tintSurface(cs.primary, 0.05, -0.05),
-      shadow: tintSurface(cs.primary, 0.05, -0.05).withValues(alpha: 0.08),
+      background: HSLColor.fromAHSL(1.0, hsl.hue, 0.40, 0.93).toColor(),
+      backgroundAlt: HSLColor.fromAHSL(1.0, hsl.hue, 0.35, 0.90).toColor(),
+      foreground: HSLColor.fromAHSL(1.0, hsl.hue, 0.45, 0.22).toColor(),
+      border: HSLColor.fromAHSL(1.0, hsl.hue, 0.30, 0.78).toColor(),
+      accent: accent,
+      shadow: accent.withValues(alpha: 0.12),
     );
   }
+}
+
+/// 12 well-separated hues (30° apart) at high saturation for maximum
+/// visual distinction between courses. Each course name is hashed to
+/// pick one entry.
+const _coursePalette = [
+  Color(0xFFD32F2F), // red         0°
+  Color(0xFFEF6C00), // orange     30°
+  Color(0xFFF9A825), // amber      45°
+  Color(0xFF558B2F), // green      90°
+  Color(0xFF00897B), // teal      170°
+  Color(0xFF0097A7), // cyan      185°
+  Color(0xFF1565C0), // blue      215°
+  Color(0xFF5E35B1), // deep purple 270°
+  Color(0xFF8E24AA), // purple    290°
+  Color(0xFFD81B60), // pink      340°
+  Color(0xFF6D4C41), // brown      20°
+  Color(0xFF546E7A), // blue grey 200°
+];
+
+Color _courseAccentFromPalette(String name) {
+  int hash = 0;
+  for (int i = 0; i < name.length; i++) {
+    hash = name.codeUnitAt(i) + ((hash << 5) - hash);
+  }
+  return _coursePalette[hash.abs() % _coursePalette.length];
 }
 
 class AppointmentTone {
