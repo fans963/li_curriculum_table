@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:m3e_core/m3e_core.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -200,13 +201,17 @@ class _MaterialUpdateDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        M3ETextButton(
           onPressed: () => Navigator.pop(context),
+          size: M3EButtonSize.md,
+          shape: M3EButtonShape.round,
           child: const Text('稍后再说'),
         ),
-        FilledButton.icon(
+        M3EFilledButton.icon(
           icon: const Icon(Icons.download_rounded, size: 18),
           label: const Text('前往下载'),
+          size: M3EButtonSize.md,
+          shape: M3EButtonShape.round,
           onPressed: () async {
             try {
               final url = Uri.parse(updateInfo.releaseUrl);

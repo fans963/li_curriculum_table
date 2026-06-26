@@ -1,4 +1,7 @@
+import 'package:animations/animations.dart';
+import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/material.dart';
+import 'package:icon_button_m3e/icon_button_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -6,34 +9,26 @@ import 'package:li_curriculum_table/core/rust/api/book.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_cupertino.dart';
+import 'package:li_curriculum_table/features/book/presentation/pages/book_detail_page.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
 import 'package:signals/signals_flutter.dart';
 
-class BookTab extends StatefulWidget {
+class BookTab extends SignalStatefulWidget {
   const BookTab({super.key});
 
   @override
   State<BookTab> createState() => _BookTabState();
 }
 
-class _BookTabState extends State<BookTab>
-    with AutomaticKeepAliveClientMixin {
+class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
   @override
   bool get wantKeepAlive => true;
 
   final _searchController = TextEditingController();
-  bool _isLoading = false;
-  List<BookInfo> _books = [];
-  String? _error;
-  bool _hasSearched = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _searchController.addListener(() {
-      setState(() {}); // Update search bar trailing icon
-    });
-  }
+  final _isLoading = signal(false);
+  final _books = signal<List<BookInfo>>([]);
+  final _error = signal<String?>(null);
+  final _hasSearched = signal(false);
 
   @override
   void dispose() {
@@ -45,62 +40,52 @@ class _BookTabState extends State<BookTab>
     final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
-    // Dismiss keyboard
     FocusScope.of(context).unfocus();
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-      _hasSearched = true;
-    });
+    _isLoading.value = true;
+    _error.value = null;
+    _hasSearched.value = true;
 
     try {
       final results = await searchBooks(title: query);
       if (!mounted) return;
-      setState(() {
-        _books = results;
-        _isLoading = false;
-      });
+      _books.value = results;
+      _isLoading.value = false;
     } catch (e) {
       if (!mounted) return;
-      setState(() {
-        _error = '检索失败，请检查网络后重试。';
-        _isLoading = false;
-      });
+      _error.value = '检索失败，请检查网络后重试。';
+      _isLoading.value = false;
     }
   }
 
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return SignalBuilder(builder: (context) {
-      final ds = sl<SettingsController>().designStyle.value;
+    final ds = sl<SettingsController>().designStyle.value;
 
-      if (AdaptiveStyle.isCupertino(ds)) {
-        return buildBookCupertino(
-          context,
-          searchController: _searchController,
-          onSearch: _performSearch,
-          isLoading: _isLoading,
-          hasSearched: _hasSearched,
-          error: _error,
-          books: _books,
-          onBookTap: (book) => _showBookDetailsSheet(context, book),
-        );
-      }
-      return _buildMaterial(context, ds);
-    });
+    if (AdaptiveStyle.isCupertino(ds)) {
+      return buildBookCupertino(
+        context,
+        searchController: _searchController,
+        onSearch: _performSearch,
+        isLoading: _isLoading.value,
+        hasSearched: _hasSearched.value,
+        error: _error.value,
+        books: _books.value,
+        onBookTap: (book) => _showBookDetailsSheet(context, book),
+      );
+    }
+    return _buildMaterial(context, ds);
   }
-
-  // ─── Material ──────────────────────────────────────────────────────────────
 
   Widget _buildMaterial(BuildContext context, DesignStyle ds) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('图书搜寻'),
+      appBar: const AppBarM3E(
+        title: Text('图书搜寻'),
         centerTitle: true,
+        shapeFamily: AppBarM3EShapeFamily.square,
       ),
       body: SafeArea(
         child: Center(
@@ -113,40 +98,51 @@ class _BookTabState extends State<BookTab>
                   child: SearchBar(
                     controller: _searchController,
                     hintText: '输入书名检索馆藏，例如 "计算机"',
-                    leading: Icon(AppIcons.search(ds), color: colorScheme.onSurfaceVariant),
+                    leading: Icon(AppIcons.search(ds),
+                        color: colorScheme.onSurfaceVariant),
                     trailing: [
                       if (_searchController.text.isNotEmpty)
-                        IconButton(
+                        IconButtonM3E(
                           icon: Icon(AppIcons.clear(ds)),
+                          variant: IconButtonM3EVariant.tonal,
+                          shape: IconButtonM3EShapeVariant.round,
                           onPressed: () => _searchController.clear(),
                         ),
-                      IconButton(
-                        icon: Icon(AppIcons.arrowForward(ds), color: colorScheme.primary),
+                      IconButtonM3E(
+                        icon: Icon(AppIcons.arrowForward(ds)),
+                        variant: IconButtonM3EVariant.filled,
+                        shape: IconButtonM3EShapeVariant.round,
                         onPressed: _performSearch,
                       ),
                     ],
                     onSubmitted: (_) => _performSearch(),
                     elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(colorScheme.surfaceContainerHigh),
+                    backgroundColor: WidgetStateProperty.all(
+                        colorScheme.surfaceContainerHigh),
                     shape: WidgetStateProperty.all(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                        side: BorderSide(
+                            color: colorScheme.outlineVariant
+                                .withValues(alpha: 0.5)),
                       ),
                     ),
                   ),
                 ),
                 Expanded(
-                  child: buildMaterialBody(
-                    context,
-                    ds: ds,
-                    isLoading: _isLoading,
-                    error: _error,
-                    hasSearched: _hasSearched,
-                    books: _books,
-                    onRetry: _performSearch,
-                    onBookTap: (book) => _showBookDetailsSheet(context, book),
-                    onShowDetails: _showMaterialDetailsSheet,
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 300),
+                    child: buildMaterialBody(
+                      context,
+                      ds: ds,
+                      isLoading: _isLoading.value,
+                      error: _error.value,
+                      hasSearched: _hasSearched.value,
+                      books: _books.value,
+                      onRetry: _performSearch,
+                      onBookTap: (book, cardCenter, cardSize) =>
+                          _showBookDetailsDialog(context, book, ds, cardCenter),
+                    ),
                   ),
                 ),
               ],
@@ -157,114 +153,30 @@ class _BookTabState extends State<BookTab>
     );
   }
 
-  // ─── Book Details Sheet (routing layer) ────────────────────────────────────
-
   void _showBookDetailsSheet(BuildContext context, BookInfo book) {
-    final ds = sl<SettingsController>().designStyle.value;
-
-    if (AdaptiveStyle.isCupertino(ds)) {
-      showCupertinoBookDetailsSheet(context, book);
-      return;
-    }
-
-    _showMaterialDetailsSheet(context, book, ds);
+    showCupertinoBookDetailsSheet(context, book);
   }
 
-  void _showMaterialDetailsSheet(
+  void _showBookDetailsDialog(
     BuildContext context,
     BookInfo book,
     DesignStyle ds,
+    Offset cardCenter,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: colorScheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    Navigator.of(context).push(
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 400),
+        reverseTransitionDuration: const Duration(milliseconds: 300),
+        opaque: false,
+        barrierDismissible: true,
+        barrierColor: Colors.black54,
+        pageBuilder: (context, animation, secondaryAnimation) {
+          return BookDetailDialog(book: book, ds: ds);
+        },
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeScaleTransition(animation: animation, child: child);
+        },
       ),
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.65,
-          minChildSize: 0.4,
-          maxChildSize: 0.95,
-          expand: false,
-          builder: (context, scrollController) {
-            return SingleChildScrollView(
-              controller: scrollController,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Handle
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 16),
-                      decoration: BoxDecoration(
-                        color: colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  ),
-
-                  // Header with Book Title
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          book.title,
-                          style: textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          book.docType,
-                          style: textTheme.labelMedium?.copyWith(
-                            color: colorScheme.onPrimaryContainer,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 16),
-
-                  // Book Metadata Grid
-                  buildMetaItem(context, '索书号', book.callNo, isCode: true),
-                  buildMetaItem(context, '责任者/作者', book.author),
-                  buildMetaItem(context, '出版与印刷项', book.publisher),
-                  buildMetaItem(context, '馆藏概况', book.holdingsSummary),
-
-                  const SizedBox(height: 16),
-
-                  // Specific holdings list & dynamic details (Lazy loaded)
-                  buildMaterialHoldings(context, book, ds),
-                  const SizedBox(height: 32),
-                ],
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }

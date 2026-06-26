@@ -1,6 +1,7 @@
 import 'package:infinite_calendar_view/infinite_calendar_view.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -11,7 +12,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/pages/widget
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 
-class TimetableWeekView extends StatefulWidget {
+class TimetableWeekView extends SignalStatefulWidget {
   const TimetableWeekView({
     super.key,
     required this.startHour,
@@ -60,9 +61,8 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
 
   @override
   Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      final controller = eventsController;
-      final timetableState = sl<TimetableController>().state.value;
+    final controller = eventsController;
+    final timetableState = sl<TimetableController>().state.value;
       final termStart = timetableState.termStartMonday;
       final weeklyScroll = sl<SettingsController>().state.value.weeklyScroll;
 
@@ -114,7 +114,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
               child: Center(
                 child: isCupertino
                     ? const CupertinoActivityIndicator()
-                    : const CircularProgressIndicator.adaptive(strokeWidth: 2),
+                    : const LoadingIndicatorM3E(),
               ),
             );
           }
@@ -241,6 +241,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                       heightPerMinute: heightPerMinute,
                       isToday: isToday,
                       color: primaryColor,
+                      foregroundColor: onPrimaryColor,
                       now: widget.now,
                     );
                   },
@@ -249,9 +250,8 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
               ),
             ),
           );
-        },
-      );
-    });
+      },
+    );
   }
 }
 
@@ -300,12 +300,14 @@ class CurrentTimeIndicatorPainter extends CustomPainter {
   final double heightPerMinute;
   final bool isToday;
   final Color color;
+  final Color foregroundColor;
   final DateTime now;
 
   CurrentTimeIndicatorPainter({
     required this.heightPerMinute,
     required this.isToday,
     required this.color,
+    required this.foregroundColor,
     required this.now,
   });
 
@@ -331,7 +333,7 @@ class CurrentTimeIndicatorPainter extends CustomPainter {
     canvas.drawCircle(Offset(4, y), 5.0, circlePaintOuter);
 
     final circlePaintInner = Paint()
-      ..color = Colors.white
+      ..color = foregroundColor
       ..style = PaintingStyle.fill;
     canvas.drawCircle(Offset(4, y), 2.0, circlePaintInner);
   }
@@ -341,6 +343,7 @@ class CurrentTimeIndicatorPainter extends CustomPainter {
     return oldDelegate.heightPerMinute != heightPerMinute ||
         oldDelegate.isToday != isToday ||
         oldDelegate.now != now ||
-        oldDelegate.color != color;
+        oldDelegate.color != color ||
+        oldDelegate.foregroundColor != foregroundColor;
   }
 }

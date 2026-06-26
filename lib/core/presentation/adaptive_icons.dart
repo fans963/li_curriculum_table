@@ -188,8 +188,13 @@ class AppIcons {
     cupertino: CupertinoIcons.color_filter,
   );
   static IconData viewWeek(DesignStyle s) => adaptiveIcon(s,
-    material: Icons.view_week_outlined,
-    cupertino: CupertinoIcons.rectangle_grid_1x2,
+    material: Icons.view_week_rounded,
+    cupertino: CupertinoIcons.slider_horizontal_3,
+  );
+
+  static IconData viewInAr(DesignStyle s) => adaptiveIcon(s,
+    material: Icons.view_in_ar_rounded,
+    cupertino: CupertinoIcons.cube,
   );
   static IconData viewWeekFilled(DesignStyle s) => adaptiveIcon(s,
     material: Icons.view_week_rounded,

@@ -4,20 +4,23 @@ import 'package:geolocator/geolocator.dart';
 import 'package:li_curriculum_table/core/rust/api/weather.dart' as rust;
 
 class WeatherInfo {
-  final double temperature;
+  final double minTemperature;
+  final double maxTemperature;
   final int weatherCode;
   final bool isDay;
   final double? windSpeed;
 
   const WeatherInfo({
-    required this.temperature,
+    required this.minTemperature,
+    required this.maxTemperature,
     required this.weatherCode,
     required this.isDay,
     this.windSpeed,
   });
 
   factory WeatherInfo.fromRust(rust.WeatherData data) => WeatherInfo(
-        temperature: data.temperature,
+        minTemperature: data.minTemperature,
+        maxTemperature: data.maxTemperature,
         weatherCode: data.weatherCode,
         isDay: data.isDay,
         windSpeed: data.windSpeed,
@@ -25,7 +28,7 @@ class WeatherInfo {
 
   String get description => _weatherDescription(weatherCode);
   IconData get icon => _weatherIcon(weatherCode, isDay);
-  String get tip => _weatherTip(weatherCode, temperature);
+  String get tip => _weatherTip(weatherCode, maxTemperature);
   Color get color => _weatherColor(weatherCode);
 
   static String _weatherDescription(int code) {
@@ -147,7 +150,7 @@ class WeatherService {
 
       final weather = WeatherInfo.fromRust(data);
 
-      debugPrint('Weather: ${weather.temperature}°C code=${weather.weatherCode}');
+      debugPrint('Weather: ${weather.minTemperature}°C-${weather.maxTemperature}°C code=${weather.weatherCode}');
       _cachedWeather = weather;
       _lastFetchTime = DateTime.now();
       return weather;

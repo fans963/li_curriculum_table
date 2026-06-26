@@ -1,8 +1,12 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/glass_card.dart';
+import 'package:li_curriculum_table/core/presentation/glass_dialog.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:m3e_core/m3e_core.dart';
+
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 
@@ -23,75 +27,35 @@ Widget buildCupertinoAppointmentCard({
 }) {
   final tone = resolveCupertinoTone(context, title);
   final bgColor = isOngoing
-      ? tone.accent.withValues(alpha: 0.12)
-      : tone.background;
+      ? tone.accent.withValues(alpha: 0.15)
+      : tone.background.withValues(alpha: 0.45);
   final borderColor = isOngoing
       ? tone.accent.withValues(alpha: 0.4)
-      : tone.accent.withValues(alpha: 0.15);
+      : CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2);
 
   return Padding(
-    padding: const EdgeInsets.all(1.5),
+    padding: const EdgeInsets.all(2.0),
     child: GestureDetector(
       onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: borderColor, width: 0.5),
-        ),
+      child: GlassCard(
+        backgroundColor: bgColor,
+        borderColor: borderColor,
         child: Row(
           children: [
             Container(
-              width: 3,
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-              decoration: BoxDecoration(
-                color: tone.accent,
-                borderRadius: BorderRadius.circular(1.5),
-              ),
+              width: 3.5,
+              color: isOngoing
+                  ? tone.accent
+                  : tone.accent.withValues(alpha: 0.5),
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(4, 6, 8, 6),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: tone.foreground,
-                              height: 1.2,
-                            ),
-                          ),
-                        ),
-                        if (isOngoing) ...[
-                          const SizedBox(width: 6),
-                          _ongoingBadge(tone.accent, fontSize: 9, hPad: 5, vPad: 1.5),
-                        ],
-                      ],
-                    ),
-                    if (locationLine.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        locationLine,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: tone.foreground.withValues(alpha: 0.65),
-                          fontWeight: FontWeight.w400,
-                          height: 1.2,
-                        ),
-                      ),
-                    ],
-                  ],
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                child: _CardContent(
+                  title: title,
+                  locationLine: locationLine,
+                  isOngoing: isOngoing,
+                  tone: tone,
                 ),
               ),
             ),
@@ -100,6 +64,80 @@ Widget buildCupertinoAppointmentCard({
       ),
     ),
   );
+}
+
+/// Card inner content — extracted to reduce nesting depth.
+class _CardContent extends StatelessWidget {
+  final String title;
+  final String locationLine;
+  final bool isOngoing;
+  final CupertinoTone tone;
+
+  const _CardContent({
+    required this.title,
+    required this.locationLine,
+    required this.isOngoing,
+    required this.tone,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: tone.foreground,
+                  letterSpacing: -0.2,
+                  height: 1.15,
+                ),
+              ),
+            ),
+            if (isOngoing) ...[
+              const SizedBox(width: 6),
+              _ongoingBadge(tone.accent, fontSize: 9, hPad: 5, vPad: 1.5),
+            ],
+          ],
+        ),
+        if (locationLine.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Row(
+            children: [
+              Icon(
+                CupertinoIcons.location,
+                size: 10,
+                color: tone.foreground.withValues(alpha: 0.5),
+              ),
+              const SizedBox(width: 2),
+              Expanded(
+                child: Text(
+                  locationLine,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: tone.foreground.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: -0.1,
+                    height: 1.2,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
 }
 
 CupertinoTone resolveCupertinoTone(BuildContext context, String seedText) {
@@ -111,17 +149,39 @@ CupertinoTone resolveCupertinoTone(BuildContext context, String seedText) {
   );
 }
 
-Widget _ongoingBadge(Color accent, {double fontSize = 11, double hPad = 8, double vPad = 4, Color? foreground}) {
+Widget _ongoingBadge(Color accent, {double fontSize = 11, double hPad = 7, double vPad = 3, Color? foreground}) {
+  final fg = foreground ?? CupertinoColors.white;
   return Container(
     padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
-    decoration: BoxDecoration(color: accent, borderRadius: BorderRadius.circular(4)),
-    child: Text('进行中', style: TextStyle(
-      fontSize: fontSize,
-      fontWeight: FontWeight.w700,
-      color: foreground ?? CupertinoColors.white,
-    )),
+    decoration: BoxDecoration(
+      color: accent,
+      borderRadius: BorderRadius.circular(8),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 5,
+          height: 5,
+          decoration: BoxDecoration(
+            color: fg,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text('进行中', style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w700,
+          color: fg,
+        )),
+      ],
+    ),
   );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Course Details Sheet
+// ═══════════════════════════════════════════════════════════════════════════
 
 class CourseDetailsSheet extends StatelessWidget {
   final CourseOccurrence occurrence;
@@ -129,6 +189,7 @@ class CourseDetailsSheet extends StatelessWidget {
   final String timeLine;
   final bool isOngoing;
   final DesignStyle designStyle;
+  final VoidCallback? onClose;
 
   const CourseDetailsSheet({
     super.key,
@@ -137,6 +198,7 @@ class CourseDetailsSheet extends StatelessWidget {
     required this.designStyle,
     required this.timeLine,
     required this.isOngoing,
+    this.onClose,
   });
 
   @override
@@ -145,82 +207,68 @@ class CourseDetailsSheet extends StatelessWidget {
     return _buildMaterial(context);
   }
 
-  Widget _buildSheet({
-    required Color bgColor,
-    required double topRadius,
-    required double hPad,
-    required Widget handle,
-    required List<Widget> children,
-  }) {
-    return DraggableScrollableSheet(
-      initialChildSize: 0.5,
-      minChildSize: 0.3,
-      maxChildSize: 0.9,
-      expand: false,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(topRadius)),
-          ),
-          child: SingleChildScrollView(
-            controller: scrollController,
-            padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 32),
-            child: SafeArea(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [handle, ...children],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
   // ── Cupertino ──────────────────────────────────────────────────────────
 
   Widget _buildCupertino(BuildContext context) {
     final accent = resolveCupertinoTone(context, occurrence.courseName).accent;
-    final bg = CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
-    final label = CupertinoColors.label.resolveFrom(context);
     final secondary = CupertinoColors.secondaryLabel.resolveFrom(context);
     final sep = CupertinoColors.separator.resolveFrom(context);
     final otherInfo = '${occurrence.courseType}'
         '${occurrence.credit.isNotEmpty ? ' · ${occurrence.credit}学分' : ''}';
 
-    return _buildSheet(
-      bgColor: bg,
-      topRadius: 18,
-      hPad: 20,
-      handle: Center(
-        child: Container(
-          width: 36, height: 5,
-          decoration: BoxDecoration(color: sep, borderRadius: BorderRadius.circular(2.5)),
-        ),
+    return GlassDialog(
+      child: Stack(
+        children: [
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 32),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Text(occurrence.courseName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.2, letterSpacing: -0.5))),
+                      if (isOngoing) ...[const SizedBox(width: 8), _ongoingBadge(accent, fontSize: 11, hPad: 7, vPad: 3)],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(occurrence.weekText, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: accent)),
+                const SizedBox(height: 20),
+                Container(height: 0.5, color: sep),
+                const SizedBox(height: 16),
+                _infoRow(context, CupertinoIcons.clock, '时间', timeLine, accent, secondary),
+                _infoRow(context, CupertinoIcons.location, '地点', occurrence.location, accent, secondary),
+                _infoRow(context, CupertinoIcons.person, '教师', occurrence.teacher, accent, secondary),
+                _infoRow(context, CupertinoIcons.book, '其他信息', otherInfo, accent, secondary),
+              ],
+            ),
+          ),
+          if (onClose != null)
+            Positioned(
+              top: 16,
+              right: 16,
+              child: GestureDetector(
+                onTap: onClose,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    CupertinoIcons.xmark,
+                    size: 16,
+                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
-      children: [
-        const SizedBox(height: 20),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: Text(occurrence.courseName,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: label, height: 1.2))),
-            if (isOngoing) ...[const SizedBox(width: 8), _ongoingBadge(accent, fontSize: 11, hPad: 7, vPad: 3)],
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(occurrence.weekText, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: accent)),
-        const SizedBox(height: 20),
-        Container(height: 0.5, color: sep),
-        const SizedBox(height: 16),
-        _infoRow(context, CupertinoIcons.clock, '时间', timeLine, accent, secondary),
-        _infoRow(context, CupertinoIcons.location, '地点', occurrence.location, accent, secondary),
-        _infoRow(context, CupertinoIcons.person, '教师', occurrence.teacher, accent, secondary),
-        _infoRow(context, CupertinoIcons.book, '其他信息', otherInfo, accent, secondary),
-        const SizedBox(height: 16),
-      ],
     );
   }
 
@@ -232,38 +280,58 @@ class CourseDetailsSheet extends StatelessWidget {
     final otherInfo = '${occurrence.courseType}'
         '${occurrence.credit.isNotEmpty ? ' · ${occurrence.credit}学分' : ''}';
 
-    return _buildSheet(
-      bgColor: cs.surface,
-      topRadius: 28,
-      hPad: 24,
-      handle: Center(
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 480),
         child: Container(
-          width: 32, height: 4,
-          decoration: BoxDecoration(
-            color: cs.onSurfaceVariant.withValues(alpha: 0.4),
-            borderRadius: BorderRadius.circular(2),
-          ),
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHigh,
+              borderRadius: BorderRadius.circular(36),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: Text(occurrence.courseName,
+                        style: tt.headlineMedium?.copyWith(fontWeight: FontWeight.bold, height: 1.15, letterSpacing: -0.5))),
+                      if (isOngoing) ...[const SizedBox(width: 8), _ongoingBadge(cs.primaryContainer, foreground: cs.onPrimaryContainer)],
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(occurrence.weekText, style: tt.titleMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 28),
+                  _infoRow(context, AppIcons.time(designStyle), '时间', timeLine, tone.accent, null, isMaterial: true),
+                  _infoRow(context, AppIcons.location(designStyle), '地点', occurrence.location, tone.accent, null, isMaterial: true),
+                  _infoRow(context, AppIcons.person(designStyle), '教师', occurrence.teacher, tone.accent, null, isMaterial: true),
+                  _infoRow(context, AppIcons.school(designStyle), '其他信息', otherInfo, tone.accent, null, isMaterial: true),
+                  if (onClose != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          M3EFilledButton(
+                            onPressed: onClose ?? () {},
+                            size: M3EButtonSize.md,
+                            shape: M3EButtonShape.round,
+                            child: const Text('关闭'),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
         ),
       ),
-      children: [
-        const SizedBox(height: 24),
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(child: Text(occurrence.courseName,
-              style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.bold, height: 1.2))),
-            if (isOngoing) ...[const SizedBox(width: 8), _ongoingBadge(tone.accent, foreground: tone.foreground)],
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(occurrence.weekText, style: tt.bodyMedium?.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
-        const SizedBox(height: 24),
-        _infoRow(context, AppIcons.time(designStyle), '时间', timeLine, tone.accent, null, isMaterial: true),
-        _infoRow(context, AppIcons.location(designStyle), '地点', occurrence.location, tone.accent, null, isMaterial: true),
-        _infoRow(context, AppIcons.person(designStyle), '教师', occurrence.teacher, tone.accent, null, isMaterial: true),
-        _infoRow(context, AppIcons.school(designStyle), '其他信息', otherInfo, tone.accent, null, isMaterial: true),
-        const SizedBox(height: 16),
-      ],
     );
   }
 
@@ -271,26 +339,27 @@ class CourseDetailsSheet extends StatelessWidget {
     if (value.trim().isEmpty) return const SizedBox.shrink();
     final labelStyle = isMaterial
         ? Theme.of(context).textTheme.labelSmall?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant)
-        : TextStyle(fontSize: 12, color: secondaryLabel);
+        : TextStyle(fontSize: 13, color: secondaryLabel, fontWeight: FontWeight.w500);
     final valueStyle = isMaterial
-        ? Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500)
-        : const TextStyle(fontSize: 16, fontWeight: FontWeight.w400);
-    final iconSize = isMaterial ? 20.0 : 17.0;
-    final bgAlpha = isMaterial ? 0.15 : 0.12;
+        ? Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600)
+        : TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: CupertinoColors.label.resolveFrom(context));
+    final iconSize = isMaterial ? 22.0 : 18.0;
+    final bgAlpha = isMaterial ? 0.20 : 0.12;
     final gap = isMaterial ? 2.0 : 1.0;
-    final bottom = isMaterial ? 16.0 : 14.0;
-    final iconBg = isMaterial
-        ? BoxDecoration(color: iconColor.withValues(alpha: bgAlpha), shape: BoxShape.circle)
-        : BoxDecoration(color: iconColor.withValues(alpha: bgAlpha), borderRadius: BorderRadius.circular(8));
+    final bottom = isMaterial ? 18.0 : 14.0;
+    final iconBg = BoxDecoration(
+      color: iconColor.withValues(alpha: bgAlpha),
+      borderRadius: BorderRadius.circular(isMaterial ? 16 : 8),
+    );
     return Padding(
       padding: EdgeInsets.only(bottom: bottom),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
-            width: isMaterial ? null : 32.0,
-            height: isMaterial ? null : 32.0,
-            padding: isMaterial ? const EdgeInsets.all(8) : null,
+            width: isMaterial ? 44.0 : 34.0,
+            height: isMaterial ? 44.0 : 34.0,
+            alignment: Alignment.center,
             decoration: iconBg,
             child: Icon(icon, size: iconSize, color: iconColor),
           ),

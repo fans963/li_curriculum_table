@@ -7,13 +7,14 @@ import 'package:li_curriculum_table/features/navigation/presentation/pages/main_
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:m3e_design/m3e_design.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 
 const bool isWeb = kIsWeb;
 
-class CurriculumTableApp extends StatelessWidget {
+class CurriculumTableApp extends SignalWidget {
   const CurriculumTableApp({super.key});
 
   ThemeData _buildTheme({
@@ -75,8 +76,9 @@ class CurriculumTableApp extends StatelessWidget {
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
     const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
-    return brightness == Brightness.dark
-        ? FlexThemeData.dark(
+    return withM3ETheme(
+      brightness == Brightness.dark
+          ? FlexThemeData.dark(
             colors: colors,
             fontFamily: webFontFamily,
             useMaterial3: true,
@@ -103,7 +105,8 @@ class CurriculumTableApp extends StatelessWidget {
               keepPrimary: true,
             ),
             tones: _flexTones(colorSchemeType, Brightness.light),
-          );
+          ),
+    );
   }
 
   FlexTones _flexTones(ColorSchemeType type, Brightness brightness) {
@@ -210,11 +213,9 @@ class CurriculumTableApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsCtrl = sl<SettingsController>();
+    final settings = settingsCtrl.state.value;
 
-    return SignalBuilder(builder: (context) {
-      final settings = settingsCtrl.state.value;
-
-      return BetterFeedback(
+    return BetterFeedback(
         localeOverride: const Locale('zh', 'CN'),
         child: DynamicColorBuilder(
           builder: (lightDynamic, darkDynamic) {
@@ -263,6 +264,5 @@ class CurriculumTableApp extends StatelessWidget {
           },
         ),
       );
-    });
   }
 }

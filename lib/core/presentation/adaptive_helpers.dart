@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:m3e_core/m3e_core.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
@@ -47,10 +49,9 @@ Widget adaptiveActivityIndicator({
   if (AdaptiveStyle.isCupertino(designStyle)) {
     return CupertinoActivityIndicator(radius: size / 2, color: color);
   }
-  return SizedBox(
-    width: size,
-    height: size,
-    child: CircularProgressIndicator(strokeWidth: strokeWidth, color: color),
+  return LoadingIndicatorM3E(
+    constraints: BoxConstraints.tight(Size(size, size)),
+    color: color,
   );
 }
 
@@ -92,20 +93,28 @@ Future<bool> showAdaptiveConfirmDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(
+          M3ETextButton(
             onPressed: () => Navigator.pop(ctx, false),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
-          FilledButton(
-            style: isDestructive
-                ? FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                  )
-                : null,
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(confirmText),
-          ),
+          if (isDestructive)
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(confirmText),
+            )
+          else
+            M3EFilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              size: M3EButtonSize.md,
+              shape: M3EButtonShape.round,
+              child: Text(confirmText),
+            ),
         ],
       ),
     );
@@ -165,12 +174,16 @@ Future<String?> showAdaptiveInputDialog(
           autofocus: true,
         ),
         actions: [
-          TextButton(
+          M3ETextButton(
             onPressed: () => Navigator.pop(ctx),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
-          FilledButton(
+          M3EFilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(confirmText),
           ),
         ],

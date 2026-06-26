@@ -18,7 +18,7 @@ class SettingsController {
   late final weeklyScroll = computed(() => _state.value.weeklyScroll);
   late final proxyEnabled = computed(() => _state.value.proxyEnabled);
   late final proxyPort = computed(() => _state.value.proxyPort);
-
+  late final enableBookCover = computed(() => _state.value.enableBookCover);
   Future<void> init() async {
     final repository = sl<SettingsRepository>();
     _state.value = await repository.loadSettings();
@@ -40,6 +40,11 @@ class SettingsController {
 
   Future<void> setWeeklyScroll(bool enabled) async {
     _state.value = _state.value.copyWith(weeklyScroll: enabled);
+    await _save();
+  }
+
+  Future<void> setEnableBookCover(bool enabled) async {
+    _state.value = _state.value.copyWith(enableBookCover: enabled);
     await _save();
   }
 

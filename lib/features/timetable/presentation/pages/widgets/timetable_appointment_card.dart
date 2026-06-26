@@ -1,13 +1,14 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart';
-import 'package:li_curriculum_table/util/util.dart';
 
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart'
     show CourseDetailsSheet, CupertinoTone, resolveCupertinoTone;
@@ -23,7 +24,7 @@ Widget buildTimetableAppointmentCard({
   );
 }
 
-class _AnimatedAppointmentCard extends StatefulWidget {
+class _AnimatedAppointmentCard extends StatelessWidget {
   final CourseOccurrence occurrence;
   final DateTime now;
 
@@ -33,17 +34,7 @@ class _AnimatedAppointmentCard extends StatefulWidget {
   });
 
   @override
-  State<_AnimatedAppointmentCard> createState() =>
-      _AnimatedAppointmentCardState();
-}
-
-class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
-    final occurrence = widget.occurrence;
-    final now = widget.now;
     final isOngoing =
         !now.isBefore(occurrence.start) && now.isBefore(occurrence.end);
     final title = occurrence.courseName;
@@ -64,14 +55,14 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
             context,
             seedText: title,
           );
-          _showDetailsBottomSheet(
+          _showDetailsDialog(
             context,
             occurrence,
             tone,
             isOngoing,
             timeLine,
             designStyle,
-          );
+          ).then((_) => FocusManager.instance.primaryFocus?.unfocus());
         },
       );
     }
@@ -97,90 +88,65 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
       context,
       seedText: title,
     );
+    final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(1.5),
       child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
         onTap: () {
           FocusScope.of(context).unfocus();
           final designStyle = sl<SettingsController>().state.value.designStyle;
-          _showDetailsBottomSheet(
+          _showDetailsDialog(
             context,
             occurrence,
             tone,
             isOngoing,
             timeLine,
             designStyle,
-          );
+          ).then((_) => FocusManager.instance.primaryFocus?.unfocus());
         },
-        child: AnimatedScale(
-          scale: _isPressed ? 0.96 : 1.0,
-          duration: kInteractionDuration,
-          curve: kEmphasizedCurve,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              AnimatedContainer(
-                duration: kDefaultAnimationDuration,
-                curve: kDefaultAnimationCurve,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      if (isOngoing)
-                        Color.alphaBlend(
-                          tone.accent.withValues(alpha: 0.14),
-                          tone.background,
-                        )
-                      else
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: isOngoing
+                    ? Color.alphaBlend(
+                        tone.accent.withValues(alpha: 0.08),
                         tone.background,
-                      if (isOngoing)
-                        Color.alphaBlend(
-                          tone.accent.withValues(alpha: 0.08),
-                          tone.backgroundAlt,
-                        )
-                      else
-                        tone.backgroundAlt,
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: isOngoing ? tone.accent : tone.border,
-                    width: isOngoing ? 1.2 : 0.8,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isOngoing
-                          ? tone.accent.withValues(alpha: 0.22)
-                          : tone.shadow.withValues(
-                              alpha: _isPressed ? 0.05 : 0.08,
-                            ),
-                      blurRadius: isOngoing ? 12 : (_isPressed ? 5 : 8),
-                      offset: isOngoing
-                          ? const Offset(0, 3)
-                          : (_isPressed
-                              ? const Offset(0, 1)
-                              : const Offset(0, 2)),
-                    ),
-                  ],
+                      )
+                    : tone.background,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: isOngoing
+                      ? tone.accent.withValues(alpha: 0.4)
+                      : tone.border,
+                  width: isOngoing ? 1.0 : 0.5,
                 ),
+                boxShadow: [
+                  BoxShadow(
+                    color: tone.accent.withValues(alpha: isOngoing ? 0.12 : 0.05),
+                    blurRadius: isOngoing ? 8 : 4,
+                    offset: Offset(0, isOngoing ? 3 : 2),
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
                 child: Row(
                   children: [
                     Container(
-                      width: 3.5,
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                      decoration: BoxDecoration(
-                        color: tone.accent,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
+                      width: 3,
+                      color: isOngoing
+                          ? tone.accent
+                          : tone.accent.withValues(alpha: 0.4),
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(4, 6, 6, 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 7,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -196,26 +162,37 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                                   ?.copyWith(
                                     color: tone.foreground,
                                     fontWeight: FontWeight.w700,
-                                    height: 1.15,
+                                    height: 1.2,
                                   ),
                             ),
                             if (locationLine.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              AutoSizeText(
-                                locationLine,
-                                maxLines: 1,
-                                minFontSize: 8,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: tone.foreground.withValues(
-                                        alpha: 0.84,
-                                      ),
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.15,
+                              const SizedBox(height: 3),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 10,
+                                    color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Expanded(
+                                    child: AutoSizeText(
+                                      locationLine,
+                                      maxLines: 1,
+                                      minFontSize: 7,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant
+                                                .withValues(alpha: 0.6),
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.15,
+                                          ),
                                     ),
+                                  ),
+                                ],
                               ),
                             ],
                           ],
@@ -225,50 +202,63 @@ class _AnimatedAppointmentCardState extends State<_AnimatedAppointmentCard> {
                   ],
                 ),
               ),
-              if (isOngoing)
-                Positioned(
-                  top: -7,
-                  right: 6,
-                  child: AnimatedOpacity(
-                    duration: kDefaultAnimationDuration,
-                    opacity: 1.0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
+            ),
+            if (isOngoing)
+              Positioned(
+                top: -6,
+                right: 8,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 7,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: tone.accent.withValues(alpha: 0.20),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                      decoration: BoxDecoration(
-                        color: tone.accent,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: [
-                          BoxShadow(
-                            color: tone.accent.withValues(alpha: 0.35),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 5,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: cs.onPrimaryContainer,
+                          shape: BoxShape.circle,
+                        ),
                       ),
-                      child: Text(
+                      const SizedBox(width: 4),
+                      Text(
                         '进行中',
-                        style:
-                            Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: tone.foreground,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.2,
-                                ),
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelSmall
+                            ?.copyWith(
+                              color: cs.onPrimaryContainer,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 9,
+                              letterSpacing: 0.2,
+                            ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
   }
 }
 
-void _showDetailsBottomSheet(
+Future<void> _showDetailsDialog(
   BuildContext context,
   CourseOccurrence occurrence,
   AppointmentTone tone,
@@ -283,60 +273,83 @@ void _showDetailsBottomSheet(
     isOngoing: isOngoing,
     designStyle: designStyle,
   );
+
   if (AdaptiveStyle.isCupertino(designStyle)) {
-    showCupertinoModalPopup(context: context, builder: (_) => sheet);
-  } else {
-    showModalBottomSheet(
+    return showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => sheet,
+      barrierDismissible: true,
+      barrierLabel: 'course-detail',
+      barrierColor: CupertinoColors.black.withValues(alpha: 0.4),
+      transitionDuration: const Duration(milliseconds: 350),
+      pageBuilder: (context, animation, secondaryAnimation) => sheet,
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+        final t = curved.value;
+        return Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t, child: child));
+      },
     );
   }
+
+  return Navigator.of(context).push(
+    PageRouteBuilder(
+      transitionDuration: const Duration(milliseconds: 400),
+      reverseTransitionDuration: const Duration(milliseconds: 300),
+      opaque: false,
+      barrierDismissible: true,
+      barrierColor: Colors.black54,
+      pageBuilder: (context, animation, secondaryAnimation) => sheet,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeScaleTransition(animation: animation, child: child);
+      },
+    ),
+  );
 }
 
 AppointmentTone resolveAppointmentTone(
   BuildContext context, {
   required String seedText,
 }) {
+  final cs = Theme.of(context).colorScheme;
   final isDark = Theme.of(context).brightness == Brightness.dark;
-  
+
+  // Derive a per-course hue from the course name hash for visual variety.
   int hash = 0;
   for (int i = 0; i < seedText.length; i++) {
     hash = seedText.codeUnitAt(i) + ((hash << 5) - hash);
   }
-  
-  final double hue = (hash.abs() % 360).toDouble();
-  
+  final double courseHue = (hash.abs() % 360).toDouble();
+
+  // Blend the course hue into the theme's tonal surfaces so cards
+  // integrate with the user's chosen seed color, dynamic color, and
+  // ColorSchemeType while still being visually distinct per course.
+  Color tintSurface(Color base, double saturation, double lightness) {
+    final baseHsl = HSLColor.fromColor(base);
+    final tinted = HSLColor.fromAHSL(
+      1.0,
+      courseHue,
+      (baseHsl.saturation + saturation).clamp(0.0, 1.0),
+      (baseHsl.lightness + lightness).clamp(0.0, 1.0),
+    ).toColor();
+    return Color.alphaBlend(tinted.withValues(alpha: 0.35), base);
+  }
+
   if (isDark) {
-    // Dark mode: soft dark colors
-    final bg = HSLColor.fromAHSL(1.0, hue, 0.40, 0.16).toColor();
-    final bgAlt = HSLColor.fromAHSL(1.0, hue, 0.40, 0.20).toColor();
-    final fg = HSLColor.fromAHSL(1.0, hue, 0.65, 0.88).toColor();
-    final acc = HSLColor.fromAHSL(1.0, hue, 0.75, 0.60).toColor();
-    final brd = HSLColor.fromAHSL(1.0, hue, 0.50, 0.28).toColor();
     return AppointmentTone(
-      background: bg,
-      backgroundAlt: bgAlt,
-      foreground: fg,
-      border: brd,
-      accent: acc,
+      background: tintSurface(cs.surfaceContainerLow, 0.10, -0.04),
+      backgroundAlt: tintSurface(cs.surfaceContainer, 0.10, -0.02),
+      foreground: tintSurface(cs.onSurface, 0.20, 0.05),
+      border: tintSurface(cs.outlineVariant, 0.08, 0.0),
+      accent: tintSurface(cs.primary, 0.08, 0.0),
       shadow: Colors.black.withValues(alpha: 0.25),
     );
   } else {
-    // Light mode: soft pastel colors
-    final bg = HSLColor.fromAHSL(1.0, hue, 0.50, 0.94).toColor();
-    final bgAlt = HSLColor.fromAHSL(1.0, hue, 0.50, 0.91).toColor();
-    final fg = HSLColor.fromAHSL(1.0, hue, 0.65, 0.24).toColor();
-    final acc = HSLColor.fromAHSL(1.0, hue, 0.70, 0.45).toColor();
-    final brd = HSLColor.fromAHSL(1.0, hue, 0.55, 0.82).toColor();
     return AppointmentTone(
-      background: bg,
-      backgroundAlt: bgAlt,
-      foreground: fg,
-      border: brd,
-      accent: acc,
-      shadow: acc.withValues(alpha: 0.10),
+      background: tintSurface(cs.surfaceContainerLow, 0.10, 0.02),
+      backgroundAlt: tintSurface(cs.surfaceContainerLow, 0.10, -0.01),
+      foreground: tintSurface(cs.onSurface, 0.25, -0.10),
+      border: tintSurface(cs.outlineVariant, 0.08, 0.04),
+      accent: tintSurface(cs.primary, 0.05, -0.05),
+      shadow: tintSurface(cs.primary, 0.05, -0.05).withValues(alpha: 0.08),
     );
   }
 }

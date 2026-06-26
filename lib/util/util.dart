@@ -8,17 +8,20 @@ import 'package:flutter/widgets.dart';
 /// Default animation duration — M3 Expressive medium2 (300ms).
 const kDefaultAnimationDuration = Duration(milliseconds: 300);
 
-/// Default animation curve — spring-based for expressive feel.
-const kDefaultAnimationCurve = Curves.easeOutCubic;
+/// Default animation curve — M3 Expressive Emphasized Decelerate.
+/// cubic-bezier(0.05, 0.7, 0.1, 1.0) — for entering/changing elements.
+const kDefaultAnimationCurve = Cubic(0.05, 0.7, 0.1, 1.0);
 
-/// Quick interaction duration — iOS 26 recommends <200ms for taps/presses.
+/// Quick interaction duration — M3 Expressive short2 (150ms).
 const kInteractionDuration = Duration(milliseconds: 150);
 
-/// Spring curve for selection/toggle animations — bouncy feel.
-const kSpringCurve = Curves.elasticOut;
+/// Spring curve for selection/toggle animations — M3 Expressive spring feel.
+/// Approximation of spring(duration: 500ms, bounce: 0.15) via cubic-bezier.
+const kSpringCurve = Cubic(0.175, 0.885, 0.32, 1.175);
 
-/// Emphasized easing for attention-grabbing transitions.
-const kEmphasizedCurve = Curves.easeOutBack;
+/// Emphasized easing for spatial transitions — M3 Expressive Emphasized.
+/// cubic-bezier(0.2, 0, 0, 1.0) — for moving elements.
+const kEmphasizedCurve = Cubic(0.2, 0, 0, 1.0);
 
 // ─── Platform check ────────────────────────────────────────────────────────
 

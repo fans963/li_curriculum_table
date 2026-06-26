@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:m3e_core/m3e_core.dart';
 
 class TimetableControlPanel extends StatefulWidget {
   const TimetableControlPanel({
@@ -102,18 +104,19 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: FilledButton.icon(
+                child: M3EFilledButton.icon(
                   icon: widget.isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                          child: LoadingIndicatorM3E(
+                            color: colorScheme.onPrimary,
                           ),
                         )
                       : const Icon(Icons.cloud_sync_rounded),
                   label: Text(widget.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息'),
+                  size: M3EButtonSize.lg,
+                  shape: M3EButtonShape.round,
                   onPressed: widget.isLoading ? null : widget.onLoginPressed,
                 ),
               ),
@@ -200,7 +203,7 @@ class TimetableStatusBanner extends StatelessWidget {
               const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: LoadingIndicatorM3E(),
               )
             else
               Icon(

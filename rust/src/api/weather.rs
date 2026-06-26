@@ -4,69 +4,57 @@ use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
 struct OpenMeteoResponse {
-    current_weather: Option<CurrentWeather>,
+    daily: Option<DailyWeather>,
+    error: Option<bool>,
+    reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-struct CurrentWeather {
-    temperature: f64,
-    weathercode: i32,
-    is_day: i32,
-    windspeed: Option<f64>,
+struct DailyWeather {
+    weather_code: Option<Vec<i32>>,
+    temperature_2m_max: Option<Vec<f64>>,
+    temperature_2m_min: Option<Vec<f64>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct WeatherData {
-    pub temperature: f64,
+    pub min_temperature: f64,
+    pub max_temperature: f64,
     pub weather_code: i32,
     pub is_day: bool,
     pub wind_speed: Option<f64>,
 }
 
 pub async fn fetch_weather(latitude: f64, longitude: f64) -> Result<WeatherData> {
-    log::info!("fetch_weather: lat={}, lon={}", latitude, longitude);
-
     let client = http::build_client();
 
     let url = format!(
-        "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&current_weather=true&timezone=auto",
+        "https://api.open-meteo.com/v1/forecast?latitude={}&longitude={}&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1",
         latitude, longitude,
     );
 
-    log::info!("fetch_weather: requesting {}", url);
+    let response = client.get(&url).send().await?;
+    let body = response.text().await?;
+    let data: OpenMeteoResponse = serde_json::from_str(&body)?;
 
-    let response = client.get(&url).send().await.map_err(|e| {
-        log::error!("fetch_weather: request failed: {}", e);
-        anyhow::anyhow!("Weather request failed: {}", e)
-    })?;
+    if data.error == Some(true) {
+        let reason = data.reason.unwrap_or_else(|| "Unknown error".to_string());
+        anyhow::bail!("Weather API error: {}", reason);
+    }
 
-    log::info!("fetch_weather: status={}", response.status());
+    let daily = data
+        .daily
+        .ok_or_else(|| anyhow::anyhow!("No daily weather data in response"))?;
 
-    let body = response.text().await.map_err(|e| {
-        log::error!("fetch_weather: failed to read body: {}", e);
-        anyhow::anyhow!("Failed to read weather response: {}", e)
-    })?;
-
-    log::info!("fetch_weather: body len={}", body.len());
-
-    let data: OpenMeteoResponse = serde_json::from_str(&body).map_err(|e| {
-        log::error!("fetch_weather: parse failed: {} (body: {})", e, &body[..body.len().min(200)]);
-        anyhow::anyhow!("Failed to parse weather response: {}", e)
-    })?;
-
-    let current = data
-        .current_weather
-        .ok_or_else(|| anyhow::anyhow!("No current_weather in response"))?;
-
-    log::info!(
-        "fetch_weather: done, temp={}, code={}, is_day={}",
-        current.temperature, current.weathercode, current.is_day
-    );
+    let weather_code = daily.weather_code.and_then(|v| v.first().cloned()).unwrap_or(0);
+    let max_temp = daily.temperature_2m_max.and_then(|v| v.first().cloned()).unwrap_or(0.0);
+    let min_temp = daily.temperature_2m_min.and_then(|v| v.first().cloned()).unwrap_or(0.0);
 
     Ok(WeatherData {
-        temperature: current.temperature,
-        weather_code: current.weathercode,
-        is_day: current.is_day == 1,
-        wind_speed: current.windspeed,
+        min_temperature: min_temp,
+        max_temperature: max_temp,
+        weather_code,
+        is_day: true, // We don't have is_day for daily, assume day
+        wind_speed: None,
     })
 }

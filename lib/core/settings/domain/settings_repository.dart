@@ -124,7 +124,7 @@ class AppSettings {
   final bool useDynamicColor;
   final DesignStyle designStyle;
   final ColorSchemeType colorSchemeType;
-
+  final bool enableBookCover;
   const AppSettings({
     required this.proxyEnabled,
     required this.proxyPort,
@@ -134,6 +134,7 @@ class AppSettings {
     required this.useDynamicColor,
     this.designStyle = DesignStyle.system,
     this.colorSchemeType = ColorSchemeType.tonalSpot,
+    required this.enableBookCover,
   });
 
   factory AppSettings.defaultSettings() {
@@ -146,6 +147,7 @@ class AppSettings {
       useDynamicColor: true,
       designStyle: DesignStyle.system,
       colorSchemeType: ColorSchemeType.tonalSpot,
+      enableBookCover: false,
     );
   }
 
@@ -158,6 +160,7 @@ class AppSettings {
     bool? useDynamicColor,
     DesignStyle? designStyle,
     ColorSchemeType? colorSchemeType,
+    bool? enableBookCover,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -168,6 +171,7 @@ class AppSettings {
       useDynamicColor: useDynamicColor ?? this.useDynamicColor,
       designStyle: designStyle ?? this.designStyle,
       colorSchemeType: colorSchemeType ?? this.colorSchemeType,
+      enableBookCover: enableBookCover ?? this.enableBookCover,
     );
   }
 }

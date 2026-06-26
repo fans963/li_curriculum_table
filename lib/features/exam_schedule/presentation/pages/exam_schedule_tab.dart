@@ -10,7 +10,7 @@ import '../state/exam_controller.dart';
 import '../../domain/models/exam.dart';
 import 'exam_schedule_cupertino.dart';
 
-class ExamScheduleTab extends StatefulWidget {
+class ExamScheduleTab extends SignalStatefulWidget {
   const ExamScheduleTab({super.key});
 
   @override
@@ -25,17 +25,15 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    return SignalBuilder(builder: (context) {
-      final state = sl<ExamController>().state.value;
-      final isCupertino = AdaptiveStyle.isCupertino(
-        sl<SettingsController>().designStyle.value,
-      );
+    final state = sl<ExamController>().state.value;
+    final isCupertino = AdaptiveStyle.isCupertino(
+      sl<SettingsController>().designStyle.value,
+    );
 
-      if (isCupertino) {
-        return buildExamScheduleCupertino(context, state);
-      }
-      return _buildMaterial(context, state);
-    });
+    if (isCupertino) {
+      return buildExamScheduleCupertino(context, state);
+    }
+    return _buildMaterial(context, state);
   }
 
   Widget _buildMaterial(BuildContext context, ExamState state) {
@@ -80,7 +78,6 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
           return const Center(key: ValueKey('empty'), child: Text('暂无考试安排'));
         }
 
-        // Sort: upcoming first (by date asc), then expired (by date desc)
         final sorted = List<ExamEntity>.from(state.filteredExams);
         sorted.sort((a, b) {
           final aExpired = a.isExpired;
@@ -106,7 +103,6 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
                 itemCount: sorted.length,
                 itemBuilder: (context, index) {
                   final exam = sorted[index];
-                  // Show section header when transitioning from upcoming to expired
                   if (index == upcoming.length && expired.isNotEmpty) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,25 +146,13 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          _buildCountBadge(
-            context,
-            '$upcoming',
-            '场待考',
-            colorScheme.primary,
-          ),
+          _buildCountBadge(context, '$upcoming', '场待考', colorScheme.primary),
           const SizedBox(width: 12),
-          _buildCountBadge(
-            context,
-            '$expired',
-            '场已结束',
-            colorScheme.outline,
-          ),
+          _buildCountBadge(context, '$expired', '场已结束', colorScheme.outline),
           const Spacer(),
           Text(
             '共 ${upcoming + expired} 场考试',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colorScheme.outline,
-            ),
+            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.outline),
           ),
         ],
       ),
@@ -187,21 +171,9 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            count,
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
+          Text(count, style: theme.textTheme.titleSmall?.copyWith(color: color, fontWeight: FontWeight.w800)),
           const SizedBox(width: 3),
-          Text(
-            label,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: color.withValues(alpha: 0.8),
-              fontSize: 11,
-            ),
-          ),
+          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.8), fontSize: 11)),
         ],
       ),
     );
@@ -222,20 +194,9 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            title,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.outline,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline, fontWeight: FontWeight.w600)),
           const SizedBox(width: 8),
-          Expanded(
-            child: Container(
-              height: 1,
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-          ),
+          Expanded(child: Container(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
         ],
       ),
     );
@@ -255,7 +216,6 @@ class _ExamCard extends StatelessWidget {
     final daysLeft = exam.daysRemaining;
     final ds = sl<SettingsController>().designStyle.value;
 
-    // Determine accent color based on urgency
     Color accentColor;
     if (isExpired) {
       accentColor = colorScheme.outline;
@@ -297,26 +257,19 @@ class _ExamCard extends StatelessWidget {
           child: IntrinsicHeight(
             child: Row(
               children: [
-                // Left accent bar
                 Container(
                   width: 4,
                   decoration: BoxDecoration(
-                    color: isExpired
-                        ? colorScheme.outlineVariant
-                        : accentColor,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(16),
-                    ),
+                    color: isExpired ? colorScheme.outlineVariant : accentColor,
+                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
                   ),
                 ),
-                // Main content
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top row: course name + countdown badge
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -324,26 +277,9 @@ class _ExamCard extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    exam.courseName,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isExpired
-                                          ? colorScheme.onSurfaceVariant.withValues(alpha: 0.75)
-                                          : colorScheme.onSurface,
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                  Text(exam.courseName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: isExpired ? colorScheme.onSurfaceVariant.withValues(alpha: 0.75) : colorScheme.onSurface, fontSize: 16)),
                                   const SizedBox(height: 3),
-                                  Text(
-                                    exam.courseCode,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isExpired
-                                          ? colorScheme.outline.withValues(alpha: 0.6)
-                                          : colorScheme.outline,
-                                      fontSize: 11,
-                                    ),
-                                  ),
+                                  Text(exam.courseCode, style: theme.textTheme.bodySmall?.copyWith(color: isExpired ? colorScheme.outline.withValues(alpha: 0.6) : colorScheme.outline, fontSize: 11)),
                                 ],
                               ),
                             ),
@@ -352,27 +288,11 @@ class _ExamCard extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        // Info rows
-                        _buildInfoRow(
-                          context,
-                          AppIcons.calendar(ds),
-                          '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}',
-                          isExpired: isExpired,
-                        ),
+                        _buildInfoRow(context, AppIcons.calendar(ds), '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}', isExpired: isExpired),
                         const SizedBox(height: 6),
-                        _buildInfoRow(
-                          context,
-                          AppIcons.locationOutline(ds),
-                          exam.location,
-                          isExpired: isExpired,
-                        ),
+                        _buildInfoRow(context, AppIcons.locationOutline(ds), exam.location, isExpired: isExpired),
                         const SizedBox(height: 6),
-                        _buildInfoRow(
-                          context,
-                          AppIcons.seat(ds),
-                          '座位 ${exam.seatNumber}  ·  场次 ${exam.session}',
-                          isExpired: isExpired,
-                        ),
+                        _buildInfoRow(context, AppIcons.seat(ds), '座位 ${exam.seatNumber}  ·  场次 ${exam.session}', isExpired: isExpired),
                       ],
                     ),
                   ),
@@ -385,12 +305,7 @@ class _ExamCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCountdownBadge(
-    BuildContext context,
-    Color accentColor,
-    bool isExpired,
-    bool isToday,
-  ) {
+  Widget _buildCountdownBadge(BuildContext context, Color accentColor, bool isExpired, bool isToday) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final ds = sl<SettingsController>().designStyle.value;
@@ -400,68 +315,28 @@ class _ExamCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isExpired
-            ? colorScheme.outlineVariant.withValues(alpha: 0.3)
-            : accentColor.withValues(alpha: 0.1),
+        color: isExpired ? colorScheme.outlineVariant.withValues(alpha: 0.3) : accentColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: isExpired
-              ? colorScheme.outlineVariant.withValues(alpha: 0.5)
-              : accentColor.withValues(alpha: 0.25),
-        ),
+        border: Border.all(color: isExpired ? colorScheme.outlineVariant.withValues(alpha: 0.5) : accentColor.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isToday) ...[
-            Icon(AppIcons.bolt(ds), size: 13, color: accentColor),
-            const SizedBox(width: 2),
-          ],
-          Text(
-            text,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: isExpired
-                  ? colorScheme.outline
-                  : accentColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-            ),
-          ),
+          if (isToday) ...[Icon(AppIcons.bolt(ds), size: 13, color: accentColor), const SizedBox(width: 2)],
+          Text(text, style: theme.textTheme.labelSmall?.copyWith(color: isExpired ? colorScheme.outline : accentColor, fontWeight: FontWeight.w700, fontSize: 11)),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(
-    BuildContext context,
-    IconData icon,
-    String text, {
-    bool isExpired = false,
-  }) {
+  Widget _buildInfoRow(BuildContext context, IconData icon, String text, {bool isExpired = false}) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 14,
-          color: isExpired
-              ? cs.outline.withValues(alpha: 0.55)
-              : cs.outline.withValues(alpha: 0.7),
-        ),
+        Icon(icon, size: 14, color: isExpired ? cs.outline.withValues(alpha: 0.55) : cs.outline.withValues(alpha: 0.7)),
         const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: isExpired
-                  ? cs.onSurfaceVariant.withValues(alpha: 0.65)
-                  : cs.onSurfaceVariant,
-              fontSize: 12.5,
-            ),
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
+        Expanded(child: Text(text, style: theme.textTheme.bodySmall?.copyWith(color: isExpired ? cs.onSurfaceVariant.withValues(alpha: 0.65) : cs.onSurfaceVariant, fontSize: 12.5), overflow: TextOverflow.ellipsis)),
       ],
     );
   }

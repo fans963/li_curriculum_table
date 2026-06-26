@@ -13,14 +13,14 @@ class SecureSettingsLocalDataSource {
   static const _kUseDynamicColor = 'use_dynamic_color';
   static const _kDesignStyle = 'design_style';
   static const _kColorSchemeType = 'color_scheme_type';
-
+  static const _kEnableBookCover = 'enable_book_cover';
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
     final data = await _store.readAll([
       _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
       _kThemeMode, _kSeedColor, _kUseDynamicColor,
-      _kDesignStyle, _kColorSchemeType,
+      _kDesignStyle, _kColorSchemeType, _kEnableBookCover,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -41,6 +41,7 @@ class SecureSettingsLocalDataSource {
       (e) => e.name == data[_kColorSchemeType],
       orElse: () => ColorSchemeType.tonalSpot,
     );
+    final enableBookCover = data[_kEnableBookCover] == 'true'; // default false
 
     return AppSettings(
       proxyEnabled: enabled,
@@ -51,6 +52,7 @@ class SecureSettingsLocalDataSource {
       useDynamicColor: useDynamic,
       designStyle: designStyle,
       colorSchemeType: colorSchemeType,
+      enableBookCover: enableBookCover,
     );
   }
 
@@ -64,6 +66,7 @@ class SecureSettingsLocalDataSource {
       _kUseDynamicColor: settings.useDynamicColor.toString(),
       _kDesignStyle: settings.designStyle.name,
       _kColorSchemeType: settings.colorSchemeType.name,
+      _kEnableBookCover: settings.enableBookCover.toString(),
     });
   }
 }

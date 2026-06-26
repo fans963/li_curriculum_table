@@ -1,7 +1,9 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
+import 'package:fab_m3e/fab_m3e.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -22,7 +24,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/pages/tabs/t
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:signals/signals_flutter.dart';
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends SignalStatefulWidget {
   const MainScreen({super.key});
 
   @override
@@ -89,12 +91,11 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      final currentIndex = _nav.currentIndex.value;
-      final isSyncing = _sync.isSyncing.value;
-      final settings = _settings.state.value;
-      final ds = settings.designStyle;
-      final isCupertino = AdaptiveStyle.isCupertino(ds);
+    final currentIndex = _nav.currentIndex.value;
+    final isSyncing = _sync.isSyncing.value;
+    final settings = _settings.state.value;
+    final ds = settings.designStyle;
+    final isCupertino = AdaptiveStyle.isCupertino(ds);
 
       if (isCupertino) {
         // Cupertino: liquid glass bar floats OVER the content
@@ -120,58 +121,62 @@ class _MainScreenState extends State<MainScreen> {
         body: _buildPageContent(),
         floatingActionButton: (currentIndex == 4 || currentIndex == 5)
             ? null
-            : FloatingActionButton(
+            : FabM3E(
                 onPressed: isSyncing ? null : () => _sync.syncGlobal(),
                 tooltip: '同步数据',
-                child: isSyncing
+                kind: FabM3EKind.secondary,
+                shapeFamily: FabM3EShapeFamily.round,
+                icon: isSyncing
                     ? adaptiveActivityIndicator(
                         designStyle: ds,
                         size: 24,
                         color:
-                            Theme.of(context).colorScheme.onPrimaryContainer,
+                            Theme.of(context).colorScheme.onSecondaryContainer,
                       )
                     : const Icon(Icons.refresh),
               ),
         bottomNavigationBar: _buildMaterialNavBar(currentIndex, ds),
       );
-    });
   }
 
   Widget _buildMaterialNavBar(int currentIndex, DesignStyle ds) {
-    return NavigationBar(
+    return NavigationBarM3E(
       selectedIndex: currentIndex,
+      indicatorStyle: NavBarM3EIndicatorStyle.pill,
+      labelBehavior: NavBarM3ELabelBehavior.alwaysShow,
+      shapeFamily: NavBarM3EShapeFamily.square,
       onDestinationSelected: (index) {
         FocusScope.of(context).unfocus();
         _nav.setIndex(index);
         _pageController.jumpToPage(index);
       },
       destinations: [
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.timetableOutline(ds)),
           selectedIcon: Icon(AppIcons.timetable(ds)),
           label: '课表',
         ),
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.classroomOutline(ds)),
           selectedIcon: Icon(AppIcons.classroom(ds)),
           label: '空闲教室',
         ),
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.gradeOutline(ds)),
           selectedIcon: Icon(AppIcons.grade(ds)),
           label: '成绩',
         ),
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.examOutline(ds)),
           selectedIcon: Icon(AppIcons.exam(ds)),
           label: '考试',
         ),
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.bookOutline(ds)),
           selectedIcon: Icon(AppIcons.book(ds)),
           label: '图书',
         ),
-        NavigationDestination(
+        NavigationDestinationM3E(
           icon: Icon(AppIcons.settingsOutline(ds)),
           selectedIcon: Icon(AppIcons.settings(ds)),
           label: '设置',
