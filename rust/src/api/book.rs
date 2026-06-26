@@ -2,6 +2,70 @@ use crate::api::http;
 use regex_lite::Regex;
 use scraper::{Html, Selector};
 
+/// Advanced search parameters mirroring the OPAC search_more.php form.
+#[derive(Debug, Clone, Default)]
+pub struct BookSearchParams {
+    /// Search field: "title", "author", "publisher", "isbn", "keyword", "callno", "series"
+    pub search_type: String,
+    /// The search query text
+    pub query: String,
+    /// Document type filter (default "ALL")
+    pub doctype: String,
+    /// Language code filter (default "ALL")
+    pub lang_code: String,
+    /// Results per page: 20, 30, 50, 100 (default 20)
+    pub displaypg: u32,
+    /// Sort field (default "CATA_DATE")
+    pub sort: String,
+    /// Sort order: "asc" or "desc" (default "DESC")
+    pub orderby: String,
+    /// Campus filter: "ALL", "00"=南京, "06"=江阴 (default "ALL")
+    pub dept: String,
+    /// Show mode: "list" or "table" (default "list")
+    pub showmode: String,
+    /// Page number (1-based, default 1)
+    pub page: u32,
+}
+
+impl BookSearchParams {
+    pub fn new(query: String) -> Self {
+        Self {
+            search_type: "title".to_string(),
+            query,
+            doctype: "ALL".to_string(),
+            lang_code: "ALL".to_string(),
+            displaypg: 20,
+            sort: "CATA_DATE".to_string(),
+            orderby: "DESC".to_string(),
+            dept: "ALL".to_string(),
+            showmode: "list".to_string(),
+            page: 1,
+        }
+    }
+
+    /// Build the search URL from parameters.
+    pub fn build_url(&self) -> String {
+        let encoded: String =
+            url::form_urlencoded::byte_serialize(self.query.as_bytes()).collect();
+        let mut url = format!(
+            "http://202.119.83.14:8080/uopac/opac/openlink.php?strSearchType={}&historyCount=1&strText={}&doctype={}&lang_code={}&displaypg={}&sort={}&orderby={}&dept={}&showmode={}&match_flag=forward&with_ebook=on",
+            self.search_type,
+            encoded,
+            self.doctype,
+            self.lang_code,
+            self.displaypg,
+            self.sort,
+            self.orderby,
+            self.dept,
+            self.showmode,
+        );
+        if self.page > 1 {
+            url.push_str(&format!("&page={}", self.page));
+        }
+        url
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct BookInfo {
     pub title: String,
@@ -19,27 +83,51 @@ pub struct BookLocation {
     pub status: String,
 }
 
-pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
-    let clean_title = title.trim();
-    if clean_title.is_empty() {
-        return Ok(Vec::new());
-    }
+/// Result of a book search including total count for pagination.
+#[derive(Debug, Clone)]
+pub struct BookSearchResult {
+    pub books: Vec<BookInfo>,
+    pub total_count: u32,
+}
 
+pub async fn search_books(title: String) -> anyhow::Result<BookSearchResult> {
+    if title.trim().is_empty() {
+        return Ok(BookSearchResult { books: Vec::new(), total_count: 0 });
+    }
+    let encoded: String = url::form_urlencoded::byte_serialize(title.as_bytes()).collect();
+    let url = format!(
+        "http://202.119.83.14:8080/uopac/opac/openlink.php?strSearchType=title&historyCount=1&strText={}&doctype=ALL&displaypg=20&showmode=list&with_ebook=on",
+        encoded
+    );
+    search_and_parse(&url).await
+}
+
+/// Advanced search with full parameters.
+pub async fn search_books_advanced(params: BookSearchParams) -> anyhow::Result<BookSearchResult> {
+    if params.query.trim().is_empty() {
+        return Ok(BookSearchResult { books: Vec::new(), total_count: 0 });
+    }
+    search_and_parse(&params.build_url()).await
+}
+
+/// Core search: build URL, fetch, parse.
+async fn search_and_parse(target_url: &str) -> anyhow::Result<BookSearchResult> {
     let client = http::build_client();
 
-    let encoded_title: String = url::form_urlencoded::byte_serialize(clean_title.as_bytes()).collect();
-    let target_url = format!(
-        "http://202.119.83.14:8080/uopac/opac/openlink.php?title={}&doctype=ALL&showmode=list",
-        encoded_title
-    );
-    
-    let response = client.get(&target_url)
-        .send()
-        .await?;
+    println!("BookCrawler: [Request] {}", target_url);
+
+    let response = client.get(target_url).send().await?;
+
+    let status = response.status();
+    println!("BookCrawler: [Response] status: {}, url: {}", status, response.url());
 
     let html_content = response.text().await?;
+    println!("BookCrawler: [Data] received {} bytes", html_content.len());
+
+
+
     let document = Html::parse_document(&html_content);
-    
+
     let book_list_selector = Selector::parse("ol#search_book_list").unwrap();
     let item_selector = Selector::parse("li.book_list_info").unwrap();
 
@@ -55,8 +143,7 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
             if let Some(h3_el) = item.select(&h3_selector).next() {
                 if let Some(a_el) = h3_el.select(&a_selector).next() {
                     let title_full = a_el.text().collect::<Vec<_>>().join("").trim().to_string();
-                    
-                    // strip starting index like '1. ' or '2. '
+
                     let title = if let Some(dot_idx) = title_full.find('.') {
                         if dot_idx < 4 {
                             title_full[dot_idx + 1..].trim().to_string()
@@ -68,13 +155,11 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
                     };
 
                     let relative_href = a_el.value().attr("href").unwrap_or("").to_string();
-                    let detail_url = if relative_href.starts_with("http") {
-                        relative_href
-                    } else {
-                        format!("http://202.119.83.14:8080/uopac/opac/{}", relative_href)
-                    };
+                    let detail_url = resolve_detail_url(&relative_href);
 
-                    let doc_type = h3_el.select(&span_selector).next()
+                    let doc_type = h3_el
+                        .select(&span_selector)
+                        .next()
                         .map(|s| s.text().collect::<Vec<_>>().join("").trim().to_string())
                         .unwrap_or_else(|| "未知类型".to_string());
 
@@ -87,8 +172,10 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
                             }
                         }
                     }
-
-                    let call_no = call_no.trim_start_matches([' ', '-', '/', ':']).trim().to_string();
+                    let call_no = call_no
+                        .trim_start_matches([' ', '-', '/', ':'])
+                        .trim()
+                        .to_string();
 
                     let mut holdings_summary = "未知".to_string();
                     let mut author = "未知作者".to_string();
@@ -127,7 +214,53 @@ pub async fn search_books(title: String) -> anyhow::Result<Vec<BookInfo>> {
         }
     }
 
-    Ok(books)
+    let total_count = parse_total_count(&html_content);
+
+    Ok(BookSearchResult { books, total_count })
+}
+
+/// Parse total result count from the page by stripping HTML tags first,
+/// then matching "检索到 N 条".
+fn parse_total_count(html: &str) -> u32 {
+    // Strip HTML tags: replace <...> with nothing
+    let re_tag = Regex::new(r"<[^>]*>").ok();
+    let plain = if let Some(re) = &re_tag {
+        re.replace_all(html, "")
+    } else {
+        return 0;
+    };
+    // Collapse whitespace
+    let plain = plain.replace(char::is_whitespace, " ");
+    let re = Regex::new(r"检索到\s*(\d+)\s*条").ok();
+    if let Some(re) = &re {
+        if let Some(caps) = re.captures(&plain) {
+            if let Some(m) = caps.get(1) {
+                return m.as_str().parse::<u32>().unwrap_or(0);
+            }
+        }
+    }
+    // Fallback: "count=N" in URLs
+    let re2 = Regex::new(r"[&?]count=(\d+)").ok();
+    if let Some(re) = &re2 {
+        if let Some(caps) = re.captures(html) {
+            if let Some(m) = caps.get(1) {
+                return m.as_str().parse::<u32>().unwrap_or(0);
+            }
+        }
+    }
+    0
+}
+
+/// Resolve a relative or absolute detail URL.
+fn resolve_detail_url(href: &str) -> String {
+    if href.starts_with("http") {
+        href.to_string()
+    } else {
+        format!(
+            "http://202.119.83.14:8080/uopac/opac/{}",
+            href.trim_start_matches("./")
+        )
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -150,26 +283,31 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDeta
 
     let client = http::build_client();
 
+    println!("BookCrawler: [Request] detail: {}", detail_url);
+
     let response = client.get(&detail_url)
         .send()
         .await?;
 
+    println!("BookCrawler: [Response] detail status: {}, url: {}", response.status(), response.url());
     let html_content = response.text().await?;
+    println!("BookCrawler: [Data] detail received {} bytes", html_content.len());
     let document = Html::parse_document(&html_content);
     
     let mut isbn = "无".to_string();
     let mut price = "无".to_string();
     let mut pages = "无".to_string();
 
-    let dl_selector = Selector::parse("dl.booklist").unwrap();
+    // New format (2026): generic dl/dt/dd pairs, not dl.booklist
+    let dl_selector = Selector::parse("dl").unwrap();
     let dt_selector = Selector::parse("dt").unwrap();
     let dd_selector = Selector::parse("dd").unwrap();
 
     for dl in document.select(&dl_selector) {
-        if let (Some(dt), Some(dd)) = (dl.select(&dt_selector).next(), dl.select(&dd_selector).next()) {
+        for (dt, dd) in dl.select(&dt_selector).zip(dl.select(&dd_selector)) {
             let dt_text = dt.text().collect::<Vec<_>>().join("").trim().to_string();
             let dd_text = dd.text().collect::<Vec<_>>().join("").trim().to_string();
-            
+
             if dt_text.contains("ISBN及定价") {
                 let parts: Vec<&str> = dd_text.split('/').collect();
                 if !parts.is_empty() {

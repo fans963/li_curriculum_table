@@ -6,13 +6,10 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-/// Build a [`reqwest::Client`] with a 15 s timeout (native) or default (WASM).
-/// The client is built once and reused across calls.
+/// Build a [`reqwest::Client`] with browser-like headers, keep-alive, and a
+/// generous timeout for the slow campus OPAC server.
 Future<Client> buildClient() => RustLib.instance.api.crateApiHttpBuildClient();
 
-/// Return a [`reqwest::ClientBuilder`].
-/// - Native: 15 s timeout, TLS via reqwest's `rustls` feature
-/// - WASM: no timeout (browser handles it), no TLS config
 Future<ClientBuilder> clientBuilder() =>
     RustLib.instance.api.crateApiHttpClientBuilder();
 

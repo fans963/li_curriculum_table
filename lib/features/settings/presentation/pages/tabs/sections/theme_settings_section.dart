@@ -79,9 +79,10 @@ class _ThemeModePicker extends StatelessWidget {
       children: [
         Text('主题模式', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
         const SizedBox(height: 10),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 360),
-          child: M3EToggleButtonGroup(
+        Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 360),
+            child: M3EToggleButtonGroup(
             type: M3EButtonGroupType.connected,
             style: M3EButtonStyle.tonal,
             size: M3EButtonSize.md,
@@ -96,6 +97,7 @@ class _ThemeModePicker extends StatelessWidget {
               M3EToggleButtonGroupAction(icon: Icon(Icons.dark_mode_rounded), label: Text('深色')),
             ],
           ),
+        ),
         ),
       ],
     );

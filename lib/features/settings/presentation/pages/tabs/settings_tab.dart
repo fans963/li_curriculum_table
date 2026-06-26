@@ -305,7 +305,7 @@ class _SettingsTabState extends State<SettingsTab>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '一款轻盈优雅的跨平台课表应用',
+                    '一款轻盈优雅的跨平台本地安全课表应用',
                     textAlign: TextAlign.center,
                     style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                   ),

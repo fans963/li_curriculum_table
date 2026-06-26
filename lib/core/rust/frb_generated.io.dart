@@ -91,7 +91,16 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BookLocation dco_decode_book_location(dynamic raw);
 
   @protected
+  BookSearchParams dco_decode_book_search_params(dynamic raw);
+
+  @protected
+  BookSearchResult dco_decode_book_search_result(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  BookSearchParams dco_decode_box_autoadd_book_search_params(dynamic raw);
 
   @protected
   double dco_decode_box_autoadd_f_64(dynamic raw);
@@ -258,7 +267,18 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BookLocation sse_decode_book_location(SseDeserializer deserializer);
 
   @protected
+  BookSearchParams sse_decode_book_search_params(SseDeserializer deserializer);
+
+  @protected
+  BookSearchResult sse_decode_book_search_result(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  BookSearchParams sse_decode_box_autoadd_book_search_params(
+    SseDeserializer deserializer,
+  );
 
   @protected
   double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
@@ -442,7 +462,25 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_book_location(BookLocation self, SseSerializer serializer);
 
   @protected
+  void sse_encode_book_search_params(
+    BookSearchParams self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_book_search_result(
+    BookSearchResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_book_search_params(
+    BookSearchParams self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);

@@ -6,11 +6,16 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `check_image_url`, `fetch_dangdang_cover`, `fetch_douban_cover`, `gb_extract_thumbnail`, `google_books_cover`, `ol_cover_by_isbn`, `ol_cover_by_title`, `ol_fetch_cover_id`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `check_image_url`, `fetch_dangdang_cover`, `fetch_douban_cover`, `gb_extract_thumbnail`, `google_books_cover`, `ol_cover_by_isbn`, `ol_cover_by_title`, `ol_fetch_cover_id`, `parse_total_count`, `resolve_detail_url`, `search_and_parse`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`, `fmt`, `fmt`
 
-Future<List<BookInfo>> searchBooks({required String title}) =>
+Future<BookSearchResult> searchBooks({required String title}) =>
     RustLib.instance.api.crateApiBookSearchBooks(title: title);
+
+/// Advanced search with full parameters.
+Future<BookSearchResult> searchBooksAdvanced({
+  required BookSearchParams params,
+}) => RustLib.instance.api.crateApiBookSearchBooksAdvanced(params: params);
 
 Future<BookDetail> fetchBookLocations({required String detailUrl}) =>
     RustLib.instance.api.crateApiBookFetchBookLocations(detailUrl: detailUrl);
@@ -107,4 +112,109 @@ class BookLocation {
           runtimeType == other.runtimeType &&
           location == other.location &&
           status == other.status;
+}
+
+/// Advanced search parameters mirroring the OPAC search_more.php form.
+class BookSearchParams {
+  /// Search field: "title", "author", "publisher", "isbn", "keyword", "callno", "series"
+  final String searchType;
+
+  /// The search query text
+  final String query;
+
+  /// Document type filter (default "ALL")
+  final String doctype;
+
+  /// Language code filter (default "ALL")
+  final String langCode;
+
+  /// Results per page: 20, 30, 50, 100 (default 20)
+  final int displaypg;
+
+  /// Sort field (default "CATA_DATE")
+  final String sort;
+
+  /// Sort order: "asc" or "desc" (default "DESC")
+  final String orderby;
+
+  /// Campus filter: "ALL", "00"=南京, "06"=江阴 (default "ALL")
+  final String dept;
+
+  /// Show mode: "list" or "table" (default "list")
+  final String showmode;
+
+  /// Page number (1-based, default 1)
+  final int page;
+
+  const BookSearchParams({
+    required this.searchType,
+    required this.query,
+    required this.doctype,
+    required this.langCode,
+    required this.displaypg,
+    required this.sort,
+    required this.orderby,
+    required this.dept,
+    required this.showmode,
+    required this.page,
+  });
+
+  /// Build the search URL from parameters.
+  Future<String> buildUrl() =>
+      RustLib.instance.api.crateApiBookBookSearchParamsBuildUrl(that: this);
+
+  static Future<BookSearchParams> default_() =>
+      RustLib.instance.api.crateApiBookBookSearchParamsDefault();
+
+  // HINT: Make it `#[frb(sync)]` to let it become the default constructor of Dart class.
+  static Future<BookSearchParams> newInstance({required String query}) =>
+      RustLib.instance.api.crateApiBookBookSearchParamsNew(query: query);
+
+  @override
+  int get hashCode =>
+      searchType.hashCode ^
+      query.hashCode ^
+      doctype.hashCode ^
+      langCode.hashCode ^
+      displaypg.hashCode ^
+      sort.hashCode ^
+      orderby.hashCode ^
+      dept.hashCode ^
+      showmode.hashCode ^
+      page.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BookSearchParams &&
+          runtimeType == other.runtimeType &&
+          searchType == other.searchType &&
+          query == other.query &&
+          doctype == other.doctype &&
+          langCode == other.langCode &&
+          displaypg == other.displaypg &&
+          sort == other.sort &&
+          orderby == other.orderby &&
+          dept == other.dept &&
+          showmode == other.showmode &&
+          page == other.page;
+}
+
+/// Result of a book search including total count for pagination.
+class BookSearchResult {
+  final List<BookInfo> books;
+  final int totalCount;
+
+  const BookSearchResult({required this.books, required this.totalCount});
+
+  @override
+  int get hashCode => books.hashCode ^ totalCount.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is BookSearchResult &&
+          runtimeType == other.runtimeType &&
+          books == other.books &&
+          totalCount == other.totalCount;
 }
