@@ -162,6 +162,32 @@ class NotificationService {
     }
   }
 
+  /// Schedule a notification for a custom schedule event at the specified time.
+  /// Uses notification ID range 30000-39999.
+  Future<void> scheduleEventReminder({
+    required int id,
+    required String title,
+    required String body,
+    required DateTime notifyTime,
+  }) async {
+    final reminderTime = notifyTime.isBefore(DateTime.now())
+        ? notifyTime.add(const Duration(days: 1))
+        : notifyTime;
+
+    await _scheduleNotification(
+      id: 30000 + (id % 10000),
+      title: title,
+      body: body,
+      scheduledTime: reminderTime,
+      channelId: _courseChannelId,
+    );
+  }
+
+  /// Cancel a schedule event notification by its ID.
+  Future<void> cancelEventReminder(int id) async {
+    await _plugin.cancel(id: 30000 + (id % 10000));
+  }
+
   /// Schedule exam reminders: 1 day before and 2 hours before each exam.
   Future<void> scheduleExamReminders(List<ExamEntity> exams) async {
     // Cancel all existing exam notifications

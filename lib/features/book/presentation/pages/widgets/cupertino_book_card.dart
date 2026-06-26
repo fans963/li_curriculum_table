@@ -3,7 +3,7 @@ part of '../book_cupertino.dart';
 // Cupertino Book Card — with cover image + signal lazy loading
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _CupertinoBookCard extends StatefulWidget {
+class _CupertinoBookCard extends SignalStatefulWidget {
   final BookInfo book;
   final VoidCallback onTap;
 
@@ -40,11 +40,20 @@ class _CupertinoBookCardState extends State<_CupertinoBookCard> {
 
     return GestureDetector(
       onTap: widget.onTap,
-      child: GlassCard(
-        borderRadius: 12,
-        shadowAlpha: 0.03,
-        backgroundColor: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context).withValues(alpha: 0.6),
-        borderColor: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2),
+      child: Container(
+        decoration: BoxDecoration(
+          color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
         child: cardContent,
       ),
     );

@@ -315,7 +315,7 @@ class _GradesTabState extends State<GradesTab>
   }
 }
 
-class _GradeItemCard extends StatefulWidget {
+class _GradeItemCard extends SignalStatefulWidget {
   final GradeEntity grade;
   final bool isSelected;
   final VoidCallback onToggle;

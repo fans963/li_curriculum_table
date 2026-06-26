@@ -105,6 +105,9 @@ class _AnimatedAppointmentCard extends StatelessWidget {
             designStyle,
           ).then((_) => FocusManager.instance.primaryFocus?.unfocus());
         },
+        onLongPress: occurrence.courseType == '日程'
+            ? () => confirmRemoveScheduleEvent(context, occurrence)
+            : null,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -151,20 +154,35 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            AutoSizeText(
-                              title,
-                              maxLines: 2,
-                              minFontSize: 8,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: tone.foreground,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.2,
-                                  ),
-                            ),
+                            if (sl<SettingsController>().autoSizeText.value)
+                              AutoSizeText(
+                                title,
+                                maxLines: 2,
+                                minFontSize: 8,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: tone.foreground,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.2,
+                                    ),
+                              )
+                            else
+                              Text(
+                                title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: tone.foreground,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.2,
+                                    ),
+                              ),
                             if (locationLine.isNotEmpty) ...[
                               const SizedBox(height: 3),
                               Row(
@@ -176,21 +194,36 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 2),
                                   Expanded(
-                                    child: AutoSizeText(
-                                      locationLine,
-                                      maxLines: 1,
-                                      minFontSize: 7,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant
-                                                .withValues(alpha: 0.6),
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.15,
-                                          ),
-                                    ),
+                                    child: sl<SettingsController>().autoSizeText.value
+                                      ? AutoSizeText(
+                                          locationLine,
+                                          maxLines: 2,
+                                          minFontSize: 7,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: cs.onSurfaceVariant
+                                                    .withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                                height: 1.15,
+                                              ),
+                                        )
+                                      : Text(
+                                          locationLine,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: cs.onSurfaceVariant
+                                                    .withValues(alpha: 0.6),
+                                                fontWeight: FontWeight.w500,
+                                                height: 1.15,
+                                              ),
+                                        ),
                                   ),
                                 ],
                               ),

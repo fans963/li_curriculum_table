@@ -11,7 +11,7 @@ import 'package:li_curriculum_table/core/presentation/info_row.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:m3e_core/m3e_core.dart';
 
-class BookDetailDialog extends StatefulWidget {
+class BookDetailDialog extends SignalStatefulWidget {
   final BookInfo book;
   final DesignStyle ds;
   final VoidCallback? onClose;
@@ -29,13 +29,13 @@ class BookDetailDialog extends StatefulWidget {
 
 class _BookDetailDialogState extends State<BookDetailDialog> {
   late final BookCoverSignal _cover;
-  bool _copiedCallNo = false;
+  final _copiedCallNo = signal(false);
 
   void _copyCallNo(String text) {
     Clipboard.setData(ClipboardData(text: text));
-    setState(() => _copiedCallNo = true);
+    _copiedCallNo.value = true;
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) setState(() => _copiedCallNo = false);
+      if (mounted) _copiedCallNo.value = false;
     });
   }
 
@@ -54,7 +54,7 @@ class _BookDetailDialogState extends State<BookDetailDialog> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    Theme.of(context).textTheme;
     final book = widget.book;
     final ds = widget.ds;
     final enableBookCover = BookCoverSignal.isEnabled;
@@ -89,7 +89,7 @@ class _BookDetailDialogState extends State<BookDetailDialog> {
                   child: _MaterialDetailContent(
                     book: book,
                     ds: ds,
-                    copiedCallNo: _copiedCallNo,
+                    copiedCallNo: _copiedCallNo.value,
                     onCopy: _copyCallNo,
                   ),
                 ),

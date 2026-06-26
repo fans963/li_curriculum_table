@@ -8,26 +8,90 @@ class _InteractionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final daysLabel = settings.weeklyScroll
+        ? ''
+        : ' — 屏幕显示 ${settings.daysVisibleCount} 天';
     return _iosCard(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           _iosTile(
             context,
+            icon: CupertinoIcons.textformat,
+            title: '课表文字自适应',
+            subtitle: '自动缩小字号以完整显示课程名和地点',
+            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.autoSizeText, onChanged: notifier.setAutoSizeText)),
+          ),
+          _iosTile(
+            context,
             icon: CupertinoIcons.rectangle_grid_1x2,
             title: '按星期滑动',
-            subtitle: '以整周为单位左右对齐滑动',
+            subtitle: '以整周为单位左右对齐滑动$daysLabel',
             trailing: IgnorePointer(child: CupertinoSwitch(value: settings.weeklyScroll, onChanged: notifier.setWeeklyScroll)),
           ),
+          if (!settings.weeklyScroll)
+            _iosTile(
+              context,
+              icon: CupertinoIcons.view_2d,
+              title: '显示天数',
+              subtitle: '屏幕内同时显示 ${settings.daysVisibleCount} 天课程',
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${settings.daysVisibleCount} 天',
+                    style: TextStyle(fontSize: 15, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(CupertinoIcons.chevron_forward, size: 16, color: CupertinoColors.tertiaryLabel.resolveFrom(context)),
+                ],
+              ),
+              onTap: () => _showDaysCountPicker(context),
+            ),
           _iosTile(
             context,
             icon: CupertinoIcons.book,
             title: '图书馆检索封面',
-            subtitle: '自动获取图书封面，开启将消耗更多流量',
+            subtitle: '自动获取图书封面,目前数据库并不完善，仅有部分热门书籍封面信息',
             trailing: IgnorePointer(child: CupertinoSwitch(value: settings.enableBookCover, onChanged: notifier.setEnableBookCover)),
             showDivider: false,
           ),
         ],
+      ),
+    );
+  }
+
+  void _showDaysCountPicker(BuildContext context) {
+    const options = [1, 3, 5, 7];
+    showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => CupertinoActionSheet(
+        title: const Text('屏幕内显示天数'),
+        message: const Text('选择课表视图同时显示几天的课程'),
+        actions: options.map((days) {
+          final selected = settings.daysVisibleCount == days;
+          return CupertinoActionSheetAction(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text('$days 天${days == 7 ? ' (默认)' : ''}'),
+                if (selected) ...[
+                  const SizedBox(width: 8),
+                  const Icon(CupertinoIcons.check_mark, size: 18, color: CupertinoColors.systemBlue),
+                ],
+              ],
+            ),
+            onPressed: () {
+              notifier.setDaysVisibleCount(days);
+              Navigator.pop(ctx);
+            },
+          );
+        }).toList(),
+        cancelButton: CupertinoActionSheetAction(
+          isDefaultAction: true,
+          child: const Text('取消'),
+          onPressed: () => Navigator.pop(ctx),
+        ),
       ),
     );
   }

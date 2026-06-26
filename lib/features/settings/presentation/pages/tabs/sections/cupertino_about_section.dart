@@ -1,6 +1,6 @@
 part of '../settings_cupertino.dart';
 
-class _AccountCard extends StatelessWidget {
+class _AccountCard extends SignalStatefulWidget {
   final dynamic state;
   final TextEditingController usernameController;
   final TextEditingController passwordController;
@@ -8,7 +8,27 @@ class _AccountCard extends StatelessWidget {
   const _AccountCard({required this.state, required this.usernameController, required this.passwordController});
 
   @override
+  State<_AccountCard> createState() => _AccountCardState();
+}
+
+class _AccountCardState extends State<_AccountCard> {
+  late final _termController = TextEditingController(
+    text: sl<SettingsController>().currentTerm.value,
+  );
+
+  @override
+  void dispose() {
+    _termController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final settingsCtrl = sl<SettingsController>();
+    final timetableCtrl = sl<TimetableController>();
+    final termStart = timetableCtrl.termStartMonday.value;
+    final state = widget.state;
+
     return _iosCard(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -16,7 +36,7 @@ class _AccountCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
             child: CupertinoTextField(
-              controller: usernameController,
+              controller: widget.usernameController,
               placeholder: '学号',
               prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.person, size: 20)),
               decoration: BoxDecoration(
@@ -29,7 +49,7 @@ class _AccountCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: CupertinoTextField(
-              controller: passwordController,
+              controller: widget.passwordController,
               placeholder: '密码',
               obscureText: true,
               prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.lock, size: 20)),
@@ -38,6 +58,54 @@ class _AccountCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               clearButtonMode: OverlayVisibilityMode.editing,
+            ),
+          ),
+          // Semester
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: CupertinoTextField(
+              controller: _termController,
+              placeholder: '当前学期 (如 2025-2026-1)',
+              prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.book, size: 20)),
+              decoration: BoxDecoration(
+                color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              clearButtonMode: OverlayVisibilityMode.editing,
+              onSubmitted: (v) => settingsCtrl.setCurrentTerm(v.trim()),
+            ),
+          ),
+          // Term start date
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+              borderRadius: BorderRadius.circular(10),
+              onPressed: () => _pickTermStartDate(context, timetableCtrl, termStart),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Icon(CupertinoIcons.calendar, size: 20, color: termStart != null ? CupertinoColors.label.resolveFrom(context) : CupertinoColors.placeholderText.resolveFrom(context)),
+                  const SizedBox(width: 8),
+                  Text(
+                    termStart != null
+                        ? '开学: ${termStart.year}-${termStart.month.toString().padLeft(2, '0')}-${termStart.day.toString().padLeft(2, '0')}'
+                        : '本学期开学日期 (点击设置)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: termStart != null
+                          ? CupertinoColors.label.resolveFrom(context)
+                          : CupertinoColors.placeholderText.resolveFrom(context),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    termStart != null ? '推算第 ${state.displayWeek ?? '?'} 周' : '',
+                    style: TextStyle(fontSize: 13, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                  ),
+                ],
+              ),
             ),
           ),
           _iosTile(
@@ -52,8 +120,8 @@ class _AccountCard extends StatelessWidget {
             onTap: state.isLoading
                 ? null
                 : () async {
-                    final u = usernameController.text.trim();
-                    final p = passwordController.text;
+                    final u = widget.usernameController.text.trim();
+                    final p = widget.passwordController.text;
                     if (u.isEmpty || p.isEmpty) {
                       showCupertinoDialog(
                         context: context,
@@ -68,6 +136,43 @@ class _AccountCard extends StatelessWidget {
                     FocusScope.of(context).unfocus();
                     await sl<TimetableController>().fetchAndBuild(username: u, password: p);
                   },
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _pickTermStartDate(BuildContext context, TimetableController controller, DateTime? initial) {
+    final selectedDate = signal(initial ?? DateTime.now());
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('选择开学日期'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: SizedBox(
+            height: 180,
+            child: CupertinoDatePicker(
+              mode: CupertinoDatePickerMode.date,
+              initialDateTime: selectedDate.value,
+              minimumDate: DateTime(selectedDate.value.year - 1),
+              maximumDate: DateTime(selectedDate.value.year + 1),
+              onDateTimeChanged: (d) => selectedDate.value = d,
+            ),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('确定'),
+            onPressed: () {
+              controller.setTermStartDate(selectedDate.value);
+              Navigator.pop(ctx);
+            },
           ),
         ],
       ),

@@ -35,6 +35,7 @@ class TimetableWeekView extends SignalStatefulWidget {
 class TimetableWeekViewState extends State<TimetableWeekView> {
   GlobalKey<EventsPlannerState> _plannerKey = GlobalKey<EventsPlannerState>();
   DateTime? _lastTermStart;
+  int _lastDaysCount = 7;
 
   @override
   void initState() {
@@ -64,10 +65,15 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
     final controller = eventsController;
     final timetableState = sl<TimetableController>().state.value;
       final termStart = timetableState.termStartMonday;
-      final weeklyScroll = sl<SettingsController>().state.value.weeklyScroll;
+      final settings = sl<SettingsController>().state.value;
+      final weeklyScroll = settings.weeklyScroll;
+      // When week-scrolling is on, always show a full week (7 days).
+      // When free-scrolling (无极滑动), use the user-configured count.
+      final daysVisibleCount = weeklyScroll ? 7 : settings.daysVisibleCount;
 
-      if (termStart != _lastTermStart) {
+      if (termStart != _lastTermStart || daysVisibleCount != _lastDaysCount) {
         _lastTermStart = termStart;
+        _lastDaysCount = daysVisibleCount;
         _plannerKey = GlobalKey<EventsPlannerState>();
         _handleInitialJump();
       }
@@ -122,11 +128,11 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
           return Container(
             color: surfaceColor,
             child: KeyedSubtree(
-              key: ValueKey(termStart),
+              key: ValueKey('$termStart-$daysVisibleCount'),
               child: EventsPlanner(
                 key: _plannerKey,
                 controller: controller,
-                daysShowed: 7,
+                daysShowed: daysVisibleCount,
                 initialDate: termStart ?? DateTime.now().withoutTime,
                 heightPerMinute: widget.pixelsPerMinute,
                 initialVerticalScrollOffset: 480 * widget.pixelsPerMinute,

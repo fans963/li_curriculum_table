@@ -153,39 +153,15 @@ class _ThemeCard extends StatelessWidget {
 
   void _showCustomPicker(BuildContext context) {
     final hsv = HSVColor.fromColor(settings.seedColor);
-    double h = hsv.hue, s = hsv.saturation, v = hsv.value;
     showCupertinoDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setState) {
-          final picked = HSVColor.fromAHSV(1, h, s, v).toColor();
-          return CupertinoAlertDialog(
-            title: const Text('自定义颜色'),
-            content: Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Container(width: 64, height: 64, decoration: BoxDecoration(color: picked, shape: BoxShape.circle, border: Border.all(color: CupertinoColors.separator.resolveFrom(ctx), width: 0.5))),
-                const SizedBox(height: 16),
-                _hsvRow('H', h, 0, 360, (v) => setState(() => h = v)),
-                _hsvRow('S', s, 0, 1, (v) => setState(() => s = v)),
-                _hsvRow('V', v, 0.2, 1, (val) => setState(() => v = val)),
-              ]),
-            ),
-            actions: [
-              CupertinoDialogAction(child: const Text('取消'), onPressed: () => Navigator.pop(ctx)),
-              CupertinoDialogAction(isDefaultAction: true, child: const Text('确定'), onPressed: () { notifier.setSeedColor(picked); Navigator.pop(ctx); }),
-            ],
-          );
-        },
+      builder: (ctx) => _CupertinoColorPickerDialog(
+        initialHue: hsv.hue,
+        initialSat: hsv.saturation,
+        initialVal: hsv.value,
+        notifier: notifier,
       ),
     );
-  }
-
-  Widget _hsvRow(String label, double value, double min, double max, ValueChanged<double> onChanged) {
-    return Row(children: [
-      Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
-      Expanded(child: CupertinoSlider(value: value, min: min, max: max, onChanged: onChanged)),
-    ]);
   }
 
   void _showSchemeTypePicker(BuildContext context) {
@@ -210,6 +186,69 @@ class _ThemeCard extends StatelessWidget {
         }).toList(),
         cancelButton: CupertinoActionSheetAction(isDefaultAction: true, child: const Text('取消'), onPressed: () => Navigator.pop(ctx)),
       ),
+    );
+  }
+}
+
+// HSV slider row used by the color picker dialog
+Widget _hsvRow(String label, double value, double min, double max, ValueChanged<double> onChanged) {
+  return Row(children: [
+    Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+    Expanded(child: CupertinoSlider(value: value, min: min, max: max, onChanged: onChanged)),
+  ]);
+}
+
+class _CupertinoColorPickerDialog extends SignalStatefulWidget {
+  final double initialHue;
+  final double initialSat;
+  final double initialVal;
+  final SettingsController notifier;
+
+  const _CupertinoColorPickerDialog({
+    required this.initialHue,
+    required this.initialSat,
+    required this.initialVal,
+    required this.notifier,
+  });
+
+  @override
+  State<_CupertinoColorPickerDialog> createState() => _CupertinoColorPickerDialogState();
+}
+
+class _CupertinoColorPickerDialogState extends State<_CupertinoColorPickerDialog> {
+  late final _hue = signal(widget.initialHue);
+  late final _sat = signal(widget.initialSat);
+  late final _val = signal(widget.initialVal);
+
+  @override
+  Widget build(BuildContext context) {
+    final picked = HSVColor.fromAHSV(1, _hue.value, _sat.value, _val.value).toColor();
+    return CupertinoAlertDialog(
+      title: const Text('自定义颜色'),
+      content: Padding(
+        padding: const EdgeInsets.only(top: 16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(
+              color: picked, shape: BoxShape.circle,
+              border: Border.all(color: CupertinoColors.separator.resolveFrom(context), width: 0.5),
+            ),
+          ),
+          const SizedBox(height: 16),
+          _hsvRow('H', _hue.value, 0, 360, (v) => _hue.value = v),
+          _hsvRow('S', _sat.value, 0, 1, (v) => _sat.value = v),
+          _hsvRow('V', _val.value, 0.2, 1, (v) => _val.value = v),
+        ]),
+      ),
+      actions: [
+        CupertinoDialogAction(child: const Text('取消'), onPressed: () => Navigator.pop(context)),
+        CupertinoDialogAction(
+          isDefaultAction: true,
+          child: const Text('确定'),
+          onPressed: () { widget.notifier.setSeedColor(picked); Navigator.pop(context); },
+        ),
+      ],
     );
   }
 }

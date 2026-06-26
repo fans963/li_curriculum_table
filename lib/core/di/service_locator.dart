@@ -26,15 +26,18 @@ import 'package:li_curriculum_table/features/grades/data/datasources/grade_remot
 import 'package:li_curriculum_table/features/grades/data/repositories/grade_repository_impl.dart';
 import 'package:li_curriculum_table/features/grades/domain/repositories/grade_repository.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_credentials_local_datasource.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_schedule_events_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_teaching_week_baseline_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_timetable_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/timetable_crawler_client.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/credentials_repository_impl.dart';
+import 'package:li_curriculum_table/features/timetable/data/repositories/schedule_events_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/teaching_week_baseline_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/timetable_cache_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/timetable_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/schedule_events_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/teaching_week_baseline_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
@@ -104,6 +107,14 @@ void setupServiceLocator() {
 
   sl.registerLazySingleton<TimetableRepository>(
     () => TimetableRepositoryImpl(sl<TimetableCrawlerClient>()),
+  );
+
+  sl.registerLazySingleton<SecureScheduleEventsLocalDataSource>(
+    () => SecureScheduleEventsLocalDataSource(sl<SecureStorageStore>()),
+  );
+
+  sl.registerLazySingleton<ScheduleEventsRepository>(
+    () => ScheduleEventsRepositoryImpl(sl<SecureScheduleEventsLocalDataSource>()),
   );
 
   // ─── Classroom ─────────────────────────────────────────────────────────

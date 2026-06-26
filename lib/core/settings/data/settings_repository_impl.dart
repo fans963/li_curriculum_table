@@ -14,6 +14,9 @@ class SecureSettingsLocalDataSource {
   static const _kDesignStyle = 'design_style';
   static const _kColorSchemeType = 'color_scheme_type';
   static const _kEnableBookCover = 'enable_book_cover';
+  static const _kCurrentTerm = 'current_term';
+  static const _kAutoSizeText = 'auto_size_text';
+  static const _kDaysVisibleCount = 'days_visible_count';
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
@@ -21,6 +24,7 @@ class SecureSettingsLocalDataSource {
       _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
       _kThemeMode, _kSeedColor, _kUseDynamicColor,
       _kDesignStyle, _kColorSchemeType, _kEnableBookCover,
+      _kCurrentTerm, _kAutoSizeText, _kDaysVisibleCount,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -42,6 +46,9 @@ class SecureSettingsLocalDataSource {
       orElse: () => ColorSchemeType.tonalSpot,
     );
     final enableBookCover = data[_kEnableBookCover] == 'true'; // default false
+    final currentTerm = data[_kCurrentTerm] ?? '';
+    final autoSizeText = data[_kAutoSizeText] != 'false'; // default true
+    final daysVisibleCount = int.tryParse(data[_kDaysVisibleCount] ?? '7') ?? 7;
 
     return AppSettings(
       proxyEnabled: enabled,
@@ -53,6 +60,9 @@ class SecureSettingsLocalDataSource {
       designStyle: designStyle,
       colorSchemeType: colorSchemeType,
       enableBookCover: enableBookCover,
+      currentTerm: currentTerm,
+      autoSizeText: autoSizeText,
+      daysVisibleCount: daysVisibleCount,
     );
   }
 
@@ -67,6 +77,9 @@ class SecureSettingsLocalDataSource {
       _kDesignStyle: settings.designStyle.name,
       _kColorSchemeType: settings.colorSchemeType.name,
       _kEnableBookCover: settings.enableBookCover.toString(),
+      _kCurrentTerm: settings.currentTerm,
+      _kAutoSizeText: settings.autoSizeText.toString(),
+      _kDaysVisibleCount: settings.daysVisibleCount.toString(),
     });
   }
 }

@@ -19,6 +19,9 @@ class SettingsController {
   late final proxyEnabled = computed(() => _state.value.proxyEnabled);
   late final proxyPort = computed(() => _state.value.proxyPort);
   late final enableBookCover = computed(() => _state.value.enableBookCover);
+  late final currentTerm = computed(() => _state.value.currentTerm);
+  late final autoSizeText = computed(() => _state.value.autoSizeText);
+  late final daysVisibleCount = computed(() => _state.value.daysVisibleCount);
   Future<void> init() async {
     final repository = sl<SettingsRepository>();
     _state.value = await repository.loadSettings();
@@ -45,6 +48,22 @@ class SettingsController {
 
   Future<void> setEnableBookCover(bool enabled) async {
     _state.value = _state.value.copyWith(enableBookCover: enabled);
+    await _save();
+  }
+
+  Future<void> setCurrentTerm(String term) async {
+    _state.value = _state.value.copyWith(currentTerm: term);
+    await _save();
+  }
+
+  Future<void> setAutoSizeText(bool enabled) async {
+    _state.value = _state.value.copyWith(autoSizeText: enabled);
+    await _save();
+  }
+
+  Future<void> setDaysVisibleCount(int days) async {
+    if (days < 1 || days > 14) return;
+    _state.value = _state.value.copyWith(daysVisibleCount: days);
     await _save();
   }
 

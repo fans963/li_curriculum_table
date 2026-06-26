@@ -1,9 +1,6 @@
-import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
 import 'package:intl/intl.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -83,9 +80,7 @@ Widget _buildCupertinoDateChip(BuildContext context, ClassroomState state) {
     onTap: () async {
       await showCupertinoModalPopup<DateTime>(
         context: context,
-        builder: (ctx) => CupertinoLiquidGlass(
-          tintOpacity: 0.2,
-          child: Container(
+        builder: (ctx) => Container(
             height: 280,
             decoration: BoxDecoration(
               color: CupertinoColors.systemBackground.resolveFrom(context).withValues(alpha: 0.75),
@@ -129,7 +124,6 @@ Widget _buildCupertinoDateChip(BuildContext context, ClassroomState state) {
               ),
             ],
           ),
-        ),
         ),
       );
     },
@@ -188,9 +182,7 @@ Widget _buildCupertinoPickerSheet(
   required int selectedIndex,
   required ValueChanged<int> onSelected,
 }) {
-  return CupertinoLiquidGlass(
-    tintOpacity: 0.2,
-    child: Container(
+  return Container(
       height: 300,
       decoration: BoxDecoration(
         color: CupertinoColors.systemBackground.resolveFrom(context).withValues(alpha: 0.75),
@@ -232,7 +224,6 @@ Widget _buildCupertinoPickerSheet(
           ),
         ),
       ],
-    ),
     ),
   );
 }
@@ -323,10 +314,19 @@ Widget _buildCupertinoClassroomList(BuildContext context, ClassroomState state) 
       ...state.results.map((item) {
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: GlassCard(
-              backgroundColor: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-              shadowAlpha: 0.03,
-              shadowBlurRadius: 10,
+          child: Container(
+              decoration: BoxDecoration(
+                color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: CupertinoColors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                 child: Row(

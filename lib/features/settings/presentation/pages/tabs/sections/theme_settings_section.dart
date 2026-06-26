@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:m3e_core/m3e_core.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:slider_m3e/slider_m3e.dart';
-import 'package:li_curriculum_table/app/app.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -275,40 +275,67 @@ class _DesignStylePicker extends StatelessWidget {
 
 void _showCustomColorPicker(BuildContext context, Color current, SettingsController notifier) {
   final hsv = HSVColor.fromColor(current);
-  double hue = hsv.hue, sat = hsv.saturation, val = hsv.value;
-
   showDialog(
     context: context,
-    builder: (ctx) => StatefulBuilder(
-      builder: (ctx, setState) {
-        final picked = HSVColor.fromAHSV(1, hue, sat, val).toColor();
-        final cs = Theme.of(ctx).colorScheme;
-        return AlertDialog(
-          title: const Text('自定义颜色'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 64, height: 64,
-                decoration: BoxDecoration(color: picked, shape: BoxShape.circle, border: Border.all(color: cs.outlineVariant, width: 0.5)),
-              ),
-              const SizedBox(height: 16),
-              _hsvRow('H', hue, 0, 360, SliderM3EEmphasis.secondary, (v) => setState(() => hue = v)),
-              _hsvRow('S', sat, 0, 1, SliderM3EEmphasis.surface, (v) => setState(() => sat = v)),
-              _hsvRow('V', val, 0.2, 1, SliderM3EEmphasis.surface, (v) => setState(() => val = v)),
-            ],
-          ),
-          actions: [
-            M3ETextButton(onPressed: () => Navigator.pop(ctx), size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('取消')),
-            M3EFilledButton(
-              onPressed: () { notifier.setSeedColor(picked); Navigator.pop(ctx); },
-              size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('确定'),
-            ),
-          ],
-        );
-      },
+    builder: (ctx) => _ColorPickerDialog(
+      initialHue: hsv.hue,
+      initialSat: hsv.saturation,
+      initialVal: hsv.value,
+      notifier: notifier,
     ),
   );
+}
+
+class _ColorPickerDialog extends SignalStatefulWidget {
+  final double initialHue;
+  final double initialSat;
+  final double initialVal;
+  final SettingsController notifier;
+
+  const _ColorPickerDialog({
+    required this.initialHue,
+    required this.initialSat,
+    required this.initialVal,
+    required this.notifier,
+  });
+
+  @override
+  State<_ColorPickerDialog> createState() => _ColorPickerDialogState();
+}
+
+class _ColorPickerDialogState extends State<_ColorPickerDialog> {
+  late final _hue = signal(widget.initialHue);
+  late final _sat = signal(widget.initialSat);
+  late final _val = signal(widget.initialVal);
+
+  @override
+  Widget build(BuildContext context) {
+    final picked = HSVColor.fromAHSV(1, _hue.value, _sat.value, _val.value).toColor();
+    final cs = Theme.of(context).colorScheme;
+    return AlertDialog(
+      title: const Text('自定义颜色'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 64, height: 64,
+            decoration: BoxDecoration(color: picked, shape: BoxShape.circle, border: Border.all(color: cs.outlineVariant, width: 0.5)),
+          ),
+          const SizedBox(height: 16),
+          _hsvRow('H', _hue.value, 0, 360, SliderM3EEmphasis.secondary, (v) => _hue.value = v),
+          _hsvRow('S', _sat.value, 0, 1, SliderM3EEmphasis.surface, (v) => _sat.value = v),
+          _hsvRow('V', _val.value, 0.2, 1, SliderM3EEmphasis.surface, (v) => _val.value = v),
+        ],
+      ),
+      actions: [
+        M3ETextButton(onPressed: () => Navigator.pop(context), size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('取消')),
+        M3EFilledButton(
+          onPressed: () { widget.notifier.setSeedColor(picked); Navigator.pop(context); },
+          size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('确定'),
+        ),
+      ],
+    );
+  }
 }
 
 Widget _hsvRow(String label, double value, double min, double max, SliderM3EEmphasis emphasis, ValueChanged<double> onChanged) {

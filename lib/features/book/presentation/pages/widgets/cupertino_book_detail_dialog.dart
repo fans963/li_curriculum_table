@@ -1,6 +1,6 @@
 part of '../book_cupertino.dart';
 
-class _CupertinoBookDetailDialog extends StatefulWidget {
+class _CupertinoBookDetailDialog extends SignalStatefulWidget {
   final BookInfo book;
   const _CupertinoBookDetailDialog({required this.book});
 
@@ -10,13 +10,13 @@ class _CupertinoBookDetailDialog extends StatefulWidget {
 
 class _CupertinoBookDetailDialogState extends State<_CupertinoBookDetailDialog> {
   late final BookCoverSignal _cover;
-  bool _copiedCallNo = false;
+  final _copiedCallNo = signal(false);
 
   void _copyCallNo(String text) {
     Clipboard.setData(ClipboardData(text: text));
-    setState(() => _copiedCallNo = true);
+    _copiedCallNo.value = true;
     Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) setState(() => _copiedCallNo = false);
+      if (mounted) _copiedCallNo.value = false;
     });
   }
 
@@ -50,7 +50,7 @@ class _CupertinoBookDetailDialogState extends State<_CupertinoBookDetailDialog> 
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
               child: _DetailContent(
                 book: book,
-                copiedCallNo: _copiedCallNo,
+                copiedCallNo: _copiedCallNo.value,
                 onCopy: _copyCallNo,
               ),
             ),

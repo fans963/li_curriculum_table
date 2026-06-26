@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$TimetableState {
 
- bool get isLoading; String get status; int get currentTeachingWeek; int get displayWeek; int get referenceWeek; int get minWeek; int get maxWeek; DateTime? get termStartMonday; TimetableData? get data; bool get needsLogin;
+ bool get isLoading; String get status; int get currentTeachingWeek; int get displayWeek; int get referenceWeek; int get minWeek; int get maxWeek; DateTime? get termStartMonday; TimetableData? get data; bool get needsLogin; List<ScheduleEvent> get scheduleEvents;
 /// Create a copy of TimetableState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -25,16 +25,16 @@ $TimetableStateCopyWith<TimetableState> get copyWith => _$TimetableStateCopyWith
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.status, status) || other.status == status)&&(identical(other.currentTeachingWeek, currentTeachingWeek) || other.currentTeachingWeek == currentTeachingWeek)&&(identical(other.displayWeek, displayWeek) || other.displayWeek == displayWeek)&&(identical(other.referenceWeek, referenceWeek) || other.referenceWeek == referenceWeek)&&(identical(other.minWeek, minWeek) || other.minWeek == minWeek)&&(identical(other.maxWeek, maxWeek) || other.maxWeek == maxWeek)&&(identical(other.termStartMonday, termStartMonday) || other.termStartMonday == termStartMonday)&&(identical(other.data, data) || other.data == data)&&(identical(other.needsLogin, needsLogin) || other.needsLogin == needsLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is TimetableState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.status, status) || other.status == status)&&(identical(other.currentTeachingWeek, currentTeachingWeek) || other.currentTeachingWeek == currentTeachingWeek)&&(identical(other.displayWeek, displayWeek) || other.displayWeek == displayWeek)&&(identical(other.referenceWeek, referenceWeek) || other.referenceWeek == referenceWeek)&&(identical(other.minWeek, minWeek) || other.minWeek == minWeek)&&(identical(other.maxWeek, maxWeek) || other.maxWeek == maxWeek)&&(identical(other.termStartMonday, termStartMonday) || other.termStartMonday == termStartMonday)&&(identical(other.data, data) || other.data == data)&&(identical(other.needsLogin, needsLogin) || other.needsLogin == needsLogin)&&const DeepCollectionEquality().equals(other.scheduleEvents, scheduleEvents));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,status,currentTeachingWeek,displayWeek,referenceWeek,minWeek,maxWeek,termStartMonday,data,needsLogin);
+int get hashCode => Object.hash(runtimeType,isLoading,status,currentTeachingWeek,displayWeek,referenceWeek,minWeek,maxWeek,termStartMonday,data,needsLogin,const DeepCollectionEquality().hash(scheduleEvents));
 
 @override
 String toString() {
-  return 'TimetableState(isLoading: $isLoading, status: $status, currentTeachingWeek: $currentTeachingWeek, displayWeek: $displayWeek, referenceWeek: $referenceWeek, minWeek: $minWeek, maxWeek: $maxWeek, termStartMonday: $termStartMonday, data: $data, needsLogin: $needsLogin)';
+  return 'TimetableState(isLoading: $isLoading, status: $status, currentTeachingWeek: $currentTeachingWeek, displayWeek: $displayWeek, referenceWeek: $referenceWeek, minWeek: $minWeek, maxWeek: $maxWeek, termStartMonday: $termStartMonday, data: $data, needsLogin: $needsLogin, scheduleEvents: $scheduleEvents)';
 }
 
 
@@ -45,7 +45,7 @@ abstract mixin class $TimetableStateCopyWith<$Res>  {
   factory $TimetableStateCopyWith(TimetableState value, $Res Function(TimetableState) _then) = _$TimetableStateCopyWithImpl;
 @useResult
 $Res call({
- bool isLoading, String status, int currentTeachingWeek, int displayWeek, int referenceWeek, int minWeek, int maxWeek, DateTime? termStartMonday, TimetableData? data, bool needsLogin
+ bool isLoading, String status, int currentTeachingWeek, int displayWeek, int referenceWeek, int minWeek, int maxWeek, DateTime? termStartMonday, TimetableData? data, bool needsLogin, List<ScheduleEvent> scheduleEvents
 });
 
 
@@ -62,7 +62,7 @@ class _$TimetableStateCopyWithImpl<$Res>
 
 /// Create a copy of TimetableState
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? status = null,Object? currentTeachingWeek = null,Object? displayWeek = null,Object? referenceWeek = null,Object? minWeek = null,Object? maxWeek = null,Object? termStartMonday = freezed,Object? data = freezed,Object? needsLogin = null,}) {
+@pragma('vm:prefer-inline') @override $Res call({Object? isLoading = null,Object? status = null,Object? currentTeachingWeek = null,Object? displayWeek = null,Object? referenceWeek = null,Object? minWeek = null,Object? maxWeek = null,Object? termStartMonday = freezed,Object? data = freezed,Object? needsLogin = null,Object? scheduleEvents = null,}) {
   return _then(_self.copyWith(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -74,7 +74,8 @@ as int,maxWeek: null == maxWeek ? _self.maxWeek : maxWeek // ignore: cast_nullab
 as int,termStartMonday: freezed == termStartMonday ? _self.termStartMonday : termStartMonday // ignore: cast_nullable_to_non_nullable
 as DateTime?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as TimetableData?,needsLogin: null == needsLogin ? _self.needsLogin : needsLogin // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,scheduleEvents: null == scheduleEvents ? _self.scheduleEvents : scheduleEvents // ignore: cast_nullable_to_non_nullable
+as List<ScheduleEvent>,
   ));
 }
 /// Create a copy of TimetableState
@@ -171,10 +172,10 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin,  List<ScheduleEvent> scheduleEvents)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _TimetableState() when $default != null:
-return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin);case _:
+return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin,_that.scheduleEvents);case _:
   return orElse();
 
 }
@@ -192,10 +193,10 @@ return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.dis
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin,  List<ScheduleEvent> scheduleEvents)  $default,) {final _that = this;
 switch (_that) {
 case _TimetableState():
-return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin);case _:
+return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin,_that.scheduleEvents);case _:
   throw StateError('Unexpected subclass');
 
 }
@@ -212,10 +213,10 @@ return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.dis
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( bool isLoading,  String status,  int currentTeachingWeek,  int displayWeek,  int referenceWeek,  int minWeek,  int maxWeek,  DateTime? termStartMonday,  TimetableData? data,  bool needsLogin,  List<ScheduleEvent> scheduleEvents)?  $default,) {final _that = this;
 switch (_that) {
 case _TimetableState() when $default != null:
-return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin);case _:
+return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.displayWeek,_that.referenceWeek,_that.minWeek,_that.maxWeek,_that.termStartMonday,_that.data,_that.needsLogin,_that.scheduleEvents);case _:
   return null;
 
 }
@@ -227,7 +228,7 @@ return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.dis
 
 
 class _TimetableState implements TimetableState {
-  const _TimetableState({required this.isLoading, required this.status, required this.currentTeachingWeek, required this.displayWeek, required this.referenceWeek, required this.minWeek, required this.maxWeek, this.termStartMonday, this.data, this.needsLogin = false});
+  const _TimetableState({required this.isLoading, required this.status, required this.currentTeachingWeek, required this.displayWeek, required this.referenceWeek, required this.minWeek, required this.maxWeek, this.termStartMonday, this.data, this.needsLogin = false, final  List<ScheduleEvent> scheduleEvents = const []}): _scheduleEvents = scheduleEvents;
   
 
 @override final  bool isLoading;
@@ -240,6 +241,13 @@ class _TimetableState implements TimetableState {
 @override final  DateTime? termStartMonday;
 @override final  TimetableData? data;
 @override@JsonKey() final  bool needsLogin;
+ final  List<ScheduleEvent> _scheduleEvents;
+@override@JsonKey() List<ScheduleEvent> get scheduleEvents {
+  if (_scheduleEvents is EqualUnmodifiableListView) return _scheduleEvents;
+  // ignore: implicit_dynamic_type
+  return EqualUnmodifiableListView(_scheduleEvents);
+}
+
 
 /// Create a copy of TimetableState
 /// with the given fields replaced by the non-null parameter values.
@@ -251,16 +259,16 @@ _$TimetableStateCopyWith<_TimetableState> get copyWith => __$TimetableStateCopyW
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.status, status) || other.status == status)&&(identical(other.currentTeachingWeek, currentTeachingWeek) || other.currentTeachingWeek == currentTeachingWeek)&&(identical(other.displayWeek, displayWeek) || other.displayWeek == displayWeek)&&(identical(other.referenceWeek, referenceWeek) || other.referenceWeek == referenceWeek)&&(identical(other.minWeek, minWeek) || other.minWeek == minWeek)&&(identical(other.maxWeek, maxWeek) || other.maxWeek == maxWeek)&&(identical(other.termStartMonday, termStartMonday) || other.termStartMonday == termStartMonday)&&(identical(other.data, data) || other.data == data)&&(identical(other.needsLogin, needsLogin) || other.needsLogin == needsLogin));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is _TimetableState&&(identical(other.isLoading, isLoading) || other.isLoading == isLoading)&&(identical(other.status, status) || other.status == status)&&(identical(other.currentTeachingWeek, currentTeachingWeek) || other.currentTeachingWeek == currentTeachingWeek)&&(identical(other.displayWeek, displayWeek) || other.displayWeek == displayWeek)&&(identical(other.referenceWeek, referenceWeek) || other.referenceWeek == referenceWeek)&&(identical(other.minWeek, minWeek) || other.minWeek == minWeek)&&(identical(other.maxWeek, maxWeek) || other.maxWeek == maxWeek)&&(identical(other.termStartMonday, termStartMonday) || other.termStartMonday == termStartMonday)&&(identical(other.data, data) || other.data == data)&&(identical(other.needsLogin, needsLogin) || other.needsLogin == needsLogin)&&const DeepCollectionEquality().equals(other._scheduleEvents, _scheduleEvents));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,isLoading,status,currentTeachingWeek,displayWeek,referenceWeek,minWeek,maxWeek,termStartMonday,data,needsLogin);
+int get hashCode => Object.hash(runtimeType,isLoading,status,currentTeachingWeek,displayWeek,referenceWeek,minWeek,maxWeek,termStartMonday,data,needsLogin,const DeepCollectionEquality().hash(_scheduleEvents));
 
 @override
 String toString() {
-  return 'TimetableState(isLoading: $isLoading, status: $status, currentTeachingWeek: $currentTeachingWeek, displayWeek: $displayWeek, referenceWeek: $referenceWeek, minWeek: $minWeek, maxWeek: $maxWeek, termStartMonday: $termStartMonday, data: $data, needsLogin: $needsLogin)';
+  return 'TimetableState(isLoading: $isLoading, status: $status, currentTeachingWeek: $currentTeachingWeek, displayWeek: $displayWeek, referenceWeek: $referenceWeek, minWeek: $minWeek, maxWeek: $maxWeek, termStartMonday: $termStartMonday, data: $data, needsLogin: $needsLogin, scheduleEvents: $scheduleEvents)';
 }
 
 
@@ -271,7 +279,7 @@ abstract mixin class _$TimetableStateCopyWith<$Res> implements $TimetableStateCo
   factory _$TimetableStateCopyWith(_TimetableState value, $Res Function(_TimetableState) _then) = __$TimetableStateCopyWithImpl;
 @override @useResult
 $Res call({
- bool isLoading, String status, int currentTeachingWeek, int displayWeek, int referenceWeek, int minWeek, int maxWeek, DateTime? termStartMonday, TimetableData? data, bool needsLogin
+ bool isLoading, String status, int currentTeachingWeek, int displayWeek, int referenceWeek, int minWeek, int maxWeek, DateTime? termStartMonday, TimetableData? data, bool needsLogin, List<ScheduleEvent> scheduleEvents
 });
 
 
@@ -288,7 +296,7 @@ class __$TimetableStateCopyWithImpl<$Res>
 
 /// Create a copy of TimetableState
 /// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? status = null,Object? currentTeachingWeek = null,Object? displayWeek = null,Object? referenceWeek = null,Object? minWeek = null,Object? maxWeek = null,Object? termStartMonday = freezed,Object? data = freezed,Object? needsLogin = null,}) {
+@override @pragma('vm:prefer-inline') $Res call({Object? isLoading = null,Object? status = null,Object? currentTeachingWeek = null,Object? displayWeek = null,Object? referenceWeek = null,Object? minWeek = null,Object? maxWeek = null,Object? termStartMonday = freezed,Object? data = freezed,Object? needsLogin = null,Object? scheduleEvents = null,}) {
   return _then(_TimetableState(
 isLoading: null == isLoading ? _self.isLoading : isLoading // ignore: cast_nullable_to_non_nullable
 as bool,status: null == status ? _self.status : status // ignore: cast_nullable_to_non_nullable
@@ -300,7 +308,8 @@ as int,maxWeek: null == maxWeek ? _self.maxWeek : maxWeek // ignore: cast_nullab
 as int,termStartMonday: freezed == termStartMonday ? _self.termStartMonday : termStartMonday // ignore: cast_nullable_to_non_nullable
 as DateTime?,data: freezed == data ? _self.data : data // ignore: cast_nullable_to_non_nullable
 as TimetableData?,needsLogin: null == needsLogin ? _self.needsLogin : needsLogin // ignore: cast_nullable_to_non_nullable
-as bool,
+as bool,scheduleEvents: null == scheduleEvents ? _self._scheduleEvents : scheduleEvents // ignore: cast_nullable_to_non_nullable
+as List<ScheduleEvent>,
   ));
 }
 

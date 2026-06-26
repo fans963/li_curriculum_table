@@ -1,14 +1,10 @@
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
 import 'package:flutter/services.dart';
-import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_dialog.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/book/domain/book_cover_loader.dart';
 import 'package:signals/signals_flutter.dart';
 

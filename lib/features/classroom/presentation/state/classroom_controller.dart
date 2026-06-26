@@ -1,5 +1,6 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/campus.dart';
@@ -14,6 +15,14 @@ class ClassroomController {
   final _state = signal(ClassroomState(selectedDate: DateTime.now()));
 
   ReadonlySignal<ClassroomState> get state => _state;
+
+  /// Resolve the effective term: user-specified setting takes priority,
+  /// falling back to the server-provided value from the classroom page.
+  String _resolveTerm() {
+    final userTerm = sl<SettingsController>().currentTerm.value;
+    if (userTerm.isNotEmpty) return userTerm;
+    return _state.value.currentTerm;
+  }
 
   Campus? _findDefaultCampus(List<Campus> campuses, String? lastId) {
     if (campuses.isEmpty) return null;
@@ -232,7 +241,7 @@ class ClassroomController {
         buildingId: building.id,
         week: week,
         weekday: weekday,
-        term: _state.value.currentTerm,
+        term: _resolveTerm(),
         username: user,
         password: pass,
         forceRefresh: forceRefresh,
@@ -257,7 +266,7 @@ class ClassroomController {
       final (user, pass) = await _getCredentials();
 
       if (_state.value.campuses.isEmpty ||
-          _state.value.currentTerm.isEmpty) {
+          _resolveTerm().isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
           password: pass,
@@ -315,7 +324,7 @@ class ClassroomController {
       final repository = sl<ClassroomRepository>();
       final (user, pass) = await _getCredentials();
 
-      if (_state.value.currentTerm.isEmpty) {
+      if (_resolveTerm().isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
           password: pass,
@@ -326,7 +335,7 @@ class ClassroomController {
       }
 
       await repository.syncAllSchedules(
-        term: _state.value.currentTerm,
+        term: _resolveTerm(),
         username: user,
         password: pass,
       );

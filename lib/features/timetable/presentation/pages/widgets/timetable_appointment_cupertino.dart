@@ -1,10 +1,14 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_dialog.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:m3e_core/m3e_core.dart';
 
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
@@ -28,7 +32,7 @@ Widget buildCupertinoAppointmentCard({
   final tone = resolveCupertinoTone(context, title);
   final bgColor = isOngoing
       ? tone.accent.withValues(alpha: 0.15)
-      : tone.background.withValues(alpha: 0.45);
+      : tone.background;
   final borderColor = isOngoing
       ? tone.accent.withValues(alpha: 0.4)
       : CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2);
@@ -37,9 +41,23 @@ Widget buildCupertinoAppointmentCard({
     padding: const EdgeInsets.all(2.0),
     child: GestureDetector(
       onTap: onTap,
-      child: GlassCard(
-        backgroundColor: bgColor,
-        borderColor: borderColor,
+      onLongPress: occurrence.courseType == '日程'
+          ? () => confirmRemoveScheduleEvent(context, occurrence)
+          : null,
+      child: Container(
+        decoration: BoxDecoration(
+          color: bgColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: CupertinoColors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Row(
           children: [
             Container(
@@ -89,18 +107,32 @@ class _CardContent extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: tone.foreground,
-                  letterSpacing: -0.2,
-                  height: 1.15,
-                ),
-              ),
+              child: sl<SettingsController>().autoSizeText.value
+                ? AutoSizeText(
+                    title,
+                    maxLines: 2,
+                    minFontSize: 8,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: tone.foreground,
+                      letterSpacing: -0.2,
+                      height: 1.15,
+                    ),
+                  )
+                : Text(
+                    title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: tone.foreground,
+                      letterSpacing: -0.2,
+                      height: 1.15,
+                    ),
+                  ),
             ),
             if (isOngoing) ...[
               const SizedBox(width: 6),
@@ -119,18 +151,32 @@ class _CardContent extends StatelessWidget {
               ),
               const SizedBox(width: 2),
               Expanded(
-                child: Text(
-                  locationLine,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: tone.foreground.withValues(alpha: 0.6),
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: -0.1,
-                    height: 1.2,
-                  ),
-                ),
+                child: sl<SettingsController>().autoSizeText.value
+                  ? AutoSizeText(
+                      locationLine,
+                      maxLines: 2,
+                      minFontSize: 7,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: tone.foreground.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.1,
+                        height: 1.2,
+                      ),
+                    )
+                  : Text(
+                      locationLine,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: tone.foreground.withValues(alpha: 0.6),
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: -0.1,
+                        height: 1.2,
+                      ),
+                    ),
               ),
             ],
           ),
@@ -376,6 +422,35 @@ class CourseDetailsSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Show a confirmation dialog and remove the schedule event.
+Future<void> confirmRemoveScheduleEvent(
+    BuildContext context, CourseOccurrence occurrence) async {
+  final ds = sl<SettingsController>().designStyle.value;
+  final confirmed = await showAdaptiveConfirmDialog(
+    context,
+    designStyle: ds,
+    title: '删除日程',
+    content: '确定删除「${occurrence.courseName}」吗？',
+    confirmText: '删除',
+    cancelText: '取消',
+    isDestructive: true,
+  );
+  if (!confirmed || !context.mounted) return;
+  final events = sl<TimetableController>().state.value.scheduleEvents;
+  final match = events.where((e) =>
+      e.title == occurrence.courseName &&
+      e.location == occurrence.location);
+  if (match.isNotEmpty) {
+    sl<TimetableController>().removeScheduleEvent(match.first.id);
+    if (!context.mounted) return;
+    showAdaptiveMessage(
+      context,
+      designStyle: ds,
+      message: '已删除日程「${occurrence.courseName}」',
     );
   }
 }

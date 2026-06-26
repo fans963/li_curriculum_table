@@ -1,4 +1,3 @@
-import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 
 /// A zero-overhead wrapper that flattens the 8-layer Cupertino detail dialog
@@ -44,11 +43,7 @@ class GlassDialog extends StatelessWidget {
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(borderRadius),
-                child: CupertinoLiquidGlass(
-                  tintOpacity: 0.15,
-                  child: Container(
+              child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(
                       color: CupertinoColors.secondarySystemGroupedBackground
@@ -63,8 +58,6 @@ class GlassDialog extends StatelessWidget {
                       ),
                     ),
                     child: child,
-                  ),
-                ),
               ),
             ),
           ),

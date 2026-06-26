@@ -1,9 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors, Theme;
-import 'package:get_it/get_it.dart';
-import 'package:intl/intl.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
@@ -115,14 +111,21 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
 
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-    child: GlassCard(
-      backgroundColor: isExpired
-          ? CupertinoColors.systemFill.resolveFrom(context).withValues(alpha: 0.5)
-          : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-      borderRadius: 18,
-      shadowAlpha: isExpired ? 0 : 0.08, // Handled implicitly since accentColor was used with 0.08 alpha, but wait, it used accentColor. Let's just use GlassCard default shadow color for consistency or pass custom shadow if GlassCard supported it. It doesn't support shadowColor, so we just use the default black shadow with a slightly lower alpha to compensate for lack of colored shadow.
-      shadowBlurRadius: 10,
-      shadowOffset: const Offset(0, 4),
+    child: Container(
+      decoration: BoxDecoration(
+        color: isExpired
+            ? CupertinoColors.systemFill.resolveFrom(context).withValues(alpha: 0.5)
+            : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: isExpired ? [] : [
+          BoxShadow(
+            color: CupertinoColors.black.withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Row(

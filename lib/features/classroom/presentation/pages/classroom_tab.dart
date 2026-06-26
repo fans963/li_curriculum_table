@@ -150,8 +150,6 @@ class _ClassroomTabState extends State<ClassroomTab>
               children: [
           if (state.campuses.isNotEmpty)
             CampusDropdown(
-              campuses: state.campuses,
-              selectedCampus: state.selectedCampus,
               onSelected: (c) {
                 if (c.id == state.selectedCampus?.id) return;
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -162,8 +160,6 @@ class _ClassroomTabState extends State<ClassroomTab>
           if (state.buildings.isNotEmpty) ...[
             const SizedBox(width: 8),
             BuildingDropdown(
-              buildings: state.buildings,
-              selectedBuilding: state.selectedBuilding,
               onSelected: (b) {
                 if (b.id == state.selectedBuilding?.id) return;
                 WidgetsBinding.instance.addPostFrameCallback((_) {

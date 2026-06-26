@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:signals/signals_flutter.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
@@ -14,7 +13,6 @@ import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
-import 'package:signals/signals_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'sections/cupertino_theme_section.dart';

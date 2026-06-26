@@ -125,6 +125,18 @@ class AppSettings {
   final DesignStyle designStyle;
   final ColorSchemeType colorSchemeType;
   final bool enableBookCover;
+
+  /// Current semester identifier, e.g. "2025-2026-1". Empty string means unset.
+  final String currentTerm;
+
+  /// Whether to use AutoSizeText for timetable cell text (course name & location).
+  final bool autoSizeText;
+
+  /// Number of days to show simultaneously in the timetable week view.
+  /// Only effective when [weeklyScroll] is false (free scrolling mode).
+  /// Default is 7 (full week).
+  final int daysVisibleCount;
+
   const AppSettings({
     required this.proxyEnabled,
     required this.proxyPort,
@@ -135,6 +147,9 @@ class AppSettings {
     this.designStyle = DesignStyle.system,
     this.colorSchemeType = ColorSchemeType.tonalSpot,
     required this.enableBookCover,
+    this.currentTerm = '',
+    this.autoSizeText = true,
+    this.daysVisibleCount = 7,
   });
 
   factory AppSettings.defaultSettings() {
@@ -148,6 +163,9 @@ class AppSettings {
       designStyle: DesignStyle.system,
       colorSchemeType: ColorSchemeType.tonalSpot,
       enableBookCover: false,
+      currentTerm: '',
+      autoSizeText: true,
+      daysVisibleCount: 7,
     );
   }
 
@@ -161,6 +179,9 @@ class AppSettings {
     DesignStyle? designStyle,
     ColorSchemeType? colorSchemeType,
     bool? enableBookCover,
+    String? currentTerm,
+    bool? autoSizeText,
+    int? daysVisibleCount,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -172,6 +193,9 @@ class AppSettings {
       designStyle: designStyle ?? this.designStyle,
       colorSchemeType: colorSchemeType ?? this.colorSchemeType,
       enableBookCover: enableBookCover ?? this.enableBookCover,
+      currentTerm: currentTerm ?? this.currentTerm,
+      autoSizeText: autoSizeText ?? this.autoSizeText,
+      daysVisibleCount: daysVisibleCount ?? this.daysVisibleCount,
     );
   }
 }

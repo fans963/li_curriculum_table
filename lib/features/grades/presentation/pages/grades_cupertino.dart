@@ -1,8 +1,6 @@
-import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart' show Colors;
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/glass_card.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
@@ -32,9 +30,7 @@ Widget buildGradesCupertino(BuildContext context, GradeState state) {
 Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(20, 8, 20, 8),
-    child: CupertinoLiquidGlass(
-      tintOpacity: 0.15,
-      child: Container(
+    child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         decoration: BoxDecoration(
           color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context).withValues(alpha: 0.8),
@@ -48,7 +44,6 @@ Widget _buildCupertinoSummary(BuildContext context, GradeState state) {
           ],
         ),
       ),
-    ),
   );
 }
 
@@ -165,14 +160,21 @@ Widget _buildCupertinoGradeCard(BuildContext context, GradeEntity grade, GradeSt
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     child: GestureDetector(
       onTap: () => controller.toggleCourseSelection(grade.courseCode),
-      child: GlassCard(
-        backgroundColor: isSelected
-            ? CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.08)
-            : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-        borderRadius: 18,
-        shadowAlpha: isSelected ? 0 : 0.02,
-        shadowBlurRadius: 8,
-        shadowOffset: const Offset(0, 3),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isSelected
+              ? CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.08)
+              : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isSelected ? [] : [
+            BoxShadow(
+              color: CupertinoColors.black.withValues(alpha: 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
         child: Padding(
           padding: const EdgeInsets.all(14),
           child: Row(

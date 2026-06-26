@@ -9,6 +9,7 @@ import 'package:li_curriculum_table/features/classroom/domain/models/building.da
 import 'package:li_curriculum_table/features/classroom/domain/models/campus.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
+import 'package:signals/signals_flutter.dart';
 
 bool isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
@@ -194,12 +195,10 @@ class QuickDateSelector extends StatelessWidget {
   }
 }
 
-class CampusDropdown extends StatefulWidget {
-  final List<Campus> campuses;
-  final Campus? selectedCampus;
+class CampusDropdown extends SignalStatefulWidget {
   final ValueChanged<Campus> onSelected;
 
-  const CampusDropdown({super.key, required this.campuses, this.selectedCampus, required this.onSelected});
+  const CampusDropdown({super.key, required this.onSelected});
 
   @override
   State<CampusDropdown> createState() => _CampusDropdownState();
@@ -207,39 +206,31 @@ class CampusDropdown extends StatefulWidget {
 
 class _CampusDropdownState extends State<CampusDropdown> {
   late final M3EDropdownController<Campus> _controller;
-  List<Campus>? _lastCampuses;
+  late final EffectCleanup _syncEffect;
 
   @override
   void initState() {
     super.initState();
     _controller = M3EDropdownController<Campus>();
     _controller.initialize();
-    _updateItems();
-  }
 
-  void _updateItems() {
-    final campuses = widget.campuses;
-    if (identical(campuses, _lastCampuses)) return;
-    _lastCampuses = campuses;
-    _controller.setItems(campuses.map((c) => M3EDropdownItem(
-      label: c.name,
-      value: c,
-      selected: c.id == widget.selectedCampus?.id,
-    )).toList());
-  }
-
-  @override
-  void didUpdateWidget(CampusDropdown oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _updateItems();
-    // Sync selection if selectedCampus changed externally
-    if (widget.selectedCampus?.id != oldWidget.selectedCampus?.id) {
-      _controller.selectWhere((item) => item.value.id == widget.selectedCampus?.id);
-    }
+    // Reactively sync dropdown items from the controller signal
+    _syncEffect = effect(() {
+      final state = sl<ClassroomController>().state.value;
+      _controller.setItems(state.campuses.map((c) => M3EDropdownItem(
+        label: c.name,
+        value: c,
+        selected: c.id == state.selectedCampus?.id,
+      )).toList());
+      if (state.selectedCampus != null) {
+        _controller.selectWhere((item) => item.value.id == state.selectedCampus!.id);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _syncEffect();
     _controller.dispose();
     super.dispose();
   }
@@ -283,12 +274,10 @@ class _CampusDropdownState extends State<CampusDropdown> {
   }
 }
 
-class BuildingDropdown extends StatefulWidget {
-  final List<Building> buildings;
-  final Building? selectedBuilding;
+class BuildingDropdown extends SignalStatefulWidget {
   final ValueChanged<Building> onSelected;
 
-  const BuildingDropdown({super.key, required this.buildings, this.selectedBuilding, required this.onSelected});
+  const BuildingDropdown({super.key, required this.onSelected});
 
   @override
   State<BuildingDropdown> createState() => _BuildingDropdownState();
@@ -296,38 +285,31 @@ class BuildingDropdown extends StatefulWidget {
 
 class _BuildingDropdownState extends State<BuildingDropdown> {
   late final M3EDropdownController<Building> _controller;
-  List<Building>? _lastBuildings;
+  late final EffectCleanup _syncEffect;
 
   @override
   void initState() {
     super.initState();
     _controller = M3EDropdownController<Building>();
     _controller.initialize();
-    _updateItems();
-  }
 
-  void _updateItems() {
-    final buildings = widget.buildings;
-    if (identical(buildings, _lastBuildings)) return;
-    _lastBuildings = buildings;
-    _controller.setItems(buildings.map((b) => M3EDropdownItem(
-      label: b.name,
-      value: b,
-      selected: b.id == widget.selectedBuilding?.id,
-    )).toList());
-  }
-
-  @override
-  void didUpdateWidget(BuildingDropdown oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _updateItems();
-    if (widget.selectedBuilding?.id != oldWidget.selectedBuilding?.id) {
-      _controller.selectWhere((item) => item.value.id == widget.selectedBuilding?.id);
-    }
+    // Reactively sync dropdown items from the controller signal
+    _syncEffect = effect(() {
+      final state = sl<ClassroomController>().state.value;
+      _controller.setItems(state.buildings.map((b) => M3EDropdownItem(
+        label: b.name,
+        value: b,
+        selected: b.id == state.selectedBuilding?.id,
+      )).toList());
+      if (state.selectedBuilding != null) {
+        _controller.selectWhere((item) => item.value.id == state.selectedBuilding!.id);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _syncEffect();
     _controller.dispose();
     super.dispose();
   }

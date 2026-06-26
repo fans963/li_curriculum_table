@@ -14,6 +14,7 @@ import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/add_schedule_event_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/weather_banner.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
@@ -52,6 +53,7 @@ class _TimetableTabState extends State<TimetableTab>
       final controller = sl<TimetableController>();
       await controller.restoreCachedTimetable();
       await controller.restoreCachedTeachingWeekBaseline();
+      await controller.loadScheduleEvents();
     });
   }
 
@@ -157,7 +159,17 @@ class _TimetableTabState extends State<TimetableTab>
       return CupertinoPageScaffold(
         navigationBar: CupertinoNavigationBar(
           middle: title,
-          trailing: scrollToggle,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: () => AddScheduleEventSheet.show(context),
+                child: const Icon(CupertinoIcons.add),
+              ),
+              scrollToggle,
+            ],
+          ),
           backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context).withValues(alpha: 0.95),
           border: null,
         ),
@@ -165,13 +177,21 @@ class _TimetableTabState extends State<TimetableTab>
       );
     }
 
+    final addCourseButton = IconButtonM3E(
+      icon: const Icon(Icons.add_rounded),
+      variant: IconButtonM3EVariant.standard,
+      shape: IconButtonM3EShapeVariant.round,
+      tooltip: '添加自定义课程',
+      onPressed: () => AddScheduleEventSheet.show(context),
+    );
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBarM3E(
         title: title,
         centerTitle: true,
         shapeFamily: AppBarM3EShapeFamily.square,
-        actions: [scrollToggle],
+        actions: [addCourseButton, scrollToggle],
       ),
       body: body,
     );

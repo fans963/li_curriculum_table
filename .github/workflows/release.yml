@@ -91,7 +91,7 @@ jobs:
         run: |
           dart pub global activate fastforge
           rustup component add rustfmt
-          cargo install --git https://github.com/fzyzcjy/flutter_rust_bridge.git flutter_rust_bridge_codegen
+          cargo install flutter_rust_bridge_codegen
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH
           echo "${{ github.workspace }}/.pub-cache/bin" >> $GITHUB_PATH
 

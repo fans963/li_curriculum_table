@@ -234,10 +234,8 @@ class _SettingsTabState extends State<SettingsTab>
     return TimetableControlPanel(
       usernameController: _usernameController,
       passwordController: _passwordController,
-      isLoading: state.isLoading,
-      currentTeachingWeek: state.currentTeachingWeek,
-      termStartMonday: state.termStartMonday,
       onTermStartDateChanged: (date) => sl<TimetableController>().setTermStartDate(date),
+      onCurrentTermChanged: (term) => sl<SettingsController>().setCurrentTerm(term),
       onLoginPressed: () async {
         final u = _usernameController.text.trim();
         final p = _passwordController.text;

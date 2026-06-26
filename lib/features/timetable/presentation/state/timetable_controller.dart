@@ -11,7 +11,9 @@ import 'package:li_curriculum_table/features/timetable/domain/entities/cached_ti
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_week_baseline.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/schedule_events_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/teaching_week_baseline_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
@@ -53,8 +55,9 @@ class TimetableController {
     final repository = sl<TeachingWeekBaselineRepository>();
     final baseline = await repository.loadBaseline();
     if (baseline == null) {
-      final now = DateTime.now();
-      setTermStartDate(DateTime(now.year, 3, 1));
+      // No cached baseline — if the user has selected a semester in settings,
+      // leave termStartMonday as null so the UI prompts them to pick a start date.
+      // Previously this defaulted to March 1, which was incorrect for fall semesters.
       return;
     }
 
@@ -265,10 +268,8 @@ class TimetableController {
       );
       _updateWeekRange(data);
 
-      if (_state.value.termStartMonday == null) {
-        final now = DateTime.now();
-        setTermStartDate(DateTime(now.year, 3, 1));
-      }
+      // If termStartMonday is still null, the user hasn't set a semester start date yet.
+      // The settings UI will prompt them to select one.
 
       // Track sub-sync failures for accurate status message
       final List<String> failedSyncs = [];
@@ -367,9 +368,52 @@ class TimetableController {
     });
   }
 
+  // ─── Schedule Events ─────────────────────────────────────────────────────
+
+  /// Load schedule events from storage into state.
+  Future<void> loadScheduleEvents() async {
+    final events = await sl<ScheduleEventsRepository>().loadEvents();
+    _state.value = _state.value.copyWith(scheduleEvents: events);
+  }
+
+  /// Add a schedule event and optionally schedule a notification.
+  Future<void> addScheduleEvent(ScheduleEvent event) async {
+    final repo = sl<ScheduleEventsRepository>();
+    final events = await repo.loadEvents();
+    events.add(event);
+    await repo.saveEvents(events);
+    _state.value = _state.value.copyWith(scheduleEvents: events);
+
+    if (event.enableNotification && event.notifyTime != null) {
+      final idHash = event.id.hashCode.toUnsigned(31);
+      await sl<NotificationService>().scheduleEventReminder(
+        id: idHash,
+        title: '📅 日程提醒',
+        body: '${event.title}\n${event.location}',
+        notifyTime: event.notifyTime!,
+      );
+    }
+  }
+
+  /// Remove a schedule event by ID and cancel its notification.
+  Future<void> removeScheduleEvent(String eventId) async {
+    final repo = sl<ScheduleEventsRepository>();
+    final events = await repo.loadEvents();
+    final target = events.where((e) => e.id == eventId);
+    if (target.isNotEmpty && target.first.enableNotification) {
+      await sl<NotificationService>().cancelEventReminder(
+        eventId.hashCode.toUnsigned(31),
+      );
+    }
+    events.removeWhere((e) => e.id == eventId);
+    await repo.saveEvents(events);
+    _state.value = _state.value.copyWith(scheduleEvents: events);
+  }
+
   Future<void> clearAllCache() async {
     _state.value =
         _state.value.copyWith(isLoading: true, status: '正在清除缓存...');
+    await sl<ScheduleEventsRepository>().clearEvents();
     final store = sl<SecureStorageStore>();
     await store.deleteAllExcept([
       'timetable.credentials.username',
