@@ -11,6 +11,7 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/book/presentation/pages/book_cupertino.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_detail_page.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
+import 'package:m3e_core/m3e_core.dart';
 import 'package:signals/signals_flutter.dart';
 
 class BookTab extends SignalStatefulWidget {
@@ -260,18 +261,18 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                 // Row 1: 检索字段 + 文献类型
                 Row(
                   children: [
-                    Expanded(child: _advDropdown(context, label: '检索字段', value: _advSearchType.value, items: _searchTypeLabels, onChanged: (v) => _advSearchType.value = v)),
+                    _advDropdown(context, label: '检索字段', value: _advSearchType.value, items: _searchTypeLabels, onChanged: (v) => _advSearchType.value = v),
                     const SizedBox(width: 10),
-                    Expanded(child: _advDropdown(context, label: '文献类型', value: _advDoctype.value, items: _doctypeLabels, onChanged: (v) => _advDoctype.value = v)),
+                    _advDropdown(context, label: '文献类型', value: _advDoctype.value, items: _doctypeLabels, onChanged: (v) => _advDoctype.value = v),
                   ],
                 ),
                 const SizedBox(height: 10),
                 // Row 2: 校区 + 排序
                 Row(
                   children: [
-                    Expanded(child: _advDropdown(context, label: '校区', value: _advDept.value, items: _deptLabels, onChanged: (v) => _advDept.value = v)),
+                    _advDropdown(context, label: '校区', value: _advDept.value, items: _deptLabels, onChanged: (v) => _advDept.value = v),
                     const SizedBox(width: 10),
-                    Expanded(child: _advDropdown(context, label: '排序', value: _advSort.value, items: _sortLabels, onChanged: (v) => _advSort.value = v)),
+                    _advDropdown(context, label: '排序', value: _advSort.value, items: _sortLabels, onChanged: (v) => _advSort.value = v),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -319,30 +320,7 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     required Map<String, String> items,
     required ValueChanged<String> onChanged,
   }) {
-    final cs = Theme.of(context).colorScheme;
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: TextStyle(fontSize: 11, color: cs.outline),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.5))),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        isDense: true,
-        filled: true,
-        fillColor: cs.surface,
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: value,
-          isDense: true,
-          icon: Icon(Icons.unfold_more, size: 16, color: cs.onSurfaceVariant),
-          style: TextStyle(fontSize: 13, color: cs.onSurface, fontWeight: FontWeight.w500),
-          items: items.entries
-              .map((e) => DropdownMenuItem(value: e.key, child: Text(e.value, style: const TextStyle(fontSize: 13))))
-              .toList(),
-          onChanged: (v) { if (v != null) onChanged(v); },
-        ),
-      ),
-    );
+    return Expanded(child: _M3EAdvDropdown(label: label, value: value, items: items, onChanged: onChanged));
   }
 
   Widget _buildMaterial(BuildContext context, DesignStyle ds) {
@@ -451,6 +429,78 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeScaleTransition(animation: animation, child: child);
         },
+      ),
+    );
+  }
+}
+
+class _M3EAdvDropdown extends StatefulWidget {
+  final String label, value;
+  final Map<String, String> items;
+  final ValueChanged<String> onChanged;
+  const _M3EAdvDropdown({required this.label, required this.value, required this.items, required this.onChanged});
+  @override
+  State<_M3EAdvDropdown> createState() => _M3EAdvDropdownState();
+}
+
+class _M3EAdvDropdownState extends State<_M3EAdvDropdown> {
+  late final M3EDropdownController<String> _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = M3EDropdownController<String>()..initialize();
+    _sync();
+  }
+
+  @override
+  void didUpdateWidget(covariant _M3EAdvDropdown oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.value != widget.value || oldWidget.items != widget.items) {
+      _sync();
+    }
+  }
+
+  void _sync() {
+    _controller.setItems(widget.items.entries.map((e) => M3EDropdownItem(
+      label: e.value,
+      value: e.key,
+      selected: e.key == widget.value,
+    )).toList());
+    _controller.selectWhere((i) => i.value == widget.value);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return M3EDropdownMenu<String>(
+      singleSelect: true,
+      showChipAnimation: false,
+      items: const [],
+      controller: _controller,
+      onSelectionChanged: (selected) {
+        if (selected.isNotEmpty) widget.onChanged(selected.first.value);
+      },
+      containerRadius: 12,
+      fieldStyle: M3EDropdownFieldStyle(
+        hintText: widget.label,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: BorderSide(color: cs.outlineVariant, width: 0.5),
+        focusedBorder: BorderSide(color: cs.primary, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        selectedBorderRadius: 12,
+      ),
+      dropdownStyle: const M3EDropdownStyle(maxHeight: 300, containerRadius: 12),
+      itemStyle: M3EDropdownItemStyle(
+        outerRadius: 10,
+        innerRadius: 6,
+        selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
       ),
     );
   }
