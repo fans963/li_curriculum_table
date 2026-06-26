@@ -4,12 +4,15 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/auth.dart';
-import 'api/book.dart';
+import 'api/book/cover.dart';
+import 'api/book/models.dart';
+import 'api/book/search.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
 import 'api/exam.dart';
 import 'api/grade.dart';
 import 'api/http.dart';
+import 'api/level_exam_score.dart';
 import 'api/update.dart';
 import 'api/weather.dart';
 import 'crawler/model.dart';
@@ -136,6 +139,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_i_32(dynamic raw);
 
   @protected
+  LevelExamScore dco_decode_level_exam_score(dynamic raw);
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw);
 
   @protected
@@ -169,6 +175,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<Grade> dco_decode_list_grade(dynamic raw);
+
+  @protected
+  List<LevelExamScore> dco_decode_list_level_exam_score(dynamic raw);
 
   @protected
   List<OccupiedSlot> dco_decode_list_occupied_slot(dynamic raw);
@@ -316,6 +325,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_i_32(SseDeserializer deserializer);
 
   @protected
+  LevelExamScore sse_decode_level_exam_score(SseDeserializer deserializer);
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
 
   @protected
@@ -353,6 +365,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   List<Grade> sse_decode_list_grade(SseDeserializer deserializer);
+
+  @protected
+  List<LevelExamScore> sse_decode_list_level_exam_score(
+    SseDeserializer deserializer,
+  );
 
   @protected
   List<OccupiedSlot> sse_decode_list_occupied_slot(
@@ -525,6 +542,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_i_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_level_exam_score(
+    LevelExamScore self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
 
   @protected
@@ -568,6 +591,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_list_grade(List<Grade> self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_list_level_exam_score(
+    List<LevelExamScore> self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_occupied_slot(

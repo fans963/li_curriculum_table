@@ -1,4 +1,3 @@
-import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -48,24 +47,19 @@ class _ClassroomTabState extends State<ClassroomTab>
   // ─── Material ──────────────────────────────────────────────────────────────
 
   Widget _buildMaterial(BuildContext context, ClassroomState state) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: const AppBarM3E(
-        title: Text('空闲教室'),
-        centerTitle: true,
-        shapeFamily: AppBarM3EShapeFamily.square,
-      ),
-      body: SafeArea(
+    return ColoredBox(
+      color: cs.surface,
+      child: SafeArea(
+        bottom: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildFilterBar(context, state),
-                const SizedBox(height: 8),
+                _buildCompactHeader(context, state),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: kDefaultAnimationDuration,
@@ -84,7 +78,7 @@ class _ClassroomTabState extends State<ClassroomTab>
                                     child: Text(
                                       '* 未出现在列表中的教室本学期系统均无排课',
                                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                            color: colorScheme.outline,
+                                            color: cs.outline,
                                             fontStyle: FontStyle.italic,
                                           ),
                                     ),
@@ -93,7 +87,7 @@ class _ClassroomTabState extends State<ClassroomTab>
                               const SliverToBoxAdapter(child: SizedBox(height: 12)),
                               SliverPersistentHeader(
                                 pinned: true,
-                                delegate: SessionHeaderDelegate(colorScheme: colorScheme),
+                                delegate: SessionHeaderDelegate(colorScheme: cs),
                               ),
                               if (state.needsLogin)
                                 SliverFillRemaining(
@@ -132,53 +126,69 @@ class _ClassroomTabState extends State<ClassroomTab>
     );
   }
 
-  Widget _buildFilterBar(BuildContext context, ClassroomState state) {
+  Widget _buildCompactHeader(BuildContext context, ClassroomState state) {
     final notifier = sl<ClassroomController>();
+    final cs = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          QuickDateSelector(
-            selectedDate: state.selectedDate,
-            onDateSelected: (date) => notifier.selectDate(date),
+          // Row 1: title + date selector
+          Row(
+            children: [
+              Text('空闲教室', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: QuickDateSelector(
+                  selectedDate: state.selectedDate,
+                  onDateSelected: (date) => notifier.selectDate(date),
+                ),
+              ),
+            ],
           ),
+          // Row 2: campus + building dropdowns (only when available)
           if (state.campuses.isNotEmpty || state.buildings.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             Row(
               children: [
-          if (state.campuses.isNotEmpty)
-            CampusDropdown(
-              onSelected: (c) {
-                if (c.id == state.selectedCampus?.id) return;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  notifier.setCampus(c);
-                });
-              },
-            ),
-          if (state.buildings.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            BuildingDropdown(
-              onSelected: (b) {
-                if (b.id == state.selectedBuilding?.id) return;
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  notifier.selectBuilding(b);
-                });
-              },
-            ),
-          ],
+                if (state.campuses.isNotEmpty)
+                  CampusDropdown(
+                    onSelected: (c) {
+                      if (c.id == state.selectedCampus?.id) return;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        notifier.setCampus(c);
+                      });
+                    },
+                  ),
+                if (state.buildings.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  BuildingDropdown(
+                    onSelected: (b) {
+                      if (b.id == state.selectedBuilding?.id) return;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        notifier.selectBuilding(b);
+                      });
+                    },
+                  ),
+                ],
                 if (state.isLoading && state.selectedCampus != null) ...[
                   const SizedBox(width: 8),
                   const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    width: 16,
+                    height: 16,
+                    child: LoadingIndicatorM3E(),
                   ),
                 ],
               ],
             ),
           ],
+          const SizedBox(height: 4),
         ],
       ),
     );

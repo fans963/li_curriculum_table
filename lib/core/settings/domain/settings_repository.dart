@@ -132,10 +132,22 @@ class AppSettings {
   /// Whether to use AutoSizeText for timetable cell text (course name & location).
   final bool autoSizeText;
 
+  /// Minimum font size when [autoSizeText] is ON.
+  final double autoSizeMinFontSize;
+
+  /// Max lines for course name & location when [autoSizeText] is OFF.
+  final int timetableTextMaxLines;
+
+  /// Font size for course name when [autoSizeText] is OFF.
+  final double timetableTextFontSize;
+
   /// Number of days to show simultaneously in the timetable week view.
   /// Only effective when [weeklyScroll] is false (free scrolling mode).
   /// Default is 7 (full week).
   final int daysVisibleCount;
+
+  /// Whether the user has accepted the terms of service.
+  final bool termsAccepted;
 
   const AppSettings({
     required this.proxyEnabled,
@@ -149,7 +161,11 @@ class AppSettings {
     required this.enableBookCover,
     this.currentTerm = '',
     this.autoSizeText = true,
+    this.autoSizeMinFontSize = 6.0,
+    this.timetableTextMaxLines = 2,
+    this.timetableTextFontSize = 11.0,
     this.daysVisibleCount = 7,
+    this.termsAccepted = false,
   });
 
   factory AppSettings.defaultSettings() {
@@ -165,7 +181,11 @@ class AppSettings {
       enableBookCover: false,
       currentTerm: '',
       autoSizeText: true,
+      autoSizeMinFontSize: 6.0,
+      timetableTextMaxLines: 2,
+      timetableTextFontSize: 13.0,
       daysVisibleCount: 7,
+      termsAccepted: false,
     );
   }
 
@@ -181,7 +201,11 @@ class AppSettings {
     bool? enableBookCover,
     String? currentTerm,
     bool? autoSizeText,
+    double? autoSizeMinFontSize,
+    int? timetableTextMaxLines,
+    double? timetableTextFontSize,
     int? daysVisibleCount,
+    bool? termsAccepted,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -195,7 +219,11 @@ class AppSettings {
       enableBookCover: enableBookCover ?? this.enableBookCover,
       currentTerm: currentTerm ?? this.currentTerm,
       autoSizeText: autoSizeText ?? this.autoSizeText,
+      autoSizeMinFontSize: autoSizeMinFontSize ?? this.autoSizeMinFontSize,
+      timetableTextMaxLines: timetableTextMaxLines ?? this.timetableTextMaxLines,
+      timetableTextFontSize: timetableTextFontSize ?? this.timetableTextFontSize,
       daysVisibleCount: daysVisibleCount ?? this.daysVisibleCount,
+      termsAccepted: termsAccepted ?? this.termsAccepted,
     );
   }
 }

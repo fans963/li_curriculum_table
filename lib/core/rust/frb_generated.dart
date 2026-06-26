@@ -4,12 +4,15 @@
 // ignore_for_file: unused_import, unused_element, unnecessary_import, duplicate_ignore, invalid_use_of_internal_member, annotate_overrides, non_constant_identifier_names, curly_braces_in_flow_control_structures, prefer_const_literals_to_create_immutables, unused_field
 
 import 'api/auth.dart';
-import 'api/book.dart';
+import 'api/book/cover.dart';
+import 'api/book/models.dart';
+import 'api/book/search.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
 import 'api/exam.dart';
 import 'api/grade.dart';
 import 'api/http.dart';
+import 'api/level_exam_score.dart';
 import 'api/update.dart';
 import 'api/weather.dart';
 import 'crawler/model.dart';
@@ -75,7 +78,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.12.0';
 
   @override
-  int get rustContentHash => -674811801;
+  int get rustContentHash => 1254908820;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -87,13 +90,13 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
 }
 
 abstract class RustLibApi extends BaseApi {
-  Future<String> crateApiBookBookSearchParamsBuildUrl({
+  Future<String> crateApiBookModelsBookSearchParamsBuildUrl({
     required BookSearchParams that,
   });
 
-  Future<BookSearchParams> crateApiBookBookSearchParamsDefault();
+  Future<BookSearchParams> crateApiBookModelsBookSearchParamsDefault();
 
-  Future<BookSearchParams> crateApiBookBookSearchParamsNew({
+  Future<BookSearchParams> crateApiBookModelsBookSearchParamsNew({
     required String query,
   });
 
@@ -103,11 +106,11 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ClientBuilder> crateApiHttpClientBuilder();
 
-  Future<BookDetail> crateApiBookFetchBookLocations({
+  Future<BookDetail> crateApiBookSearchFetchBookLocations({
     required String detailUrl,
   });
 
-  Future<String?> crateApiBookFetchCoverUrl({
+  Future<String?> crateApiBookCoverFetchCoverUrl({
     required String isbn,
     required String title,
   });
@@ -167,6 +170,11 @@ abstract class RustLibApi extends BaseApi {
     required String password,
   });
 
+  Future<List<LevelExamScore>> crateApiLevelExamScoreGetLevelExamScores({
+    required String username,
+    required String password,
+  });
+
   Future<ArcSessionManager> crateApiCrawlerGetSharedSessionManager();
 
   Future<void> crateApiSimpleInitApp();
@@ -175,9 +183,11 @@ abstract class RustLibApi extends BaseApi {
 
   Future<void> crateApiCrawlerRunProxyServer({required int port});
 
-  Future<BookSearchResult> crateApiBookSearchBooks({required String title});
+  Future<BookSearchResult> crateApiBookSearchSearchBooks({
+    required String title,
+  });
 
-  Future<BookSearchResult> crateApiBookSearchBooksAdvanced({
+  Future<BookSearchResult> crateApiBookSearchSearchBooksAdvanced({
     required BookSearchParams params,
   });
 
@@ -217,7 +227,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   });
 
   @override
-  Future<String> crateApiBookBookSearchParamsBuildUrl({
+  Future<String> crateApiBookModelsBookSearchParamsBuildUrl({
     required BookSearchParams that,
   }) {
     return handler.executeNormal(
@@ -236,21 +246,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_String,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBookBookSearchParamsBuildUrlConstMeta,
+        constMeta: kCrateApiBookModelsBookSearchParamsBuildUrlConstMeta,
         argValues: [that],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookBookSearchParamsBuildUrlConstMeta =>
+  TaskConstMeta get kCrateApiBookModelsBookSearchParamsBuildUrlConstMeta =>
       const TaskConstMeta(
         debugName: "book_search_params_build_url",
         argNames: ["that"],
       );
 
   @override
-  Future<BookSearchParams> crateApiBookBookSearchParamsDefault() {
+  Future<BookSearchParams> crateApiBookModelsBookSearchParamsDefault() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -266,21 +276,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_book_search_params,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBookBookSearchParamsDefaultConstMeta,
+        constMeta: kCrateApiBookModelsBookSearchParamsDefaultConstMeta,
         argValues: [],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookBookSearchParamsDefaultConstMeta =>
+  TaskConstMeta get kCrateApiBookModelsBookSearchParamsDefaultConstMeta =>
       const TaskConstMeta(
         debugName: "book_search_params_default",
         argNames: [],
       );
 
   @override
-  Future<BookSearchParams> crateApiBookBookSearchParamsNew({
+  Future<BookSearchParams> crateApiBookModelsBookSearchParamsNew({
     required String query,
   }) {
     return handler.executeNormal(
@@ -299,14 +309,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_book_search_params,
           decodeErrorData: null,
         ),
-        constMeta: kCrateApiBookBookSearchParamsNewConstMeta,
+        constMeta: kCrateApiBookModelsBookSearchParamsNewConstMeta,
         argValues: [query],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookBookSearchParamsNewConstMeta =>
+  TaskConstMeta get kCrateApiBookModelsBookSearchParamsNewConstMeta =>
       const TaskConstMeta(
         debugName: "book_search_params_new",
         argNames: ["query"],
@@ -396,7 +406,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "client_builder", argNames: []);
 
   @override
-  Future<BookDetail> crateApiBookFetchBookLocations({
+  Future<BookDetail> crateApiBookSearchFetchBookLocations({
     required String detailUrl,
   }) {
     return handler.executeNormal(
@@ -415,21 +425,21 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_book_detail,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateApiBookFetchBookLocationsConstMeta,
+        constMeta: kCrateApiBookSearchFetchBookLocationsConstMeta,
         argValues: [detailUrl],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookFetchBookLocationsConstMeta =>
+  TaskConstMeta get kCrateApiBookSearchFetchBookLocationsConstMeta =>
       const TaskConstMeta(
         debugName: "fetch_book_locations",
         argNames: ["detailUrl"],
       );
 
   @override
-  Future<String?> crateApiBookFetchCoverUrl({
+  Future<String?> crateApiBookCoverFetchCoverUrl({
     required String isbn,
     required String title,
   }) {
@@ -450,17 +460,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_opt_String,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateApiBookFetchCoverUrlConstMeta,
+        constMeta: kCrateApiBookCoverFetchCoverUrlConstMeta,
         argValues: [isbn, title],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookFetchCoverUrlConstMeta => const TaskConstMeta(
-    debugName: "fetch_cover_url",
-    argNames: ["isbn", "title"],
-  );
+  TaskConstMeta get kCrateApiBookCoverFetchCoverUrlConstMeta =>
+      const TaskConstMeta(
+        debugName: "fetch_cover_url",
+        argNames: ["isbn", "title"],
+      );
 
   @override
   Future<TimetableRecord> crateApiCrawlerFetchTimetableData({
@@ -812,6 +823,41 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   );
 
   @override
+  Future<List<LevelExamScore>> crateApiLevelExamScoreGetLevelExamScores({
+    required String username,
+    required String password,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(username, serializer);
+          sse_encode_String(password, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 18,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_level_exam_score,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiLevelExamScoreGetLevelExamScoresConstMeta,
+        argValues: [username, password],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiLevelExamScoreGetLevelExamScoresConstMeta =>
+      const TaskConstMeta(
+        debugName: "get_level_exam_scores",
+        argNames: ["username", "password"],
+      );
+
+  @override
   Future<ArcSessionManager> crateApiCrawlerGetSharedSessionManager() {
     return handler.executeNormal(
       NormalTask(
@@ -820,7 +866,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 19,
             port: port_,
           );
         },
@@ -851,7 +897,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 20,
             port: port_,
           );
         },
@@ -878,7 +924,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 21,
             port: port_,
           );
         },
@@ -906,7 +952,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 22,
             port: port_,
           );
         },
@@ -925,42 +971,14 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "run_proxy_server", argNames: ["port"]);
 
   @override
-  Future<BookSearchResult> crateApiBookSearchBooks({required String title}) {
-    return handler.executeNormal(
-      NormalTask(
-        callFfi: (port_) {
-          final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_String(title, serializer);
-          pdeCallFfi(
-            generalizedFrbRustBinding,
-            serializer,
-            funcId: 22,
-            port: port_,
-          );
-        },
-        codec: SseCodec(
-          decodeSuccessData: sse_decode_book_search_result,
-          decodeErrorData: sse_decode_AnyhowException,
-        ),
-        constMeta: kCrateApiBookSearchBooksConstMeta,
-        argValues: [title],
-        apiImpl: this,
-      ),
-    );
-  }
-
-  TaskConstMeta get kCrateApiBookSearchBooksConstMeta =>
-      const TaskConstMeta(debugName: "search_books", argNames: ["title"]);
-
-  @override
-  Future<BookSearchResult> crateApiBookSearchBooksAdvanced({
-    required BookSearchParams params,
+  Future<BookSearchResult> crateApiBookSearchSearchBooks({
+    required String title,
   }) {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
           final serializer = SseSerializer(generalizedFrbRustBinding);
-          sse_encode_box_autoadd_book_search_params(params, serializer);
+          sse_encode_String(title, serializer);
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
@@ -972,14 +990,44 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           decodeSuccessData: sse_decode_book_search_result,
           decodeErrorData: sse_decode_AnyhowException,
         ),
-        constMeta: kCrateApiBookSearchBooksAdvancedConstMeta,
+        constMeta: kCrateApiBookSearchSearchBooksConstMeta,
+        argValues: [title],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiBookSearchSearchBooksConstMeta =>
+      const TaskConstMeta(debugName: "search_books", argNames: ["title"]);
+
+  @override
+  Future<BookSearchResult> crateApiBookSearchSearchBooksAdvanced({
+    required BookSearchParams params,
+  }) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_box_autoadd_book_search_params(params, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 24,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_book_search_result,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiBookSearchSearchBooksAdvancedConstMeta,
         argValues: [params],
         apiImpl: this,
       ),
     );
   }
 
-  TaskConstMeta get kCrateApiBookSearchBooksAdvancedConstMeta =>
+  TaskConstMeta get kCrateApiBookSearchSearchBooksAdvancedConstMeta =>
       const TaskConstMeta(
         debugName: "search_books_advanced",
         argNames: ["params"],
@@ -995,7 +1043,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 25,
             port: port_,
           );
         },
@@ -1325,6 +1373,24 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LevelExamScore dco_decode_level_exam_score(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 8)
+      throw Exception('unexpected arr length: expect 8 but see ${arr.length}');
+    return LevelExamScore(
+      courseName: dco_decode_String(arr[0]),
+      writtenScore: dco_decode_String(arr[1]),
+      practicalScore: dco_decode_String(arr[2]),
+      totalScore: dco_decode_String(arr[3]),
+      writtenGrade: dco_decode_String(arr[4]),
+      practicalGrade: dco_decode_String(arr[5]),
+      totalGrade: dco_decode_String(arr[6]),
+      examDate: dco_decode_String(arr[7]),
+    );
+  }
+
+  @protected
   List<String> dco_decode_list_String(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_String).toList();
@@ -1392,6 +1458,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   List<Grade> dco_decode_list_grade(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return (raw as List<dynamic>).map(dco_decode_grade).toList();
+  }
+
+  @protected
+  List<LevelExamScore> dco_decode_list_level_exam_score(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return (raw as List<dynamic>).map(dco_decode_level_exam_score).toList();
   }
 
   @protected
@@ -1847,6 +1919,29 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  LevelExamScore sse_decode_level_exam_score(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_courseName = sse_decode_String(deserializer);
+    var var_writtenScore = sse_decode_String(deserializer);
+    var var_practicalScore = sse_decode_String(deserializer);
+    var var_totalScore = sse_decode_String(deserializer);
+    var var_writtenGrade = sse_decode_String(deserializer);
+    var var_practicalGrade = sse_decode_String(deserializer);
+    var var_totalGrade = sse_decode_String(deserializer);
+    var var_examDate = sse_decode_String(deserializer);
+    return LevelExamScore(
+      courseName: var_courseName,
+      writtenScore: var_writtenScore,
+      practicalScore: var_practicalScore,
+      totalScore: var_totalScore,
+      writtenGrade: var_writtenGrade,
+      practicalGrade: var_practicalGrade,
+      totalGrade: var_totalGrade,
+      examDate: var_examDate,
+    );
+  }
+
+  @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
 
@@ -1980,6 +2075,20 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     var ans_ = <Grade>[];
     for (var idx_ = 0; idx_ < len_; ++idx_) {
       ans_.add(sse_decode_grade(deserializer));
+    }
+    return ans_;
+  }
+
+  @protected
+  List<LevelExamScore> sse_decode_list_level_exam_score(
+    SseDeserializer deserializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+
+    var len_ = sse_decode_i_32(deserializer);
+    var ans_ = <LevelExamScore>[];
+    for (var idx_ = 0; idx_ < len_; ++idx_) {
+      ans_.add(sse_decode_level_exam_score(deserializer));
     }
     return ans_;
   }
@@ -2415,6 +2524,22 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  void sse_encode_level_exam_score(
+    LevelExamScore self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_String(self.courseName, serializer);
+    sse_encode_String(self.writtenScore, serializer);
+    sse_encode_String(self.practicalScore, serializer);
+    sse_encode_String(self.totalScore, serializer);
+    sse_encode_String(self.writtenGrade, serializer);
+    sse_encode_String(self.practicalGrade, serializer);
+    sse_encode_String(self.totalGrade, serializer);
+    sse_encode_String(self.examDate, serializer);
+  }
+
+  @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     sse_encode_i_32(self.length, serializer);
@@ -2525,6 +2650,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     sse_encode_i_32(self.length, serializer);
     for (final item in self) {
       sse_encode_grade(item, serializer);
+    }
+  }
+
+  @protected
+  void sse_encode_list_level_exam_score(
+    List<LevelExamScore> self,
+    SseSerializer serializer,
+  ) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_i_32(self.length, serializer);
+    for (final item in self) {
+      sse_encode_level_exam_score(item, serializer);
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:icon_button_m3e/icon_button_m3e.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
@@ -67,26 +68,25 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
               ]),
             ),
             const Spacer(),
-            IconButton(
+            IconButtonM3E(
               onPressed: () async { if (!isDesktop) return; await windowManager.minimize(); },
-              icon: const Icon(Icons.minimize), tooltip: '最小化', iconSize: 18,
-              style: IconButton.styleFrom(minimumSize: const Size(32, 32), padding: EdgeInsets.zero),
+              icon: const Icon(Icons.minimize), tooltip: '最小化',
+              size: IconButtonM3ESize.xs, variant: IconButtonM3EVariant.standard,
             ),
-            IconButton(
+            IconButtonM3E(
               onPressed: () async {
                 if (!isDesktop) return;
                 _isMaximized.value ? await windowManager.unmaximize() : await windowManager.maximize();
               },
               icon: Icon(_isMaximized.value ? Icons.fullscreen_exit : Icons.fullscreen),
               tooltip: _isMaximized.value ? '还原' : '最大化',
-              iconSize: 18,
-              style: IconButton.styleFrom(minimumSize: const Size(32, 32), padding: EdgeInsets.zero),
+              size: IconButtonM3ESize.xs, variant: IconButtonM3EVariant.standard,
             ),
-            IconButton(
+            IconButtonM3E(
               icon: const Icon(Icons.close),
               onPressed: () async { if (!isDesktop) return; await windowManager.close(); },
-              tooltip: '关闭', iconSize: 18,
-              style: IconButton.styleFrom(minimumSize: const Size(32, 32), padding: EdgeInsets.zero, foregroundColor: colorScheme.error),
+              tooltip: '关闭',
+              size: IconButtonM3ESize.xs, variant: IconButtonM3EVariant.standard,
             ),
           ],
         ),

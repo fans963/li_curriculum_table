@@ -1,5 +1,4 @@
 import 'package:animations/animations.dart';
-import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/material.dart';
 import 'package:icon_button_m3e/icon_button_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -326,20 +325,22 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
   Widget _buildMaterial(BuildContext context, DesignStyle ds) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Scaffold(
-      appBar: const AppBarM3E(
-        title: Text('图书搜寻'),
-        centerTitle: true,
-        shapeFamily: AppBarM3EShapeFamily.square,
-      ),
-      body: SafeArea(
+    return ColoredBox(
+      color: colorScheme.surface,
+      child: SafeArea(
+        bottom: false,
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 800),
             child: Column(
               children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                // Compact header: search bar
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+                  ),
                   child: SearchBar(
                     controller: _searchController,
                     hintText: '输入书名检索馆藏，例如 "计算机"',
@@ -373,7 +374,7 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                       ),
                     ),
                   ),
-                ),
+                ), // end compact header
                 // Advanced search toggle + panel
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),

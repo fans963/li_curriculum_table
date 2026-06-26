@@ -12,6 +12,7 @@ import 'package:li_curriculum_table/features/timetable/presentation/state/timeta
 import 'package:m3e_core/m3e_core.dart';
 
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 
 class CupertinoTone {
@@ -29,7 +30,8 @@ Widget buildCupertinoAppointmentCard({
   required bool isOngoing,
   required VoidCallback onTap,
 }) {
-  final tone = resolveCupertinoTone(context, title);
+  final customColor = sl<CourseColorService>().getColor(title);
+  final tone = resolveCupertinoTone(context, title, customColor: customColor);
   final bgColor = isOngoing
       ? tone.accent.withValues(alpha: 0.15)
       : tone.background;
@@ -111,7 +113,7 @@ class _CardContent extends StatelessWidget {
                 ? AutoSizeText(
                     title,
                     maxLines: 2,
-                    minFontSize: 8,
+                    minFontSize: 6,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
@@ -155,7 +157,7 @@ class _CardContent extends StatelessWidget {
                   ? AutoSizeText(
                       locationLine,
                       maxLines: 2,
-                      minFontSize: 7,
+                      minFontSize: 6,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 11,
@@ -186,8 +188,8 @@ class _CardContent extends StatelessWidget {
   }
 }
 
-CupertinoTone resolveCupertinoTone(BuildContext context, String seedText) {
-  final tone = resolveAppointmentTone(context, seedText: seedText);
+CupertinoTone resolveCupertinoTone(BuildContext context, String seedText, {Color? customColor}) {
+  final tone = resolveAppointmentTone(context, seedText: seedText, customColor: customColor);
   return CupertinoTone(
     accent: tone.accent,
     background: tone.background,
@@ -256,7 +258,8 @@ class CourseDetailsSheet extends StatelessWidget {
   // ── Cupertino ──────────────────────────────────────────────────────────
 
   Widget _buildCupertino(BuildContext context) {
-    final accent = resolveCupertinoTone(context, occurrence.courseName).accent;
+    final customColor = sl<CourseColorService>().getColor(occurrence.courseName);
+    final accent = resolveCupertinoTone(context, occurrence.courseName, customColor: customColor).accent;
     final secondary = CupertinoColors.secondaryLabel.resolveFrom(context);
     final sep = CupertinoColors.separator.resolveFrom(context);
     final otherInfo = '${occurrence.courseType}'
@@ -290,6 +293,8 @@ class CourseDetailsSheet extends StatelessWidget {
                 _infoRow(context, CupertinoIcons.location, '地点', occurrence.location, accent, secondary),
                 _infoRow(context, CupertinoIcons.person, '教师', occurrence.teacher, accent, secondary),
                 _infoRow(context, CupertinoIcons.book, '其他信息', otherInfo, accent, secondary),
+                const SizedBox(height: 8),
+                _buildColorPicker(context, customColor),
               ],
             ),
           ),
@@ -323,6 +328,7 @@ class CourseDetailsSheet extends StatelessWidget {
   Widget _buildMaterial(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final customColor = sl<CourseColorService>().getColor(occurrence.courseName);
     final otherInfo = '${occurrence.courseType}'
         '${occurrence.credit.isNotEmpty ? ' · ${occurrence.credit}学分' : ''}';
 
@@ -358,6 +364,8 @@ class CourseDetailsSheet extends StatelessWidget {
                   _infoRow(context, AppIcons.location(designStyle), '地点', occurrence.location, tone.accent, null, isMaterial: true),
                   _infoRow(context, AppIcons.person(designStyle), '教师', occurrence.teacher, tone.accent, null, isMaterial: true),
                   _infoRow(context, AppIcons.school(designStyle), '其他信息', otherInfo, tone.accent, null, isMaterial: true),
+                  const SizedBox(height: 8),
+                  _buildColorPicker(context, customColor, isMaterial: true),
                   if (onClose != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 12),
@@ -378,6 +386,97 @@ class CourseDetailsSheet extends StatelessWidget {
             ),
         ),
       ),
+    );
+  }
+
+  static const _palette = <Color>[
+    Color(0xFFD32F2F), // red
+    Color(0xFFE64A19), // deep orange
+    Color(0xFFF57C00), // orange
+    Color(0xFFEF6C00), // amber
+    Color(0xFF689F38), // light green
+    Color(0xFF2E7D32), // green
+    Color(0xFF00695C), // teal
+    Color(0xFF00838F), // cyan
+    Color(0xFF1565C0), // blue
+    Color(0xFF283593), // indigo
+    Color(0xFF6A1B9A), // purple
+    Color(0xFFAD1457), // pink
+    Color(0xFF5D4037), // brown
+    Color(0xFF37474F), // blue grey
+  ];
+
+  Widget _buildColorPicker(BuildContext context, Color? currentCustom, {bool isMaterial = false}) {
+    final service = sl<CourseColorService>();
+    final cs = Theme.of(context).colorScheme;
+
+    return StatefulBuilder(
+      builder: (context, setPickerState) {
+        final active = service.getColor(occurrence.courseName);
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text(
+                  '卡片颜色',
+                  style: isMaterial
+                      ? Theme.of(context).textTheme.labelMedium?.copyWith(color: cs.onSurfaceVariant)
+                      : TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context), fontWeight: FontWeight.w500),
+                ),
+                const Spacer(),
+                if (active != null)
+                  GestureDetector(
+                    onTap: () async {
+                      await service.removeColor(occurrence.courseName);
+                      setPickerState(() {});
+                    },
+                    child: Text(
+                      '恢复默认',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: isMaterial ? cs.primary : CupertinoColors.systemBlue.resolveFrom(context),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: _palette.map((color) {
+                final isSelected = active?.toARGB32() == color.toARGB32();
+                return GestureDetector(
+                  onTap: () async {
+                    await service.setColor(occurrence.courseName, color);
+                    setPickerState(() {});
+                  },
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: isSelected
+                          ? Border.all(color: cs.onSurface, width: 2.5)
+                          : null,
+                      boxShadow: isSelected
+                          ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 6, offset: const Offset(0, 2))]
+                          : null,
+                    ),
+                    child: isSelected
+                        ? Icon(Icons.check, size: 18, color: cs.surface)
+                        : null,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        );
+      },
     );
   }
 

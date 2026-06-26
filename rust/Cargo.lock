@@ -6408,6 +6408,7 @@ dependencies = [
  "image",
  "log",
  "mimalloc",
+ "rayon",
  "regex-lite",
  "reqwest 0.13.4",
  "rmp-serde",

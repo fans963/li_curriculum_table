@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
@@ -10,6 +12,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
+import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';

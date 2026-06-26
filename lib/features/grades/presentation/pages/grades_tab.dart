@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_controller.dart';
+import 'widgets/level_exam_score_card.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import '../../domain/models/grade.dart';
 import 'package:collection/collection.dart';
@@ -24,6 +27,12 @@ class _GradesTabState extends State<GradesTab>
   bool get wantKeepAlive => true;
 
   @override
+  void initState() {
+    super.initState();
+    sl<LevelExamScoreController>().init();
+  }
+
+  @override
   Widget build(BuildContext context) {
     super.build(context);
     final state = sl<GradeController>().state.value;
@@ -38,24 +47,39 @@ class _GradesTabState extends State<GradesTab>
   }
 
   Widget _buildMaterial(BuildContext context, GradeState state) {
-    return Scaffold(
-      appBar: _buildHeader(context, state),
-      body: _buildBody(context, state),
+    final cs = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: cs.surface,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildCompactHeader(context, state),
+            Expanded(child: _buildBody(context, state)),
+          ],
+        ),
+      ),
     );
   }
 
-  PreferredSizeWidget _buildHeader(BuildContext context, GradeState state) {
-    return AppBar(
-      title: const Text('成绩查询'),
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(110),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: _buildSummaryCard(context, state),
+  Widget _buildCompactHeader(BuildContext context, GradeState state) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Text('成绩查询', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          const Spacer(),
+          Text(
+            '已选 ${state.selectedCourseCodes.length}/${state.grades.length}',
+            style: TextStyle(fontSize: 12, color: cs.outline),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -134,7 +158,7 @@ class _GradesTabState extends State<GradesTab>
       switchOutCurve: kDefaultAnimationCurve,
       child: () {
         if (state.isLoading && state.grades.isEmpty) {
-          return const Center(key: ValueKey('loading'), child: CircularProgressIndicator());
+          return Center(key: const ValueKey('loading'), child: LoadingIndicatorM3E());
         }
 
         if (state.needsLogin) {
@@ -160,23 +184,27 @@ class _GradesTabState extends State<GradesTab>
 
         final grouped = groupBy(state.filteredGrades, (GradeEntity g) => g.term);
         final terms = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+        final levelScores = sl<LevelExamScoreController>().state.value.scores;
+        final hasLevelScores = levelScores.isNotEmpty;
+        // header slots: 0=summary, 1=search+filter
+        const headerCount = 2;
 
-        return Column(
+        return ListView.builder(
           key: const ValueKey('grades_list'),
-          children: [
-            _buildSearchField(context, state),
-            Expanded(
-              child: ListView.builder(
-                itemCount: terms.length,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemBuilder: (context, index) {
-                  final term = terms[index];
-                  final termGrades = grouped[term]!;
-                  return _buildTermSection(context, term, termGrades, state);
-                },
-              ),
-            ),
-          ],
+          itemCount: headerCount + (hasLevelScores ? 1 : 0) + terms.length,
+          padding: const EdgeInsets.only(bottom: 80),
+          itemBuilder: (context, index) {
+            if (index == 0) return _buildSummaryCard(context, state);
+            if (index == 1) return _buildSearchField(context, state);
+            final bodyIndex = index - headerCount;
+            if (hasLevelScores && bodyIndex == 0) {
+              return LevelExamScoresSection(scores: levelScores);
+            }
+            final termIndex = hasLevelScores ? bodyIndex - 1 : bodyIndex;
+            final term = terms[termIndex];
+            final termGrades = grouped[term]!;
+            return _buildTermSection(context, term, termGrades, state);
+          },
         );
       }(),
     );

@@ -226,6 +226,23 @@ class _AboutCard extends StatelessWidget {
           ),
           _iosTile(
             context,
+            icon: CupertinoIcons.doc_text,
+            title: '使用条款与隐私政策',
+            onTap: () async {
+              final agreed = await showTermsOfServiceDialog(
+                context,
+                designStyle: DesignStyle.cupertino,
+                barrierDismissible: true,
+              );
+              if (!agreed && context.mounted) {
+                await sl<SettingsController>().setTermsAccepted(false);
+                await Future.delayed(const Duration(milliseconds: 200));
+                exit(0);
+              }
+            },
+          ),
+          _iosTile(
+            context,
             icon: CupertinoIcons.globe,
             title: 'GitHub',
             subtitle: '查看源代码',

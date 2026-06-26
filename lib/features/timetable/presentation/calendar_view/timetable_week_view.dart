@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -15,15 +16,11 @@ import 'package:li_curriculum_table/features/timetable/domain/services/teaching_
 class TimetableWeekView extends SignalStatefulWidget {
   const TimetableWeekView({
     super.key,
-    required this.startHour,
-    required this.endHour,
     required this.pixelsPerMinute,
     required this.now,
     this.onPageChange,
   });
 
-  final int startHour;
-  final int endHour;
   final double pixelsPerMinute;
   final DateTime now;
   final void Function(DateTime, int)? onPageChange;
@@ -64,6 +61,8 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
   Widget build(BuildContext context) {
     final controller = eventsController;
     final timetableState = sl<TimetableController>().state.value;
+    // Watch color version — forces planner rebuild when any course color changes.
+    final colorVersion = sl<CourseColorService>().version.value;
       final termStart = timetableState.termStartMonday;
       final settings = sl<SettingsController>().state.value;
       final weeklyScroll = settings.weeklyScroll;
@@ -81,8 +80,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
       final ds = sl<SettingsController>().state.value.designStyle;
       final isCupertino = AdaptiveStyle.isCupertino(ds);
       final colorScheme = Theme.of(context).colorScheme;
-      final textTheme = Theme.of(context).textTheme;
-      const headerHeight = 64.0;
+      const headerHeight = 44.0;
 
       // Adaptive colors — use Cupertino system colors when in Cupertino mode
       final surfaceColor = isCupertino
@@ -107,9 +105,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
           ? CupertinoColors.white
           : colorScheme.onPrimary;
 
-      // Dynamic boundaries relative to termStart (Week 1 Monday)
-      final int maxPreviousDays = ((1 - timetableState.minWeek) * 7).toInt();
-      final int maxNextDays = ((timetableState.maxWeek - 1) * 7).toInt();
+      // No horizontal scroll limit — allow free scrolling beyond data range
 
       return LayoutBuilder(
         builder: (context, constraints) {
@@ -128,7 +124,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
           return Container(
             color: surfaceColor,
             child: KeyedSubtree(
-              key: ValueKey('$termStart-$daysVisibleCount'),
+              key: ValueKey('$termStart-$daysVisibleCount-c$colorVersion'),
               child: EventsPlanner(
                 key: _plannerKey,
                 controller: controller,
@@ -136,9 +132,6 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                 initialDate: termStart ?? DateTime.now().withoutTime,
                 heightPerMinute: widget.pixelsPerMinute,
                 initialVerticalScrollOffset: 480 * widget.pixelsPerMinute,
-                minVerticalScrollOffset: 480 * widget.pixelsPerMinute,
-                maxPreviousDays: maxPreviousDays,
-                maxNextDays: maxNextDays,
                 horizontalScrollPhysics: weeklyScroll
                     ? const PageScrollPhysics()
                     : const BouncingScrollPhysics(),
@@ -157,15 +150,24 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                   dayEventBuilder: (event, height, width, heightPerMinute) {
                     final occurrence = event.data as CourseOccurrence?;
                     if (occurrence == null) return const SizedBox.shrink();
-                    return buildTimetableAppointmentCard(
-                      context: context,
-                      occurrence: occurrence,
-                      now: widget.now,
+                    // Use a Listener to detect taps via raw pointer events,
+                    // bypassing the gesture arena (Scale/LongPress/Drag recognizers
+                    // from the framework cause ~300ms tap delay).
+                    return _TapDetector(
+                      onTap: () => openCourseDetails(context, occurrence),
+                      child: buildTimetableAppointmentCard(
+                        context: context,
+                        occurrence: occurrence,
+                        now: widget.now,
+                        onTap: () {}, // suppress card's own GestureDetector onTap
+                      ),
                     );
                   },
                   dayCustomPainter: (heightPerMinute, isToday) =>
-                      VerticalDashedSeparatorPainter(
-                        color: separatorColor,
+                      DayLinesWithVerticalSeparatorPainter(
+                        heightPerMinute: heightPerMinute,
+                        lineColor: separatorColor,
+                        rightOffset: 1.5, // daySeparationWidth / 2
                       ),
                 ),
                 offTimesParam: OffTimesParam(offTimesColor: surfaceColor),
@@ -175,7 +177,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                 daysHeaderParam: DaysHeaderParam(
                   daysHeaderHeight: headerHeight,
                   dayHeaderBuilder: (date, isToday) {
-                    final weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                    const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
                     return Container(
                       decoration: BoxDecoration(
                         color: isCupertino ? cardColor : surfaceColor,
@@ -190,40 +192,27 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                           children: [
                             Text(
                               weekdays[date.weekday - 1],
-                              style: (isCupertino
-                                      ? const TextStyle(fontSize: 13, letterSpacing: -0.08)
-                                      : textTheme.labelMedium)
-                                  ?.copyWith(
+                              style: TextStyle(
+                                fontSize: 11,
                                 color: isToday ? primaryColor : onSurfaceVariantColor,
-                                fontWeight: isToday ? FontWeight.w900 : FontWeight.w600,
+                                fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                               ),
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 2),
                             Container(
-                              width: 32,
-                              height: 32,
+                              width: 24,
+                              height: 24,
                               alignment: Alignment.center,
                               decoration: isToday
                                   ? BoxDecoration(
                                       color: primaryColor,
                                       shape: BoxShape.circle,
-                                      boxShadow: isCupertino
-                                          ? null
-                                          : [
-                                              BoxShadow(
-                                                color: primaryColor.withValues(alpha: 0.3),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 2),
-                                              ),
-                                            ],
                                     )
                                   : null,
                               child: Text(
                                 '${date.day}',
-                                style: (isCupertino
-                                        ? const TextStyle(fontSize: 17)
-                                        : textTheme.titleMedium)
-                                    ?.copyWith(
+                                style: TextStyle(
+                                  fontSize: 14,
                                   color: isToday ? onPrimaryColor : onSurfaceColor,
                                   fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                                 ),
@@ -236,23 +225,16 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                   },
                 ),
                 timesIndicatorsParam: TimesIndicatorsParam(
-                  timesIndicatorsWidth: 1.0,
-                  timesIndicatorsCustomPainter: (_) => EmptyPainter(),
+                  timesIndicatorsWidth: 32,
+                  timesIndicatorsHorizontalPadding: 2,
+                  timesIndicatorsCustomPainter: (heightPerMinute) =>
+                      _CompactHoursPainter(
+                        heightPerMinute: heightPerMinute,
+                        color: colorScheme.outline,
+                      ),
                 ),
-                currentHourIndicatorParam: CurrentHourIndicatorParam(
-                  currentHourIndicatorLineVisibility: true,
-                  currentHourIndicatorHourVisibility: false,
-                  currentHourIndicatorCustomPainter: (heightPerMinute, isToday) {
-                    return CurrentTimeIndicatorPainter(
-                      heightPerMinute: heightPerMinute,
-                      isToday: isToday,
-                      color: primaryColor,
-                      foregroundColor: onPrimaryColor,
-                      now: widget.now,
-                    );
-                  },
-                ),
-                pinchToZoomParam: const PinchToZoomParameters(pinchToZoom: false),
+                currentHourIndicatorParam: const CurrentHourIndicatorParam(),
+                pinchToZoomParam: const PinchToZoomParameters(),
               ),
             ),
           );
@@ -261,95 +243,156 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
   }
 }
 
-class VerticalDashedSeparatorPainter extends CustomPainter {
-  final Color color;
+/// Combined painter: horizontal hour/half-hour lines (like LinesPainter)
+/// plus a vertical dashed separator on the right edge.
+class DayLinesWithVerticalSeparatorPainter extends CustomPainter {
+  final double heightPerMinute;
+  final Color lineColor;
   final double dashHeight;
   final double dashSpace;
+  final double rightOffset;
 
-  VerticalDashedSeparatorPainter({
-    required this.color,
+  DayLinesWithVerticalSeparatorPainter({
+    required this.heightPerMinute,
+    required this.lineColor,
     this.dashHeight = 4.0,
     this.dashSpace = 4.0,
+    this.rightOffset = 0,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
+    final cellHeight = heightPerMinute * 60;
+
+    final hourPaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 0.5;
+    final halfHourPaint = Paint()
+      ..color = lineColor
+      ..strokeWidth = 0.2;
+    final dashPaint = Paint()
+      ..color = lineColor
       ..strokeWidth = 0.5;
 
+    // Horizontal lines — same as LinesPainter
+    for (var i = 0; i < 24; i++) {
+      final hourY = i * cellHeight;
+      canvas.drawLine(Offset(0, hourY), Offset(size.width, hourY), hourPaint);
+
+      final halfHourY = hourY + cellHeight / 2;
+      canvas.drawLine(
+          Offset(0, halfHourY), Offset(size.width, halfHourY), halfHourPaint);
+    }
+    // 24:00
+    canvas.drawLine(
+        Offset(0, 24 * cellHeight), Offset(size.width, 24 * cellHeight), hourPaint);
+
+    // Vertical dashed line — offset to align with header separator
+    final dx = size.width + rightOffset;
     double y = 0;
     while (y < size.height) {
       canvas.drawLine(
-        Offset(size.width, y),
-        Offset(size.width, y + dashHeight),
-        paint,
+        Offset(dx, y),
+        Offset(dx, y + dashHeight),
+        dashPaint,
       );
       y += dashHeight + dashSpace;
     }
   }
 
   @override
-  bool shouldRepaint(covariant VerticalDashedSeparatorPainter oldDelegate) {
-    return oldDelegate.color != color;
+  bool shouldRepaint(covariant DayLinesWithVerticalSeparatorPainter oldDelegate) {
+    return oldDelegate.heightPerMinute != heightPerMinute ||
+        oldDelegate.lineColor != lineColor ||
+        oldDelegate.rightOffset != rightOffset;
   }
 }
 
-class EmptyPainter extends CustomPainter {
+/// Detects taps via raw pointer events using [Listener], completely bypassing
+/// Flutter's gesture arena. This avoids the ~300ms disambiguation delay caused
+/// by competing [ScaleGestureRecognizer], [LongPressGestureRecognizer], and
+/// [DragGestureRecognizer] from the infinite_calendar_view framework.
+class _TapDetector extends StatefulWidget {
+  const _TapDetector({required this.onTap, required this.child});
+
+  final VoidCallback onTap;
+  final Widget child;
+
   @override
-  void paint(Canvas canvas, Size size) {}
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
+  State<_TapDetector> createState() => _TapDetectorState();
 }
 
-class CurrentTimeIndicatorPainter extends CustomPainter {
-  final double heightPerMinute;
-  final bool isToday;
-  final Color color;
-  final Color foregroundColor;
-  final DateTime now;
+class _TapDetectorState extends State<_TapDetector> {
+  Offset? _pointerDownPos;
+  DateTime? _pointerDownTime;
 
-  CurrentTimeIndicatorPainter({
+  @override
+  Widget build(BuildContext context) {
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: (event) {
+        _pointerDownPos = event.localPosition;
+        _pointerDownTime = DateTime.now();
+      },
+      onPointerUp: (event) {
+        if (_pointerDownPos == null || _pointerDownTime == null) return;
+        final dx = event.localPosition.dx - _pointerDownPos!.dx;
+        final dy = event.localPosition.dy - _pointerDownPos!.dy;
+        final distance = dx * dx + dy * dy;
+        final elapsed = DateTime.now().difference(_pointerDownTime!);
+        // Consider it a tap if the pointer barely moved (< 20px²) and was held
+        // for less than 200ms.
+        if (distance < 400 && elapsed < const Duration(milliseconds: 200)) {
+          widget.onTap();
+        }
+        _pointerDownPos = null;
+        _pointerDownTime = null;
+      },
+      onPointerCancel: (_) {
+        _pointerDownPos = null;
+        _pointerDownTime = null;
+      },
+      child: widget.child,
+    );
+  }
+}
+
+/// Compact time axis painter — shows just the hour number (e.g. "8" not "08:00").
+/// Text is vertically centered on the hour line drawn by LinesPainter at
+/// y = i * cellHeight, so the number sits right on the line.
+class _CompactHoursPainter extends CustomPainter {
+  final double heightPerMinute;
+  final Color color;
+
+  const _CompactHoursPainter({
     required this.heightPerMinute,
-    required this.isToday,
     required this.color,
-    required this.foregroundColor,
-    required this.now,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (!isToday) return;
+    final cellHeight = heightPerMinute * 60;
+    const fontSize = 10.0;
+    const textHeight = fontSize; // approximate single-line height
 
-    final absoluteMinutes = now.hour * 60 + now.minute;
-    final y = absoluteMinutes * heightPerMinute;
-
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.8)
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    // Draw the bright horizontal line indicating current time across the card zone
-    canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
-
-    // Draw an elegant indicator dot on the left side
-    final circlePaintOuter = Paint()
-      ..color = color
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(4, y), 5.0, circlePaintOuter);
-
-    final circlePaintInner = Paint()
-      ..color = foregroundColor
-      ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(4, y), 2.0, circlePaintInner);
+    for (var i = 0; i <= 24; i++) {
+      final lineY = i * cellHeight;
+      // Center text vertically on the line
+      final textY = lineY - textHeight / 2;
+      final tp = TextPainter(
+        text: TextSpan(
+          text: '$i',
+          style: TextStyle(color: color, fontSize: fontSize, height: 1.0),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      tp.layout(minWidth: size.width, maxWidth: size.width);
+      tp.paint(canvas, Offset(0, textY));
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CurrentTimeIndicatorPainter oldDelegate) {
-    return oldDelegate.heightPerMinute != heightPerMinute ||
-        oldDelegate.isToday != isToday ||
-        oldDelegate.now != now ||
-        oldDelegate.color != color ||
-        oldDelegate.foregroundColor != foregroundColor;
-  }
+  bool shouldRepaint(covariant _CompactHoursPainter oldDelegate) =>
+      oldDelegate.heightPerMinute != heightPerMinute ||
+      oldDelegate.color != color;
 }

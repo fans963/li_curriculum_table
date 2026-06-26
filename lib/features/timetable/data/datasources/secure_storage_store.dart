@@ -64,4 +64,26 @@ class SecureStorageStore {
       throw SecureStorageException('Failed to clean secure storage', e);
     }
   }
+
+  /// Read every key-value pair stored in secure storage.
+  Future<Map<String, String>> readAllEntries() async {
+    try {
+      return await _storage.readAll();
+    } catch (e) {
+      debugPrint('SecureStorageStore.readAllEntries error: $e');
+      throw SecureStorageException('Failed to read all entries', e);
+    }
+  }
+
+  /// Import a map of key-value pairs, overwriting existing values.
+  Future<void> importAll(Map<String, String> entries) async {
+    try {
+      for (final entry in entries.entries) {
+        await _storage.write(key: entry.key, value: entry.value);
+      }
+    } catch (e) {
+      debugPrint('SecureStorageStore.importAll error: $e');
+      throw SecureStorageException('Failed to import entries', e);
+    }
+  }
 }

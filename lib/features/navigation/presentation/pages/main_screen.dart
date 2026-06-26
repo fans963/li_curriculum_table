@@ -1,5 +1,7 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:fab_m3e/fab_m3e.dart';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,7 @@ import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
@@ -44,7 +47,23 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: _nav.currentIndex.value);
-    WidgetsBinding.instance.addPostFrameCallback((_) => _checkForUpdate());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _showTermsIfNeeded();
+      _checkForUpdate();
+    });
+  }
+
+  Future<void> _showTermsIfNeeded() async {
+    if (_settings.termsAccepted.value) return;
+    if (!mounted) return;
+    final ds = _settings.designStyle.value;
+    // ignore: use_build_context_synchronously
+    final agreed = await showTermsOfServiceDialog(context, designStyle: ds);
+    if (agreed && mounted) {
+      await _settings.setTermsAccepted(true);
+    } else if (!agreed) {
+      exit(0);
+    }
   }
 
   @override

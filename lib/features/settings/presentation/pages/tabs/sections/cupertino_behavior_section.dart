@@ -199,27 +199,66 @@ class _StorageCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _iosCard(
-      child: _iosTile(
-        context,
-        icon: CupertinoIcons.delete,
-        iconColor: CupertinoColors.systemRed,
-        title: '清除所有缓存',
-        trailing: null,
-        showDivider: false,
-        onTap: () async {
-          final confirmed = await showCupertinoDialog<bool>(
-            context: context,
-            builder: (ctx) => CupertinoAlertDialog(
-              title: const Text('确认清除缓存？'),
-              content: const Text('将删除所有离线课表和缓存数据。您仍将保持登录状态，但需要重新同步以加载数据。'),
-              actions: [
-                CupertinoDialogAction(child: const Text('取消'), onPressed: () => Navigator.pop(ctx, false)),
-                CupertinoDialogAction(isDestructiveAction: true, child: const Text('清除'), onPressed: () => Navigator.pop(ctx, true)),
-              ],
-            ),
-          );
-          if (confirmed == true && mounted) await onClearCache();
-        },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _iosTile(
+            context,
+            icon: CupertinoIcons.share,
+            title: '导出缓存',
+            subtitle: '将本地数据导出为 JSON 文件分享',
+            onTap: () async {
+              try {
+                await sl<CacheBackupService>().exportAndShare();
+              } catch (_) {
+                if (context.mounted) {
+                  showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '导出失败');
+                }
+              }
+            },
+          ),
+          _iosTile(
+            context,
+            icon: CupertinoIcons.doc,
+            title: '导入缓存',
+            subtitle: '从 JSON 文件导入数据',
+            onTap: () async {
+              try {
+                final count = await sl<CacheBackupService>().importFromFile();
+                if (count == null) return;
+                if (!context.mounted) return;
+                showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '已导入 $count 条数据');
+                await sl<TimetableController>().restoreCachedTimetable();
+                await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
+              } on FormatException catch (e) {
+                if (context.mounted) showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: e.message);
+              } catch (_) {
+                if (context.mounted) showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '导入失败');
+              }
+            },
+          ),
+          _iosTile(
+            context,
+            icon: CupertinoIcons.delete,
+            iconColor: CupertinoColors.systemRed,
+            title: '清除所有缓存',
+            showDivider: false,
+            onTap: () async {
+              final confirmed = await showCupertinoDialog<bool>(
+                context: context,
+                builder: (ctx) => CupertinoAlertDialog(
+                  title: const Text('确认清除缓存？'),
+                  content: const Text('将删除所有离线课表和缓存数据。您仍将保持登录状态，但需要重新同步以加载数据。'),
+                  actions: [
+                    CupertinoDialogAction(child: const Text('取消'), onPressed: () => Navigator.pop(ctx, false)),
+                    CupertinoDialogAction(isDestructiveAction: true, child: const Text('清除'), onPressed: () => Navigator.pop(ctx, true)),
+                  ],
+                ),
+              );
+              if (confirmed == true && mounted) await onClearCache();
+            },
+          ),
+        ],
       ),
     );
   }

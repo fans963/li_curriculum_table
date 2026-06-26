@@ -3,7 +3,7 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.21+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Rust](https://img.shields.io/badge/Rust-1.75+-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
 [![Signals](https://img.shields.io/badge/Signals-7.x-FF6B35?logo=dart&logoColor=white)](https://pub.dev/packages/signals)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 
 > 一款轻盈、优雅且高性能的跨平台课表应用。
 
@@ -16,7 +16,7 @@
 |------|------|
 | 🚀 **Rust 驱动核心** | 采用 `flutter_rust_bridge` 将抓取逻辑与 OCR 引擎下沉至 Rust 层，响应丝滑 |
 | 🧠 **自研 OCR** | 基于 Burn 框架的自研 OCR 模型，仅 200KB，本地识别验证码，无需联网 |
-| 🎨 **双设计风格** | Material Design 3 + Apple Cupertino，运行时一键切换 |
+| 🎨 **双设计风格** | Material 3 Expressive + Apple Cupertino，运行时一键切换 |
 | 🌈 **动态取色** | 支持根据系统壁纸动态调整 UI 配色（Android 12+） |
 | 🔐 **隐私至上** | 所有数据本地存储，敏感信息通过 `flutter_secure_storage` 硬件级加密 |
 | 🌐 **全平台** | Android / iOS / Windows / macOS / Linux / Web 六端覆盖 |
@@ -25,6 +25,8 @@
 | 🔔 **智能通知** | 课前 20 分钟、考前 1 天 + 2 小时、成绩发布等多场景提醒 |
 | ☁️ **天气横幅** | 课表顶部展示当日天气信息，一目了然 |
 | 📖 **图书封面** | 图书馆检索支持自动获取豆瓣图书封面（可开关） |
+| 📍 **天气定位** | 可选获取设备定位以展示当地天气，定位权限可随时关闭 |
+| 📋 **使用条款** | 首次启动弹出使用条款与隐私政策，设置中可随时查看 |
 
 ---
 
@@ -423,13 +425,13 @@ graph LR
         S[system]
     end
 
-    M --> |"Android / Google"| MD[Material Design 3]
+    M --> |"Android / Google"| MD[Material 3 Expressive]
     C --> |"iOS / Apple"| CD[Cupertino Design]
     S --> |"跟随平台"| AUTO{Platform?}
     AUTO --> |Android| MD
     AUTO --> |iOS| CD
 
-    MD --> T1["AppBar + NavigationBar + FAB"]
+    MD --> T1["AppBarM3E + NavigationBarM3E + FabM3E"]
     CD --> T2["CupertinoNavigationBar + CupertinoTabBar"]
 
     style M fill:#4CAF50,color:#fff
@@ -437,19 +439,21 @@ graph LR
     style S fill:#9E9E9E,color:#fff
 ```
 
-运行时切换设计风格，所有 UI 组件自动适配：
+Material 侧全面采用 [M3E Expressive](https://pub.dev/packages/m3e_collection) 组件库，运行时切换设计风格，所有 UI 组件自动适配：
 
-| 组件 | Material | Cupertino |
-|------|----------|-----------|
-| 导航栏 | `NavigationBar` | `CupertinoTabBar` |
-| 页面头 | `AppBar (AppBarM3E)` | `GlassScaffold` (毛玻璃导航栏) |
+| 组件 | Material 3 Expressive | Cupertino |
+|------|-----------------------|-----------|
+| 导航栏 | `NavigationBarM3E` | `CupertinoTabBar` |
+| 页面头 | `AppBarM3E` | `GlassScaffold` (毛玻璃导航栏) |
+| 图标按钮 | `IconButtonM3E` | `CupertinoButton` |
+| 浮动按钮 | `FabM3E` / `ExtendedFabM3E` | `CupertinoButton` (导航栏 +) |
+| 滑块 | `SliderM3E` | `CupertinoSlider` |
+| 加载器 | `LoadingIndicatorM3E` | `CupertinoActivityIndicator` |
+| 进度条 | `CircularProgressIndicatorM3E` | `CupertinoActivityIndicator` |
+| 按钮 | `M3EFilledButton` / `M3ETextButton` | `CupertinoButton` |
 | 课程卡片 | `Card` + 阴影 | `Container` + 圆角实色 |
-| 日程添加 | `FilledButton` (FAB) | `CupertinoButton` (导航栏 +) |
-| 列表 | `ListView` + `Card` | `ListView` + `_iosCard` |
 | 对话框 | `AlertDialog` | `CupertinoAlertDialog` |
 | 详情弹窗 | `showModalBottomSheet` | `CupertinoActionSheet` / `GlassDialog` |
-| 选择器 | `SegmentedButton` | `CupertinoActionSheet` |
-| 加载器 | `CircularProgressIndicator` | `CupertinoActivityIndicator` |
 | 消息提示 | `SnackBar` (Adaptive) | `CupertinoAlertDialog` (自动消失) |
 
 ---
@@ -564,6 +568,23 @@ style: 代码风格
 docs: 文档
 chore: 构建/工具
 ```
+
+---
+
+## 📄 开源协议
+
+本项目基于 **[GNU General Public License v3.0](LICENSE)** 开源。
+
+```
+Copyright (C) 2026 fan
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+```
+
+简而言之：你可以自由使用、修改和分发本项目，但**衍生作品必须同样以 GPL-3.0 开源**。
 
 ---
 

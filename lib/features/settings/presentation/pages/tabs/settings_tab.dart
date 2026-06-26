@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/cupertino.dart';
@@ -18,8 +19,11 @@ import 'package:li_curriculum_table/features/timetable/domain/repositories/crede
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
@@ -180,12 +184,30 @@ class _SettingsTabState extends State<SettingsTab>
                 SectionCard(
                   icon: AppIcons.storage(ds),
                   title: '存储',
-                  child: SettingsTile(
-                    icon: AppIcons.deleteSweep(ds),
-                    title: '清除所有缓存',
-                    subtitle: '删除本地课表、教室、成绩等缓存，保留登录凭据',
-                    onTap: () => _confirmClearCache(context),
-                    iconColor: cs.error,
+                  child: Column(
+                    children: [
+                      SettingsTile(
+                        icon: Icons.upload_rounded,
+                        title: '导出缓存',
+                        subtitle: '将本地数据导出为 JSON 文件分享',
+                        onTap: () => _exportCache(context),
+                      ),
+                      const Divider(height: 1),
+                      SettingsTile(
+                        icon: Icons.download_rounded,
+                        title: '导入缓存',
+                        subtitle: '从 JSON 文件导入数据',
+                        onTap: () => _importCache(context),
+                      ),
+                      const Divider(height: 1),
+                      SettingsTile(
+                        icon: AppIcons.deleteSweep(ds),
+                        title: '清除所有缓存',
+                        subtitle: '删除本地课表、教室、成绩等缓存，保留登录凭据',
+                        onTap: () => _confirmClearCache(context),
+                        iconColor: cs.error,
+                      ),
+                    ],
                   ),
                 ),
 
@@ -203,6 +225,29 @@ class _SettingsTabState extends State<SettingsTab>
                     onTap: () => BetterFeedback.of(context).show(
                       (feedback) => FeedbackHandler.shareFeedback(feedback),
                     ),
+                  ),
+                ),
+                const SizedBox(height: sectionSpacing),
+                SectionCard(
+                  icon: Icons.policy_outlined,
+                  title: '条款与隐私',
+                  child: SettingsTile(
+                    icon: Icons.description_outlined,
+                    title: '使用条款与隐私政策',
+                    subtitle: '查看本应用的使用条款和隐私声明',
+                    onTap: () async {
+                      final agreed = await showTermsOfServiceDialog(
+                        context,
+                        designStyle: ds,
+                        barrierDismissible: true,
+                      );
+                      if (!agreed && mounted) {
+                        await sl<SettingsController>().setTermsAccepted(false);
+                        // Allow secure storage to flush before exiting
+                        await Future.delayed(const Duration(milliseconds: 200));
+                        if (mounted) _exitApp();
+                      }
+                    },
                   ),
                 ),
                 const SizedBox(height: sectionSpacing),
@@ -249,6 +294,8 @@ class _SettingsTabState extends State<SettingsTab>
     );
   }
 
+  void _exitApp() => exit(0);
+
   Future<void> _confirmClearCache(BuildContext context) async {
     final confirmed = await showAdaptiveConfirmDialog(
       context,
@@ -260,6 +307,33 @@ class _SettingsTabState extends State<SettingsTab>
       isDestructive: true,
     );
     if (confirmed && mounted) await sl<TimetableController>().clearAllCache();
+  }
+
+  Future<void> _exportCache(BuildContext context) async {
+    final ds = sl<SettingsController>().designStyle.value;
+    try {
+      await sl<CacheBackupService>().exportAndShare();
+    } catch (_) {
+      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
+    }
+  }
+
+  Future<void> _importCache(BuildContext context) async {
+    final ds = sl<SettingsController>().designStyle.value;
+    try {
+      final count = await sl<CacheBackupService>().importFromFile();
+      if (count == null) return; // user cancelled
+      if (!mounted) return;
+      showAdaptiveMessage(context, designStyle: ds, message: '已导入 $count 条数据');
+      // Reload timetable to reflect imported data
+      await sl<TimetableController>().restoreCachedTimetable();
+      await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
+      await sl<CourseColorService>().reload();
+    } on FormatException catch (e) {
+      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: e.message);
+    } catch (_) {
+      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
+    }
   }
 
   Widget _buildAboutCard(BuildContext context) {

@@ -13,6 +13,7 @@ import 'package:li_curriculum_table/features/timetable/domain/entities/teaching_
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/schedule_events_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/teaching_week_baseline_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
@@ -47,7 +48,6 @@ class TimetableController {
   }
 
   void updateDisplayWeek(int week) {
-    if (week < _state.value.minWeek || week > _state.value.maxWeek) return;
     _state.value = _state.value.copyWith(displayWeek: week);
   }
 
@@ -418,11 +418,19 @@ class TimetableController {
     await store.deleteAllExcept([
       'timetable.credentials.username',
       'timetable.credentials.password',
+      'timetable.course_colors',
+      // Preserve all app settings
+      'proxy_enabled', 'proxy_port', 'weekly_scroll',
+      'theme_mode', 'seed_color', 'use_dynamic_color',
+      'design_style', 'color_scheme_type', 'enable_book_cover',
+      'current_term', 'auto_size_text', 'days_visible_count',
+      'terms_accepted',
     ]);
 
     _state.value = initialTimetableState.copyWith(
       needsLogin: false,
       status: '缓存已清除。',
     );
+    await sl<CourseColorService>().reload();
   }
 }

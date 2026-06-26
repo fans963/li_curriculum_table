@@ -1,6 +1,13 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_local_datasource.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_remote_datasource.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/repositories/level_exam_score_repository_impl.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/domain/repositories/level_exam_score_repository.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_controller.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
@@ -73,6 +80,12 @@ void setupServiceLocator() {
   sl.registerLazySingleton<UpdateService>(() => UpdateService());
   sl.registerLazySingleton<WeatherService>(() => WeatherService());
   sl.registerLazySingleton<NotificationService>(() => NotificationService());
+  sl.registerLazySingleton<CacheBackupService>(
+    () => CacheBackupService(sl<SecureStorageStore>()),
+  );
+  sl.registerLazySingleton<CourseColorService>(
+    () => CourseColorService(sl<SecureStorageStore>()),
+  );
 
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(
@@ -165,6 +178,27 @@ void setupServiceLocator() {
       sl<ExamLocalDataSource>(),
       sl<SecureCredentialsLocalDataSource>(),
     ),
+  );
+
+  // ─── Level Exam Scores ────────────────────────────────────────────────
+  sl.registerLazySingleton<LevelExamScoreRemoteDataSource>(
+    () => LevelExamScoreRemoteDataSource(),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreLocalDataSource>(
+    () => LevelExamScoreLocalDataSource(sl<SecureStorageStore>()),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreRepository>(
+    () => LevelExamScoreRepositoryImpl(
+      sl<LevelExamScoreRemoteDataSource>(),
+      sl<LevelExamScoreLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreController>(
+    () => LevelExamScoreController(),
   );
 
   // ─── Controllers (signals-based) ───────────────────────────────────────

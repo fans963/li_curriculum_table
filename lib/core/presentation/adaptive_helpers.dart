@@ -100,12 +100,14 @@ Future<bool> showAdaptiveConfirmDialog(
             child: Text(cancelText),
           ),
           if (isDestructive)
-            FilledButton(
-              style: FilledButton.styleFrom(
+            M3EFilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              size: M3EButtonSize.md,
+              shape: M3EButtonShape.round,
+              decoration: M3EButtonDecoration.styleFrom(
                 backgroundColor: Theme.of(context).colorScheme.error,
                 foregroundColor: Theme.of(context).colorScheme.onError,
               ),
-              onPressed: () => Navigator.pop(ctx, true),
               child: Text(confirmText),
             )
           else

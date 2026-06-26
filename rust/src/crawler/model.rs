@@ -125,6 +125,31 @@ pub struct ExamRecord {
     pub exams: Vec<Exam>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LevelExamScore {
+    #[serde(rename = "courseName")]
+    pub course_name: String,
+    #[serde(rename = "writtenScore")]
+    pub written_score: String,
+    #[serde(rename = "practicalScore")]
+    pub practical_score: String,
+    #[serde(rename = "totalScore")]
+    pub total_score: String,
+    #[serde(rename = "writtenGrade")]
+    pub written_grade: String,
+    #[serde(rename = "practicalGrade")]
+    pub practical_grade: String,
+    #[serde(rename = "totalGrade")]
+    pub total_grade: String,
+    #[serde(rename = "examDate")]
+    pub exam_date: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LevelExamScoreRecord {
+    pub scores: Vec<LevelExamScore>,
+}
+
 pub struct KbtableWeekHint {
     pub course_name: String,
     pub weekday: u32,

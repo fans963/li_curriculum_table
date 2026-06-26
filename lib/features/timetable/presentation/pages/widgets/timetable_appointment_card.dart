@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -13,14 +14,44 @@ import 'package:li_curriculum_table/features/timetable/presentation/pages/widget
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart'
     show CourseDetailsSheet, CupertinoTone, resolveCupertinoTone;
 
+/// Open the course details dialog for the given [occurrence].
+/// Callable from both the card's internal tap handler and external callers
+/// (e.g. a Listener wrapper that bypasses the gesture arena).
+Future<void> openCourseDetails(
+  BuildContext context,
+  CourseOccurrence occurrence,
+) async {
+  final isOngoing =
+      !DateTime.now().isBefore(occurrence.start) &&
+      DateTime.now().isBefore(occurrence.end);
+  final timeLine = _formatOccurrenceTimeRange(occurrence);
+  final designStyle = sl<SettingsController>().state.value.designStyle;
+  final customColor = sl<CourseColorService>().getColor(occurrence.courseName);
+  final tone = resolveAppointmentTone(context, seedText: occurrence.courseName, customColor: customColor);
+
+  await _showDetailsDialog(
+    context,
+    occurrence,
+    tone,
+    isOngoing,
+    timeLine,
+    designStyle,
+  );
+  if (context.mounted) {
+    FocusManager.instance.primaryFocus?.unfocus();
+  }
+}
+
 Widget buildTimetableAppointmentCard({
   required BuildContext context,
   required CourseOccurrence occurrence,
   required DateTime now,
+  VoidCallback? onTap,
 }) {
   return _AnimatedAppointmentCard(
     occurrence: occurrence,
     now: now,
+    onTap: onTap,
   );
 }
 
@@ -28,9 +59,15 @@ class _AnimatedAppointmentCard extends StatelessWidget {
   final CourseOccurrence occurrence;
   final DateTime now;
 
+  /// When non-null, the card is rendered without its own tap gesture detector.
+  /// The caller is responsible for detecting taps (e.g. via a Listener wrapper)
+  /// to bypass the gesture arena and get instant tap response.
+  final VoidCallback? onTap;
+
   const _AnimatedAppointmentCard({
     required this.occurrence,
     required this.now,
+    this.onTap,
   });
 
   @override
@@ -41,6 +78,16 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     final timeLine = _formatOccurrenceTimeRange(occurrence);
     final locationLine = occurrence.location.trim();
     final designStyle = sl<SettingsController>().state.value.designStyle;
+    final customColor = sl<CourseColorService>().getColor(title);
+    final tone = resolveAppointmentTone(context, seedText: title, customColor: customColor);
+
+    // Internal tap handler — used only when no external onTap is provided.
+    void handleTap() => openCourseDetails(context, occurrence);
+
+    // When onTap is externally provided (via Listener bypassing the gesture
+    // arena), the card's own GestureDetector must NOT handle taps — otherwise
+    // the callback fires twice. Only use the internal handler as fallback.
+    final cardOnTap = onTap == null ? handleTap : null;
 
     if (AdaptiveStyle.isCupertino(designStyle)) {
       return buildCupertinoAppointmentCard(
@@ -49,21 +96,8 @@ class _AnimatedAppointmentCard extends StatelessWidget {
         title: title,
         locationLine: locationLine,
         isOngoing: isOngoing,
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          final tone = resolveAppointmentTone(
-            context,
-            seedText: title,
-          );
-          _showDetailsDialog(
-            context,
-            occurrence,
-            tone,
-            isOngoing,
-            timeLine,
-            designStyle,
-          ).then((_) => FocusManager.instance.primaryFocus?.unfocus());
-        },
+        // When externally handled, provide a no-op — Cupertino requires non-null.
+        onTap: cardOnTap ?? () {},
       );
     }
     return _buildMaterialCard(
@@ -73,6 +107,9 @@ class _AnimatedAppointmentCard extends StatelessWidget {
       locationLine,
       timeLine,
       isOngoing,
+      tone,
+      designStyle,
+      onTap: cardOnTap, // null when externally handled — GestureDetector skips tap
     );
   }
 
@@ -83,28 +120,16 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     String locationLine,
     String timeLine,
     bool isOngoing,
-  ) {
-    final tone = resolveAppointmentTone(
-      context,
-      seedText: title,
-    );
+    AppointmentTone tone,
+    DesignStyle designStyle, {
+    VoidCallback? onTap,
+  }) {
     final cs = Theme.of(context).colorScheme;
 
     return Padding(
       padding: const EdgeInsets.all(1.5),
       child: GestureDetector(
-        onTap: () {
-          FocusScope.of(context).unfocus();
-          final designStyle = sl<SettingsController>().state.value.designStyle;
-          _showDetailsDialog(
-            context,
-            occurrence,
-            tone,
-            isOngoing,
-            timeLine,
-            designStyle,
-          ).then((_) => FocusManager.instance.primaryFocus?.unfocus());
-        },
+        onTap: onTap,
         onLongPress: occurrence.courseType == '日程'
             ? () => confirmRemoveScheduleEvent(context, occurrence)
             : null,
@@ -154,35 +179,32 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (sl<SettingsController>().autoSizeText.value)
-                              AutoSizeText(
+                            Builder(builder: (context) {
+                              final s = sl<SettingsController>().state.value;
+                              final baseStyle = Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                    color: tone.foreground,
+                                    fontWeight: FontWeight.w700,
+                                    height: 1.2,
+                                  );
+                              if (s.autoSizeText) {
+                                return AutoSizeText(
+                                  title,
+                                  maxLines: s.timetableTextMaxLines,
+                                  minFontSize: s.autoSizeMinFontSize,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: baseStyle,
+                                );
+                              }
+                              return Text(
                                 title,
-                                maxLines: 2,
-                                minFontSize: 8,
+                                maxLines: s.timetableTextMaxLines,
                                 overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: tone.foreground,
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.2,
-                                    ),
-                              )
-                            else
-                              Text(
-                                title,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(
-                                      color: tone.foreground,
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.2,
-                                    ),
-                              ),
+                                style: baseStyle?.copyWith(fontSize: s.timetableTextFontSize),
+                              );
+                            }),
                             if (locationLine.isNotEmpty) ...[
                               const SizedBox(height: 3),
                               Row(
@@ -194,36 +216,32 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 2),
                                   Expanded(
-                                    child: sl<SettingsController>().autoSizeText.value
-                                      ? AutoSizeText(
+                                    child: Builder(builder: (context) {
+                                      final s = sl<SettingsController>().state.value;
+                                      final locStyle = Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                                            fontWeight: FontWeight.w500,
+                                            height: 1.15,
+                                          );
+                                      if (s.autoSizeText) {
+                                        return AutoSizeText(
                                           locationLine,
-                                          maxLines: 2,
-                                          minFontSize: 7,
+                                          maxLines: s.timetableTextMaxLines,
+                                          minFontSize: s.autoSizeMinFontSize,
                                           overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: cs.onSurfaceVariant
-                                                    .withValues(alpha: 0.6),
-                                                fontWeight: FontWeight.w500,
-                                                height: 1.15,
-                                              ),
-                                        )
-                                      : Text(
-                                          locationLine,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                color: cs.onSurfaceVariant
-                                                    .withValues(alpha: 0.6),
-                                                fontWeight: FontWeight.w500,
-                                                height: 1.15,
-                                              ),
-                                        ),
+                                          style: locStyle,
+                                        );
+                                      }
+                                      return Text(
+                                        locationLine,
+                                        maxLines: s.timetableTextMaxLines,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: locStyle?.copyWith(fontSize: s.timetableTextFontSize - 2),
+                                      );
+                                    }),
                                   ),
                                 ],
                               ),
@@ -313,11 +331,10 @@ Future<void> _showDetailsDialog(
       barrierDismissible: true,
       barrierLabel: 'course-detail',
       barrierColor: CupertinoColors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 350),
+      transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (context, animation, secondaryAnimation) => sheet,
       transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
-        final t = curved.value;
+        final t = Curves.easeOutCubic.transform(animation.value);
         return Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t, child: child));
       },
     );
@@ -325,8 +342,8 @@ Future<void> _showDetailsDialog(
 
   return Navigator.of(context).push(
     PageRouteBuilder(
-      transitionDuration: const Duration(milliseconds: 400),
-      reverseTransitionDuration: const Duration(milliseconds: 300),
+      transitionDuration: const Duration(milliseconds: 300),
+      reverseTransitionDuration: const Duration(milliseconds: 250),
       opaque: false,
       barrierDismissible: true,
       barrierColor: Colors.black54,
@@ -341,20 +358,24 @@ Future<void> _showDetailsDialog(
 AppointmentTone resolveAppointmentTone(
   BuildContext context, {
   required String seedText,
+  Color? customColor,
 }) {
   final cs = Theme.of(context).colorScheme;
   final isDark = Theme.of(context).brightness == Brightness.dark;
 
-  // Derive a per-course hue from the course name hash for visual variety.
-  int hash = 0;
-  for (int i = 0; i < seedText.length; i++) {
-    hash = seedText.codeUnitAt(i) + ((hash << 5) - hash);
+  // Derive a per-course hue from the course name hash for visual variety,
+  // or use the custom color's hue if overridden.
+  final double courseHue;
+  if (customColor != null) {
+    courseHue = HSLColor.fromColor(customColor).hue;
+  } else {
+    int hash = 0;
+    for (int i = 0; i < seedText.length; i++) {
+      hash = seedText.codeUnitAt(i) + ((hash << 5) - hash);
+    }
+    courseHue = (hash.abs() % 360).toDouble();
   }
-  final double courseHue = (hash.abs() % 360).toDouble();
 
-  // Blend the course hue into the theme's tonal surfaces so cards
-  // integrate with the user's chosen seed color, dynamic color, and
-  // ColorSchemeType while still being visually distinct per course.
   Color tintSurface(Color base, double saturation, double lightness) {
     final baseHsl = HSLColor.fromColor(base);
     final tinted = HSLColor.fromAHSL(
@@ -364,6 +385,24 @@ AppointmentTone resolveAppointmentTone(
       (baseHsl.lightness + lightness).clamp(0.0, 1.0),
     ).toColor();
     return Color.alphaBlend(tinted.withValues(alpha: 0.35), base);
+  }
+
+  // Custom color: derive tones directly from the picked color, no blending with surface.
+  if (customColor != null) {
+    final hsl = HSLColor.fromColor(customColor);
+    final accent = customColor;
+    final bg = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.7, isDark ? 0.20 : 0.92).toColor();
+    final bgAlt = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.6, isDark ? 0.24 : 0.88).toColor();
+    final fg = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.5, isDark ? 0.85 : 0.15).toColor();
+    final border = HSLColor.fromAHSL(1.0, hsl.hue, hsl.saturation * 0.4, isDark ? 0.35 : 0.75).toColor();
+    return AppointmentTone(
+      background: bg,
+      backgroundAlt: bgAlt,
+      foreground: fg,
+      border: border,
+      accent: accent,
+      shadow: accent.withValues(alpha: isDark ? 0.3 : 0.15),
+    );
   }
 
   if (isDark) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -37,9 +38,40 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
   }
 
   Widget _buildMaterial(BuildContext context, ExamState state) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('考试安排')),
-      body: _buildBody(context, state),
+    final cs = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: cs.surface,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildCompactHeader(context, state),
+            Expanded(child: _buildBody(context, state)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactHeader(BuildContext context, ExamState state) {
+    final cs = Theme.of(context).colorScheme;
+    final upcoming = state.exams.where((e) => !e.isExpired).length;
+    final total = state.exams.length;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Text('考试安排', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          const Spacer(),
+          if (total > 0)
+            Text('$upcoming 场待考 / $total 场', style: TextStyle(fontSize: 12, color: cs.outline)),
+        ],
+      ),
     );
   }
 
@@ -50,7 +82,7 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       switchOutCurve: kDefaultAnimationCurve,
       child: () {
         if (state.isLoading && state.exams.isEmpty) {
-          return const Center(key: ValueKey('loading'), child: CircularProgressIndicator());
+          return Center(key: const ValueKey('loading'), child: LoadingIndicatorM3E());
         }
 
         if (state.needsLogin) {
