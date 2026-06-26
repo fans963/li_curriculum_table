@@ -314,7 +314,7 @@ class _SettingsTabState extends State<SettingsTab>
     try {
       await sl<CacheBackupService>().exportAndShare();
     } catch (_) {
-      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
+      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
     }
   }
 
@@ -323,7 +323,7 @@ class _SettingsTabState extends State<SettingsTab>
     try {
       final count = await sl<CacheBackupService>().importFromFile();
       if (count == null) return; // user cancelled
-      if (!mounted) return;
+      if (!context.mounted) return;
       showAdaptiveMessage(context, designStyle: ds, message: '已导入 $count 条数据');
       // Reload all cached data to reflect imported state
       await sl<SettingsController>().init();
@@ -331,9 +331,9 @@ class _SettingsTabState extends State<SettingsTab>
       await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
       await sl<CourseColorService>().reload();
     } on FormatException catch (e) {
-      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: e.message);
+      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: e.message);
     } catch (_) {
-      if (mounted) showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
+      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
     }
   }
 

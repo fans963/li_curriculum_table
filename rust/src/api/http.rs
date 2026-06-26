@@ -1,4 +1,5 @@
 use std::sync::OnceLock;
+#[cfg(not(target_arch = "wasm32"))]
 use std::time::Duration;
 
 // Re-export reqwest types so frb_generated.rs can find them via `use crate::api::http::*`
@@ -34,11 +35,12 @@ pub fn client_builder() -> reqwest::ClientBuilder {
 
     let builder = reqwest::Client::builder()
         .user_agent(BROWSER_UA)
-        .default_headers(headers)
-        .tcp_keepalive(Duration::from_secs(30));
+        .default_headers(headers);
 
     #[cfg(not(target_arch = "wasm32"))]
-    let builder = builder.timeout(Duration::from_secs(30));
+    let builder = builder
+        .tcp_keepalive(Duration::from_secs(30))
+        .timeout(Duration::from_secs(30));
 
     builder
 }
