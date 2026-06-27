@@ -153,14 +153,6 @@ jobs:
           name: li-table-${{ matrix.os }}
           path: dist/
 
-      - name: Upload Debug Symbols
-        if: hashFiles('build/debug-info/**') != ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-symbols-${{ matrix.os }}
-          path: build/debug-info/
-          retention-days: 30
-
   publish:
     name: Create GitHub Release
     needs: build
