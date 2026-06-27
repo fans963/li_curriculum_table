@@ -2,8 +2,8 @@ name: Sync Release to Gitee
 
 on:
   release:
-    types: [published] # Triggers when a new Release is published on GitHub
-  workflow_dispatch: # Allow manual trigger as fallback
+    types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -13,8 +13,19 @@ jobs:
     name: Sync to Gitee
     runs-on: ubuntu-latest
     steps:
+      - name: Check Gitee token
+        id: check
+        env:
+          TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Sync GitHub Release to Gitee
-        if: ${{ secrets.GITEE_TOKEN != '' }}
+        if: steps.check.outputs.has_token == 'true'
         uses: trustedinster/sync-release-gitee@v1.3
         with:
           gitee_owner: fans963
