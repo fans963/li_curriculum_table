@@ -1,6 +1,5 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:fab_m3e/fab_m3e.dart';
-import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -9,6 +8,7 @@ import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
@@ -62,7 +62,7 @@ class _MainScreenState extends State<MainScreen> {
     if (agreed && mounted) {
       await _settings.setTermsAccepted(true);
     } else if (!agreed) {
-      exit(0);
+      exitApp();
     }
   }
 
@@ -73,6 +73,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdate() async {
+    if (kIsWeb) return;
     try {
       final updateInfo = await sl<UpdateService>().checkForUpdate();
       if (mounted) {

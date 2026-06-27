@@ -1,8 +1,8 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
@@ -418,6 +418,10 @@ class _SettingsTabState extends State<SettingsTab>
   }
 
   Future<void> _checkForUpdateManually(BuildContext context) async {
+    if (kIsWeb) {
+      showAdaptiveMessage(context, designStyle: sl<SettingsController>().designStyle.value, message: 'Web 端自动更新，无需手动检查');
+      return;
+    }
     final ds = sl<SettingsController>().designStyle.value;
     final isCupertino = AdaptiveStyle.isCupertino(ds);
 

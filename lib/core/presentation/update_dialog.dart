@@ -1,7 +1,5 @@
-import 'dart:ffi' show Abi;
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:m3e_core/m3e_core.dart';
 import 'package:open_filex/open_filex.dart';
@@ -15,39 +13,56 @@ import 'package:markdown_widget/markdown_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 
-const _mirrorPrefixes = [
+const _ghOwner = 'fans963';
+const _ghRepo = 'li_curriculum_table';
+const _giteeOwner = 'fans963';
+const _giteeRepo = 'li_curriculum_table';
+
+/// GitHub mirror prefixes for in-app download (native platforms).
+const _ghMirrorPrefixes = [
   'https://ghfast.top/',
   'https://gh-proxy.com/',
   'https://gh.ddlc.top/',
 ];
 
-const _repoOwner = 'fans963';
-const _repoName = 'li_curriculum_table';
+/// All downloadable assets with human-readable labels.
+const _assets = [
+  _Asset('app-arm64-v8a-release.apk', 'Android ARM64'),
+  _Asset('app-armeabi-v7a-release.apk', 'Android ARM32'),
+  _Asset('app-x86_64-release.apk', 'Android x86_64'),
+  _Asset('li-curriculum-table-unsigned.ipa', 'iOS (IPA)'),
+];
 
-/// Map the current device ABI to the release asset filename.
-String _androidApkName() {
-  switch (Abi.current()) {
-    case Abi.androidArm64:
-      return 'app-arm64-v8a-release.apk';
-    case Abi.androidArm:
-      return 'app-armeabi-v7a-release.apk';
-    case Abi.androidX64:
-      return 'app-x86_64-release.apk';
-    case Abi.androidIA32:
-      return 'app-x86-release.apk';
-    default:
-      return 'app-arm64-v8a-release.apk'; // fallback to most common
-  }
+class _Asset {
+  final String filename;
+  final String label;
+  const _Asset(this.filename, this.label);
 }
 
-/// Build the download URL for the latest release asset.
+/// Gitee download URL (fastest in mainland China).
+String _giteeUrl(String version, String filename) =>
+    'https://gitee.com/$_giteeOwner/$_giteeRepo/releases/download/v$version/$filename';
+
+/// GitHub download URL (fallback).
+String _ghUrl(String version, String filename) =>
+    'https://github.com/$_ghOwner/$_ghRepo/releases/download/v$version/$filename';
+
+/// Mirror-prefixed GitHub URL for in-app download.
+String _ghMirrorUrl(String version, String filename) =>
+    '${_ghMirrorPrefixes.first}${_ghUrl(version, filename)}';
+
+/// Build the download URL for the current device (native in-app download).
 String _buildDownloadUrl(String version) {
-  if (Platform.isAndroid) {
-    return 'https://github.com/$_repoOwner/$_repoName/releases/download/v$version/${_androidApkName()}';
-  } else if (Platform.isIOS) {
-    return 'https://github.com/$_repoOwner/$_repoName/releases/download/v$version/li-curriculum-table-unsigned.ipa';
+  String filename;
+  if (defaultTargetPlatform == TargetPlatform.android) {
+    filename = 'app-arm64-v8a-release.apk';
+  } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+    filename = 'li-curriculum-table-unsigned.ipa';
+  } else {
+    return 'https://github.com/$_ghOwner/$_ghRepo/releases/tag/v$version';
   }
-  return 'https://github.com/$_repoOwner/$_repoName/releases/tag/v$version';
+  // Native: use fastest mirror first
+  return _ghMirrorUrl(version, filename);
 }
 
 /// Shows update dialog if [updateInfo] indicates a new version is available.
@@ -163,11 +178,11 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
 
     final url = _buildDownloadUrl(widget.updateInfo.latestVersion);
     final dir = await getTemporaryDirectory();
-    final ext = Platform.isAndroid ? 'apk' : 'ipa';
+    final ext = defaultTargetPlatform == TargetPlatform.android ? 'apk' : 'ipa';
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _ghMirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
           _dl.received = progress.received.toInt();
@@ -208,7 +223,7 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final canDownload = Platform.isAndroid || Platform.isIOS;
+    final canDownload = defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
 
     return AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
@@ -359,6 +374,14 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
             shape: M3EButtonShape.round,
             onPressed: _startDownload,
           )
+        else if (kIsWeb)
+          M3EFilledButton.icon(
+            icon: const Icon(Icons.phone_android_rounded, size: 18),
+            label: const Text('下载本地应用'),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
+            onPressed: () => _showWebDownloadSheet(context),
+          )
         else
           M3EFilledButton.icon(
             icon: const Icon(Icons.open_in_browser_rounded, size: 18),
@@ -373,6 +396,135 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
           ),
       ],
     );
+  }
+
+  void _showWebDownloadSheet(BuildContext context) {
+    final v = widget.updateInfo.latestVersion;
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: cs.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text('下载本地应用 v$v', style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            Text('Gitee 镜像速度更快，GitHub 作为备选', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+            const SizedBox(height: 16),
+            for (final asset in _assets) ...[
+              _DownloadAssetTile(
+                label: asset.label,
+                filename: asset.filename,
+                version: v,
+                primaryUrl: _giteeUrl(v, asset.filename),
+                fallbackUrl: _ghUrl(v, asset.filename),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// A tappable row that opens [primaryUrl], falling back to [fallbackUrl] on error.
+class _DownloadAssetTile extends StatelessWidget {
+  final String label;
+  final String filename;
+  final String version;
+  final String primaryUrl;
+  final String fallbackUrl;
+
+  const _DownloadAssetTile({
+    required this.label,
+    required this.filename,
+    required this.version,
+    required this.primaryUrl,
+    required this.fallbackUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+
+    return Material(
+      color: cs.surfaceContainerHighest.withValues(alpha: 0.4),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => _launchWithFallback(context),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(Icons.phone_android_rounded, size: 20, color: cs.primary),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(label, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                    Text(filename, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 11)),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text('Gitee', style: tt.labelSmall?.copyWith(color: cs.primary, fontWeight: FontWeight.w600)),
+                  ),
+                  const SizedBox(height: 2),
+                  Text('备选 GitHub', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant, fontSize: 9)),
+                ],
+              ),
+              const SizedBox(width: 8),
+              Icon(Icons.download_rounded, size: 20, color: cs.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchWithFallback(BuildContext context) async {
+    // Try Gitee first
+    final primary = Uri.parse(primaryUrl);
+    try {
+      if (await canLaunchUrl(primary)) {
+        await launchUrl(primary, mode: LaunchMode.platformDefault);
+        return;
+      }
+    } catch (_) {}
+    // Fallback to GitHub
+    final fallback = Uri.parse(fallbackUrl);
+    if (await canLaunchUrl(fallback)) {
+      await launchUrl(fallback, mode: LaunchMode.platformDefault);
+    }
   }
 }
 
@@ -397,11 +549,11 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
 
     final url = _buildDownloadUrl(widget.updateInfo.latestVersion);
     final dir = await getTemporaryDirectory();
-    final ext = Platform.isAndroid ? 'apk' : 'ipa';
+    final ext = defaultTargetPlatform == TargetPlatform.android ? 'apk' : 'ipa';
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _ghMirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
           _dl.received = progress.received.toInt();
@@ -449,7 +601,7 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
     final accent = CupertinoColors.systemBlue.resolveFrom(context);
     final bgColor = CupertinoColors.systemGroupedBackground.resolveFrom(context);
     final cardColor = CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
-    final canDownload = Platform.isAndroid || Platform.isIOS;
+    final canDownload = defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS;
 
     final screenHeight = MediaQuery.of(context).size.height;
     final sheetHeight = screenHeight * 0.85;
@@ -499,16 +651,23 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
                                   onPressed: _startDownload,
                                   child: const Text('下载', style: TextStyle(fontSize: 15, color: CupertinoColors.white)),
                                 )
-                              : CupertinoButton.filled(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                                  minimumSize: const Size(0, 32),
-                                  onPressed: () async {
-                                    final url = Uri.parse(_buildDownloadUrl(widget.updateInfo.latestVersion));
-                                    if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
-                                    if (context.mounted) Navigator.pop(context);
-                                  },
-                                  child: const Text('下载', style: TextStyle(fontSize: 15, color: CupertinoColors.white)),
-                                ),
+                              : kIsWeb
+                                  ? CupertinoButton.filled(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      minimumSize: const Size(0, 32),
+                                      onPressed: () => _showWebDownloadSheet(context),
+                                      child: const Text('本地应用', style: TextStyle(fontSize: 15, color: CupertinoColors.white)),
+                                    )
+                                  : CupertinoButton.filled(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                                      minimumSize: const Size(0, 32),
+                                      onPressed: () async {
+                                        final url = Uri.parse(_buildDownloadUrl(widget.updateInfo.latestVersion));
+                                        if (await canLaunchUrl(url)) await launchUrl(url, mode: LaunchMode.externalApplication);
+                                        if (context.mounted) Navigator.pop(context);
+                                      },
+                                      child: const Text('下载', style: TextStyle(fontSize: 15, color: CupertinoColors.white)),
+                                    ),
                 ),
                 child: SafeArea(
                   top: false,
@@ -629,6 +788,134 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showWebDownloadSheet(BuildContext context) {
+    final v = widget.updateInfo.latestVersion;
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => Container(
+        height: MediaQuery.of(context).size.height * 0.5,
+        decoration: BoxDecoration(
+          color: CupertinoColors.systemBackground.resolveFrom(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('下载本地应用 v$v',
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: Size.zero,
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('关闭'),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text('Gitee 镜像速度更快，GitHub 作为备选',
+                  style: TextStyle(fontSize: 13, color: secondaryLabel)),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                itemCount: _assets.length,
+                separatorBuilder: (_, _) => const SizedBox(height: 8),
+                itemBuilder: (_, i) {
+                  final asset = _assets[i];
+                  return _CupertinoAssetRow(
+                    label: asset.label,
+                    filename: asset.filename,
+                    primaryUrl: _giteeUrl(v, asset.filename),
+                    fallbackUrl: _ghUrl(v, asset.filename),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CupertinoAssetRow extends StatelessWidget {
+  final String label;
+  final String filename;
+  final String primaryUrl;
+  final String fallbackUrl;
+
+  const _CupertinoAssetRow({
+    required this.label,
+    required this.filename,
+    required this.primaryUrl,
+    required this.fallbackUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cardColor = CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
+    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
+    final accent = CupertinoColors.systemBlue.resolveFrom(context);
+
+    return GestureDetector(
+      onTap: () async {
+        final primary = Uri.parse(primaryUrl);
+        try {
+          if (await canLaunchUrl(primary)) {
+            await launchUrl(primary, mode: LaunchMode.platformDefault);
+            return;
+          }
+        } catch (_) {}
+        final fb = Uri.parse(fallbackUrl);
+        if (await canLaunchUrl(fb)) {
+          await launchUrl(fb, mode: LaunchMode.platformDefault);
+        }
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: cardColor,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Icon(CupertinoIcons.device_phone_portrait, size: 20, color: accent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  Text(filename, style: TextStyle(fontSize: 11, color: secondaryLabel)),
+                ],
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text('Gitee', style: TextStyle(fontSize: 12, color: accent, fontWeight: FontWeight.w600)),
+            ),
+            const SizedBox(width: 8),
+            Icon(CupertinoIcons.cloud_download, size: 18, color: secondaryLabel),
+          ],
         ),
       ),
     );
