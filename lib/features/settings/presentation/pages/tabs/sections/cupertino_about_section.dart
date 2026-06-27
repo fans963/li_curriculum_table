@@ -278,8 +278,28 @@ class _SyncStatusCard extends StatelessWidget {
 // Theme Card
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _AboutCard extends StatelessWidget {
-  const _AboutCard();
+class _FeedbackCard extends StatelessWidget {
+  const _FeedbackCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _iosCard(
+      child: _iosTile(
+        context,
+        icon: CupertinoIcons.chat_bubble_2,
+        title: '发送反馈',
+        subtitle: '遇到问题或有建议？支持截图标注',
+        showDivider: false,
+        onTap: () => BetterFeedback.of(context).show(
+          (feedback) => FeedbackHandler.shareFeedback(feedback),
+        ),
+      ),
+    );
+  }
+}
+
+class _CupertinoAboutCard extends StatelessWidget {
+  const _CupertinoAboutCard();
 
   @override
   Widget build(BuildContext context) {
@@ -342,6 +362,61 @@ class _AboutCard extends StatelessWidget {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
       if (context.mounted) showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '检查更新失败，请稍后重试');
     }
+  }
+}
+
+class _CupertinoAppInfoCard extends StatelessWidget {
+  const _CupertinoAppInfoCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version ?? '...';
+        final buildNumber = snapshot.data?.buildNumber ?? '';
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+          decoration: BoxDecoration(
+            color: CupertinoColors.secondarySystemGroupedBackground,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: CupertinoColors.separator.withValues(alpha: 0.2), width: 0.5),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72, height: 72,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(color: CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6)),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/icon/icon.png'),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('🍐 课表', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text(
+                'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',
+                style: TextStyle(fontSize: 15, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '一款轻盈优雅的跨平台本地安全课表应用',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }
 

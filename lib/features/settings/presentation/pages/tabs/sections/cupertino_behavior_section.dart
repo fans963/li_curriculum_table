@@ -22,6 +22,10 @@ class _InteractionCard extends StatelessWidget {
             subtitle: '自动缩小字号以完整显示课程名和地点',
             trailing: IgnorePointer(child: CupertinoSwitch(value: settings.autoSizeText, onChanged: notifier.setAutoSizeText)),
           ),
+          if (settings.autoSizeText)
+            _CupertinoAutoSizeSlider(settings: settings, notifier: notifier)
+          else
+            _CupertinoFixedTextSettings(settings: settings, notifier: notifier),
           _iosTile(
             context,
             icon: CupertinoIcons.rectangle_grid_1x2,
@@ -92,6 +96,121 @@ class _InteractionCard extends StatelessWidget {
           child: const Text('取消'),
           onPressed: () => Navigator.pop(ctx),
         ),
+      ),
+    );
+  }
+}
+
+/// Slider for minimum font size when auto-size is ON (Cupertino style).
+class _CupertinoAutoSizeSlider extends StatelessWidget {
+  final AppSettings settings;
+  final SettingsController notifier;
+
+  const _CupertinoAutoSizeSlider({required this.settings, required this.notifier});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Icon(CupertinoIcons.textformat_size, size: 20, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('最小字号', style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+                CupertinoSlider(
+                  value: settings.autoSizeMinFontSize,
+                  min: 4,
+                  max: 14,
+                  divisions: 10,
+                  onChanged: (v) => notifier.setAutoSizeMinFontSize(v),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            width: 40,
+            child: Text(
+              settings.autoSizeMinFontSize.toStringAsFixed(1),
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: CupertinoColors.systemBlue.resolveFrom(context)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Controls for font size and max lines when auto-size is OFF (Cupertino style).
+class _CupertinoFixedTextSettings extends StatelessWidget {
+  final AppSettings settings;
+  final SettingsController notifier;
+
+  const _CupertinoFixedTextSettings({required this.settings, required this.notifier});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        children: [
+          // Font size slider
+          Row(
+            children: [
+              Icon(CupertinoIcons.textformat_size, size: 20, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('字体大小', style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+                    CupertinoSlider(
+                      value: settings.timetableTextFontSize,
+                      min: 5,
+                      max: 20,
+                      divisions: 15,
+                      onChanged: (v) => notifier.setTimetableTextFontSize(v),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(
+                width: 40,
+                child: Text(
+                  settings.timetableTextFontSize.toStringAsFixed(1),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                ),
+              ),
+            ],
+          ),
+          // Max lines selector
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: Row(
+              children: [
+                Icon(CupertinoIcons.text_alignleft, size: 20, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+                const SizedBox(width: 12),
+                Text('最大行数', style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+                const Spacer(),
+                CupertinoSlidingSegmentedControl<int>(
+                  groupValue: settings.timetableTextMaxLines,
+                  onValueChanged: (v) { if (v != null) notifier.setTimetableTextMaxLines(v); },
+                  children: const {
+                    1: Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('1')),
+                    2: Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('2')),
+                    3: Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('3')),
+                    4: Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('4')),
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -228,8 +347,10 @@ class _StorageCard extends StatelessWidget {
                 if (count == null) return;
                 if (!context.mounted) return;
                 showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '已导入 $count 条数据');
+                await sl<SettingsController>().init();
                 await sl<TimetableController>().restoreCachedTimetable();
                 await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
+                await sl<CourseColorService>().reload();
               } on FormatException catch (e) {
                 if (context.mounted) showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: e.message);
               } catch (_) {

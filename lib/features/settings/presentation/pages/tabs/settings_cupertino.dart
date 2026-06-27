@@ -1,11 +1,13 @@
 import 'dart:io';
 
+import 'package:feedback/feedback.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/glass_scaffold.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:flutter/foundation.dart';
@@ -16,7 +18,9 @@ import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
+import 'package:li_curriculum_table/util/feedback_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 part 'sections/cupertino_theme_section.dart';
@@ -62,7 +66,7 @@ Widget buildSettingsCupertino({
 // Body
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _Body extends StatelessWidget {
+class _Body extends StatefulWidget {
   final dynamic state;
   final AppSettings settings;
   final TextEditingController usernameController;
@@ -80,6 +84,25 @@ class _Body extends StatelessWidget {
   });
 
   @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  late final TextEditingController _proxyController;
+
+  @override
+  void initState() {
+    super.initState();
+    _proxyController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _proxyController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final notifier = sl<SettingsController>();
     return SafeArea(
@@ -88,27 +111,31 @@ class _Body extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
-            _AccountCard(state: state, usernameController: usernameController, passwordController: passwordController),
+            _AccountCard(state: widget.state, usernameController: widget.usernameController, passwordController: widget.passwordController),
             const SizedBox(height: 12),
-            _SyncStatusCard(state: state),
+            _SyncStatusCard(state: widget.state),
             const SizedBox(height: 24),
             _SectionLabel('外观'),
             const SizedBox(height: 8),
-            _ThemeCard(settings: settings, notifier: notifier),
+            _ThemeCard(settings: widget.settings, notifier: notifier),
             const SizedBox(height: 24),
             _SectionLabel('交互'),
             const SizedBox(height: 8),
-            _InteractionCard(settings: settings, notifier: notifier),
+            _InteractionCard(settings: widget.settings, notifier: notifier),
             const SizedBox(height: 24),
             _SectionLabel('高级'),
             const SizedBox(height: 8),
-            if (!kIsWeb) _ProxyCard(settings: settings, notifier: notifier, proxyController: TextEditingController()),
+            if (!kIsWeb) _ProxyCard(settings: widget.settings, notifier: notifier, proxyController: _proxyController),
             if (!kIsWeb) const SizedBox(height: 8),
-            _StorageCard(onClearCache: onClearCache, mounted: mounted),
+            _StorageCard(onClearCache: widget.onClearCache, mounted: widget.mounted),
             const SizedBox(height: 24),
             _SectionLabel('关于'),
             const SizedBox(height: 8),
-            _AboutCard(),
+            _FeedbackCard(),
+            const SizedBox(height: 8),
+            _CupertinoAboutCard(),
+            const SizedBox(height: 12),
+            _CupertinoAppInfoCard(),
             const SizedBox(height: 48),
           ],
         ),

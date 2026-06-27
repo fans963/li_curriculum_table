@@ -12,6 +12,51 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<UpdateData> checkForUpdate() =>
     RustLib.instance.api.crateApiUpdateCheckForUpdate();
 
+/// Download a file from [url] to a temporary path, streaming progress via [sink].
+/// Returns the final saved file path on success.
+Stream<DownloadProgress> downloadUpdate({
+  required String url,
+  required String savePath,
+}) => RustLib.instance.api.crateApiUpdateDownloadUpdate(
+  url: url,
+  savePath: savePath,
+);
+
+class DownloadProgress {
+  final BigInt received;
+  final BigInt total;
+  final bool done;
+  final String savedPath;
+  final String error;
+
+  const DownloadProgress({
+    required this.received,
+    required this.total,
+    required this.done,
+    required this.savedPath,
+    required this.error,
+  });
+
+  @override
+  int get hashCode =>
+      received.hashCode ^
+      total.hashCode ^
+      done.hashCode ^
+      savedPath.hashCode ^
+      error.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DownloadProgress &&
+          runtimeType == other.runtimeType &&
+          received == other.received &&
+          total == other.total &&
+          done == other.done &&
+          savedPath == other.savedPath &&
+          error == other.error;
+}
+
 class UpdateData {
   final String latestVersion;
   final String releaseUrl;

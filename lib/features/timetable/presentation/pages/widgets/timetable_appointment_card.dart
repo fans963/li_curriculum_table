@@ -206,45 +206,33 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                               );
                             }),
                             if (locationLine.isNotEmpty) ...[
-                              const SizedBox(height: 3),
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.location_on_outlined,
-                                    size: 10,
-                                    color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  Expanded(
-                                    child: Builder(builder: (context) {
-                                      final s = sl<SettingsController>().state.value;
-                                      final locStyle = Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                                            fontWeight: FontWeight.w500,
-                                            height: 1.15,
-                                          );
-                                      if (s.autoSizeText) {
-                                        return AutoSizeText(
-                                          locationLine,
-                                          maxLines: s.timetableTextMaxLines,
-                                          minFontSize: s.autoSizeMinFontSize,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: locStyle,
-                                        );
-                                      }
-                                      return Text(
-                                        locationLine,
-                                        maxLines: s.timetableTextMaxLines,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: locStyle?.copyWith(fontSize: s.timetableTextFontSize - 2),
-                                      );
-                                    }),
-                                  ),
-                                ],
-                              ),
+                              const SizedBox(height: 2),
+                              Builder(builder: (context) {
+                                final s = sl<SettingsController>().state.value;
+                                final locStyle = Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
+                                      fontWeight: FontWeight.w500,
+                                      height: 1.15,
+                                    );
+                                if (s.autoSizeText) {
+                                  return AutoSizeText(
+                                    locationLine,
+                                    maxLines: s.timetableTextMaxLines,
+                                    minFontSize: s.autoSizeMinFontSize,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: locStyle,
+                                  );
+                                }
+                                return Text(
+                                  locationLine,
+                                  maxLines: s.timetableTextMaxLines,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: locStyle?.copyWith(fontSize: s.timetableTextFontSize - 2),
+                                );
+                              }),
                             ],
                           ],
                         ),
