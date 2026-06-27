@@ -49,7 +49,9 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    final isCupertino = AdaptiveStyle.isCupertino(sl<SettingsController>().designStyle.value);
+    final isCupertino = AdaptiveStyle.isCupertino(
+      sl<SettingsController>().designStyle.value,
+    );
 
     return CupertinoTheme(
       data: CupertinoTheme.of(context),
@@ -61,7 +63,9 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
             if (!isDesktop) return;
             await windowManager.startDragging();
           },
-          child: isCupertino ? _buildCupertino(context) : _buildMaterial(context),
+          child: isCupertino
+              ? _buildCupertino(context)
+              : _buildMaterial(context),
         ),
       ),
     );
@@ -72,10 +76,14 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+          context,
+        ),
         border: Border(
           bottom: BorderSide(
-            color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+            color: CupertinoColors.separator
+                .resolveFrom(context)
+                .withValues(alpha: 0.3),
             width: 0.5,
           ),
         ),
@@ -91,16 +99,22 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
                 children: [
                   _buildMacButton(
                     color: const Color(0xFFFF5F56), // Red
-                    onPressed: () async { await windowManager.close(); },
+                    onPressed: () async {
+                      await windowManager.close();
+                    },
                   ),
                   _buildMacButton(
                     color: const Color(0xFFFFBD2E), // Yellow
-                    onPressed: () async { await windowManager.minimize(); },
+                    onPressed: () async {
+                      await windowManager.minimize();
+                    },
                   ),
                   _buildMacButton(
                     color: const Color(0xFF27C93F), // Green
                     onPressed: () async {
-                      _isMaximized.value ? await windowManager.unmaximize() : await windowManager.maximize();
+                      _isMaximized.value
+                          ? await windowManager.unmaximize()
+                          : await windowManager.maximize();
                     },
                   ),
                 ],
@@ -108,19 +122,28 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
             ),
           Center(
             child: RichText(
-              text: TextSpan(children: [
-                TextSpan(text: '🍐', style: TextStyle(fontSize: 20, color: CupertinoColors.activeOrange.resolveFrom(context), fontFamily: 'NotoColorEmoji')),
-                const WidgetSpan(child: SizedBox(width: 6)),
-                TextSpan(
-                  text: '课表',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: CupertinoColors.label.resolveFrom(context),
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.3,
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '🍐',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: CupertinoColors.activeOrange.resolveFrom(context),
+                      fontFamily: 'NotoColorEmoji',
+                    ),
                   ),
-                ),
-              ]),
+                  const WidgetSpan(child: SizedBox(width: 6)),
+                  TextSpan(
+                    text: '课表',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: CupertinoColors.label.resolveFrom(context),
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -138,10 +161,7 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
         width: 12,
         height: 12,
         margin: const EdgeInsets.only(right: 8),
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       ),
     );
   }
@@ -158,15 +178,33 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
       child: Row(
         children: [
           RichText(
-            text: TextSpan(children: [
-              TextSpan(text: '🍐', style: TextStyle(fontSize: 25, color: colorScheme.primary, fontFamily: 'NotoColorEmoji')),
-              TextSpan(text: '课表', style: TextStyle(fontSize: 24, color: colorScheme.onSurface, fontWeight: FontWeight.w600)),
-            ]),
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '🍐',
+                  style: TextStyle(
+                    fontSize: 25,
+                    color: colorScheme.primary,
+                    fontFamily: 'NotoColorEmoji',
+                  ),
+                ),
+                TextSpan(
+                  text: '课表',
+                  style: TextStyle(
+                    fontSize: 24,
+                    color: colorScheme.onSurface,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
           ),
           const Spacer(),
           if (isDesktop) ...[
             IconButtonM3E(
-              onPressed: () async { await windowManager.minimize(); },
+              onPressed: () async {
+                await windowManager.minimize();
+              },
               icon: const Icon(Icons.minimize),
               tooltip: '最小化',
               size: IconButtonM3ESize.xs,
@@ -174,16 +212,22 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
             ),
             IconButtonM3E(
               onPressed: () async {
-                _isMaximized.value ? await windowManager.unmaximize() : await windowManager.maximize();
+                _isMaximized.value
+                    ? await windowManager.unmaximize()
+                    : await windowManager.maximize();
               },
-              icon: Icon(_isMaximized.value ? Icons.fullscreen_exit : Icons.fullscreen),
+              icon: Icon(
+                _isMaximized.value ? Icons.fullscreen_exit : Icons.fullscreen,
+              ),
               tooltip: _isMaximized.value ? '还原' : '最大化',
               size: IconButtonM3ESize.xs,
               variant: IconButtonM3EVariant.standard,
             ),
             IconButtonM3E(
               icon: const Icon(Icons.close),
-              onPressed: () async { await windowManager.close(); },
+              onPressed: () async {
+                await windowManager.close();
+              },
               tooltip: '关闭',
               size: IconButtonM3ESize.xs,
               variant: IconButtonM3EVariant.standard,

@@ -6,7 +6,10 @@ use super::models::{BookDetail, BookInfo, BookLocation, BookSearchParams, BookSe
 
 pub async fn search_books(title: String) -> anyhow::Result<BookSearchResult> {
     if title.trim().is_empty() {
-        return Ok(BookSearchResult { books: Vec::new(), total_count: 0 });
+        return Ok(BookSearchResult {
+            books: Vec::new(),
+            total_count: 0,
+        });
     }
     let encoded: String = url::form_urlencoded::byte_serialize(title.as_bytes()).collect();
     let url = format!(
@@ -18,7 +21,10 @@ pub async fn search_books(title: String) -> anyhow::Result<BookSearchResult> {
 
 pub async fn search_books_advanced(params: BookSearchParams) -> anyhow::Result<BookSearchResult> {
     if params.query.trim().is_empty() {
-        return Ok(BookSearchResult { books: Vec::new(), total_count: 0 });
+        return Ok(BookSearchResult {
+            books: Vec::new(),
+            total_count: 0,
+        });
     }
     search_and_parse(&params.build_url()).await
 }
@@ -45,7 +51,11 @@ async fn search_and_parse(target_url: &str) -> anyhow::Result<BookSearchResult> 
                 if let Some(a_el) = h3_el.select(&a_selector).next() {
                     let title_full = a_el.text().collect::<Vec<_>>().join("").trim().to_string();
                     let title = if let Some(dot_idx) = title_full.find('.') {
-                        if dot_idx < 4 { title_full[dot_idx + 1..].trim().to_string() } else { title_full.clone() }
+                        if dot_idx < 4 {
+                            title_full[dot_idx + 1..].trim().to_string()
+                        } else {
+                            title_full.clone()
+                        }
                     } else {
                         title_full.clone()
                     };
@@ -53,7 +63,9 @@ async fn search_and_parse(target_url: &str) -> anyhow::Result<BookSearchResult> 
                     let relative_href = a_el.value().attr("href").unwrap_or("").to_string();
                     let detail_url = resolve_detail_url(&relative_href);
 
-                    let doc_type = h3_el.select(&span_selector).next()
+                    let doc_type = h3_el
+                        .select(&span_selector)
+                        .next()
                         .map(|s| s.text().collect::<Vec<_>>().join("").trim().to_string())
                         .unwrap_or_else(|| "未知类型".to_string());
 
@@ -61,10 +73,15 @@ async fn search_and_parse(target_url: &str) -> anyhow::Result<BookSearchResult> 
                     for node in h3_el.children() {
                         if let Some(text_node) = node.value().as_text() {
                             let text = text_node.trim();
-                            if !text.is_empty() { call_no = text.to_string(); }
+                            if !text.is_empty() {
+                                call_no = text.to_string();
+                            }
                         }
                     }
-                    let call_no = call_no.trim_start_matches([' ', '-', '/', ':']).trim().to_string();
+                    let call_no = call_no
+                        .trim_start_matches([' ', '-', '/', ':'])
+                        .trim()
+                        .to_string();
 
                     let mut holdings_summary = "未知".to_string();
                     let mut author = "未知作者".to_string();
@@ -74,14 +91,30 @@ async fn search_and_parse(target_url: &str) -> anyhow::Result<BookSearchResult> 
                         let mut all_texts = Vec::new();
                         for text_el in p_el.text() {
                             let trimmed = text_el.trim();
-                            if !trimmed.is_empty() { all_texts.push(trimmed.to_string()); }
+                            if !trimmed.is_empty() {
+                                all_texts.push(trimmed.to_string());
+                            }
                         }
-                        if all_texts.len() >= 2 { holdings_summary = all_texts[..2].join(" "); }
-                        if all_texts.len() > 2 { author = all_texts[2].clone(); }
-                        if all_texts.len() > 3 { publisher = all_texts[3].clone(); }
+                        if all_texts.len() >= 2 {
+                            holdings_summary = all_texts[..2].join(" ");
+                        }
+                        if all_texts.len() > 2 {
+                            author = all_texts[2].clone();
+                        }
+                        if all_texts.len() > 3 {
+                            publisher = all_texts[3].clone();
+                        }
                     }
 
-                    books.push(BookInfo { title, author, publisher, call_no, doc_type, holdings_summary, detail_url });
+                    books.push(BookInfo {
+                        title,
+                        author,
+                        publisher,
+                        call_no,
+                        doc_type,
+                        holdings_summary,
+                        detail_url,
+                    });
                 }
             }
         }
@@ -121,13 +154,21 @@ fn resolve_detail_url(href: &str) -> String {
     if href.starts_with("http") {
         href.to_string()
     } else {
-        format!("http://202.119.83.14:8080/uopac/opac/{}", href.trim_start_matches("./"))
+        format!(
+            "http://202.119.83.14:8080/uopac/opac/{}",
+            href.trim_start_matches("./")
+        )
     }
 }
 
 pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDetail> {
     if detail_url.is_empty() {
-        return Ok(BookDetail { isbn: "无".into(), price: "无".into(), pages: "无".into(), locations: Vec::new() });
+        return Ok(BookDetail {
+            isbn: "无".into(),
+            price: "无".into(),
+            pages: "无".into(),
+            locations: Vec::new(),
+        });
     }
 
     let client = http::build_client();
@@ -150,8 +191,12 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDeta
 
             if dt_text.contains("ISBN及定价") {
                 let parts: Vec<&str> = dd_text.split('/').collect();
-                if !parts.is_empty() { isbn = parts[0].trim().to_string(); }
-                if parts.len() > 1 { price = parts[1].trim().to_string(); }
+                if !parts.is_empty() {
+                    isbn = parts[0].trim().to_string();
+                }
+                if parts.len() > 1 {
+                    price = parts[1].trim().to_string();
+                }
             } else if dt_text.contains("载体形态项") {
                 if let Some(idx) = dd_text.find('页') {
                     pages = dd_text[..idx + '页'.len_utf8()].trim().to_string();
@@ -177,12 +222,30 @@ pub async fn fetch_book_locations(detail_url: String) -> anyhow::Result<BookDeta
         for row in rows {
             let tds: Vec<_> = row.select(&td_selector).collect();
             if tds.len() >= 5 {
-                let loc = tds[3].text().collect::<Vec<_>>().join("").trim().to_string();
-                let status = tds[4].text().collect::<Vec<_>>().join("").trim().to_string();
-                locations.push(BookLocation { location: loc, status });
+                let loc = tds[3]
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("")
+                    .trim()
+                    .to_string();
+                let status = tds[4]
+                    .text()
+                    .collect::<Vec<_>>()
+                    .join("")
+                    .trim()
+                    .to_string();
+                locations.push(BookLocation {
+                    location: loc,
+                    status,
+                });
             }
         }
     }
 
-    Ok(BookDetail { isbn, price, pages, locations })
+    Ok(BookDetail {
+        isbn,
+        price,
+        pages,
+        locations,
+    })
 }

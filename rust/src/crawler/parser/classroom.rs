@@ -59,10 +59,7 @@ pub fn parse_classroom_availability(
 }
 
 /// Parse a single classroom row's 35 cells into occupied slots.
-fn parse_classroom_row(
-    classroom_name: String,
-    cell_htmls: Vec<String>,
-) -> ClassroomSchedule {
+fn parse_classroom_row(classroom_name: String, cell_htmls: Vec<String>) -> ClassroomSchedule {
     let mut occupied_slots = Vec::new();
 
     for day_idx in 0..7u32 {

@@ -16,6 +16,7 @@ import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/cupertino_settings_utils.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';

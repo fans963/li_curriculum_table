@@ -27,13 +27,12 @@ class GlassScaffold extends StatelessWidget {
         children: [
           Positioned.fill(
             child: ColoredBox(
-              color: CupertinoColors.systemGroupedBackground
-                  .resolveFrom(context),
+              color: CupertinoColors.systemGroupedBackground.resolveFrom(
+                context,
+              ),
               child: CustomScrollView(
                 slivers: [
-                  SliverToBoxAdapter(
-                    child: SizedBox(height: topPadding + 44),
-                  ),
+                  SliverToBoxAdapter(child: SizedBox(height: topPadding + 44)),
                   ...slivers,
                 ],
               ),

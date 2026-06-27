@@ -1,20 +1,14 @@
 import 'dart:async';
 
 import 'package:app_bar_m3e/app_bar_m3e.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
-import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
-import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
@@ -23,13 +17,14 @@ import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_cupertino.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_about_card.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_web_download_card.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 
 class SettingsTab extends SignalStatefulWidget {
@@ -71,7 +66,9 @@ class _SettingsTabState extends State<SettingsTab>
       final u = _usernameController.text.trim();
       final p = _passwordController.text;
       if (u.isNotEmpty && p.isNotEmpty) {
-        sl<CredentialsRepository>().cacheCredentials(LoginCredentials(username: u, password: p));
+        sl<CredentialsRepository>().cacheCredentials(
+          LoginCredentials(username: u, password: p),
+        );
       }
     });
   }
@@ -110,23 +107,27 @@ class _SettingsTabState extends State<SettingsTab>
 
     if (AdaptiveStyle.isCupertino(settings.designStyle)) {
       return buildSettingsCupertino(
-          context: context,
-          state: state,
-          settings: settings,
-          usernameController: _usernameController,
-          passwordController: _passwordController,
-          mounted: mounted,
-          onClearCache: () => sl<TimetableController>().clearAllCache(),
-        );
-      }
-      return _buildMaterial(context, state, settings);
+        context: context,
+        state: state,
+        settings: settings,
+        usernameController: _usernameController,
+        passwordController: _passwordController,
+        mounted: mounted,
+        onClearCache: () => sl<TimetableController>().clearAllCache(),
+      );
+    }
+    return _buildMaterial(context, state, settings);
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   // Material
   // ═══════════════════════════════════════════════════════════════════════════
 
-  Widget _buildMaterial(BuildContext context, dynamic state, AppSettings settings) {
+  Widget _buildMaterial(
+    BuildContext context,
+    dynamic state,
+    AppSettings settings,
+  ) {
     final cs = Theme.of(context).colorScheme;
     final ds = settings.designStyle;
 
@@ -253,10 +254,10 @@ class _SettingsTabState extends State<SettingsTab>
                 ),
                 if (kIsWeb) ...[
                   const SizedBox(height: sectionSpacing),
-                  _buildWebDownloadCard(context),
+                  const MaterialWebDownloadCard(),
                 ],
                 const SizedBox(height: sectionSpacing),
-                _buildAboutCard(context),
+                const MaterialAboutCard(),
               ],
             ),
           ),
@@ -265,7 +266,11 @@ class _SettingsTabState extends State<SettingsTab>
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     return Padding(
@@ -274,7 +279,13 @@ class _SettingsTabState extends State<SettingsTab>
         children: [
           Icon(icon, size: 18, color: cs.primary),
           const SizedBox(width: 8),
-          Text(title, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600, color: cs.primary)),
+          Text(
+            title,
+            style: tt.titleMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: cs.primary,
+            ),
+          ),
         ],
       ),
     );
@@ -284,13 +295,19 @@ class _SettingsTabState extends State<SettingsTab>
     return TimetableControlPanel(
       usernameController: _usernameController,
       passwordController: _passwordController,
-      onTermStartDateChanged: (date) => sl<TimetableController>().setTermStartDate(date),
-      onCurrentTermChanged: (term) => sl<SettingsController>().setCurrentTerm(term),
+      onTermStartDateChanged: (date) =>
+          sl<TimetableController>().setTermStartDate(date),
+      onCurrentTermChanged: (term) =>
+          sl<SettingsController>().setCurrentTerm(term),
       onLoginPressed: () async {
         final u = _usernameController.text.trim();
         final p = _passwordController.text;
         if (u.isEmpty || p.isEmpty) {
-          showAdaptiveMessage(context, designStyle: sl<SettingsController>().designStyle.value, message: '请输入学号和密码');
+          showAdaptiveMessage(
+            context,
+            designStyle: sl<SettingsController>().designStyle.value,
+            message: '请输入学号和密码',
+          );
           return;
         }
         FocusScope.of(context).unfocus();
@@ -319,7 +336,8 @@ class _SettingsTabState extends State<SettingsTab>
     try {
       await sl<CacheBackupService>().exportAndShare();
     } catch (_) {
-      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
+      if (context.mounted)
+        showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
     }
   }
 
@@ -336,219 +354,14 @@ class _SettingsTabState extends State<SettingsTab>
       await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
       await sl<CourseColorService>().reload();
     } on FormatException catch (e) {
-      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: e.message);
+      if (context.mounted)
+        showAdaptiveMessage(context, designStyle: ds, message: e.message);
     } catch (_) {
-      if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
-    }
-  }
-
-  Widget _buildWebDownloadCard(BuildContext context) {
-    const owner = 'fans963';
-    const repo = 'li_curriculum_table';
-
-    return FutureBuilder<PackageInfo>(
-      future: PackageInfo.fromPlatform(),
-      builder: (context, snapshot) {
-        final version = snapshot.data?.version ?? '';
-
-        final assets = [
-          ('app-arm64-v8a-release.apk', 'Android ARM64'),
-          ('app-armeabi-v7a-release.apk', 'Android ARM32'),
-          ('app-x86_64-release.apk', 'Android x86_64'),
-          ('li-curriculum-table-unsigned.ipa', 'iOS (IPA)'),
-        ];
-
-        return SectionCard(
-          icon: Icons.phone_android_rounded,
-          title: '下载本地应用',
-          subtitle: '在手机或电脑上安装原生版本',
-          child: Column(
-            children: [
-              for (var i = 0; i < assets.length; i++) ...[
-                if (i > 0) const Divider(height: 1),
-                _WebDownloadTile(
-                  label: assets[i].$2,
-                  filename: assets[i].$1,
-                  version: version,
-                  giteeUrl: 'https://gitee.com/$owner/$repo/releases/download/v$version/${assets[i].$1}',
-                  ghUrl: 'https://github.com/$owner/$repo/releases/download/v$version/${assets[i].$1}',
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildAboutCard(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
-    return Card(
-        elevation: 0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4)),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: FutureBuilder<PackageInfo>(
-            future: PackageInfo.fromPlatform(),
-            builder: (context, snapshot) {
-              final version = snapshot.data?.version ?? '...';
-              final buildNumber = snapshot.data?.buildNumber ?? '';
-
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 72, height: 72,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(color: cs.primary.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6)),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: Image.asset('assets/icon/icon.png'),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Text('🍐 课表', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Text(
-                    'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',
-                    style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '一款轻盈优雅的跨平台本地安全课表应用',
-                    textAlign: TextAlign.center,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                  ),
-                  const SizedBox(height: 24),
-                  Wrap(
-                    spacing: 12,
-                    runSpacing: 8,
-                    alignment: WrapAlignment.center,
-                    children: [
-                      M3EFilledButton.tonalIcon(
-                        icon: const Icon(Icons.system_update_rounded, size: 18),
-                        label: const Text('检查更新'),
-                        size: M3EButtonSize.md,
-                        shape: M3EButtonShape.round,
-                        onPressed: () => _checkForUpdateManually(context),
-                      ),
-                      M3EOutlinedButton.icon(
-                        icon: const Icon(Icons.code_rounded, size: 18),
-                        label: const Text('GitHub'),
-                        size: M3EButtonSize.md,
-                        shape: M3EButtonShape.round,
-                        onPressed: () => launchUrl(
-                          Uri.parse('https://github.com/fans963/--table'),
-                          mode: LaunchMode.externalApplication,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-            },
-          ),
-        ),
-    );
-  }
-
-  Future<void> _checkForUpdateManually(BuildContext context) async {
-    if (kIsWeb) {
-      showAdaptiveMessage(context, designStyle: sl<SettingsController>().designStyle.value, message: 'Web 端自动更新，无需手动检查');
-      return;
-    }
-    final ds = sl<SettingsController>().designStyle.value;
-    final isCupertino = AdaptiveStyle.isCupertino(ds);
-
-    if (isCupertino) {
-      showCupertinoDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const CupertinoAlertDialog(
-          content: Padding(
-            padding: EdgeInsets.only(top: 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [CupertinoActivityIndicator(), SizedBox(height: 12), Text('正在检查更新...')],
-            ),
-          ),
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [LoadingIndicatorM3E(), SizedBox(height: 16), Text('正在检查更新...')],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    try {
-      final updateInfo = await sl<UpdateService>().checkForUpdate();
-      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted) await showUpdateDialogIfNeeded(context, updateInfo, silent: false);
-    } catch (e) {
-      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (!context.mounted) return;
-      showAdaptiveMessage(context, designStyle: ds, message: '检查更新失败，请稍后重试');
+      if (context.mounted)
+        showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
     }
   }
 }
 
-class _WebDownloadTile extends StatelessWidget {
-  final String label;
-  final String filename;
-  final String version;
-  final String giteeUrl;
-  final String ghUrl;
-
-  const _WebDownloadTile({
-    required this.label,
-    required this.filename,
-    required this.version,
-    required this.giteeUrl,
-    required this.ghUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return ListTile(
-      title: Text(label),
-      subtitle: Text(filename, style: TextStyle(fontSize: 11, color: cs.outline)),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          IconButton(
-            icon: const Icon(Icons.cloud_download_outlined),
-            tooltip: 'Gitee 下载',
-            onPressed: () => launchUrl(Uri.parse(giteeUrl)),
-          ),
-          IconButton(
-            icon: const Icon(Icons.open_in_new),
-            tooltip: 'GitHub 下载',
-            onPressed: () => launchUrl(Uri.parse(ghUrl)),
-          ),
-        ],
-      ),
-    );
-  }
-}
+// Extracted components moved to sections/material_about_card.dart
+// and sections/material_web_download_card.dart

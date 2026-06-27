@@ -164,13 +164,15 @@ class AppSettings {
     this.autoSizeText = true,
     this.autoSizeMinFontSize = 6.0,
     this.timetableTextMaxLines = 2,
-    this.timetableTextFontSize = 11.0, // overridden on mobile in defaultSettings()
+    this.timetableTextFontSize =
+        11.0, // overridden on mobile in defaultSettings()
     this.daysVisibleCount = 7,
     this.termsAccepted = false,
   });
 
   factory AppSettings.defaultSettings() {
-    final isMobile = !kIsWeb &&
+    final isMobile =
+        !kIsWeb &&
         (defaultTargetPlatform == TargetPlatform.android ||
             defaultTargetPlatform == TargetPlatform.iOS);
     return AppSettings(
@@ -224,8 +226,10 @@ class AppSettings {
       currentTerm: currentTerm ?? this.currentTerm,
       autoSizeText: autoSizeText ?? this.autoSizeText,
       autoSizeMinFontSize: autoSizeMinFontSize ?? this.autoSizeMinFontSize,
-      timetableTextMaxLines: timetableTextMaxLines ?? this.timetableTextMaxLines,
-      timetableTextFontSize: timetableTextFontSize ?? this.timetableTextFontSize,
+      timetableTextMaxLines:
+          timetableTextMaxLines ?? this.timetableTextMaxLines,
+      timetableTextFontSize:
+          timetableTextFontSize ?? this.timetableTextFontSize,
       daysVisibleCount: daysVisibleCount ?? this.daysVisibleCount,
       termsAccepted: termsAccepted ?? this.termsAccepted,
     );

@@ -27,7 +27,11 @@ class ProxySettingsSection extends StatelessWidget {
           if (!kIsWeb) ...[
             SwitchListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              secondary: Icon(AppIcons.router(ds), size: 20, color: cs.onSurfaceVariant),
+              secondary: Icon(
+                AppIcons.router(ds),
+                size: 20,
+                color: cs.onSurfaceVariant,
+              ),
               title: const Text('开启本地代理网关'),
               subtitle: const Text('其他设备或本机网页版可通过此应用共享会话'),
               value: settings.proxyEnabled,
@@ -37,14 +41,22 @@ class ProxySettingsSection extends StatelessWidget {
               icon: AppIcons.numbers(ds),
               title: '监听端口',
               subtitle: '${settings.proxyPort}（重启后生效）',
-              onTap: () => _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
+              onTap: () => _showPortDialog(
+                context,
+                settings.proxyPort,
+                (p) => notifier.setProxyPort(p),
+              ),
             ),
           ] else ...[
             SettingsTile(
               icon: AppIcons.radar(ds),
               title: 'Native 代理探测端口',
               subtitle: '${settings.proxyPort}（刷新后生效）',
-              onTap: () => _showPortDialog(context, settings.proxyPort, (p) => notifier.setProxyPort(p)),
+              onTap: () => _showPortDialog(
+                context,
+                settings.proxyPort,
+                (p) => notifier.setProxyPort(p),
+              ),
             ),
           ],
           const Divider(height: 1),
@@ -69,7 +81,11 @@ class ProxySettingsSection extends StatelessWidget {
     );
   }
 
-  void _showPortDialog(BuildContext context, int current, Function(int) onSave) async {
+  void _showPortDialog(
+    BuildContext context,
+    int current,
+    Function(int) onSave,
+  ) async {
     final result = await showAdaptiveInputDialog(
       context,
       designStyle: sl<SettingsController>().designStyle.value,

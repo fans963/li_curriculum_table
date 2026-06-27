@@ -47,7 +47,8 @@ class ExamController {
         print('[ExamController] Got ${exams.length} exams');
         for (final e in exams) {
           print(
-              '[ExamController]   ${e.courseName} | ${e.examTime} | ${e.location}');
+            '[ExamController]   ${e.courseName} | ${e.examTime} | ${e.location}',
+          );
         }
       }
 
@@ -58,10 +59,15 @@ class ExamController {
         print('[ExamController] Stack: $st');
       }
       if (e.toString().contains('未登录')) {
-        _state.value = _state.value.copyWith(isLoading: false, needsLogin: true);
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          needsLogin: true,
+        );
       } else {
-        _state.value =
-            _state.value.copyWith(isLoading: false, errorMessage: e.toString());
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          errorMessage: e.toString(),
+        );
       }
     }
   }
@@ -87,13 +93,14 @@ class ExamController {
 
   void _applyFilters() {
     if (_state.value.searchQuery.isEmpty) {
-      _state.value =
-          _state.value.copyWith(filteredExams: _state.value.exams);
+      _state.value = _state.value.copyWith(filteredExams: _state.value.exams);
     } else {
       final filtered = _state.value.exams
-          .where((e) => e.courseName
-              .toLowerCase()
-              .contains(_state.value.searchQuery.toLowerCase()))
+          .where(
+            (e) => e.courseName.toLowerCase().contains(
+              _state.value.searchQuery.toLowerCase(),
+            ),
+          )
           .toList();
       _state.value = _state.value.copyWith(filteredExams: filtered);
     }

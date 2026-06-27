@@ -88,181 +88,189 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
     final timetableState = sl<TimetableController>().state.value;
     // Watch color version — forces planner rebuild when any course color changes.
     final colorVersion = sl<CourseColorService>().version.value;
-      final termStart = timetableState.termStartMonday;
-      final settings = sl<SettingsController>().state.value;
-      final weeklyScroll = settings.weeklyScroll;
-      // When week-scrolling is on, always show a full week (7 days).
-      // When free-scrolling (无极滑动), use the user-configured count.
-      final daysVisibleCount = weeklyScroll ? 7 : settings.daysVisibleCount;
+    final termStart = timetableState.termStartMonday;
+    final settings = sl<SettingsController>().state.value;
+    final weeklyScroll = settings.weeklyScroll;
+    // When week-scrolling is on, always show a full week (7 days).
+    // When free-scrolling (无极滑动), use the user-configured count.
+    final daysVisibleCount = weeklyScroll ? 7 : settings.daysVisibleCount;
 
-      if (termStart != _lastTermStart || daysVisibleCount != _lastDaysCount) {
-        _lastTermStart = termStart;
-        _lastDaysCount = daysVisibleCount;
-        _plannerKey = GlobalKey<EventsPlannerState>();
-        _handleInitialJump();
-      }
+    if (termStart != _lastTermStart || daysVisibleCount != _lastDaysCount) {
+      _lastTermStart = termStart;
+      _lastDaysCount = daysVisibleCount;
+      _plannerKey = GlobalKey<EventsPlannerState>();
+      _handleInitialJump();
+    }
 
-      final ds = sl<SettingsController>().state.value.designStyle;
-      final isCupertino = AdaptiveStyle.isCupertino(ds);
-      final colorScheme = Theme.of(context).colorScheme;
-      const headerHeight = 44.0;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final isCupertino = AdaptiveStyle.isCupertino(ds);
+    final colorScheme = Theme.of(context).colorScheme;
+    const headerHeight = 44.0;
 
-      // Adaptive colors — use Cupertino system colors when in Cupertino mode
-      final surfaceColor = isCupertino
-          ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-          : colorScheme.surface;
-      final cardColor = isCupertino
-          ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context)
-          : colorScheme.surface;
-      final separatorColor = isCupertino
-          ? CupertinoColors.separator.resolveFrom(context)
-          : colorScheme.outlineVariant;
-      final primaryColor = isCupertino
-          ? CupertinoColors.systemBlue.resolveFrom(context)
-          : colorScheme.primary;
-      final onSurfaceColor = isCupertino
-          ? CupertinoColors.label.resolveFrom(context)
-          : colorScheme.onSurface;
-      final onSurfaceVariantColor = isCupertino
-          ? CupertinoColors.secondaryLabel.resolveFrom(context)
-          : colorScheme.onSurfaceVariant;
-      final onPrimaryColor = isCupertino
-          ? CupertinoColors.white
-          : colorScheme.onPrimary;
+    // Adaptive colors — use Cupertino system colors when in Cupertino mode
+    final surfaceColor = isCupertino
+        ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
+        : colorScheme.surface;
+    final cardColor = isCupertino
+        ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context)
+        : colorScheme.surface;
+    final separatorColor = isCupertino
+        ? CupertinoColors.separator.resolveFrom(context)
+        : colorScheme.outlineVariant;
+    final primaryColor = isCupertino
+        ? CupertinoColors.systemBlue.resolveFrom(context)
+        : colorScheme.primary;
+    final onSurfaceColor = isCupertino
+        ? CupertinoColors.label.resolveFrom(context)
+        : colorScheme.onSurface;
+    final onSurfaceVariantColor = isCupertino
+        ? CupertinoColors.secondaryLabel.resolveFrom(context)
+        : colorScheme.onSurfaceVariant;
+    final onPrimaryColor = isCupertino
+        ? CupertinoColors.white
+        : colorScheme.onPrimary;
 
-      // No horizontal scroll limit — allow free scrolling beyond data range
+    // No horizontal scroll limit — allow free scrolling beyond data range
 
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          // Guard against unstable/negative constraints during initialization
-          if (constraints.maxWidth < 120 || constraints.maxHeight < 100) {
-            return Container(
-              color: surfaceColor,
-              child: Center(
-                child: isCupertino
-                    ? const CupertinoActivityIndicator()
-                    : const LoadingIndicatorM3E(),
-              ),
-            );
-          }
-
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Guard against unstable/negative constraints during initialization
+        if (constraints.maxWidth < 120 || constraints.maxHeight < 100) {
           return Container(
             color: surfaceColor,
-            child: KeyedSubtree(
-              key: ValueKey('$termStart-$daysVisibleCount-c$colorVersion'),
-              child: EventsPlanner(
-                key: _plannerKey,
-                controller: controller,
-                daysShowed: daysVisibleCount,
-                initialDate: termStart ?? DateTime.now().withoutTime,
-                heightPerMinute: widget.pixelsPerMinute,
-                initialVerticalScrollOffset: 480 * widget.pixelsPerMinute,
-                horizontalScrollPhysics: weeklyScroll
-                    ? const PageScrollPhysics()
-                    : const BouncingScrollPhysics(),
-                onDayChange: (date) {
-                  if (widget.onPageChange != null) {
-                    final anchor = termStart;
-                    if (anchor != null) {
-                      final week = calculateWeekIndex(date, anchor);
-                      widget.onPageChange!(date, week);
-                    }
-                  }
-                },
-                dayParam: DayParam(
-                  dayTopPadding: 0,
-                  dayColor: surfaceColor,
-                  dayEventBuilder: (event, height, width, heightPerMinute) {
-                    final occurrence = event.data as CourseOccurrence?;
-                    if (occurrence == null) return const SizedBox.shrink();
-                    // Use a Listener to detect taps via raw pointer events,
-                    // bypassing the gesture arena (Scale/LongPress/Drag recognizers
-                    // from the framework cause ~300ms tap delay).
-                    return _TapDetector(
-                      onTap: () => openCourseDetails(context, occurrence),
-                      child: buildTimetableAppointmentCard(
-                        context: context,
-                        occurrence: occurrence,
-                        now: widget.now,
-                        onTap: () {}, // suppress card's own GestureDetector onTap
-                      ),
-                    );
-                  },
-                  dayCustomPainter: (heightPerMinute, isToday) =>
-                      DayLinesWithVerticalSeparatorPainter(
-                        heightPerMinute: heightPerMinute,
-                        lineColor: separatorColor,
-                        rightOffset: 1.5, // daySeparationWidth / 2
-                      ),
-                ),
-                offTimesParam: OffTimesParam(offTimesColor: surfaceColor),
-                fullDayParam: const FullDayParam(
-                  fullDayEventsBarVisibility: false,
-                ),
-                daysHeaderParam: DaysHeaderParam(
-                  daysHeaderHeight: headerHeight,
-                  dayHeaderBuilder: (date, isToday) {
-                    const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: isCupertino ? cardColor : surfaceColor,
-                        border: Border(
-                          bottom: BorderSide(color: separatorColor, width: 0.5),
-                          right: BorderSide(color: separatorColor, width: 0.5),
-                        ),
-                      ),
-                      child: Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              weekdays[date.weekday - 1],
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: isToday ? primaryColor : onSurfaceVariantColor,
-                                fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
-                              ),
-                            ),
-                            const SizedBox(height: 2),
-                            Container(
-                              width: 24,
-                              height: 24,
-                              alignment: Alignment.center,
-                              decoration: isToday
-                                  ? BoxDecoration(
-                                      color: primaryColor,
-                                      shape: BoxShape.circle,
-                                    )
-                                  : null,
-                              child: Text(
-                                '${date.day}',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: isToday ? onPrimaryColor : onSurfaceColor,
-                                  fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-                timesIndicatorsParam: TimesIndicatorsParam(
-                  timesIndicatorsWidth: 32,
-                  timesIndicatorsHorizontalPadding: 2,
-                  timesIndicatorsCustomPainter: (heightPerMinute) =>
-                      _CompactHoursPainter(
-                        heightPerMinute: heightPerMinute,
-                        color: colorScheme.outline,
-                      ),
-                ),
-                currentHourIndicatorParam: const CurrentHourIndicatorParam(),
-                pinchToZoomParam: const PinchToZoomParameters(),
-              ),
+            child: Center(
+              child: isCupertino
+                  ? const CupertinoActivityIndicator()
+                  : const LoadingIndicatorM3E(),
             ),
           );
+        }
+
+        return Container(
+          color: surfaceColor,
+          child: KeyedSubtree(
+            key: ValueKey('$termStart-$daysVisibleCount-c$colorVersion'),
+            child: EventsPlanner(
+              key: _plannerKey,
+              controller: controller,
+              daysShowed: daysVisibleCount,
+              initialDate: termStart ?? DateTime.now().withoutTime,
+              heightPerMinute: widget.pixelsPerMinute,
+              initialVerticalScrollOffset: 480 * widget.pixelsPerMinute,
+              horizontalScrollPhysics: weeklyScroll
+                  ? const PageScrollPhysics()
+                  : const BouncingScrollPhysics(),
+              onDayChange: (date) {
+                if (widget.onPageChange != null) {
+                  final anchor = termStart;
+                  if (anchor != null) {
+                    final week = calculateWeekIndex(date, anchor);
+                    widget.onPageChange!(date, week);
+                  }
+                }
+              },
+              dayParam: DayParam(
+                dayTopPadding: 0,
+                dayColor: surfaceColor,
+                dayEventBuilder: (event, height, width, heightPerMinute) {
+                  final occurrence = event.data as CourseOccurrence?;
+                  if (occurrence == null) return const SizedBox.shrink();
+                  // Use a Listener to detect taps via raw pointer events,
+                  // bypassing the gesture arena (Scale/LongPress/Drag recognizers
+                  // from the framework cause ~300ms tap delay).
+                  return _TapDetector(
+                    onTap: () => openCourseDetails(context, occurrence),
+                    child: buildTimetableAppointmentCard(
+                      context: context,
+                      occurrence: occurrence,
+                      now: widget.now,
+                      onTap: () {}, // suppress card's own GestureDetector onTap
+                    ),
+                  );
+                },
+                dayCustomPainter: (heightPerMinute, isToday) =>
+                    DayLinesWithVerticalSeparatorPainter(
+                      heightPerMinute: heightPerMinute,
+                      lineColor: separatorColor,
+                      rightOffset: 1.5, // daySeparationWidth / 2
+                    ),
+              ),
+              offTimesParam: OffTimesParam(offTimesColor: surfaceColor),
+              fullDayParam: const FullDayParam(
+                fullDayEventsBarVisibility: false,
+              ),
+              daysHeaderParam: DaysHeaderParam(
+                daysHeaderHeight: headerHeight,
+                dayHeaderBuilder: (date, isToday) {
+                  const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: isCupertino ? cardColor : surfaceColor,
+                      border: Border(
+                        bottom: BorderSide(color: separatorColor, width: 0.5),
+                        right: BorderSide(color: separatorColor, width: 0.5),
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            weekdays[date.weekday - 1],
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isToday
+                                  ? primaryColor
+                                  : onSurfaceVariantColor,
+                              fontWeight: isToday
+                                  ? FontWeight.w800
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 24,
+                            height: 24,
+                            alignment: Alignment.center,
+                            decoration: isToday
+                                ? BoxDecoration(
+                                    color: primaryColor,
+                                    shape: BoxShape.circle,
+                                  )
+                                : null,
+                            child: Text(
+                              '${date.day}',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: isToday
+                                    ? onPrimaryColor
+                                    : onSurfaceColor,
+                                fontWeight: isToday
+                                    ? FontWeight.w800
+                                    : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              timesIndicatorsParam: TimesIndicatorsParam(
+                timesIndicatorsWidth: 32,
+                timesIndicatorsHorizontalPadding: 2,
+                timesIndicatorsCustomPainter: (heightPerMinute) =>
+                    _CompactHoursPainter(
+                      heightPerMinute: heightPerMinute,
+                      color: colorScheme.outline,
+                    ),
+              ),
+              currentHourIndicatorParam: const CurrentHourIndicatorParam(),
+              pinchToZoomParam: const PinchToZoomParameters(),
+            ),
+          ),
+        );
       },
     );
   }
@@ -306,27 +314,31 @@ class DayLinesWithVerticalSeparatorPainter extends CustomPainter {
 
       final halfHourY = hourY + cellHeight / 2;
       canvas.drawLine(
-          Offset(0, halfHourY), Offset(size.width, halfHourY), halfHourPaint);
+        Offset(0, halfHourY),
+        Offset(size.width, halfHourY),
+        halfHourPaint,
+      );
     }
     // 24:00
     canvas.drawLine(
-        Offset(0, 24 * cellHeight), Offset(size.width, 24 * cellHeight), hourPaint);
+      Offset(0, 24 * cellHeight),
+      Offset(size.width, 24 * cellHeight),
+      hourPaint,
+    );
 
     // Vertical dashed line — offset to align with header separator
     final dx = size.width + rightOffset;
     double y = 0;
     while (y < size.height) {
-      canvas.drawLine(
-        Offset(dx, y),
-        Offset(dx, y + dashHeight),
-        dashPaint,
-      );
+      canvas.drawLine(Offset(dx, y), Offset(dx, y + dashHeight), dashPaint);
       y += dashHeight + dashSpace;
     }
   }
 
   @override
-  bool shouldRepaint(covariant DayLinesWithVerticalSeparatorPainter oldDelegate) {
+  bool shouldRepaint(
+    covariant DayLinesWithVerticalSeparatorPainter oldDelegate,
+  ) {
     return oldDelegate.heightPerMinute != heightPerMinute ||
         oldDelegate.lineColor != lineColor ||
         oldDelegate.rightOffset != rightOffset;

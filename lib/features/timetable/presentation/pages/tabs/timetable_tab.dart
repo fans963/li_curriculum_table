@@ -13,15 +13,20 @@ import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/add_schedule_event_sheet.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/async_course_strip.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 
 // UI Constants
 const double _pixelsPerMinute = 1.0;
+const _asyncStripPrefKey = 'timetable.async_strip_expanded';
 
 class TimetableTab extends SignalStatefulWidget {
   const TimetableTab({super.key});
@@ -35,10 +40,21 @@ class _TimetableTabState extends State<TimetableTab>
   @override
   bool get wantKeepAlive => true;
   final _calendarKey = GlobalKey<TimetableWeekViewState>();
+  final _asyncStripKey = GlobalKey<AsyncCourseStripState>(
+    debugLabel: 'asyncStrip',
+  );
   Timer? _nowTicker;
   final _now = signal<DateTime>(DateTime.now());
   final _localWeeklyScrollOverride = signal<bool?>(null);
   final _isSwitchingScroll = signal(false);
+  final _showAsyncStrip = signal(true);
+
+  void _toggleAsyncStrip() {
+    _showAsyncStrip.value = !_showAsyncStrip.value;
+    sl<SecureStorageStore>().writeAll({
+      _asyncStripPrefKey: _showAsyncStrip.value.toString(),
+    });
+  }
 
   @override
   void initState() {
@@ -50,11 +66,34 @@ class _TimetableTabState extends State<TimetableTab>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       sl<CourseColorService>().preload();
+      sl<CourseOnlineService>().preload();
+      // Restore async strip expanded preference
+      final store = sl<SecureStorageStore>();
+      final prefs = await store.readAll([_asyncStripPrefKey]);
+      final saved = prefs[_asyncStripPrefKey];
+      if (saved != null) {
+        _showAsyncStrip.value = saved == 'true';
+      }
       final controller = sl<TimetableController>();
       await controller.restoreCachedTimetable();
       await controller.restoreCachedTeachingWeekBaseline();
       await controller.loadScheduleEvents();
     });
+  }
+
+  /// All online courses — auto-detected (location=="线上") or manually marked.
+  /// These appear in the collapsible strip instead of the time grid.
+  List<CourseRow> get _asyncCourses {
+    final data = sl<TimetableController>().state.value.data;
+    if (data == null) return [];
+    final onlineService = sl<CourseOnlineService>();
+    return data.rows.where((r) {
+      // Auto-detected: academic system marks online courses with location "线上"
+      if (r.location.trim() == '线上') return true;
+      // Manually marked online (any format: live/async/hybrid)
+      if (onlineService.isOnline(r.courseName)) return true;
+      return false;
+    }).toList();
   }
 
   @override
@@ -87,8 +126,27 @@ class _TimetableTabState extends State<TimetableTab>
               isWeeklyScrollActive:
                   _localWeeklyScrollOverride.value ?? settings.weeklyScroll,
               isSwitchingScroll: _isSwitchingScroll.value,
+              hasAsyncCourses: _asyncCourses.isNotEmpty,
+              isAsyncStripExpanded: _showAsyncStrip.value,
               onAddPressed: () => AddScheduleEventSheet.show(context),
               onScrollToggle: () => _toggleScrollMode(settings),
+              onAsyncToggle: _toggleAsyncStrip,
+            ),
+            // Async online course strip (collapsible).
+            // Dependencies ensure reactivity when:
+            // - user marks/unmarks courses as online
+            // - user changes a course's custom color
+            SignalBuilder(
+              dependencies: [
+                sl<CourseOnlineService>().version,
+                sl<CourseColorService>().version,
+              ],
+              builder: (context) => AsyncCourseStrip(
+                key: _asyncStripKey,
+                asyncCourses: _asyncCourses,
+                isExpanded: _showAsyncStrip.value,
+                onToggle: _toggleAsyncStrip,
+              ),
             ),
             Expanded(
               child: AnimatedSwitcher(
@@ -174,8 +232,11 @@ class _CompactHeader extends StatelessWidget {
   final DesignStyle designStyle;
   final bool isWeeklyScrollActive;
   final bool isSwitchingScroll;
+  final bool hasAsyncCourses;
+  final bool isAsyncStripExpanded;
   final VoidCallback onAddPressed;
   final VoidCallback onScrollToggle;
+  final VoidCallback onAsyncToggle;
 
   const _CompactHeader({
     required this.displayWeek,
@@ -183,8 +244,11 @@ class _CompactHeader extends StatelessWidget {
     required this.designStyle,
     required this.isWeeklyScrollActive,
     required this.isSwitchingScroll,
+    required this.hasAsyncCourses,
+    required this.isAsyncStripExpanded,
     required this.onAddPressed,
     required this.onScrollToggle,
+    required this.onAsyncToggle,
   });
 
   @override
@@ -223,6 +287,21 @@ class _CompactHeader extends StatelessWidget {
 
           // Weather inline
           Expanded(child: _InlineWeather(designStyle: designStyle)),
+
+          // Async online courses toggle (only shown when async courses exist)
+          if (hasAsyncCourses)
+            IconButtonM3E(
+              icon: Icon(
+                isAsyncStripExpanded
+                    ? Icons.live_tv_rounded
+                    : Icons.live_tv_outlined,
+                size: 20,
+              ),
+              variant: IconButtonM3EVariant.standard,
+              shape: IconButtonM3EShapeVariant.round,
+              tooltip: isAsyncStripExpanded ? '收起网课' : '展开网课',
+              onPressed: onAsyncToggle,
+            ),
 
           // Scroll toggle
           IconButtonM3E(

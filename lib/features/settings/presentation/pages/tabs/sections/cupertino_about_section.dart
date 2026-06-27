@@ -5,7 +5,11 @@ class _AccountCard extends SignalStatefulWidget {
   final TextEditingController usernameController;
   final TextEditingController passwordController;
 
-  const _AccountCard({required this.state, required this.usernameController, required this.passwordController});
+  const _AccountCard({
+    required this.state,
+    required this.usernameController,
+    required this.passwordController,
+  });
 
   @override
   State<_AccountCard> createState() => _AccountCardState();
@@ -19,7 +23,8 @@ class _AccountCardState extends State<_AccountCard> {
     final termStart = timetableCtrl.termStartMonday.value;
     final state = widget.state;
 
-    return _iosCard(context,
+    return _iosCard(
+      context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -28,7 +33,10 @@ class _AccountCardState extends State<_AccountCard> {
             child: CupertinoTextField(
               controller: widget.usernameController,
               placeholder: '学号',
-              prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.person, size: 20)),
+              prefix: const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Icon(CupertinoIcons.person, size: 20),
+              ),
               decoration: BoxDecoration(
                 color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
                 borderRadius: BorderRadius.circular(10),
@@ -42,7 +50,10 @@ class _AccountCardState extends State<_AccountCard> {
               controller: widget.passwordController,
               placeholder: '密码',
               obscureText: true,
-              prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.lock, size: 20)),
+              prefix: const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Icon(CupertinoIcons.lock, size: 20),
+              ),
               decoration: BoxDecoration(
                 color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
                 borderRadius: BorderRadius.circular(10),
@@ -77,7 +88,9 @@ class _AccountCardState extends State<_AccountCard> {
                       fontSize: 16,
                       color: settingsCtrl.currentTerm.value.isNotEmpty
                           ? CupertinoColors.label.resolveFrom(context)
-                          : CupertinoColors.placeholderText.resolveFrom(context),
+                          : CupertinoColors.placeholderText.resolveFrom(
+                              context,
+                            ),
                     ),
                   ),
                 ],
@@ -91,11 +104,18 @@ class _AccountCardState extends State<_AccountCard> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
               borderRadius: BorderRadius.circular(10),
-              onPressed: () => _pickTermStartDate(context, timetableCtrl, termStart),
+              onPressed: () =>
+                  _pickTermStartDate(context, timetableCtrl, termStart),
               alignment: Alignment.centerLeft,
               child: Row(
                 children: [
-                  Icon(CupertinoIcons.calendar, size: 20, color: termStart != null ? CupertinoColors.label.resolveFrom(context) : CupertinoColors.placeholderText.resolveFrom(context)),
+                  Icon(
+                    CupertinoIcons.calendar,
+                    size: 20,
+                    color: termStart != null
+                        ? CupertinoColors.label.resolveFrom(context)
+                        : CupertinoColors.placeholderText.resolveFrom(context),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     termStart != null
@@ -105,13 +125,20 @@ class _AccountCardState extends State<_AccountCard> {
                       fontSize: 16,
                       color: termStart != null
                           ? CupertinoColors.label.resolveFrom(context)
-                          : CupertinoColors.placeholderText.resolveFrom(context),
+                          : CupertinoColors.placeholderText.resolveFrom(
+                              context,
+                            ),
                     ),
                   ),
                   const Spacer(),
                   Text(
-                    termStart != null ? '推算第 ${state.displayWeek ?? '?'} 周' : '',
-                    style: TextStyle(fontSize: 13, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                    termStart != null
+                        ? '推算第 ${state.displayWeek ?? '?'} 周'
+                        : '',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: CupertinoColors.systemBlue.resolveFrom(context),
+                    ),
                   ),
                 ],
               ),
@@ -119,12 +146,18 @@ class _AccountCardState extends State<_AccountCard> {
           ),
           _iosTile(
             context,
-            icon: state.isLoading ? CupertinoIcons.arrow_clockwise : CupertinoIcons.cloud_download,
+            icon: state.isLoading
+                ? CupertinoIcons.arrow_clockwise
+                : CupertinoIcons.cloud_download,
             iconColor: CupertinoColors.systemBlue,
             title: '同步课表',
             trailing: state.isLoading
                 ? const CupertinoActivityIndicator()
-                : Icon(CupertinoIcons.chevron_forward, size: 16, color: CupertinoColors.tertiaryLabel.resolveFrom(context)),
+                : Icon(
+                    CupertinoIcons.chevron_forward,
+                    size: 16,
+                    color: CupertinoColors.tertiaryLabel.resolveFrom(context),
+                  ),
             showDivider: false,
             onTap: state.isLoading
                 ? null
@@ -137,13 +170,22 @@ class _AccountCardState extends State<_AccountCard> {
                         builder: (ctx) => CupertinoAlertDialog(
                           title: const Text('提示'),
                           content: const Text('请输入学号和密码'),
-                          actions: [CupertinoDialogAction(isDefaultAction: true, child: const Text('好的'), onPressed: () => Navigator.pop(ctx))],
+                          actions: [
+                            CupertinoDialogAction(
+                              isDefaultAction: true,
+                              child: const Text('好的'),
+                              onPressed: () => Navigator.pop(ctx),
+                            ),
+                          ],
                         ),
                       );
                       return;
                     }
                     FocusScope.of(context).unfocus();
-                    await sl<TimetableController>().fetchAndBuild(username: u, password: p);
+                    await sl<TimetableController>().fetchAndBuild(
+                      username: u,
+                      password: p,
+                    );
                   },
           ),
         ],
@@ -151,7 +193,11 @@ class _AccountCardState extends State<_AccountCard> {
     );
   }
 
-  void _pickTermStartDate(BuildContext context, TimetableController controller, DateTime? initial) {
+  void _pickTermStartDate(
+    BuildContext context,
+    TimetableController controller,
+    DateTime? initial,
+  ) {
     final selectedDate = signal(initial ?? DateTime.now());
     showCupertinoDialog(
       context: context,
@@ -206,7 +252,7 @@ class _AccountCardState extends State<_AccountCard> {
     if (current.isNotEmpty && !options.contains(current)) {
       options.insert(0, current);
     }
-    
+
     final int initialIndex = options.indexOf(current);
     final selectedIndex = signal(initialIndex >= 0 ? initialIndex : 0);
 
@@ -219,12 +265,18 @@ class _AccountCardState extends State<_AccountCard> {
           child: SizedBox(
             height: 180,
             child: CupertinoPicker(
-              scrollController: FixedExtentScrollController(initialItem: selectedIndex.value),
+              scrollController: FixedExtentScrollController(
+                initialItem: selectedIndex.value,
+              ),
               itemExtent: 36.0,
               onSelectedItemChanged: (index) => selectedIndex.value = index,
-              children: options.map((opt) => Center(
-                child: Text(opt, style: const TextStyle(fontSize: 18)),
-              )).toList(),
+              children: options
+                  .map(
+                    (opt) => Center(
+                      child: Text(opt, style: const TextStyle(fontSize: 18)),
+                    ),
+                  )
+                  .toList(),
             ),
           ),
         ),
@@ -237,7 +289,8 @@ class _AccountCardState extends State<_AccountCard> {
             isDefaultAction: true,
             child: const Text('确定'),
             onPressed: () {
-              if (selectedIndex.value >= 0 && selectedIndex.value < options.length) {
+              if (selectedIndex.value >= 0 &&
+                  selectedIndex.value < options.length) {
                 settingsCtrl.setCurrentTerm(options[selectedIndex.value]);
               }
               Navigator.pop(ctx);
@@ -255,18 +308,29 @@ class _SyncStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(context,
+    return _iosCard(
+      context,
       child: _iosTile(
         context,
         icon: state.isLoading
             ? CupertinoIcons.arrow_clockwise
-            : (state.data != null ? CupertinoIcons.check_mark_circled : CupertinoIcons.xmark_circle),
+            : (state.data != null
+                  ? CupertinoIcons.check_mark_circled
+                  : CupertinoIcons.xmark_circle),
         iconColor: state.isLoading
             ? CupertinoColors.systemOrange
-            : (state.data != null ? CupertinoColors.systemGreen : CupertinoColors.systemRed),
+            : (state.data != null
+                  ? CupertinoColors.systemGreen
+                  : CupertinoColors.systemRed),
         title: statusText(state),
         trailing: state.data != null
-            ? Text('第 ${state.displayWeek} 周', style: TextStyle(fontSize: 15, color: CupertinoColors.secondaryLabel.resolveFrom(context)))
+            ? Text(
+                '第 ${state.displayWeek} 周',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
+              )
             : null,
         showDivider: false,
       ),
@@ -283,16 +347,17 @@ class _FeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(context,
+    return _iosCard(
+      context,
       child: _iosTile(
         context,
         icon: CupertinoIcons.chat_bubble_2,
         title: '发送反馈',
         subtitle: '遇到问题或有建议？支持截图标注',
         showDivider: false,
-        onTap: () => BetterFeedback.of(context).show(
-          (feedback) => FeedbackHandler.shareFeedback(feedback),
-        ),
+        onTap: () => BetterFeedback.of(
+          context,
+        ).show((feedback) => FeedbackHandler.shareFeedback(feedback)),
       ),
     );
   }
@@ -303,7 +368,8 @@ class _CupertinoAboutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(context,
+    return _iosCard(
+      context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -335,7 +401,10 @@ class _CupertinoAboutCard extends StatelessWidget {
             icon: CupertinoIcons.globe,
             title: 'GitHub',
             subtitle: '查看源代码',
-            onTap: () => launchUrl(Uri.parse('https://github.com/fans963/--table'), mode: LaunchMode.externalApplication),
+            onTap: () => launchUrl(
+              Uri.parse('https://github.com/fans963/--table'),
+              mode: LaunchMode.externalApplication,
+            ),
             showDivider: false,
           ),
         ],
@@ -350,17 +419,30 @@ class _CupertinoAboutCard extends StatelessWidget {
       builder: (_) => const CupertinoAlertDialog(
         content: Padding(
           padding: EdgeInsets.only(top: 16),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [CupertinoActivityIndicator(), SizedBox(height: 12), Text('正在检查更新...')]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CupertinoActivityIndicator(),
+              SizedBox(height: 12),
+              Text('正在检查更新...'),
+            ],
+          ),
         ),
       ),
     );
     try {
       final info = await sl<UpdateService>().checkForUpdate();
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted) await showUpdateDialogIfNeeded(context, info, silent: false);
+      if (context.mounted)
+        await showUpdateDialogIfNeeded(context, info, silent: false);
     } catch (_) {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted) showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '检查更新失败，请稍后重试');
+      if (context.mounted)
+        showAdaptiveMessage(
+          context,
+          designStyle: DesignStyle.cupertino,
+          message: '检查更新失败，请稍后重试',
+        );
     }
   }
 }
@@ -379,19 +461,33 @@ class _CupertinoAppInfoCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           decoration: BoxDecoration(
-            color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+            color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+              context,
+            ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
+            border: Border.all(
+              color: CupertinoColors.separator
+                  .resolveFrom(context)
+                  .withValues(alpha: 0.2),
+              width: 0.5,
+            ),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 72, height: 72,
+                width: 72,
+                height: 72,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
-                    BoxShadow(color: CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 6)),
+                    BoxShadow(
+                      color: CupertinoColors.systemBlue
+                          .resolveFrom(context)
+                          .withValues(alpha: 0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
                   ],
                 ),
                 child: ClipRRect(
@@ -400,17 +496,30 @@ class _CupertinoAppInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text('🍐 课表', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: CupertinoColors.label.resolveFrom(context))),
+              Text(
+                '🍐 课表',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: CupertinoColors.label.resolveFrom(context),
+                ),
+              ),
               const SizedBox(height: 4),
               Text(
                 'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',
-                style: TextStyle(fontSize: 15, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+                style: TextStyle(
+                  fontSize: 15,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
               ),
               const SizedBox(height: 8),
               Text(
                 '一款轻盈优雅的跨平台本地安全课表应用',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
               ),
             ],
           ),
@@ -447,32 +556,55 @@ class _CupertinoWebDownloadCard extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: Row(
                   children: [
-                    Icon(CupertinoIcons.device_phone_portrait, size: 18, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                    Icon(
+                      CupertinoIcons.device_phone_portrait,
+                      size: 18,
+                      color: CupertinoColors.systemBlue.resolveFrom(context),
+                    ),
                     const SizedBox(width: 10),
-                    const Text('下载本地应用', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                    const Text(
+                      '下载本地应用',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ],
                 ),
               ),
               for (var i = 0; i < _assets.length; i++)
                 _iosTile(
                   context,
-                  icon: i == 0 ? CupertinoIcons.device_phone_portrait : CupertinoIcons.download_circle,
+                  icon: i == 0
+                      ? CupertinoIcons.device_phone_portrait
+                      : CupertinoIcons.download_circle,
                   title: _assets[i].$2,
                   subtitle: _assets[i].$1,
                   showDivider: i < _assets.length - 1,
                   onTap: () async {
-                    final gitee = Uri.parse('https://gitee.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}');
-                    final gh = Uri.parse('https://github.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}');
+                    final gitee = Uri.parse(
+                      'https://gitee.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}',
+                    );
+                    final gh = Uri.parse(
+                      'https://github.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}',
+                    );
                     for (final uri in [gitee, gh]) {
                       try {
                         if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri, mode: LaunchMode.platformDefault);
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.platformDefault,
+                          );
                           return;
                         }
                       } catch (_) {}
                     }
                     if (context.mounted) {
-                      showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '无法打开下载链接');
+                      showAdaptiveMessage(
+                        context,
+                        designStyle: DesignStyle.cupertino,
+                        message: '无法打开下载链接',
+                      );
                     }
                   },
                 ),
@@ -484,20 +616,4 @@ class _CupertinoWebDownloadCard extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Utilities
-// ═══════════════════════════════════════════════════════════════════════════
-
-String statusText(dynamic state) {
-  if (state.isLoading) return '正在同步...';
-  if (state.data != null) return '已同步';
-  return '未同步';
-}
-
-String themeModeLabel(ThemeMode mode) {
-  switch (mode) {
-    case ThemeMode.system: return '跟随系统';
-    case ThemeMode.light: return '浅色';
-    case ThemeMode.dark: return '深色';
-  }
-}
+// statusText & themeModeLabel extracted to cupertino_settings_utils.dart

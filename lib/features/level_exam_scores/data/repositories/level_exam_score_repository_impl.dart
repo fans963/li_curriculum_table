@@ -16,7 +16,9 @@ class LevelExamScoreRepositoryImpl implements LevelExamScoreRepository {
   );
 
   @override
-  Future<List<LevelExamScoreEntity>> getScores({bool forceRefresh = false}) async {
+  Future<List<LevelExamScoreEntity>> getScores({
+    bool forceRefresh = false,
+  }) async {
     if (!forceRefresh) {
       final cached = await _localDataSource.readScores();
       if (cached != null) return cached;

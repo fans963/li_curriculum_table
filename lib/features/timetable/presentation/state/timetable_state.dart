@@ -30,4 +30,3 @@ const initialTimetableState = TimetableState(
   minWeek: 1,
   maxWeek: 18,
 );
-

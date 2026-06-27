@@ -6,6 +6,8 @@ import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/cupertino_pickers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_form_cupertino.dart';
 import 'package:signals/signals_flutter.dart';
 
 /// Bottom sheet form for adding a schedule event with date + clock time.
@@ -42,6 +44,8 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   final _enableNotification = signal(false);
   final _notifyTime = signal(const TimeOfDay(hour: 8, minute: 0));
 
+  final _nameNotEmpty = signal(false);
+
   @override
   void initState() {
     super.initState();
@@ -49,7 +53,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   void _onNameChanged() {
-    setState(() {});
+    _nameNotEmpty.value = _nameController.text.trim().isNotEmpty;
   }
 
   @override
@@ -63,8 +67,26 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   @override
   Widget build(BuildContext context) {
+    // Subscribe to nameNotEmpty signal for reactive rebuilds
+    final _ = _nameNotEmpty.value;
     if (_isCupertino) {
-      return _buildCupertino(context);
+      return buildScheduleEventFormCupertino(
+        context: context,
+        nameController: _nameController,
+        teacherController: _teacherController,
+        locationController: _locationController,
+        date: _date,
+        startTime: _startTime,
+        endTime: _endTime,
+        enableNotification: _enableNotification,
+        notifyTime: _notifyTime,
+        weekdayLabel: _weekdayLabel,
+        onPickDate: _pickDate,
+        onPickStartTime: _pickStartTime,
+        onPickEndTime: _pickEndTime,
+        onPickNotifyTime: _pickNotifyTime,
+        onSubmit: _submit,
+      );
     }
     return _buildMaterial(context);
   }
@@ -89,7 +111,9 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
           return Container(
             decoration: BoxDecoration(
               color: cs.surface,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(28),
+              ),
             ),
             child: ListView(
               controller: scrollController,
@@ -97,7 +121,8 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
               children: [
                 Center(
                   child: Container(
-                    width: 40, height: 4,
+                    width: 40,
+                    height: 4,
                     decoration: BoxDecoration(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(2),
@@ -105,7 +130,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('添加日程', style: Theme.of(ctx).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  '添加日程',
+                  style: Theme.of(
+                    ctx,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 20),
 
                 // Title
@@ -241,300 +271,10 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     );
   }
 
-  Widget _buildCupertino(BuildContext context) {
-    final date = _date.value;
-    final startTime = _startTime.value;
-    final endTime = _endTime.value;
-    final enableNotification = _enableNotification.value;
-    final notifyTime = _notifyTime.value;
+  // _buildCupertino extracted to schedule_event_form_cupertino.dart
 
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
-
-    return CupertinoTheme(
-      data: CupertinoTheme.of(context),
-      child: Material(
-        type: MaterialType.transparency,
-        child: Container(
-          height: MediaQuery.of(context).size.height * 0.85,
-          decoration: BoxDecoration(
-            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          ),
-          child: Column(
-            children: [
-              // iOS Action / Navigation Bar
-              Container(
-                height: 56,
-                decoration: BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(
-                      color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
-                      width: 0.5,
-                    ),
-                  ),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  children: [
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      onPressed: () => Navigator.pop(context),
-                      child: Text(
-                        '取消',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: CupertinoColors.systemBlue.resolveFrom(context),
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      '添加日程',
-                      style: TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                        color: CupertinoColors.label.resolveFrom(context),
-                      ),
-                    ),
-                    const Spacer(),
-                    CupertinoButton(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      onPressed: _nameController.text.trim().isNotEmpty ? _submit : null,
-                      child: Text(
-                        '添加',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: CupertinoColors.systemBlue.resolveFrom(context),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Content Area
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
-                  child: Column(
-                    children: [
-                      _buildCupertinoCard([
-                        CupertinoTextField(
-                          controller: _nameController,
-                          placeholder: '日程名称 *',
-                          prefix: const Padding(
-                            padding: EdgeInsets.only(left: 16),
-                            child: Icon(CupertinoIcons.pencil, size: 20, color: CupertinoColors.systemGrey),
-                          ),
-                          decoration: null,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          placeholderStyle: TextStyle(
-                            color: CupertinoColors.placeholderText.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          style: TextStyle(
-                            color: CupertinoColors.label.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          clearButtonMode: OverlayVisibilityMode.editing,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        _buildCupertinoDivider(),
-                        CupertinoTextField(
-                          controller: _teacherController,
-                          placeholder: '相关人员',
-                          prefix: const Padding(
-                            padding: EdgeInsets.only(left: 16),
-                            child: Icon(CupertinoIcons.person, size: 20, color: CupertinoColors.systemGrey),
-                          ),
-                          decoration: null,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          placeholderStyle: TextStyle(
-                            color: CupertinoColors.placeholderText.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          style: TextStyle(
-                            color: CupertinoColors.label.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          clearButtonMode: OverlayVisibilityMode.editing,
-                          textInputAction: TextInputAction.next,
-                        ),
-                        _buildCupertinoDivider(),
-                        CupertinoTextField(
-                          controller: _locationController,
-                          placeholder: '地点',
-                          prefix: const Padding(
-                            padding: EdgeInsets.only(left: 16),
-                            child: Icon(CupertinoIcons.location, size: 20, color: CupertinoColors.systemGrey),
-                          ),
-                          decoration: null,
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                          placeholderStyle: TextStyle(
-                            color: CupertinoColors.placeholderText.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          style: TextStyle(
-                            color: CupertinoColors.label.resolveFrom(context),
-                            fontSize: 16,
-                          ),
-                          clearButtonMode: OverlayVisibilityMode.editing,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _submit(),
-                        ),
-                      ]),
-                      const SizedBox(height: 20),
-
-                      _buildCupertinoCard([
-                        _buildCupertinoTapRow(
-                          icon: CupertinoIcons.calendar,
-                          label: '日期',
-                          value: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}  ${_weekdayLabel(date.weekday)}',
-                          onTap: _pickDate,
-                        ),
-                        _buildCupertinoDivider(),
-                        _buildCupertinoTapRow(
-                          icon: CupertinoIcons.clock,
-                          label: '开始时间',
-                          value: startTime.format(context),
-                          onTap: _pickStartTime,
-                        ),
-                        _buildCupertinoDivider(),
-                        _buildCupertinoTapRow(
-                          icon: CupertinoIcons.clock_fill,
-                          label: '结束时间',
-                          value: endTime.format(context),
-                          onTap: _pickEndTime,
-                        ),
-                      ]),
-                      const SizedBox(height: 20),
-
-                      _buildCupertinoCard([
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                          child: Row(
-                            children: [
-                              const Icon(CupertinoIcons.bell, size: 20, color: CupertinoColors.systemGrey),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '开启提醒',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        color: CupertinoColors.label.resolveFrom(context),
-                                      ),
-                                    ),
-                                    Text(
-                                      '在指定时间发送通知提醒',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: CupertinoColors.secondaryLabel.resolveFrom(context),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              CupertinoSwitch(
-                                value: enableNotification,
-                                onChanged: (v) => _enableNotification.value = v,
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (enableNotification) ...[
-                          _buildCupertinoDivider(),
-                          _buildCupertinoTapRow(
-                            icon: CupertinoIcons.bell_fill,
-                            label: '提醒时间',
-                            value: notifyTime.format(context),
-                            onTap: _pickNotifyTime,
-                          ),
-                        ],
-                      ]),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCupertinoCard(List<Widget> children) {
-    return Container(
-      decoration: BoxDecoration(
-        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2),
-          width: 0.5,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: children,
-      ),
-    );
-  }
-
-  Widget _buildCupertinoDivider() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 48),
-      child: Container(
-        height: 0.5,
-        color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
-      ),
-    );
-  }
-
-  Widget _buildCupertinoTapRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, size: 20, color: CupertinoColors.systemGrey),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 16,
-                color: CupertinoColors.label.resolveFrom(context),
-              ),
-            ),
-            const Spacer(),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 16,
-                color: CupertinoColors.secondaryLabel.resolveFrom(context),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Icon(
-              CupertinoIcons.chevron_forward,
-              size: 16,
-              color: CupertinoColors.tertiaryLabel.resolveFrom(context),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // _buildCupertinoCard, _buildCupertinoDivider, _buildCupertinoTapRow
+  // extracted to cupertino_form_widgets.dart (CupertinoFormCard, CupertinoFormDivider, CupertinoTapRow)
 
   String _weekdayLabel(int weekday) {
     const labels = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
@@ -546,7 +286,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   Future<void> _pickDate() async {
     if (_isCupertino) {
-      final picked = await _showCupertinoDatePicker(_date.value);
+      final picked = await showCupertinoDatePickerModal(context, _date.value);
       if (picked != null) _date.value = picked;
     } else {
       final picked = await showDatePicker(
@@ -561,7 +301,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   Future<void> _pickStartTime() async {
     final picked = _isCupertino
-        ? await _showCupertinoTimePicker(_startTime.value)
+        ? await showCupertinoTimePickerModal(context, _startTime.value)
         : await showTimePicker(context: context, initialTime: _startTime.value);
     if (picked != null) {
       _startTime.value = picked;
@@ -577,7 +317,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   Future<void> _pickEndTime() async {
     final picked = _isCupertino
-        ? await _showCupertinoTimePicker(_endTime.value)
+        ? await showCupertinoTimePickerModal(context, _endTime.value)
         : await showTimePicker(context: context, initialTime: _endTime.value);
     if (picked != null) {
       final startMin = _startTime.value.hour * 60 + _startTime.value.minute;
@@ -593,77 +333,16 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   Future<void> _pickNotifyTime() async {
     final picked = _isCupertino
-        ? await _showCupertinoTimePicker(_notifyTime.value)
-        : await showTimePicker(context: context, initialTime: _notifyTime.value);
+        ? await showCupertinoTimePickerModal(context, _notifyTime.value)
+        : await showTimePicker(
+            context: context,
+            initialTime: _notifyTime.value,
+          );
     if (picked != null) _notifyTime.value = picked;
   }
 
-  Future<DateTime?> _showCupertinoDatePicker(DateTime initial) async {
-    DateTime selected = initial;
-    await showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) => Container(
-        height: 260,
-        color: CupertinoColors.systemBackground.resolveFrom(ctx),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CupertinoButton(
-                  child: const Text('完成'),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.date,
-                initialDateTime: initial,
-                minimumDate: DateTime(2020),
-                maximumDate: DateTime.now().add(const Duration(days: 365)),
-                onDateTimeChanged: (d) => selected = d,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    return selected;
-  }
-
-  Future<TimeOfDay?> _showCupertinoTimePicker(TimeOfDay initial) async {
-    DateTime selected = DateTime(2000, 1, 1, initial.hour, initial.minute);
-    await showCupertinoModalPopup(
-      context: context,
-      builder: (ctx) => Container(
-        height: 260,
-        color: CupertinoColors.systemBackground.resolveFrom(ctx),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CupertinoButton(
-                  child: const Text('完成'),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
-            ),
-            Expanded(
-              child: CupertinoDatePicker(
-                mode: CupertinoDatePickerMode.time,
-                initialDateTime: selected,
-                use24hFormat: true,
-                onDateTimeChanged: (d) => selected = d,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-    return TimeOfDay(hour: selected.hour, minute: selected.minute);
-  }
+  // _showCupertinoDatePicker & _showCupertinoTimePicker
+  // extracted to cupertino_pickers.dart (showCupertinoDatePickerModal, showCupertinoTimePickerModal)
 
   void _submit() {
     final name = _nameController.text.trim();
@@ -684,8 +363,13 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
     final enableNotif = _enableNotification.value;
     final notifyDateTime = enableNotif
-        ? DateTime(d.year, d.month, d.day,
-            _notifyTime.value.hour, _notifyTime.value.minute)
+        ? DateTime(
+            d.year,
+            d.month,
+            d.day,
+            _notifyTime.value.hour,
+            _notifyTime.value.minute,
+          )
         : null;
 
     final event = ScheduleEvent(

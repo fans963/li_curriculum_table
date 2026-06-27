@@ -19,8 +19,8 @@ class BookCoverSignal {
   ReadonlySignal<bool> get loading => _loading;
 
   BookCoverSignal({required String detailUrl, required String title})
-      : _url = signal<String?>(null),
-        _loading = signal(true) {
+    : _url = signal<String?>(null),
+      _loading = signal(true) {
     _load(detailUrl: detailUrl, title: title);
   }
 

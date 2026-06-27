@@ -4,15 +4,23 @@ import 'package:flutter/material.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_format.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/dashed_border_painter.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/show_mark_online_sheet.dart';
 
+export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart'
+    show CourseDetailsSheet;
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart'
-    show CourseDetailsSheet, CupertinoTone, resolveCupertinoTone;
+    show CupertinoTone, resolveCupertinoTone;
 
 /// Open the course details dialog for the given [occurrence].
 /// Callable from both the card's internal tap handler and external callers
@@ -27,7 +35,11 @@ Future<void> openCourseDetails(
   final timeLine = _formatOccurrenceTimeRange(occurrence);
   final designStyle = sl<SettingsController>().state.value.designStyle;
   final customColor = sl<CourseColorService>().getColor(occurrence.courseName);
-  final tone = resolveAppointmentTone(context, seedText: occurrence.courseName, customColor: customColor);
+  final tone = resolveAppointmentTone(
+    context,
+    seedText: occurrence.courseName,
+    customColor: customColor,
+  );
 
   await _showDetailsDialog(
     context,
@@ -76,10 +88,26 @@ class _AnimatedAppointmentCard extends StatelessWidget {
         !now.isBefore(occurrence.start) && now.isBefore(occurrence.end);
     final title = occurrence.courseName;
     final timeLine = _formatOccurrenceTimeRange(occurrence);
-    final locationLine = occurrence.location.trim();
     final designStyle = sl<SettingsController>().state.value.designStyle;
     final customColor = sl<CourseColorService>().getColor(title);
-    final tone = resolveAppointmentTone(context, seedText: title, customColor: customColor);
+    final tone = resolveAppointmentTone(
+      context,
+      seedText: title,
+      customColor: customColor,
+    );
+
+    // Check online status: manual override takes priority, then auto-detect
+    // from location field (academic system uses "线上" for online courses).
+    final onlineService = sl<CourseOnlineService>();
+    final override = onlineService.getOverride(title);
+    final isAutoOnline = occurrence.location.trim() == '线上';
+    final isOnline = (override != null && override.isOnline) || isAutoOnline;
+    final isLiveOnline =
+        (override?.format == CourseFormat.liveOnline) ||
+        (isAutoOnline && override?.format != CourseFormat.asyncOnline);
+
+    // For online courses, show platform info instead of classroom.
+    final locationLine = _buildLocationLine(occurrence, override);
 
     // Internal tap handler — used only when no external onTap is provided.
     void handleTap() => openCourseDetails(context, occurrence);
@@ -96,6 +124,8 @@ class _AnimatedAppointmentCard extends StatelessWidget {
         title: title,
         locationLine: locationLine,
         isOngoing: isOngoing,
+        isOnline: isOnline,
+        isLiveOnline: isLiveOnline,
         // When externally handled, provide a no-op — Cupertino requires non-null.
         onTap: cardOnTap ?? () {},
       );
@@ -109,8 +139,34 @@ class _AnimatedAppointmentCard extends StatelessWidget {
       isOngoing,
       tone,
       designStyle,
-      onTap: cardOnTap, // null when externally handled — GestureDetector skips tap
+      isOnline: isOnline,
+      isLiveOnline: isLiveOnline,
+      onTap:
+          cardOnTap, // null when externally handled — GestureDetector skips tap
     );
+  }
+
+  String _buildLocationLine(
+    CourseOccurrence occurrence,
+    CourseFormatOverride? override,
+  ) {
+    // Manual override: show platform + meeting ID
+    if (override != null && override.isOnline) {
+      final parts = <String>[];
+      if (override.platform != null && override.platform!.isNotEmpty) {
+        parts.add(override.platform!);
+      }
+      if (override.meetingId != null && override.meetingId!.isNotEmpty) {
+        parts.add(override.meetingId!);
+      }
+      if (parts.isNotEmpty) return parts.join(' · ');
+      return '🌐 线上课程';
+    }
+    // Auto-detected: academic system location field is "线上"
+    if (occurrence.location.trim() == '线上') {
+      return '🌐 线上课程';
+    }
+    return occurrence.location.trim();
   }
 
   Widget _buildMaterialCard(
@@ -123,19 +179,39 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     AppointmentTone tone,
     DesignStyle designStyle, {
     VoidCallback? onTap,
+    bool isOnline = false,
+    bool isLiveOnline = false,
   }) {
     final cs = Theme.of(context).colorScheme;
+
+    // Long-press handler: schedule events get delete, all courses get mark-as-online.
+    void handleLongPress() {
+      if (occurrence.courseType == '日程') {
+        confirmRemoveScheduleEvent(context, occurrence);
+      } else {
+        showMarkOnlineSheet(context, occurrence);
+      }
+    }
 
     return Padding(
       padding: const EdgeInsets.all(1.5),
       child: GestureDetector(
         onTap: onTap,
-        onLongPress: occurrence.courseType == '日程'
-            ? () => confirmRemoveScheduleEvent(context, occurrence)
-            : null,
+        onLongPress: handleLongPress,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            // Dashed border overlay for live online courses
+            if (isLiveOnline && !isOngoing)
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: DashedBorderPainter(
+                    color: tone.accent.withValues(alpha: 0.6),
+                    strokeWidth: 1.0,
+                    borderRadius: 16,
+                  ),
+                ),
+              ),
             Container(
               decoration: BoxDecoration(
                 color: isOngoing
@@ -145,15 +221,19 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                       )
                     : tone.background,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(
-                  color: isOngoing
-                      ? tone.accent.withValues(alpha: 0.4)
-                      : tone.border,
-                  width: isOngoing ? 1.0 : 0.5,
-                ),
+                border: isLiveOnline && !isOngoing
+                    ? null // dashed border drawn by CustomPaint above
+                    : Border.all(
+                        color: isOngoing
+                            ? tone.accent.withValues(alpha: 0.4)
+                            : tone.border,
+                        width: isOngoing ? 1.0 : 0.5,
+                      ),
                 boxShadow: [
                   BoxShadow(
-                    color: tone.accent.withValues(alpha: isOngoing ? 0.12 : 0.05),
+                    color: tone.accent.withValues(
+                      alpha: isOngoing ? 0.12 : 0.05,
+                    ),
                     blurRadius: isOngoing ? 8 : 4,
                     offset: Offset(0, isOngoing ? 3 : 2),
                   ),
@@ -179,60 +259,71 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Builder(builder: (context) {
-                              final s = sl<SettingsController>().state.value;
-                              final baseStyle = Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.copyWith(
-                                    color: tone.foreground,
-                                    fontWeight: FontWeight.w700,
-                                    height: 1.2,
-                                  );
-                              if (s.autoSizeText) {
-                                return AutoSizeText(
-                                  title,
-                                  maxLines: s.timetableTextMaxLines,
-                                  minFontSize: s.autoSizeMinFontSize,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: baseStyle,
-                                );
-                              }
-                              return Text(
-                                title,
-                                maxLines: s.timetableTextMaxLines,
-                                overflow: TextOverflow.ellipsis,
-                                style: baseStyle?.copyWith(fontSize: s.timetableTextFontSize),
-                              );
-                            }),
-                            if (locationLine.isNotEmpty) ...[
-                              const SizedBox(height: 2),
-                              Builder(builder: (context) {
+                            Builder(
+                              builder: (context) {
                                 final s = sl<SettingsController>().state.value;
-                                final locStyle = Theme.of(context)
+                                final baseStyle = Theme.of(context)
                                     .textTheme
-                                    .bodySmall
+                                    .bodyMedium
                                     ?.copyWith(
-                                      color: cs.onSurfaceVariant.withValues(alpha: 0.6),
-                                      fontWeight: FontWeight.w500,
-                                      height: 1.15,
+                                      color: tone.foreground,
+                                      fontWeight: FontWeight.w700,
+                                      height: 1.2,
                                     );
                                 if (s.autoSizeText) {
                                   return AutoSizeText(
-                                    locationLine,
+                                    title,
                                     maxLines: s.timetableTextMaxLines,
                                     minFontSize: s.autoSizeMinFontSize,
                                     overflow: TextOverflow.ellipsis,
-                                    style: locStyle,
+                                    style: baseStyle,
                                   );
                                 }
                                 return Text(
-                                  locationLine,
+                                  title,
                                   maxLines: s.timetableTextMaxLines,
                                   overflow: TextOverflow.ellipsis,
-                                  style: locStyle?.copyWith(fontSize: s.timetableTextFontSize - 2),
+                                  style: baseStyle?.copyWith(
+                                    fontSize: s.timetableTextFontSize,
+                                  ),
                                 );
-                              }),
+                              },
+                            ),
+                            if (locationLine.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Builder(
+                                builder: (context) {
+                                  final s =
+                                      sl<SettingsController>().state.value;
+                                  final locStyle = Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: cs.onSurfaceVariant.withValues(
+                                          alpha: 0.6,
+                                        ),
+                                        fontWeight: FontWeight.w500,
+                                        height: 1.15,
+                                      );
+                                  if (s.autoSizeText) {
+                                    return AutoSizeText(
+                                      locationLine,
+                                      maxLines: s.timetableTextMaxLines,
+                                      minFontSize: s.autoSizeMinFontSize,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: locStyle,
+                                    );
+                                  }
+                                  return Text(
+                                    locationLine,
+                                    maxLines: s.timetableTextMaxLines,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: locStyle?.copyWith(
+                                      fontSize: s.timetableTextFontSize - 2,
+                                    ),
+                                  );
+                                },
+                              ),
                             ],
                           ],
                         ),
@@ -276,15 +367,12 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '进行中',
-                        style: Theme.of(context)
-                            .textTheme
-                            .labelSmall
-                            ?.copyWith(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 9,
-                              letterSpacing: 0.2,
-                            ),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: cs.onPrimaryContainer,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 9,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ],
                   ),
@@ -315,10 +403,7 @@ Future<void> _showDetailsDialog(
   );
 
   if (AdaptiveStyle.isCupertino(designStyle)) {
-    return showCupertinoModalPopup(
-      context: context,
-      builder: (_) => sheet,
-    );
+    return showCupertinoModalPopup(context: context, builder: (_) => sheet);
   }
 
   return Navigator.of(context).push(
@@ -427,3 +512,6 @@ String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
       '${twoDigits(occurrence.end.hour)}:${twoDigits(occurrence.end.minute)}';
   return '$start-$end';
 }
+
+// _showMarkOnlineSheet → show_mark_online_sheet.dart
+// _DashedBorderPainter + dashPath → dashed_border_painter.dart

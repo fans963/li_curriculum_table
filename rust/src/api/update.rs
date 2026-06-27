@@ -72,7 +72,7 @@ pub async fn download_update(
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
     use futures_util::StreamExt;
-    use reqwest::header::{ACCEPT_ENCODING, HeaderValue};
+    use reqwest::header::{HeaderValue, ACCEPT_ENCODING};
     use std::path::Path;
     use tokio::io::{AsyncWriteExt, BufWriter};
     use tokio::time::Duration;
@@ -87,12 +87,18 @@ pub async fn download_update(
         .expect("Failed to build download client");
 
     // Candidates: mirrors first, original GitHub URL last
-    let mut candidates: Vec<String> = mirror_prefixes.iter().map(|p| format!("{}{}", p, url)).collect();
+    let mut candidates: Vec<String> = mirror_prefixes
+        .iter()
+        .map(|p| format!("{}{}", p, url))
+        .collect();
     candidates.push(url);
 
     let _ = sink.add(DownloadProgress {
-        received: 0, total: 0, done: false,
-        saved_path: String::new(), error: "正在连接...".to_string(),
+        received: 0,
+        total: 0,
+        done: false,
+        saved_path: String::new(),
+        error: "正在连接...".to_string(),
     });
 
     // ── Phase 1: race all candidates in parallel ──────────────────────────
@@ -121,8 +127,11 @@ pub async fn download_update(
 
     let Some((winner_idx, response)) = winner else {
         let _ = sink.add(DownloadProgress {
-            received: 0, total: 0, done: true,
-            saved_path: String::new(), error: "所有下载源均不可达".to_string(),
+            received: 0,
+            total: 0,
+            done: true,
+            saved_path: String::new(),
+            error: "所有下载源均不可达".to_string(),
         });
         return Ok(());
     };
@@ -133,8 +142,11 @@ pub async fn download_update(
     if let Some(parent) = Path::new(&save_path).parent() {
         if let Err(e) = tokio::fs::create_dir_all(parent).await {
             let _ = sink.add(DownloadProgress {
-                received: 0, total, done: true,
-                saved_path: String::new(), error: format!("创建目录失败: {}", e),
+                received: 0,
+                total,
+                done: true,
+                saved_path: String::new(),
+                error: format!("创建目录失败: {}", e),
             });
             return Ok(());
         }
@@ -143,22 +155,30 @@ pub async fn download_update(
     match do_stream(response, &save_path, total, &sink).await {
         Ok(received) => {
             let _ = sink.add(DownloadProgress {
-                received, total, done: true,
-                saved_path: save_path, error: String::new(),
+                received,
+                total,
+                done: true,
+                saved_path: save_path,
+                error: String::new(),
             });
             return Ok(());
         }
         Err(e) => {
             let _ = sink.add(DownloadProgress {
-                received: 0, total, done: false,
-                saved_path: String::new(), error: format!("{}，尝试回退...", e),
+                received: 0,
+                total,
+                done: false,
+                saved_path: String::new(),
+                error: format!("{}，尝试回退...", e),
             });
         }
     }
 
     // ── Phase 3: sequential fallback on remaining candidates ──────────────
     for (idx, candidate) in candidates.iter().enumerate() {
-        if idx == winner_idx { continue; }
+        if idx == winner_idx {
+            continue;
+        }
 
         let mut req = client.get(candidate);
         req = req.header(ACCEPT_ENCODING, HeaderValue::from_static("identity"));
@@ -168,7 +188,9 @@ pub async fn download_update(
         };
 
         let _ = sink.add(DownloadProgress {
-            received: 0, total: 0, done: false,
+            received: 0,
+            total: 0,
+            done: false,
             saved_path: String::new(),
             error: format!("正在回退到源 {} / {}...", idx + 1, candidates.len()),
         });
@@ -176,23 +198,32 @@ pub async fn download_update(
         match do_stream(resp, &save_path, total, &sink).await {
             Ok(received) => {
                 let _ = sink.add(DownloadProgress {
-                    received, total, done: true,
-                    saved_path: save_path, error: String::new(),
+                    received,
+                    total,
+                    done: true,
+                    saved_path: save_path,
+                    error: String::new(),
                 });
                 return Ok(());
             }
             Err(e) => {
                 let _ = sink.add(DownloadProgress {
-                    received: 0, total, done: false,
-                    saved_path: String::new(), error: format!("{}，尝试下一个源...", e),
+                    received: 0,
+                    total,
+                    done: false,
+                    saved_path: String::new(),
+                    error: format!("{}，尝试下一个源...", e),
                 });
             }
         }
     }
 
     let _ = sink.add(DownloadProgress {
-        received: 0, total: 0, done: true,
-        saved_path: String::new(), error: "所有下载源均失败".to_string(),
+        received: 0,
+        total: 0,
+        done: true,
+        saved_path: String::new(),
+        error: "所有下载源均失败".to_string(),
     });
     Ok(())
 }
@@ -217,16 +248,25 @@ async fn do_stream(
 
     while let Some(chunk_result) = stream.next().await {
         let chunk = chunk_result.map_err(|e| format!("流错误: {}", e))?;
-        writer.write_all(&chunk).await.map_err(|e| format!("写入失败: {}", e))?;
+        writer
+            .write_all(&chunk)
+            .await
+            .map_err(|e| format!("写入失败: {}", e))?;
         received += chunk.len() as u64;
 
         let _ = sink.add(DownloadProgress {
-            received, total, done: false,
-            saved_path: String::new(), error: String::new(),
+            received,
+            total,
+            done: false,
+            saved_path: String::new(),
+            error: String::new(),
         });
     }
 
-    writer.flush().await.map_err(|e| format!("刷新文件失败: {}", e))?;
+    writer
+        .flush()
+        .await
+        .map_err(|e| format!("刷新文件失败: {}", e))?;
     Ok(received)
 }
 
@@ -240,8 +280,11 @@ pub async fn download_update(
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
     let _ = sink.add(DownloadProgress {
-        received: 0, total: 0, done: true,
-        saved_path: String::new(), error: "Web 端不支持应用内下载".to_string(),
+        received: 0,
+        total: 0,
+        done: true,
+        saved_path: String::new(),
+        error: "Web 端不支持应用内下载".to_string(),
     });
     Ok(())
 }

@@ -12,24 +12,19 @@ class FeedbackHandler {
     // Create an XFile from the temporary file
     final XFile xFile = XFile(screenshotFile.path);
 
-    final String shareText = feedback.text.isEmpty ? '来自用户的应用反馈' : feedback.text;
+    final String shareText = feedback.text.isEmpty
+        ? '来自用户的应用反馈'
+        : feedback.text;
 
     try {
       // Use the ShareParams API as required by share_plus 12.0.2
       await SharePlus.instance.share(
-        ShareParams(
-          text: shareText,
-          subject: '🍐课表 - 应用反馈',
-          files: [xFile],
-        ),
+        ShareParams(text: shareText, subject: '🍐课表 - 应用反馈', files: [xFile]),
       );
     } catch (e) {
       // Fallback if file sharing fails
       await SharePlus.instance.share(
-        ShareParams(
-          text: shareText,
-          subject: '🍐课表 - 应用反馈',
-        ),
+        ShareParams(text: shareText, subject: '🍐课表 - 应用反馈'),
       );
     }
   }

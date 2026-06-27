@@ -10,7 +10,7 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/book/presentation/pages/book_cupertino.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_detail_page.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:li_curriculum_table/features/book/presentation/pages/widgets/m3e_adv_dropdown.dart';
 import 'package:signals/signals_flutter.dart';
 
 class BookTab extends SignalStatefulWidget {
@@ -41,8 +41,9 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
   final _advPage = signal(1);
   final _totalCount = signal(0);
 
-  int get _totalPages =>
-      _totalCount.value == 0 ? 1 : ((_totalCount.value - 1) ~/ _advDisplaypg.value + 1);
+  int get _totalPages => _totalCount.value == 0
+      ? 1
+      : ((_totalCount.value - 1) ~/ _advDisplaypg.value + 1);
 
   static const _searchTypeLabels = {
     'title': '题名',
@@ -58,11 +59,7 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     '11': '中文期刊',
     '12': '西文期刊',
   };
-  static const _deptLabels = {
-    'ALL': '所有校区',
-    '00': '南京校区',
-    '06': '江阴校区',
-  };
+  static const _deptLabels = {'ALL': '所有校区', '00': '南京校区', '06': '江阴校区'};
   static const _sortLabels = {
     'CATA_DATE': '入藏日期',
     'M_TITLE': '题名',
@@ -158,12 +155,24 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
         deptMap: _deptLabels,
         sortMap: _sortLabels,
         onAdvChanged: <String, void Function(String)>{
-          'searchType': (v) { _advSearchType.value = v; },
-          'doctype': (v) { _advDoctype.value = v; },
-          'dept': (v) { _advDept.value = v; },
-          'sort': (v) { _advSort.value = v; },
-          'orderby': (v) { _advOrderby.value = v; },
-          'displaypg': (v) { _advDisplaypg.value = int.parse(v); },
+          'searchType': (v) {
+            _advSearchType.value = v;
+          },
+          'doctype': (v) {
+            _advDoctype.value = v;
+          },
+          'dept': (v) {
+            _advDept.value = v;
+          },
+          'sort': (v) {
+            _advSort.value = v;
+          },
+          'orderby': (v) {
+            _advOrderby.value = v;
+          },
+          'displaypg': (v) {
+            _advDisplaypg.value = int.parse(v);
+          },
         },
         page: _advPage.value,
         totalCount: _totalCount.value,
@@ -187,7 +196,12 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
         children: [
           IconButton.filledTonal(
             icon: const Icon(Icons.navigate_before, size: 18),
-            onPressed: pg > 1 ? () { _advPage.value = pg - 1; _performSearch(changePage: true); } : null,
+            onPressed: pg > 1
+                ? () {
+                    _advPage.value = pg - 1;
+                    _performSearch(changePage: true);
+                  }
+                : null,
             visualDensity: VisualDensity.compact,
             style: IconButton.styleFrom(minimumSize: const Size(36, 32)),
           ),
@@ -199,7 +213,12 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
           const SizedBox(width: 12),
           IconButton.filledTonal(
             icon: const Icon(Icons.navigate_next, size: 18),
-            onPressed: pg < _totalPages ? () { _advPage.value = pg + 1; _performSearch(changePage: true); } : null,
+            onPressed: pg < _totalPages
+                ? () {
+                    _advPage.value = pg + 1;
+                    _performSearch(changePage: true);
+                  }
+                : null,
             visualDensity: VisualDensity.compact,
             style: IconButton.styleFrom(minimumSize: const Size(36, 32)),
           ),
@@ -231,7 +250,9 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                 Text(
                   _isAdvancedDefault ? '高级检索' : '已启用高级检索',
                   style: tt.labelSmall?.copyWith(
-                    color: _isAdvancedDefault ? cs.onSurfaceVariant : cs.primary,
+                    color: _isAdvancedDefault
+                        ? cs.onSurfaceVariant
+                        : cs.primary,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 0.3,
                   ),
@@ -252,7 +273,9 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
             decoration: BoxDecoration(
               color: cs.surfaceContainerLow,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.4)),
+              border: Border.all(
+                color: cs.outlineVariant.withValues(alpha: 0.4),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -260,45 +283,116 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                 // Row 1: 检索字段 + 文献类型
                 Row(
                   children: [
-                    _advDropdown(context, label: '检索字段', value: _advSearchType.value, items: _searchTypeLabels, onChanged: (v) => _advSearchType.value = v),
+                    _advDropdown(
+                      context,
+                      label: '检索字段',
+                      value: _advSearchType.value,
+                      items: _searchTypeLabels,
+                      onChanged: (v) => _advSearchType.value = v,
+                    ),
                     const SizedBox(width: 10),
-                    _advDropdown(context, label: '文献类型', value: _advDoctype.value, items: _doctypeLabels, onChanged: (v) => _advDoctype.value = v),
+                    _advDropdown(
+                      context,
+                      label: '文献类型',
+                      value: _advDoctype.value,
+                      items: _doctypeLabels,
+                      onChanged: (v) => _advDoctype.value = v,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 // Row 2: 校区 + 排序
                 Row(
                   children: [
-                    _advDropdown(context, label: '校区', value: _advDept.value, items: _deptLabels, onChanged: (v) => _advDept.value = v),
+                    _advDropdown(
+                      context,
+                      label: '校区',
+                      value: _advDept.value,
+                      items: _deptLabels,
+                      onChanged: (v) => _advDept.value = v,
+                    ),
                     const SizedBox(width: 10),
-                    _advDropdown(context, label: '排序', value: _advSort.value, items: _sortLabels, onChanged: (v) => _advSort.value = v),
+                    _advDropdown(
+                      context,
+                      label: '排序',
+                      value: _advSort.value,
+                      items: _sortLabels,
+                      onChanged: (v) => _advSort.value = v,
+                    ),
                   ],
                 ),
                 const SizedBox(height: 12),
                 // Row 3: 排序方向 + 每页数量
                 Row(
                   children: [
-                    Text('每页', style: tt.labelSmall?.copyWith(color: cs.onSurfaceVariant)),
+                    Text(
+                      '每页',
+                      style: tt.labelSmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
                     const SizedBox(width: 10),
                     ToggleButtons(
-                      isSelected: _displaypgOptions.map((n) => n == _advDisplaypg.value).toList(),
-                      onPressed: (i) => _advDisplaypg.value = _displaypgOptions[i],
+                      isSelected: _displaypgOptions
+                          .map((n) => n == _advDisplaypg.value)
+                          .toList(),
+                      onPressed: (i) =>
+                          _advDisplaypg.value = _displaypgOptions[i],
                       borderRadius: BorderRadius.circular(20),
-                      constraints: const BoxConstraints(minWidth: 40, minHeight: 32),
-                      children: _displaypgOptions.map((n) => Padding(padding: const EdgeInsets.symmetric(horizontal: 4), child: Text('$n', style: const TextStyle(fontSize: 12)))).toList(),
+                      constraints: const BoxConstraints(
+                        minWidth: 40,
+                        minHeight: 32,
+                      ),
+                      children: _displaypgOptions
+                          .map(
+                            (n) => Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                              ),
+                              child: Text(
+                                '$n',
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                            ),
+                          )
+                          .toList(),
                     ),
                     const Spacer(),
                     SegmentedButton<String>(
                       segments: [
-                        ButtonSegment(value: 'DESC', label: Text('最新优先', style: TextStyle(fontSize: 12, color: _advOrderby.value == 'DESC' ? cs.onPrimary : cs.onSurface))),
-                        ButtonSegment(value: 'asc', label: Text('最早优先', style: TextStyle(fontSize: 12, color: _advOrderby.value == 'asc' ? cs.onPrimary : cs.onSurface))),
+                        ButtonSegment(
+                          value: 'DESC',
+                          label: Text(
+                            '最新优先',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _advOrderby.value == 'DESC'
+                                  ? cs.onPrimary
+                                  : cs.onSurface,
+                            ),
+                          ),
+                        ),
+                        ButtonSegment(
+                          value: 'asc',
+                          label: Text(
+                            '最早优先',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: _advOrderby.value == 'asc'
+                                  ? cs.onPrimary
+                                  : cs.onSurface,
+                            ),
+                          ),
+                        ),
                       ],
                       selected: {_advOrderby.value},
                       onSelectionChanged: (s) => _advOrderby.value = s.first,
                       showSelectedIcon: false,
                       style: const ButtonStyle(
                         visualDensity: VisualDensity.compact,
-                        padding: WidgetStatePropertyAll(EdgeInsets.symmetric(horizontal: 14)),
+                        padding: WidgetStatePropertyAll(
+                          EdgeInsets.symmetric(horizontal: 14),
+                        ),
                       ),
                     ),
                   ],
@@ -319,7 +413,14 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     required Map<String, String> items,
     required ValueChanged<String> onChanged,
   }) {
-    return Expanded(child: _M3EAdvDropdown(label: label, value: value, items: items, onChanged: onChanged));
+    return Expanded(
+      child: M3EAdvDropdown(
+        label: label,
+        value: value,
+        items: items,
+        onChanged: onChanged,
+      ),
+    );
   }
 
   Widget _buildMaterial(BuildContext context, DesignStyle ds) {
@@ -339,13 +440,22 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
                   decoration: BoxDecoration(
                     color: colorScheme.surface,
-                    border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: colorScheme.outlineVariant.withValues(
+                          alpha: 0.3,
+                        ),
+                        width: 0.5,
+                      ),
+                    ),
                   ),
                   child: SearchBar(
                     controller: _searchController,
                     hintText: '输入书名检索馆藏，例如 "计算机"',
-                    leading: Icon(AppIcons.search(ds),
-                        color: colorScheme.onSurfaceVariant),
+                    leading: Icon(
+                      AppIcons.search(ds),
+                      color: colorScheme.onSurfaceVariant,
+                    ),
                     trailing: [
                       if (_searchController.text.isNotEmpty)
                         IconButtonM3E(
@@ -364,13 +474,16 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
                     onSubmitted: (_) => _performSearch(),
                     elevation: WidgetStateProperty.all(0),
                     backgroundColor: WidgetStateProperty.all(
-                        colorScheme.surfaceContainerHigh),
+                      colorScheme.surfaceContainerHigh,
+                    ),
                     shape: WidgetStateProperty.all(
                       RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                         side: BorderSide(
-                            color: colorScheme.outlineVariant
-                                .withValues(alpha: 0.5)),
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.5,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -430,78 +543,6 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeScaleTransition(animation: animation, child: child);
         },
-      ),
-    );
-  }
-}
-
-class _M3EAdvDropdown extends StatefulWidget {
-  final String label, value;
-  final Map<String, String> items;
-  final ValueChanged<String> onChanged;
-  const _M3EAdvDropdown({required this.label, required this.value, required this.items, required this.onChanged});
-  @override
-  State<_M3EAdvDropdown> createState() => _M3EAdvDropdownState();
-}
-
-class _M3EAdvDropdownState extends State<_M3EAdvDropdown> {
-  late final M3EDropdownController<String> _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = M3EDropdownController<String>()..initialize();
-    _sync();
-  }
-
-  @override
-  void didUpdateWidget(covariant _M3EAdvDropdown oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.value != widget.value || oldWidget.items != widget.items) {
-      _sync();
-    }
-  }
-
-  void _sync() {
-    _controller.setItems(widget.items.entries.map((e) => M3EDropdownItem(
-      label: e.value,
-      value: e.key,
-      selected: e.key == widget.value,
-    )).toList());
-    _controller.selectWhere((i) => i.value == widget.value);
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return M3EDropdownMenu<String>(
-      singleSelect: true,
-      showChipAnimation: false,
-      items: const [],
-      controller: _controller,
-      onSelectionChanged: (selected) {
-        if (selected.isNotEmpty) widget.onChanged(selected.first.value);
-      },
-      containerRadius: 12,
-      fieldStyle: M3EDropdownFieldStyle(
-        hintText: widget.label,
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: BorderSide(color: cs.outlineVariant, width: 0.5),
-        focusedBorder: BorderSide(color: cs.primary, width: 1),
-        borderRadius: BorderRadius.circular(12),
-        selectedBorderRadius: 12,
-      ),
-      dropdownStyle: const M3EDropdownStyle(maxHeight: 300, containerRadius: 12),
-      itemStyle: M3EDropdownItemStyle(
-        outerRadius: 10,
-        innerRadius: 6,
-        selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
       ),
     );
   }

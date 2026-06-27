@@ -7,8 +7,7 @@ pub async fn get_level_exam_scores(
     username: String,
     password: String,
 ) -> Result<Vec<LevelExamScore>> {
-    let session =
-        get_authorized_session(Some(username.clone()), Some(password.clone())).await?;
+    let session = get_authorized_session(Some(username.clone()), Some(password.clone())).await?;
     let service = LevelExamScoreService::new(session);
 
     let record = service

@@ -33,18 +33,19 @@ class LevelExamScoreEntity {
   }
 
   Map<String, dynamic> toJson() => {
-        'courseName': courseName,
-        'writtenScore': writtenScore,
-        'practicalScore': practicalScore,
-        'totalScore': totalScore,
-        'writtenGrade': writtenGrade,
-        'practicalGrade': practicalGrade,
-        'totalGrade': totalGrade,
-        'examDate': examDate,
-      };
+    'courseName': courseName,
+    'writtenScore': writtenScore,
+    'practicalScore': practicalScore,
+    'totalScore': totalScore,
+    'writtenGrade': writtenGrade,
+    'practicalGrade': practicalGrade,
+    'totalGrade': totalGrade,
+    'examDate': examDate,
+  };
 
   /// Whether a numeric total score is available.
-  bool get hasNumericScore => totalScore.isNotEmpty && int.tryParse(totalScore) != null;
+  bool get hasNumericScore =>
+      totalScore.isNotEmpty && int.tryParse(totalScore) != null;
 
   /// Numeric total score, or null if not available.
   int? get numericScore => int.tryParse(totalScore);

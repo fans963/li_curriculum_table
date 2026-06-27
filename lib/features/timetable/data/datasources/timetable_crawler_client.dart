@@ -32,11 +32,8 @@ class TimetableCrawlerClient {
     Object? lastError;
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
-        final rust_model.TimetableRecord record =
-            await rust_api.fetchTimetableData(
-          username: username,
-          password: password,
-        );
+        final rust_model.TimetableRecord record = await rust_api
+            .fetchTimetableData(username: username, password: password);
 
         return TimetableCrawlerResult(
           loginLikelySuccess: record.loginLikelySuccess,

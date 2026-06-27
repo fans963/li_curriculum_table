@@ -33,7 +33,9 @@ class TimetableController {
   late final isLoading = computed(() => _state.value.isLoading);
   late final status = computed(() => _state.value.status);
   late final displayWeek = computed(() => _state.value.displayWeek);
-  late final currentTeachingWeek = computed(() => _state.value.currentTeachingWeek);
+  late final currentTeachingWeek = computed(
+    () => _state.value.currentTeachingWeek,
+  );
   late final data = computed(() => _state.value.data);
   late final needsLogin = computed(() => _state.value.needsLogin);
   late final termStartMonday = computed(() => _state.value.termStartMonday);
@@ -66,8 +68,10 @@ class TimetableController {
       referenceDate: baseline.referenceDate,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor)
-        .clamp(_state.value.minWeek, _state.value.maxWeek);
+    final inferred = calculateWeekIndex(
+      DateTime.now(),
+      anchor,
+    ).clamp(_state.value.minWeek, _state.value.maxWeek);
 
     _state.value = _state.value.copyWith(
       referenceWeek: baseline.referenceWeek,
@@ -149,8 +153,10 @@ class TimetableController {
       referenceWeek: safeWeek,
     );
 
-    final inferred = calculateWeekIndex(DateTime.now(), anchor)
-        .clamp(_state.value.minWeek, _state.value.maxWeek);
+    final inferred = calculateWeekIndex(
+      DateTime.now(),
+      anchor,
+    ).clamp(_state.value.minWeek, _state.value.maxWeek);
 
     _state.value = _state.value.copyWith(
       referenceWeek: safeWeek,
@@ -169,10 +175,10 @@ class TimetableController {
             ),
           )
           .catchError((e) {
-        if (kDebugMode) {
-          debugPrint('Failed to cache teaching week baseline: $e');
-        }
-      }),
+            if (kDebugMode) {
+              debugPrint('Failed to cache teaching week baseline: $e');
+            }
+          }),
     );
   }
 
@@ -188,8 +194,10 @@ class TimetableController {
       }
       await fetchAndBuild(username: creds.username, password: creds.password);
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, status: '同步失败: $e');
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        status: '同步失败: $e',
+      );
     } finally {
       _isFetching = false;
     }
@@ -227,8 +235,7 @@ class TimetableController {
       return;
     }
 
-    _state.value =
-        _state.value.copyWith(status: '正在爬取课表并生成对比视图...');
+    _state.value = _state.value.copyWith(status: '正在爬取课表并生成对比视图...');
 
     final repository = sl<TimetableRepository>();
 
@@ -276,8 +283,7 @@ class TimetableController {
 
       // --- Sync Classrooms ---
       try {
-        _state.value =
-            _state.value.copyWith(status: '正在同步教室信息...');
+        _state.value = _state.value.copyWith(status: '正在同步教室信息...');
         await sl<ClassroomController>().syncCurrentContext();
       } catch (e, st) {
         failedSyncs.add('教室');
@@ -288,8 +294,7 @@ class TimetableController {
 
       // --- Sync Grades ---
       try {
-        _state.value =
-            _state.value.copyWith(status: '正在同步成绩信息...');
+        _state.value = _state.value.copyWith(status: '正在同步成绩信息...');
         await sl<GradeController>().loadGrades(forceRefresh: true);
       } catch (e, st) {
         failedSyncs.add('成绩');
@@ -300,8 +305,7 @@ class TimetableController {
 
       // --- Sync Exams ---
       try {
-        _state.value =
-            _state.value.copyWith(status: '正在同步考试信息...');
+        _state.value = _state.value.copyWith(status: '正在同步考试信息...');
         await sl<ExamController>().loadExams(forceRefresh: true);
       } catch (e, st) {
         failedSyncs.add('考试');
@@ -329,11 +333,13 @@ class TimetableController {
       final loweredErr = err.toLowerCase();
       final isConnRefused =
           RegExp(r'errno\s*[:=]\s*111\b').hasMatch(err) ||
-              loweredErr.contains('connection refused');
-      final isWebXhrNetworkError = kIsWeb &&
+          loweredErr.contains('connection refused');
+      final isWebXhrNetworkError =
+          kIsWeb &&
           (loweredErr.contains('xmlhttprequest onerror') ||
               loweredErr.contains(
-                  'networkerror when attempting to fetch resource') ||
+                'networkerror when attempting to fetch resource',
+              ) ||
               loweredErr.contains('dioexception [connection error]'));
 
       if (isConnRefused) {
@@ -359,13 +365,14 @@ class TimetableController {
 
     sl<NotificationService>()
         .scheduleCourseReminders(
-      templates: data.occurrences,
-      termStartMonday: termStart,
-      currentTeachingWeek: week,
-    )
+          templates: data.occurrences,
+          termStartMonday: termStart,
+          currentTeachingWeek: week,
+        )
         .catchError((e) {
-      if (kDebugMode) debugPrint('Course notification scheduling failed: $e');
-    });
+          if (kDebugMode)
+            debugPrint('Course notification scheduling failed: $e');
+        });
   }
 
   // ─── Schedule Events ─────────────────────────────────────────────────────
@@ -411,8 +418,7 @@ class TimetableController {
   }
 
   Future<void> clearAllCache() async {
-    _state.value =
-        _state.value.copyWith(isLoading: true, status: '正在清除缓存...');
+    _state.value = _state.value.copyWith(isLoading: true, status: '正在清除缓存...');
     await sl<ScheduleEventsRepository>().clearEvents();
     final store = sl<SecureStorageStore>();
     await store.deleteAllExcept([

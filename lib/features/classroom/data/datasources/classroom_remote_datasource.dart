@@ -5,8 +5,15 @@ import 'package:li_curriculum_table/features/classroom/domain/models/classroom_a
 import 'package:li_curriculum_table/features/classroom/domain/models/classroom_schedule.dart';
 
 abstract class ClassroomRemoteDataSource {
-  Future<(List<Campus>, String)> getCampuses({String? username, String? password});
-  Future<List<Building>> getBuildings(String campusId, {String? username, String? password});
+  Future<(List<Campus>, String)> getCampuses({
+    String? username,
+    String? password,
+  });
+  Future<List<Building>> getBuildings(
+    String campusId, {
+    String? username,
+    String? password,
+  });
   Future<List<ClassroomAvailability>> getClassroomAvailability({
     required String campusId,
     required String buildingId,
@@ -27,15 +34,28 @@ abstract class ClassroomRemoteDataSource {
 
 class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
   @override
-  Future<(List<Campus>, String)> getCampuses({String? username, String? password}) async {
+  Future<(List<Campus>, String)> getCampuses({
+    String? username,
+    String? password,
+  }) async {
     final data = await rust.getCampuses(username: username, password: password);
-    final campuses = data.campuses.map((c) => Campus(id: c.id, name: c.name)).toList();
+    final campuses = data.campuses
+        .map((c) => Campus(id: c.id, name: c.name))
+        .toList();
     return (campuses, data.currentTerm);
   }
 
   @override
-  Future<List<Building>> getBuildings(String campusId, {String? username, String? password}) async {
-    final buildings = await rust.getBuildings(campusId: campusId, username: username, password: password);
+  Future<List<Building>> getBuildings(
+    String campusId, {
+    String? username,
+    String? password,
+  }) async {
+    final buildings = await rust.getBuildings(
+      campusId: campusId,
+      username: username,
+      password: password,
+    );
     return buildings.map((b) => Building(id: b.id, name: b.name)).toList();
   }
 
@@ -59,10 +79,12 @@ class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
       password: password,
     );
     return results
-        .map((r) => ClassroomAvailability(
-              classroomName: r.classroomName,
-              availability: r.availability,
-            ))
+        .map(
+          (r) => ClassroomAvailability(
+            classroomName: r.classroomName,
+            availability: r.availability,
+          ),
+        )
         .toList();
   }
 
@@ -82,17 +104,21 @@ class ClassroomRemoteDataSourceImpl implements ClassroomRemoteDataSource {
       password: password,
     );
     return results
-        .map((s) => ClassroomSchedule(
-              classroomName: s.classroomName,
-              occupiedSlots: s.occupiedSlots
-                  .map((o) => OccupiedSlot(
-                        startWeek: o.startWeek,
-                        endWeek: o.endWeek,
-                        weekday: o.weekday,
-                        slotIndex: o.slotIndex,
-                      ))
-                  .toList(),
-            ))
+        .map(
+          (s) => ClassroomSchedule(
+            classroomName: s.classroomName,
+            occupiedSlots: s.occupiedSlots
+                .map(
+                  (o) => OccupiedSlot(
+                    startWeek: o.startWeek,
+                    endWeek: o.endWeek,
+                    weekday: o.weekday,
+                    slotIndex: o.slotIndex,
+                  ),
+                )
+                .toList(),
+          ),
+        )
         .toList();
   }
 }

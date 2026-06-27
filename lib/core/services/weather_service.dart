@@ -19,12 +19,12 @@ class WeatherInfo {
   });
 
   factory WeatherInfo.fromRust(rust.WeatherData data) => WeatherInfo(
-        minTemperature: data.minTemperature,
-        maxTemperature: data.maxTemperature,
-        weatherCode: data.weatherCode,
-        isDay: data.isDay,
-        windSpeed: data.windSpeed,
-      );
+    minTemperature: data.minTemperature,
+    maxTemperature: data.maxTemperature,
+    weatherCode: data.weatherCode,
+    isDay: data.isDay,
+    windSpeed: data.windSpeed,
+  );
 
   String get description => _weatherDescription(weatherCode);
   IconData get icon => _weatherIcon(weatherCode, isDay);
@@ -51,7 +51,8 @@ class WeatherInfo {
   }
 
   static IconData _weatherIcon(int code, bool isDay) {
-    if (code <= 1) return isDay ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded;
+    if (code <= 1)
+      return isDay ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded;
     if (code == 2) return Icons.wb_cloudy_rounded;
     if (code == 3) return Icons.cloud_rounded;
     if (code >= 45 && code <= 48) return Icons.foggy;
@@ -82,7 +83,8 @@ class WeatherInfo {
     if (code <= 1) return const Color(0xFFFF9500);
     if (code <= 3) return const Color(0xFF8E8E93);
     if (code >= 45 && code <= 48) return const Color(0xFF8E8E93);
-    if (code >= 61 || (code >= 80 && code <= 82)) return const Color(0xFF007AFF);
+    if (code >= 61 || (code >= 80 && code <= 82))
+      return const Color(0xFF007AFF);
     if (code >= 71) return const Color(0xFF5AC8FA);
     if (code >= 95) return const Color(0xFF5856D6);
     return const Color(0xFF8E8E93);
@@ -140,7 +142,9 @@ class WeatherService {
         ),
       );
 
-      debugPrint('Weather: position ${position.latitude}, ${position.longitude}');
+      debugPrint(
+        'Weather: position ${position.latitude}, ${position.longitude}',
+      );
 
       // Fetch weather via Rust bridge
       final data = await rust.fetchWeather(
@@ -150,7 +154,9 @@ class WeatherService {
 
       final weather = WeatherInfo.fromRust(data);
 
-      debugPrint('Weather: ${weather.minTemperature}°C-${weather.maxTemperature}°C code=${weather.weatherCode}');
+      debugPrint(
+        'Weather: ${weather.minTemperature}°C-${weather.maxTemperature}°C code=${weather.weatherCode}',
+      );
       _cachedWeather = weather;
       _lastFetchTime = DateTime.now();
       return weather;

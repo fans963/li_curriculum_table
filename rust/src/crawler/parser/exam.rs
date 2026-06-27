@@ -57,7 +57,11 @@ pub fn parse_exams(html: &str) -> CrawlerResult<ExamRecord> {
                 .select(&td_selector)
                 .map(|td| td.text().collect::<String>().trim().to_string())
                 .collect();
-            if cells.len() < 7 { None } else { Some(cells) }
+            if cells.len() < 7 {
+                None
+            } else {
+                Some(cells)
+            }
         })
         .collect();
 

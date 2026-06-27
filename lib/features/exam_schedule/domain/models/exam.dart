@@ -27,13 +27,13 @@ class ExamEntity {
   }
 
   Map<String, dynamic> toJson() => {
-        'session': session,
-        'courseCode': courseCode,
-        'courseName': courseName,
-        'examTime': examTime,
-        'location': location,
-        'seatNumber': seatNumber,
-      };
+    'session': session,
+    'courseCode': courseCode,
+    'courseName': courseName,
+    'examTime': examTime,
+    'location': location,
+    'seatNumber': seatNumber,
+  };
 
   /// Parse the start DateTime from examTime text.
   /// Format: "2026-05-16 08:30~10:30"
@@ -70,7 +70,9 @@ class ExamEntity {
     final start = startTime;
     if (start == null) return false;
     final now = DateTime.now();
-    return now.year == start.year && now.month == start.month && now.day == start.day;
+    return now.year == start.year &&
+        now.month == start.month &&
+        now.day == start.day;
   }
 
   /// Days remaining until the exam. Negative if already passed.

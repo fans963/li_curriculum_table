@@ -1,8 +1,8 @@
-use std::sync::{Arc, OnceLock};
-pub use crate::crawler::model::{TimetableRecord, CourseRow, TimeSlot};
+pub use crate::crawler::model::{CourseRow, TimeSlot, TimetableRecord};
+use crate::crawler::services::timetable::TimetableService;
 pub use crate::crawler::SessionManager;
 use crate::ocr::DdddOcr;
-use crate::crawler::services::timetable::TimetableService;
+use std::sync::{Arc, OnceLock};
 use tokio::sync::Mutex;
 
 static SHARED_SESSION_MANAGER: OnceLock<Arc<SessionManager>> = OnceLock::new();
@@ -11,12 +11,15 @@ pub async fn init_ocr_engine() -> anyhow::Result<()> {
     let ocr = Arc::new(Mutex::new(DdddOcr::new()));
     let manager = SessionManager::new(ocr).await;
     let arc_manager = Arc::new(manager);
-    
+
     let _ = SHARED_SESSION_MANAGER.set(arc_manager);
     Ok(())
 }
 
-pub async fn fetch_timetable_data(username: String, password: String) -> anyhow::Result<TimetableRecord> {
+pub async fn fetch_timetable_data(
+    username: String,
+    password: String,
+) -> anyhow::Result<TimetableRecord> {
     let manager = get_authorized_session(Some(username.clone()), Some(password.clone())).await?;
     let service = TimetableService::new(manager);
     let record = service.fetch_timetable(&username, &password, 5).await?;
@@ -24,7 +27,8 @@ pub async fn fetch_timetable_data(username: String, password: String) -> anyhow:
 }
 
 pub async fn get_shared_session_manager() -> anyhow::Result<Arc<SessionManager>> {
-    SHARED_SESSION_MANAGER.get()
+    SHARED_SESSION_MANAGER
+        .get()
         .cloned()
         .ok_or_else(|| anyhow::anyhow!("Session manager not initialized"))
 }

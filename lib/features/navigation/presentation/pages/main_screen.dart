@@ -117,46 +117,48 @@ class _MainScreenState extends State<MainScreen> {
     final ds = settings.designStyle;
     final isCupertino = AdaptiveStyle.isCupertino(ds);
 
-      if (isCupertino) {
-        // Cupertino: liquid glass bar floats OVER the content
-        return Scaffold(
-          body: Stack(
-            children: [
-              _buildPageContent(),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _buildCupertinoTabBar(
-                  context, currentIndex, ds, isSyncing,
-                ),
-              ),
-            ],
-          ),
-        );
-      }
-
-      // Material: standard Scaffold with bottomNavigationBar + FAB
+    if (isCupertino) {
+      // Cupertino: liquid glass bar floats OVER the content
       return Scaffold(
-        body: _buildPageContent(),
-        floatingActionButton: (currentIndex == 4 || currentIndex == 5)
-            ? null
-            : FabM3E(
-                onPressed: isSyncing ? null : () => _sync.syncGlobal(),
-                tooltip: '同步数据',
-                kind: FabM3EKind.secondary,
-                shapeFamily: FabM3EShapeFamily.round,
-                icon: isSyncing
-                    ? adaptiveActivityIndicator(
-                        designStyle: ds,
-                        size: 24,
-                        color:
-                            Theme.of(context).colorScheme.onSecondaryContainer,
-                      )
-                    : const Icon(Icons.refresh),
+        body: Stack(
+          children: [
+            _buildPageContent(),
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildCupertinoTabBar(
+                context,
+                currentIndex,
+                ds,
+                isSyncing,
               ),
-        bottomNavigationBar: _buildMaterialNavBar(currentIndex, ds),
+            ),
+          ],
+        ),
       );
+    }
+
+    // Material: standard Scaffold with bottomNavigationBar + FAB
+    return Scaffold(
+      body: _buildPageContent(),
+      floatingActionButton: (currentIndex == 4 || currentIndex == 5)
+          ? null
+          : FabM3E(
+              onPressed: isSyncing ? null : () => _sync.syncGlobal(),
+              tooltip: '同步数据',
+              kind: FabM3EKind.secondary,
+              shapeFamily: FabM3EShapeFamily.round,
+              icon: isSyncing
+                  ? adaptiveActivityIndicator(
+                      designStyle: ds,
+                      size: 24,
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    )
+                  : const Icon(Icons.refresh),
+            ),
+      bottomNavigationBar: _buildMaterialNavBar(currentIndex, ds),
+    );
   }
 
   Widget _buildMaterialNavBar(int currentIndex, DesignStyle ds) {

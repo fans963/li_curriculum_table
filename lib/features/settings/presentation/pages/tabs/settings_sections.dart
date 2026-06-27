@@ -45,7 +45,8 @@ class SectionCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
                     color: cs.primaryContainer.withValues(alpha: 0.35),
                     borderRadius: BorderRadius.circular(12),
@@ -57,10 +58,20 @@ class SectionCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                      Text(
+                        title,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 2),
-                        Text(subtitle!, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                        Text(
+                          subtitle!,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
                       ],
                     ],
                   ),
@@ -113,20 +124,32 @@ class SettingsTile extends StatelessWidget {
                 Text(title, style: tt.bodyMedium),
                 if (subtitle.isNotEmpty) ...[
                   const SizedBox(height: 2),
-                  Text(subtitle, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                  Text(
+                    subtitle,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
                 ],
               ],
             ),
           ),
-          if (trailing != null) trailing!
+          if (trailing != null)
+            trailing!
           else if (onTap != null)
-            Icon(Icons.chevron_right_rounded, size: 20, color: cs.onSurfaceVariant),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: cs.onSurfaceVariant,
+            ),
         ],
       ),
     );
 
     if (onTap != null && trailing == null) {
-      return InkWell(onTap: onTap, borderRadius: BorderRadius.circular(12), child: tile);
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: tile,
+      );
     }
     return tile;
   }

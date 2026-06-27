@@ -138,7 +138,10 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                           ),
                         )
                       : const Icon(Icons.cloud_sync_rounded),
-                  label: AutoSizeText(state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息', maxLines: 1),
+                  label: AutoSizeText(
+                    state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息',
+                    maxLines: 1,
+                  ),
                   size: M3EButtonSize.lg,
                   shape: M3EButtonShape.round,
                   onPressed: state.isLoading ? null : widget.onLoginPressed,
@@ -170,7 +173,8 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                 fillColor: colorScheme.surface,
               ),
               onTap: () async {
-                final termStart = sl<TimetableController>().termStartMonday.value;
+                final termStart =
+                    sl<TimetableController>().termStartMonday.value;
                 final initialDate = termStart ?? DateTime.now();
                 final pickedDate = await showDatePicker(
                   context: context,
@@ -298,18 +302,25 @@ class _TermDropdownState extends State<_TermDropdown> {
   @override
   void didUpdateWidget(_TermDropdown old) {
     super.didUpdateWidget(old);
-    if (old.options != widget.options || old.currentTerm != widget.currentTerm) {
+    if (old.options != widget.options ||
+        old.currentTerm != widget.currentTerm) {
       _syncItems();
     }
   }
 
   void _syncItems() {
     _syncing.value = true;
-    _controller.setItems(widget.options.map((opt) => M3EDropdownItem(
-      label: opt,
-      value: opt,
-      selected: opt == widget.currentTerm,
-    )).toList());
+    _controller.setItems(
+      widget.options
+          .map(
+            (opt) => M3EDropdownItem(
+              label: opt,
+              value: opt,
+              selected: opt == widget.currentTerm,
+            ),
+          )
+          .toList(),
+    );
     if (widget.currentTerm.isNotEmpty) {
       _controller.selectWhere((item) => item.value == widget.currentTerm);
     }
@@ -347,21 +358,18 @@ class _TermDropdownState extends State<_TermDropdown> {
             hintText: '当前学期',
             prefixIcon: Icon(AppIcons.school(ds), size: 18),
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        border: BorderSide(color: cs.outlineVariant, width: 0.5),
-        focusedBorder: BorderSide(color: cs.primary, width: 1),
-        borderRadius: BorderRadius.circular(12),
-        selectedBorderRadius: 12,
-      ),
-      dropdownStyle: M3EDropdownStyle(
-        maxHeight: 300,
-        containerRadius: 16,
-      ),
-      itemStyle: M3EDropdownItemStyle(
-        outerRadius: 12,
-        innerRadius: 6,
-        selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
-      ),
-    ),
+            border: BorderSide(color: cs.outlineVariant, width: 0.5),
+            focusedBorder: BorderSide(color: cs.primary, width: 1),
+            borderRadius: BorderRadius.circular(12),
+            selectedBorderRadius: 12,
+          ),
+          dropdownStyle: M3EDropdownStyle(maxHeight: 300, containerRadius: 16),
+          itemStyle: M3EDropdownItemStyle(
+            outerRadius: 12,
+            innerRadius: 6,
+            selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
+          ),
+        ),
         Padding(
           padding: const EdgeInsets.only(left: 16, top: 4),
           child: Text(
@@ -375,4 +383,3 @@ class _TermDropdownState extends State<_TermDropdown> {
     );
   }
 }
-

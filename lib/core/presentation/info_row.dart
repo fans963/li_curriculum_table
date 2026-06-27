@@ -25,9 +25,15 @@ class InfoRow extends StatelessWidget {
       final cs = Theme.of(context).colorScheme;
       final tt = Theme.of(context).textTheme;
       return Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: maxLines > 1
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 16, color: iconColor ?? cs.onSurfaceVariant.withValues(alpha: 0.6)),
+          Icon(
+            icon,
+            size: 16,
+            color: iconColor ?? cs.onSurfaceVariant.withValues(alpha: 0.6),
+          ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
@@ -47,9 +53,15 @@ class InfoRow extends StatelessWidget {
       final cs = Theme.of(context).colorScheme;
       final tt = Theme.of(context).textTheme;
       return Row(
-        crossAxisAlignment: maxLines > 1 ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: maxLines > 1
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
-          Icon(icon, size: 18, color: iconColor ?? cs.primary.withValues(alpha: 0.8)),
+          Icon(
+            icon,
+            size: 18,
+            color: iconColor ?? cs.primary.withValues(alpha: 0.8),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

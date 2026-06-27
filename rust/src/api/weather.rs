@@ -46,9 +46,18 @@ pub async fn fetch_weather(latitude: f64, longitude: f64) -> Result<WeatherData>
         .daily
         .ok_or_else(|| anyhow::anyhow!("No daily weather data in response"))?;
 
-    let weather_code = daily.weather_code.and_then(|v| v.first().cloned()).unwrap_or(0);
-    let max_temp = daily.temperature_2m_max.and_then(|v| v.first().cloned()).unwrap_or(0.0);
-    let min_temp = daily.temperature_2m_min.and_then(|v| v.first().cloned()).unwrap_or(0.0);
+    let weather_code = daily
+        .weather_code
+        .and_then(|v| v.first().cloned())
+        .unwrap_or(0);
+    let max_temp = daily
+        .temperature_2m_max
+        .and_then(|v| v.first().cloned())
+        .unwrap_or(0.0);
+    let min_temp = daily
+        .temperature_2m_min
+        .and_then(|v| v.first().cloned())
+        .unwrap_or(0.0);
 
     Ok(WeatherData {
         min_temperature: min_temp,

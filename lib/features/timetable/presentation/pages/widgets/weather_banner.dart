@@ -44,27 +44,55 @@ class _WeatherBannerState extends State<WeatherBanner> {
     if (w == null) return const SizedBox.shrink();
 
     final isCupertino = AdaptiveStyle.isCupertino(widget.designStyle);
-    return isCupertino ? _buildCupertino(context, w) : _buildMaterial(context, w);
+    return isCupertino
+        ? _buildCupertino(context, w)
+        : _buildMaterial(context, w);
   }
 
   Widget _buildCupertino(BuildContext context, WeatherInfo w) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Semantics(
-        label: '天气: ${w.minTemperature.round()}到${w.maxTemperature.round()}度, ${w.description}',
+        label:
+            '天气: ${w.minTemperature.round()}到${w.maxTemperature.round()}度, ${w.description}',
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: CupertinoDynamicColor.resolve(CupertinoColors.secondarySystemGroupedBackground, context),
+            color: CupertinoDynamicColor.resolve(
+              CupertinoColors.secondarySystemGroupedBackground,
+              context,
+            ),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
             children: [
               Icon(w.icon, size: 22, color: w.color),
               const SizedBox(width: 10),
-              Flexible(flex: 2, child: Text('${w.minTemperature.round()}~${w.maxTemperature.round()}°C ${w.description}', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Flexible(
+                flex: 2,
+                child: Text(
+                  '${w.minTemperature.round()}~${w.maxTemperature.round()}°C ${w.description}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               const SizedBox(width: 12),
-              Flexible(flex: 3, child: Text(w.tip, style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context)), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Flexible(
+                flex: 3,
+                child: Text(
+                  w.tip,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),
@@ -77,21 +105,45 @@ class _WeatherBannerState extends State<WeatherBanner> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Semantics(
-        label: '天气: ${w.minTemperature.round()}到${w.maxTemperature.round()}度, ${w.description}',
+        label:
+            '天气: ${w.minTemperature.round()}到${w.maxTemperature.round()}度, ${w.description}',
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: cs.surfaceContainerLow,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.3),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [
               Icon(w.icon, size: 22, color: w.color),
               const SizedBox(width: 10),
-              Flexible(flex: 2, child: Text('${w.minTemperature.round()}~${w.maxTemperature.round()}°C ${w.description}', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Flexible(
+                flex: 2,
+                child: Text(
+                  '${w.minTemperature.round()}~${w.maxTemperature.round()}°C ${w.description}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
               const SizedBox(width: 12),
-              Flexible(flex: 3, child: Text(w.tip, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant), maxLines: 1, overflow: TextOverflow.ellipsis)),
+              Flexible(
+                flex: 3,
+                child: Text(
+                  w.tip,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
         ),

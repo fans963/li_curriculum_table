@@ -5,10 +5,12 @@ class _CupertinoBookDetailDialog extends SignalStatefulWidget {
   const _CupertinoBookDetailDialog({required this.book});
 
   @override
-  State<_CupertinoBookDetailDialog> createState() => _CupertinoBookDetailDialogState();
+  State<_CupertinoBookDetailDialog> createState() =>
+      _CupertinoBookDetailDialogState();
 }
 
-class _CupertinoBookDetailDialogState extends State<_CupertinoBookDetailDialog> {
+class _CupertinoBookDetailDialogState
+    extends State<_CupertinoBookDetailDialog> {
   late final BookCoverSignal _cover;
   final _copiedCallNo = signal(false);
 
@@ -23,7 +25,10 @@ class _CupertinoBookDetailDialogState extends State<_CupertinoBookDetailDialog> 
   @override
   void initState() {
     super.initState();
-    _cover = BookCoverSignal(detailUrl: widget.book.detailUrl, title: widget.book.title);
+    _cover = BookCoverSignal(
+      detailUrl: widget.book.detailUrl,
+      title: widget.book.title,
+    );
   }
 
   @override
@@ -75,21 +80,32 @@ class _CoverHeader extends SignalWidget {
         clipBehavior: Clip.antiAlias,
         children: [
           Positioned.fill(
-            child: Builder(builder: (context) {
-              final url = cover.url.value;
-              if (url != null) {
-                return ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(image: CachedNetworkImageProvider(url), fit: BoxFit.cover),
+            child: Builder(
+              builder: (context) {
+                final url = cover.url.value;
+                if (url != null) {
+                  return ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: CachedNetworkImageProvider(url),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      foregroundDecoration: BoxDecoration(
+                        color: CupertinoColors.black.withValues(alpha: 0.2),
+                      ),
                     ),
-                    foregroundDecoration: BoxDecoration(color: CupertinoColors.black.withValues(alpha: 0.2)),
+                  );
+                }
+                return Container(
+                  color: CupertinoColors.secondarySystemBackground.resolveFrom(
+                    context,
                   ),
                 );
-              }
-              return Container(color: CupertinoColors.secondarySystemBackground.resolveFrom(context));
-            }),
+              },
+            ),
           ),
           Center(
             child: Container(
@@ -98,7 +114,11 @@ class _CoverHeader extends SignalWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(10),
                 boxShadow: [
-                  BoxShadow(color: CupertinoColors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
+                  BoxShadow(
+                    color: CupertinoColors.black.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
                 ],
               ),
               clipBehavior: Clip.antiAlias,
@@ -123,8 +143,12 @@ class _FallbackHeader extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            CupertinoColors.activeBlue.resolveFrom(context).withValues(alpha: 0.12),
-            CupertinoColors.activeBlue.resolveFrom(context).withValues(alpha: 0.03),
+            CupertinoColors.activeBlue
+                .resolveFrom(context)
+                .withValues(alpha: 0.12),
+            CupertinoColors.activeBlue
+                .resolveFrom(context)
+                .withValues(alpha: 0.03),
           ],
         ),
       ),
@@ -132,11 +156,22 @@ class _FallbackHeader extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: CupertinoColors.activeBlue.resolveFrom(context).withValues(alpha: 0.1),
+            color: CupertinoColors.activeBlue
+                .resolveFrom(context)
+                .withValues(alpha: 0.1),
             shape: BoxShape.circle,
-            border: Border.all(color: CupertinoColors.activeBlue.resolveFrom(context).withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(
+              color: CupertinoColors.activeBlue
+                  .resolveFrom(context)
+                  .withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
-          child: Icon(CupertinoIcons.book_fill, size: 32, color: CupertinoColors.activeBlue.resolveFrom(context)),
+          child: Icon(
+            CupertinoIcons.book_fill,
+            size: 32,
+            color: CupertinoColors.activeBlue.resolveFrom(context),
+          ),
         ),
       ),
     );
@@ -165,7 +200,17 @@ class _DetailContent extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(child: Text(book.title, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.2, letterSpacing: -0.5))),
+            Expanded(
+              child: Text(
+                book.title,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  height: 1.2,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ),
             const SizedBox(width: 12),
             _DocTypeBadge(docType: book.docType),
           ],
@@ -175,7 +220,9 @@ class _DetailContent extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: CupertinoColors.secondarySystemBackground.resolveFrom(context),
+            color: CupertinoColors.secondarySystemBackground.resolveFrom(
+              context,
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -184,16 +231,26 @@ class _DetailContent extends StatelessWidget {
               if (book.publisher.isNotEmpty && book.publisher != '未知出版信息') ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Container(height: 0.5, color: CupertinoColors.separator.resolveFrom(context)),
+                  child: Container(
+                    height: 0.5,
+                    color: CupertinoColors.separator.resolveFrom(context),
+                  ),
                 ),
-                _DetailInfoRow(icon: CupertinoIcons.building_2_fill, text: book.publisher),
+                _DetailInfoRow(
+                  icon: CupertinoIcons.building_2_fill,
+                  text: book.publisher,
+                ),
               ],
             ],
           ),
         ),
         const SizedBox(height: 12),
         // Call Number Copyable Card
-        _CallNumberCard(callNo: book.callNo, copied: copiedCallNo, onCopy: onCopy),
+        _CallNumberCard(
+          callNo: book.callNo,
+          copied: copiedCallNo,
+          onCopy: onCopy,
+        ),
         const SizedBox(height: 8),
         // Holdings Summary
         Container(
@@ -202,14 +259,26 @@ class _DetailContent extends StatelessWidget {
             color: blue.withValues(alpha: 0.04),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Row(children: [
-            Icon(CupertinoIcons.collections, size: 18, color: blue),
-            const SizedBox(width: 8),
-            Expanded(child: Text(book.holdingsSummary, style: TextStyle(color: CupertinoColors.label.resolveFrom(context)))),
-          ]),
+          child: Row(
+            children: [
+              Icon(CupertinoIcons.collections, size: 18, color: blue),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  book.holdingsSummary,
+                  style: TextStyle(
+                    color: CupertinoColors.label.resolveFrom(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 16),
-        Container(height: 0.5, color: CupertinoColors.separator.resolveFrom(context)),
+        Container(
+          height: 0.5,
+          color: CupertinoColors.separator.resolveFrom(context),
+        ),
         const SizedBox(height: 12),
         _CupertinoHoldings(book: book),
       ],
@@ -223,7 +292,11 @@ class _CallNumberCard extends StatelessWidget {
   final bool copied;
   final void Function(String) onCopy;
 
-  const _CallNumberCard({required this.callNo, required this.copied, required this.onCopy});
+  const _CallNumberCard({
+    required this.callNo,
+    required this.copied,
+    required this.onCopy,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -235,25 +308,50 @@ class _CallNumberCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: blue.withValues(alpha: 0.15)),
       ),
-      child: Row(children: [
-        Icon(CupertinoIcons.bookmark, size: 18, color: blue),
-        const SizedBox(width: 8),
-        Text('索书号: ', style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context))),
-        Expanded(child: Text(callNo, style: const TextStyle(fontFamily: 'monospace', fontWeight: FontWeight.w700))),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: () => onCopy(callNo),
-          child: Padding(
-            padding: const EdgeInsets.all(4),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 200),
-              child: copied
-                  ? Icon(CupertinoIcons.checkmark_circle_fill, key: const ValueKey('check'), size: 18, color: CupertinoColors.activeGreen.resolveFrom(context))
-                  : Icon(CupertinoIcons.doc_on_doc, key: const ValueKey('copy'), size: 18, color: blue),
+      child: Row(
+        children: [
+          Icon(CupertinoIcons.bookmark, size: 18, color: blue),
+          const SizedBox(width: 8),
+          Text(
+            '索书号: ',
+            style: TextStyle(
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
             ),
           ),
-        ),
-      ]),
+          Expanded(
+            child: Text(
+              callNo,
+              style: const TextStyle(
+                fontFamily: 'monospace',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => onCopy(callNo),
+            child: Padding(
+              padding: const EdgeInsets.all(4),
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: copied
+                    ? Icon(
+                        CupertinoIcons.checkmark_circle_fill,
+                        key: const ValueKey('check'),
+                        size: 18,
+                        color: CupertinoColors.activeGreen.resolveFrom(context),
+                      )
+                    : Icon(
+                        CupertinoIcons.doc_on_doc,
+                        key: const ValueKey('copy'),
+                        size: 18,
+                        color: blue,
+                      ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -266,16 +364,28 @@ class _DetailInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      Icon(icon, size: 16, color: CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.8)),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Text(
-          text,
-          style: TextStyle(fontSize: 14, height: 1.3, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 16,
+          color: CupertinoColors.systemBlue
+              .resolveFrom(context)
+              .withValues(alpha: 0.8),
         ),
-      ),
-    ]);
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.3,
+              color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
 

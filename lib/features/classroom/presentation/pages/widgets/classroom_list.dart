@@ -9,16 +9,24 @@ class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
   SessionHeaderDelegate({required this.colorScheme});
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     final textTheme = Theme.of(context).textTheme;
     final sessions = ['1-3节', '4-5节', '6-7节', '8-10节', '11-13节'];
     return Container(
       height: maxExtent,
       decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: overlapsContent ? 0.95 : 1.0),
+        color: colorScheme.surface.withValues(
+          alpha: overlapsContent ? 0.95 : 1.0,
+        ),
         border: Border(
           bottom: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: overlapsContent ? 1.0 : 0.0),
+            color: colorScheme.outlineVariant.withValues(
+              alpha: overlapsContent ? 1.0 : 0.0,
+            ),
             width: 1,
           ),
         ),
@@ -36,17 +44,19 @@ class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
               ),
             ),
           ),
-          ...sessions.map((s) => Expanded(
-                flex: 2,
-                child: Text(
-                  s,
-                  textAlign: TextAlign.center,
-                  style: textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
+          ...sessions.map(
+            (s) => Expanded(
+              flex: 2,
+              child: Text(
+                s,
+                textAlign: TextAlign.center,
+                style: textTheme.labelSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.onSurfaceVariant,
                 ),
-              )),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -57,7 +67,8 @@ class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
   @override
   double get minExtent => 48;
   @override
-  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) => false;
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      false;
 }
 
 class ClassroomSliverList extends StatelessWidget {
@@ -67,67 +78,73 @@ class ClassroomSliverList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (results.isEmpty) {
-      return SliverFillRemaining(child: Center(child: Text('该楼栋暂无教室数据', style: TextStyle(color: Theme.of(context).colorScheme.outline))));
+      return SliverFillRemaining(
+        child: Center(
+          child: Text(
+            '该楼栋暂无教室数据',
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+          ),
+        ),
+      );
     }
 
     return SliverList(
-      delegate: SliverChildBuilderDelegate(
-        (context, index) {
-          final item = results[index];
-          final colorScheme = Theme.of(context).colorScheme;
-          final textTheme = Theme.of(context).textTheme;
-          return Card(
-            elevation: 0,
-            margin: const EdgeInsets.only(bottom: 8),
-            color: colorScheme.surfaceContainerLowest,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-              side: BorderSide(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = results[index];
+        final colorScheme = Theme.of(context).colorScheme;
+        final textTheme = Theme.of(context).textTheme;
+        return Card(
+          elevation: 0,
+          margin: const EdgeInsets.only(bottom: 8),
+          color: colorScheme.surfaceContainerLowest,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+            side: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 3,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          item.classroomName,
-                          style: textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.classroomName,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        if (item.hasNoClassesThisTerm)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 2.0),
-                            child: Text(
-                              '本学期无排课',
-                              style: textTheme.labelSmall?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      if (item.hasNoClassesThisTerm)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2.0),
+                          child: Text(
+                            '本学期无排课',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
-                  ...List.generate(5, (sIdx) {
-                    final isFree = item.availability[sIdx];
-                    return Expanded(
-                      flex: 2,
-                      child: StatusIndicator(isFree: isFree),
-                    );
-                  }),
-                ],
-              ),
+                ),
+                ...List.generate(5, (sIdx) {
+                  final isFree = item.availability[sIdx];
+                  return Expanded(
+                    flex: 2,
+                    child: StatusIndicator(isFree: isFree),
+                  );
+                }),
+              ],
             ),
-          );
-        },
-        childCount: results.length,
-      ),
+          ),
+        );
+      }, childCount: results.length),
     );
   }
 }

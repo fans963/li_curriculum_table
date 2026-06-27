@@ -66,7 +66,10 @@ class _ClassroomTabState extends State<ClassroomTab>
                     switchInCurve: kDefaultAnimationCurve,
                     switchOutCurve: kDefaultAnimationCurve,
                     child: state.isLoading && state.results.isEmpty
-                        ? const Center(key: ValueKey('loading'), child: LoadingIndicatorM3E())
+                        ? const Center(
+                            key: ValueKey('loading'),
+                            child: LoadingIndicatorM3E(),
+                          )
                         : CustomScrollView(
                             key: const ValueKey('results_list'),
                             physics: const BouncingScrollPhysics(),
@@ -74,34 +77,46 @@ class _ClassroomTabState extends State<ClassroomTab>
                               if (state.results.isNotEmpty)
                                 SliverToBoxAdapter(
                                   child: Padding(
-                                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      20,
+                                      4,
+                                      20,
+                                      0,
+                                    ),
                                     child: Text(
                                       '* 未出现在列表中的教室本学期系统均无排课',
-                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelSmall
+                                          ?.copyWith(
                                             color: cs.outline,
                                             fontStyle: FontStyle.italic,
                                           ),
                                     ),
                                   ),
                                 ),
-                              const SliverToBoxAdapter(child: SizedBox(height: 12)),
+                              const SliverToBoxAdapter(
+                                child: SizedBox(height: 12),
+                              ),
                               SliverPersistentHeader(
                                 pinned: true,
-                                delegate: SessionHeaderDelegate(colorScheme: cs),
+                                delegate: SessionHeaderDelegate(
+                                  colorScheme: cs,
+                                ),
                               ),
                               if (state.needsLogin)
                                 SliverFillRemaining(
                                   child: NeedsLoginView(
-                                    onRetry: () =>
-                                        sl<ClassroomController>().fetchCampuses(forceRefresh: true),
+                                    onRetry: () => sl<ClassroomController>()
+                                        .fetchCampuses(forceRefresh: true),
                                   ),
                                 )
                               else if (state.error != null)
                                 SliverFillRemaining(
                                   child: ErrorView(
                                     message: state.error!,
-                                    onRetry: () =>
-                                        sl<ClassroomController>().fetchAvailability(),
+                                    onRetry: () => sl<ClassroomController>()
+                                        .fetchAvailability(),
                                   ),
                                 )
                               else if (state.results.isEmpty)
@@ -111,8 +126,15 @@ class _ClassroomTabState extends State<ClassroomTab>
                                 )
                               else
                                 SliverPadding(
-                                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                                  sliver: ClassroomSliverList(results: state.results),
+                                  padding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    24,
+                                  ),
+                                  sliver: ClassroomSliverList(
+                                    results: state.results,
+                                  ),
                                 ),
                             ],
                           ),
@@ -134,7 +156,12 @@ class _ClassroomTabState extends State<ClassroomTab>
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -142,7 +169,14 @@ class _ClassroomTabState extends State<ClassroomTab>
           // Row 1: title + date selector
           Row(
             children: [
-              Text('空闲教室', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: cs.onSurface)),
+              Text(
+                '空闲教室',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                ),
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: QuickDateSelector(

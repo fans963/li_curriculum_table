@@ -21,9 +21,15 @@ class SettingsController {
   late final enableBookCover = computed(() => _state.value.enableBookCover);
   late final currentTerm = computed(() => _state.value.currentTerm);
   late final autoSizeText = computed(() => _state.value.autoSizeText);
-  late final autoSizeMinFontSize = computed(() => _state.value.autoSizeMinFontSize);
-  late final timetableTextMaxLines = computed(() => _state.value.timetableTextMaxLines);
-  late final timetableTextFontSize = computed(() => _state.value.timetableTextFontSize);
+  late final autoSizeMinFontSize = computed(
+    () => _state.value.autoSizeMinFontSize,
+  );
+  late final timetableTextMaxLines = computed(
+    () => _state.value.timetableTextMaxLines,
+  );
+  late final timetableTextFontSize = computed(
+    () => _state.value.timetableTextFontSize,
+  );
   late final daysVisibleCount = computed(() => _state.value.daysVisibleCount);
   late final termsAccepted = computed(() => _state.value.termsAccepted);
   Future<void> init() async {

@@ -110,11 +110,13 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
           }
         }
       }
-      results.add(ClassroomAvailability(
-        classroomName: s.classroomName,
-        availability: availability,
-        hasNoClassesThisTerm: s.occupiedSlots.isEmpty,
-      ));
+      results.add(
+        ClassroomAvailability(
+          classroomName: s.classroomName,
+          availability: availability,
+          hasNoClassesThisTerm: s.occupiedSlots.isEmpty,
+        ),
+      );
     }
 
     // Sort by name for consistency
@@ -153,24 +155,26 @@ class ClassroomRepositoryImpl implements ClassroomRepository {
     for (final campusId in allBuildingsByCampus.keys) {
       final buildings = allBuildingsByCampus[campusId]!;
       for (final building in buildings) {
-        fetchTasks.add(_pool.withResource(() async {
-          try {
-            final schedule = await _remoteDataSource.getBuildingSchedule(
-              campusId: campusId,
-              buildingId: building.id,
-              term: term,
-              username: username,
-              password: password,
-            );
-            await _localDataSource.saveBuildingSchedule(
-              campusId: campusId,
-              buildingId: building.id,
-              schedule: schedule,
-            );
-          } catch (e) {
-            // Log and continue - we don't want one building to kill the whole sync
-          }
-        }));
+        fetchTasks.add(
+          _pool.withResource(() async {
+            try {
+              final schedule = await _remoteDataSource.getBuildingSchedule(
+                campusId: campusId,
+                buildingId: building.id,
+                term: term,
+                username: username,
+                password: password,
+              );
+              await _localDataSource.saveBuildingSchedule(
+                campusId: campusId,
+                buildingId: building.id,
+                schedule: schedule,
+              );
+            } catch (e) {
+              // Log and continue - we don't want one building to kill the whole sync
+            }
+          }),
+        );
       }
     }
 

@@ -61,10 +61,8 @@ impl DdddOcr {
             }
         }
 
-        let data = burn::tensor::TensorData::new(
-            pixels,
-            vec![1, 1, height as usize, width as usize],
-        );
+        let data =
+            burn::tensor::TensorData::new(pixels, vec![1, 1, height as usize, width as usize]);
         let tensor = Tensor::<B, 4>::from_data(data, &self.device);
 
         // Forward pass: output is (1, 4, 36) — 4 characters, 36 classes each

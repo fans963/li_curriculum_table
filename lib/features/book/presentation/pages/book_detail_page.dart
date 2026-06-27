@@ -42,7 +42,10 @@ class _BookDetailDialogState extends State<BookDetailDialog> {
   @override
   void initState() {
     super.initState();
-    _cover = BookCoverSignal(detailUrl: widget.book.detailUrl, title: widget.book.title);
+    _cover = BookCoverSignal(
+      detailUrl: widget.book.detailUrl,
+      title: widget.book.title,
+    );
   }
 
   @override
@@ -81,7 +84,8 @@ class _BookDetailDialogState extends State<BookDetailDialog> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (enableBookCover) _MaterialCoverHeader(cover: _cover, cs: cs, ds: ds),
+              if (enableBookCover)
+                _MaterialCoverHeader(cover: _cover, cs: cs, ds: ds),
               if (!enableBookCover) _MaterialFallbackHeader(cs: cs, ds: ds),
               Flexible(
                 child: SingleChildScrollView(
@@ -109,7 +113,11 @@ class _MaterialCoverHeader extends SignalWidget {
   final ColorScheme cs;
   final DesignStyle ds;
 
-  const _MaterialCoverHeader({required this.cover, required this.cs, required this.ds});
+  const _MaterialCoverHeader({
+    required this.cover,
+    required this.cs,
+    required this.ds,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -119,29 +127,39 @@ class _MaterialCoverHeader extends SignalWidget {
         clipBehavior: Clip.antiAlias,
         children: [
           Positioned.fill(
-            child: Builder(builder: (context) {
-              final url = cover.url.value;
-              if (url != null) {
-                return ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      image: DecorationImage(image: CachedNetworkImageProvider(url), fit: BoxFit.cover),
+            child: Builder(
+              builder: (context) {
+                final url = cover.url.value;
+                if (url != null) {
+                  return ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: CachedNetworkImageProvider(url),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      foregroundDecoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.25),
+                      ),
                     ),
-                    foregroundDecoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.25)),
+                  );
+                }
+                return Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        cs.primaryContainer,
+                        cs.secondaryContainer.withValues(alpha: 0.5),
+                      ],
+                    ),
                   ),
                 );
-              }
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [cs.primaryContainer, cs.secondaryContainer.withValues(alpha: 0.5)],
-                  ),
-                ),
-              );
-            }),
+              },
+            ),
           ),
           Center(
             child: Container(
@@ -149,22 +167,32 @@ class _MaterialCoverHeader extends SignalWidget {
               width: 105,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               clipBehavior: Clip.antiAlias,
-              child: Builder(builder: (context) {
-                final url = cover.url.value;
-                if (url != null) {
-                  return CachedNetworkImage(
-                    imageUrl: url,
-                    fit: BoxFit.cover,
-                    httpHeaders: url.contains('doubanio.com') ? const {'Referer': 'https://book.douban.com/'} : const {},
-                    placeholder: (_, _) => _placeholder(cs, ds),
-                    errorWidget: (_, _, _) => _placeholder(cs, ds),
-                  );
-                }
-                return _placeholder(cs, ds);
-              }),
+              child: Builder(
+                builder: (context) {
+                  final url = cover.url.value;
+                  if (url != null) {
+                    return CachedNetworkImage(
+                      imageUrl: url,
+                      fit: BoxFit.cover,
+                      httpHeaders: url.contains('doubanio.com')
+                          ? const {'Referer': 'https://book.douban.com/'}
+                          : const {},
+                      placeholder: (_, _) => _placeholder(cs, ds),
+                      errorWidget: (_, _, _) => _placeholder(cs, ds),
+                    );
+                  }
+                  return _placeholder(cs, ds);
+                },
+              ),
             ),
           ),
         ],
@@ -175,7 +203,11 @@ class _MaterialCoverHeader extends SignalWidget {
   Widget _placeholder(ColorScheme cs, DesignStyle ds) {
     return Container(
       color: cs.surfaceContainerHighest,
-      child: Icon(AppIcons.menuBook(ds), size: 40, color: cs.onSurfaceVariant.withValues(alpha: 0.3)),
+      child: Icon(
+        AppIcons.menuBook(ds),
+        size: 40,
+        color: cs.onSurfaceVariant.withValues(alpha: 0.3),
+      ),
     );
   }
 }
@@ -196,7 +228,10 @@ class _MaterialFallbackHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [cs.primary.withValues(alpha: 0.15), cs.secondary.withValues(alpha: 0.05)],
+          colors: [
+            cs.primary.withValues(alpha: 0.15),
+            cs.secondary.withValues(alpha: 0.05),
+          ],
         ),
       ),
       child: Center(
@@ -205,7 +240,10 @@ class _MaterialFallbackHeader extends StatelessWidget {
           decoration: BoxDecoration(
             color: cs.primaryContainer.withValues(alpha: 0.6),
             shape: BoxShape.circle,
-            border: Border.all(color: cs.primary.withValues(alpha: 0.2), width: 1.5),
+            border: Border.all(
+              color: cs.primary.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
           ),
           child: Icon(AppIcons.menuBook(ds), size: 36, color: cs.primary),
         ),
@@ -240,7 +278,14 @@ class _MaterialDetailContent extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
-              child: Text(book.title, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.bold, height: 1.25, color: cs.onSurface)),
+              child: Text(
+                book.title,
+                style: tt.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  height: 1.25,
+                  color: cs.onSurface,
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Container(
@@ -248,9 +293,18 @@ class _MaterialDetailContent extends StatelessWidget {
               decoration: BoxDecoration(
                 color: cs.primaryContainer,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: cs.primary.withValues(alpha: 0.2), width: 1),
+                border: Border.all(
+                  color: cs.primary.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
-              child: Text(book.docType, style: tt.labelMedium?.copyWith(color: cs.onPrimaryContainer, fontWeight: FontWeight.bold)),
+              child: Text(
+                book.docType,
+                style: tt.labelMedium?.copyWith(
+                  color: cs.onPrimaryContainer,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -267,8 +321,15 @@ class _MaterialDetailContent extends StatelessWidget {
             children: [
               InfoRow(icon: AppIcons.person(ds), text: book.author, ds: ds),
               if (book.publisher.isNotEmpty && book.publisher != '未知出版信息') ...[
-                const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: Divider(height: 1, thickness: 0.5)),
-                InfoRow(icon: AppIcons.business(ds), text: book.publisher, ds: ds),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Divider(height: 1, thickness: 0.5),
+                ),
+                InfoRow(
+                  icon: AppIcons.business(ds),
+                  text: book.publisher,
+                  ds: ds,
+                ),
               ],
             ],
           ),
@@ -286,9 +347,22 @@ class _MaterialDetailContent extends StatelessWidget {
             children: [
               Icon(AppIcons.bookmark(ds), size: 18, color: cs.primary),
               const SizedBox(width: 8),
-              Text('索书号: ', style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, fontWeight: FontWeight.w500)),
+              Text(
+                '索书号: ',
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               Expanded(
-                child: SelectableText(book.callNo, style: tt.bodyMedium?.copyWith(fontFamily: 'monospace', fontWeight: FontWeight.bold, color: cs.onSurface)),
+                child: SelectableText(
+                  book.callNo,
+                  style: tt.bodyMedium?.copyWith(
+                    fontFamily: 'monospace',
+                    fontWeight: FontWeight.bold,
+                    color: cs.onSurface,
+                  ),
+                ),
               ),
               const SizedBox(width: 8),
               InkWell(
@@ -299,8 +373,18 @@ class _MaterialDetailContent extends StatelessWidget {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 200),
                     child: copiedCallNo
-                        ? Icon(Icons.check_circle, key: const ValueKey('check'), size: 18, color: Colors.green.shade600)
-                        : Icon(Icons.copy_rounded, key: const ValueKey('copy'), size: 18, color: cs.primary),
+                        ? Icon(
+                            Icons.check_circle,
+                            key: const ValueKey('check'),
+                            size: 18,
+                            color: Colors.green.shade600,
+                          )
+                        : Icon(
+                            Icons.copy_rounded,
+                            key: const ValueKey('copy'),
+                            size: 18,
+                            color: cs.primary,
+                          ),
                   ),
                 ),
               ),
@@ -320,7 +404,15 @@ class _MaterialDetailContent extends StatelessWidget {
             children: [
               Icon(AppIcons.libraryBooks(ds), size: 18, color: cs.secondary),
               const SizedBox(width: 8),
-              Expanded(child: Text(book.holdingsSummary, style: tt.bodyMedium?.copyWith(color: cs.onSecondaryContainer, fontWeight: FontWeight.w500))),
+              Expanded(
+                child: Text(
+                  book.holdingsSummary,
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSecondaryContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -331,8 +423,6 @@ class _MaterialDetailContent extends StatelessWidget {
       ],
     );
   }
-
-
 }
 
 /// Close button.

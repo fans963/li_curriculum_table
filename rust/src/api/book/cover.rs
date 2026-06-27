@@ -74,18 +74,12 @@ async fn ol_fetch_cover_id(client: &reqwest::Client, url: &str) -> Option<String
         return None;
     }
     let body: serde_json::Value = resp.json().await.ok()?;
-    body["docs"]
-        .as_array()?
-        .first()?["cover_i"]
+    body["docs"].as_array()?.first()?["cover_i"]
         .as_u64()
         .map(|id| id.to_string())
 }
 
-async fn google_books_cover(
-    client: &reqwest::Client,
-    isbn: &str,
-    title: &str,
-) -> Option<String> {
+async fn google_books_cover(client: &reqwest::Client, isbn: &str, title: &str) -> Option<String> {
     let ua = "CurriculumTableApp (contact@example.org)";
     if !isbn.is_empty() {
         let url = format!(
@@ -109,20 +103,14 @@ async fn google_books_cover(
     None
 }
 
-async fn gb_extract_thumbnail(
-    client: &reqwest::Client,
-    url: &str,
-    ua: &str,
-) -> Option<String> {
+async fn gb_extract_thumbnail(client: &reqwest::Client, url: &str, ua: &str) -> Option<String> {
     let resp = client.get(url).header("User-Agent", ua).send().await.ok()?;
     if resp.status() != reqwest::StatusCode::OK {
         return None;
     }
     let body: serde_json::Value = resp.json().await.ok()?;
-    let thumbnail = body["items"]
-        .as_array()?
-        .first()?["volumeInfo"]["imageLinks"]["thumbnail"]
-        .as_str()?;
+    let thumbnail =
+        body["items"].as_array()?.first()?["volumeInfo"]["imageLinks"]["thumbnail"].as_str()?;
     Some(thumbnail.replace("http://", "https://"))
 }
 
@@ -215,10 +203,9 @@ async fn fetch_douban_cover(client: &reqwest::Client, isbn: &str) -> Option<Stri
         .await
         .ok()?;
     let html = resp.text().await.ok()?;
-    let re = Regex::new(
-        r#"(//img\d+\.doubanio\.com/view/subject/[a-z]+/public/s\d+\.(?:jpg|webp))"#,
-    )
-    .ok()?;
+    let re =
+        Regex::new(r#"(//img\d+\.doubanio\.com/view/subject/[a-z]+/public/s\d+\.(?:jpg|webp))"#)
+            .ok()?;
     let cover_url = format!("https:{}", re.captures(&html)?.get(1)?.as_str());
     let resp = client
         .get(&cover_url)

@@ -42,9 +42,9 @@ class QueryControlCard extends StatelessWidget {
                 icon: AppIcons.locationOn(ds),
                 trailing: Text(
                   '${state.campuses.length}个校区',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.outline,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: colorScheme.outline),
                 ),
               ),
               CampusSelector(
@@ -69,9 +69,9 @@ class QueryControlCard extends StatelessWidget {
                 icon: AppIcons.apartment(ds),
                 trailing: Text(
                   '${state.buildings.length}栋楼',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: colorScheme.outline,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: colorScheme.outline),
                 ),
               ),
               BuildingSelector(
@@ -110,7 +110,12 @@ class SelectionHeader extends StatelessWidget {
   final IconData icon;
   final Widget? trailing;
 
-  const SelectionHeader({super.key, required this.title, required this.icon, this.trailing});
+  const SelectionHeader({
+    super.key,
+    required this.title,
+    required this.icon,
+    this.trailing,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -184,7 +189,9 @@ class QuickDateSelector extends StatelessWidget {
       actions: [
         for (int i = 0; i < 4; i++)
           M3EToggleButtonGroupAction(
-            label: Text('${labels[i]} (${DateFormat('MM-dd').format(dates[i])})'),
+            label: Text(
+              '${labels[i]} (${DateFormat('MM-dd').format(dates[i])})',
+            ),
           ),
         M3EToggleButtonGroupAction(
           icon: Icon(AppIcons.calendarMonth(ds), size: 16),
@@ -217,13 +224,21 @@ class _CampusDropdownState extends State<CampusDropdown> {
     // Reactively sync dropdown items from the controller signal
     _syncEffect = effect(() {
       final state = sl<ClassroomController>().state.value;
-      _controller.setItems(state.campuses.map((c) => M3EDropdownItem(
-        label: c.name,
-        value: c,
-        selected: c.id == state.selectedCampus?.id,
-      )).toList());
+      _controller.setItems(
+        state.campuses
+            .map(
+              (c) => M3EDropdownItem(
+                label: c.name,
+                value: c,
+                selected: c.id == state.selectedCampus?.id,
+              ),
+            )
+            .toList(),
+      );
       if (state.selectedCampus != null) {
-        _controller.selectWhere((item) => item.value.id == state.selectedCampus!.id);
+        _controller.selectWhere(
+          (item) => item.value.id == state.selectedCampus!.id,
+        );
       }
     });
   }
@@ -260,10 +275,7 @@ class _CampusDropdownState extends State<CampusDropdown> {
           borderRadius: BorderRadius.circular(12),
           selectedBorderRadius: 12,
         ),
-        dropdownStyle: M3EDropdownStyle(
-          maxHeight: 300,
-          containerRadius: 16,
-        ),
+        dropdownStyle: M3EDropdownStyle(maxHeight: 300, containerRadius: 16),
         itemStyle: M3EDropdownItemStyle(
           outerRadius: 12,
           innerRadius: 6,
@@ -296,13 +308,21 @@ class _BuildingDropdownState extends State<BuildingDropdown> {
     // Reactively sync dropdown items from the controller signal
     _syncEffect = effect(() {
       final state = sl<ClassroomController>().state.value;
-      _controller.setItems(state.buildings.map((b) => M3EDropdownItem(
-        label: b.name,
-        value: b,
-        selected: b.id == state.selectedBuilding?.id,
-      )).toList());
+      _controller.setItems(
+        state.buildings
+            .map(
+              (b) => M3EDropdownItem(
+                label: b.name,
+                value: b,
+                selected: b.id == state.selectedBuilding?.id,
+              ),
+            )
+            .toList(),
+      );
       if (state.selectedBuilding != null) {
-        _controller.selectWhere((item) => item.value.id == state.selectedBuilding!.id);
+        _controller.selectWhere(
+          (item) => item.value.id == state.selectedBuilding!.id,
+        );
       }
     });
   }
@@ -339,10 +359,7 @@ class _BuildingDropdownState extends State<BuildingDropdown> {
           borderRadius: BorderRadius.circular(12),
           selectedBorderRadius: 12,
         ),
-        dropdownStyle: M3EDropdownStyle(
-          maxHeight: 350,
-          containerRadius: 16,
-        ),
+        dropdownStyle: M3EDropdownStyle(maxHeight: 350, containerRadius: 16),
         itemStyle: M3EDropdownItemStyle(
           outerRadius: 12,
           innerRadius: 6,
@@ -358,11 +375,18 @@ class BuildingSelector extends StatelessWidget {
   final Building? selectedBuilding;
   final ValueChanged<Building> onSelected;
 
-  const BuildingSelector({super.key, required this.buildings, this.selectedBuilding, required this.onSelected});
+  const BuildingSelector({
+    super.key,
+    required this.buildings,
+    this.selectedBuilding,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = buildings.indexWhere((b) => b.id == selectedBuilding?.id);
+    final selectedIndex = buildings.indexWhere(
+      (b) => b.id == selectedBuilding?.id,
+    );
     return M3EToggleButtonGroup(
       style: M3EButtonStyle.tonal,
       size: M3EButtonSize.sm,
@@ -372,9 +396,9 @@ class BuildingSelector extends StatelessWidget {
       onSelectedIndexChanged: (index) {
         if (index != null) onSelected(buildings[index]);
       },
-      actions: buildings.map((b) =>
-        M3EToggleButtonGroupAction(label: Text(b.name)),
-      ).toList(),
+      actions: buildings
+          .map((b) => M3EToggleButtonGroupAction(label: Text(b.name)))
+          .toList(),
     );
   }
 }
@@ -384,11 +408,18 @@ class CampusSelector extends StatelessWidget {
   final Campus? selectedCampus;
   final ValueChanged<Campus> onSelected;
 
-  const CampusSelector({super.key, required this.campuses, this.selectedCampus, required this.onSelected});
+  const CampusSelector({
+    super.key,
+    required this.campuses,
+    this.selectedCampus,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = campuses.indexWhere((c) => c.id == selectedCampus?.id);
+    final selectedIndex = campuses.indexWhere(
+      (c) => c.id == selectedCampus?.id,
+    );
     return M3EToggleButtonGroup(
       style: M3EButtonStyle.tonal,
       size: M3EButtonSize.sm,
@@ -398,9 +429,9 @@ class CampusSelector extends StatelessWidget {
       onSelectedIndexChanged: (index) {
         if (index != null) onSelected(campuses[index]);
       },
-      actions: campuses.map((c) =>
-        M3EToggleButtonGroupAction(label: Text(c.name)),
-      ).toList(),
+      actions: campuses
+          .map((c) => M3EToggleButtonGroupAction(label: Text(c.name)))
+          .toList(),
     );
   }
 }

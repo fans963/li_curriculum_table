@@ -17,7 +17,8 @@ class LevelExamScoreController {
     final creds = await sl<CredentialsRepository>().loadCredentials();
     if (creds != null && !creds.isEmpty) {
       loadScores(forceRefresh: true).catchError((e) {
-        if (kDebugMode) print('Auto remote sync of level exam scores failed: $e');
+        if (kDebugMode)
+          print('Auto remote sync of level exam scores failed: $e');
       });
     }
   }
@@ -36,9 +37,15 @@ class LevelExamScoreController {
       _updateState(scores);
     } catch (e) {
       if (e.toString().contains('未登录')) {
-        _state.value = _state.value.copyWith(isLoading: false, needsLogin: true);
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          needsLogin: true,
+        );
       } else {
-        _state.value = _state.value.copyWith(isLoading: false, errorMessage: e.toString());
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          errorMessage: e.toString(),
+        );
       }
     }
   }

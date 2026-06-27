@@ -1,6 +1,5 @@
 part of '../book_material.dart';
 
-
 class _BookWaterfallGrid extends StatelessWidget {
   final List<BookInfo> books;
   final DesignStyle ds;
@@ -87,7 +86,10 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
   @override
   void initState() {
     super.initState();
-    _cover = BookCoverSignal(detailUrl: widget.book.detailUrl, title: widget.book.title);
+    _cover = BookCoverSignal(
+      detailUrl: widget.book.detailUrl,
+      title: widget.book.title,
+    );
   }
 
   @override
@@ -95,8 +97,6 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
     _cover.dispose();
     super.dispose();
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -115,51 +115,55 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                 aspectRatio: 3 / 4,
                 child: Container(
                   color: cs.surfaceContainerHighest,
-                  child: Builder(builder: (context) {
-                    if (_cover.loading.value) {
+                  child: Builder(
+                    builder: (context) {
+                      if (_cover.loading.value) {
+                        return Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: LoadingIndicatorM3E(
+                              color: cs.primary,
+                              constraints: BoxConstraints.tight(
+                                const Size(24, 24),
+                              ),
+                            ),
+                          ),
+                        );
+                      }
+                      final url = _cover.url.value;
+                      if (url != null) {
+                        return CachedNetworkImage(
+                          imageUrl: url,
+                          fit: BoxFit.cover,
+                          httpHeaders: url.contains('doubanio.com')
+                              ? const {'Referer': 'https://book.douban.com/'}
+                              : const {},
+                          placeholder: (_, _) => Center(
+                            child: Icon(
+                              AppIcons.menuBook(widget.ds),
+                              size: 40,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.2),
+                            ),
+                          ),
+                          errorWidget: (_, _, _) => Center(
+                            child: Icon(
+                              AppIcons.menuBook(widget.ds),
+                              size: 40,
+                              color: cs.onSurfaceVariant.withValues(alpha: 0.2),
+                            ),
+                          ),
+                        );
+                      }
                       return Center(
-                        child: SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: LoadingIndicatorM3E(
-                            color: cs.primary,
-                            constraints: BoxConstraints.tight(const Size(24, 24)),
-                          ),
+                        child: Icon(
+                          AppIcons.menuBook(widget.ds),
+                          size: 40,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.2),
                         ),
                       );
-                    }
-                    final url = _cover.url.value;
-                    if (url != null) {
-                      return CachedNetworkImage(
-                        imageUrl: url,
-                        fit: BoxFit.cover,
-                        httpHeaders: url.contains('doubanio.com')
-                            ? const {'Referer': 'https://book.douban.com/'}
-                            : const {},
-                        placeholder: (_, _) => Center(
-                          child: Icon(
-                            AppIcons.menuBook(widget.ds),
-                            size: 40,
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        errorWidget: (_, _, _) => Center(
-                          child: Icon(
-                            AppIcons.menuBook(widget.ds),
-                            size: 40,
-                            color: cs.onSurfaceVariant.withValues(alpha: 0.2),
-                          ),
-                        ),
-                      );
-                    }
-                    return Center(
-                      child: Icon(
-                        AppIcons.menuBook(widget.ds),
-                        size: 40,
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.2),
-                      ),
-                    );
-                  }),
+                    },
+                  ),
                 ),
               ),
               Padding(
@@ -182,9 +186,7 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                       book.author,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -223,7 +225,11 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                         color: cs.primaryContainer.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: Icon(AppIcons.book(widget.ds), size: 16, color: cs.primary),
+                      child: Icon(
+                        AppIcons.book(widget.ds),
+                        size: 16,
+                        color: cs.primary,
+                      ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
@@ -242,7 +248,10 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                           ),
                           const SizedBox(height: 6),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: cs.primaryContainer,
                               borderRadius: BorderRadius.circular(6),
@@ -263,15 +272,33 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                 const SizedBox(height: 10),
                 const Divider(height: 1),
                 const SizedBox(height: 10),
-                InfoRow(icon: AppIcons.person(widget.ds), text: book.author, ds: widget.ds),
-                if (book.publisher != '未知出版信息' && book.publisher.isNotEmpty) ...[
+                InfoRow(
+                  icon: AppIcons.person(widget.ds),
+                  text: book.author,
+                  ds: widget.ds,
+                ),
+                if (book.publisher != '未知出版信息' &&
+                    book.publisher.isNotEmpty) ...[
                   const SizedBox(height: 5),
-                  InfoRow(icon: AppIcons.business(widget.ds), text: book.publisher, ds: widget.ds),
+                  InfoRow(
+                    icon: AppIcons.business(widget.ds),
+                    text: book.publisher,
+                    ds: widget.ds,
+                  ),
                 ],
                 const SizedBox(height: 5),
-                InfoRow(icon: AppIcons.bookmark(widget.ds), text: '索书: ${book.callNo}', ds: widget.ds, isMonospace: true),
+                InfoRow(
+                  icon: AppIcons.bookmark(widget.ds),
+                  text: '索书: ${book.callNo}',
+                  ds: widget.ds,
+                  isMonospace: true,
+                ),
                 const SizedBox(height: 5),
-                InfoRow(icon: AppIcons.libraryBooks(widget.ds), text: book.holdingsSummary, ds: widget.ds),
+                InfoRow(
+                  icon: AppIcons.libraryBooks(widget.ds),
+                  text: book.holdingsSummary,
+                  ds: widget.ds,
+                ),
               ],
             ),
           );
@@ -301,4 +328,3 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
     );
   }
 }
-

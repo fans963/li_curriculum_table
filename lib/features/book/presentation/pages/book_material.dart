@@ -12,6 +12,7 @@ import 'package:signals/signals_flutter.dart';
 
 part 'widgets/material_book_card.dart';
 part 'widgets/material_book_holdings.dart';
+
 Widget buildMaterialBody(
   BuildContext context, {
   required DesignStyle ds,
@@ -20,7 +21,8 @@ Widget buildMaterialBody(
   required bool hasSearched,
   required List<BookInfo> books,
   required VoidCallback onRetry,
-  required void Function(BookInfo book, Offset cardCenter, Size cardSize) onBookTap,
+  required void Function(BookInfo book, Offset cardCenter, Size cardSize)
+  onBookTap,
 }) {
   final colorScheme = Theme.of(context).colorScheme;
   final textTheme = Theme.of(context).textTheme;
@@ -52,14 +54,20 @@ Widget buildMaterialBody(
           children: [
             Icon(AppIcons.cloudOff(ds), size: 64, color: colorScheme.error),
             const SizedBox(height: 16),
-            Text('出现错误',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              '出现错误',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text(error,
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
+            Text(
+              error,
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 24),
             M3EFilledButton.icon(
               icon: Icon(AppIcons.refresh(ds), size: 18),
@@ -87,20 +95,28 @@ Widget buildMaterialBody(
                 shape: BoxShape.circle,
                 color: colorScheme.primaryContainer.withValues(alpha: 0.2),
               ),
-              child: Icon(AppIcons.libraryBooks(ds),
-                  size: 72, color: colorScheme.primary),
+              child: Icon(
+                AppIcons.libraryBooks(ds),
+                size: 72,
+                color: colorScheme.primary,
+              ),
             ),
             const SizedBox(height: 24),
-            Text('南理工图书搜寻',
-                style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.primary)),
+            Text(
+              '南理工图书搜寻',
+              style: textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: colorScheme.primary,
+              ),
+            ),
             const SizedBox(height: 8),
             Text(
               '输入您想查找的书名，即刻查询南京理工大学图书馆\n的文献种类、索书号以及具体的实时馆藏位置。',
               textAlign: TextAlign.center,
-              style: textTheme.bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant, height: 1.5),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -115,26 +131,27 @@ Widget buildMaterialBody(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(AppIcons.searchOff(ds),
-                size: 64, color: colorScheme.outline),
+            Icon(AppIcons.searchOff(ds), size: 64, color: colorScheme.outline),
             const SizedBox(height: 16),
-            Text('未找到相关书籍',
-                style: textTheme.titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              '未找到相关书籍',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 8),
-            Text('换个简短的关键词或者书名再试试吧~',
-                textAlign: TextAlign.center,
-                style: textTheme.bodyMedium
-                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
+            Text(
+              '换个简短的关键词或者书名再试试吧~',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  return _BookWaterfallGrid(
-    books: books,
-    ds: ds,
-    onBookTap: onBookTap,
-  );
+  return _BookWaterfallGrid(books: books, ds: ds, onBookTap: onBookTap);
 }

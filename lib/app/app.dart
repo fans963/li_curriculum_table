@@ -79,33 +79,33 @@ class CurriculumTableApp extends SignalWidget {
     return withM3ETheme(
       brightness == Brightness.dark
           ? FlexThemeData.dark(
-            colors: colors,
-            fontFamily: webFontFamily,
-            useMaterial3: true,
-            swapLegacyOnMaterial3: true,
-            visualDensity: FlexColorScheme.comfortablePlatformDensity,
-            subThemesData: subThemes,
-            keyColors: const FlexKeyColors(
-              useSecondary: true,
-              useTertiary: true,
-              keepPrimary: true,
+              colors: colors,
+              fontFamily: webFontFamily,
+              useMaterial3: true,
+              swapLegacyOnMaterial3: true,
+              visualDensity: FlexColorScheme.comfortablePlatformDensity,
+              subThemesData: subThemes,
+              keyColors: const FlexKeyColors(
+                useSecondary: true,
+                useTertiary: true,
+                keepPrimary: true,
+              ),
+              tones: _flexTones(colorSchemeType, Brightness.dark),
+            )
+          : FlexThemeData.light(
+              colors: colors,
+              fontFamily: webFontFamily,
+              useMaterial3: true,
+              swapLegacyOnMaterial3: true,
+              visualDensity: FlexColorScheme.comfortablePlatformDensity,
+              subThemesData: subThemes,
+              keyColors: const FlexKeyColors(
+                useSecondary: true,
+                useTertiary: true,
+                keepPrimary: true,
+              ),
+              tones: _flexTones(colorSchemeType, Brightness.light),
             ),
-            tones: _flexTones(colorSchemeType, Brightness.dark),
-          )
-        : FlexThemeData.light(
-            colors: colors,
-            fontFamily: webFontFamily,
-            useMaterial3: true,
-            swapLegacyOnMaterial3: true,
-            visualDensity: FlexColorScheme.comfortablePlatformDensity,
-            subThemesData: subThemes,
-            keyColors: const FlexKeyColors(
-              useSecondary: true,
-              useTertiary: true,
-              keepPrimary: true,
-            ),
-            tones: _flexTones(colorSchemeType, Brightness.light),
-          ),
     );
   }
 
@@ -133,7 +133,8 @@ class CurriculumTableApp extends SignalWidget {
     required Color seedColor,
     ColorScheme? dynamicScheme,
   }) {
-    final scheme = dynamicScheme ??
+    final scheme =
+        dynamicScheme ??
         ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
     final primaryColor = scheme.primary;
 
@@ -216,53 +217,55 @@ class CurriculumTableApp extends SignalWidget {
     final settings = settingsCtrl.state.value;
 
     return BetterFeedback(
-        localeOverride: const Locale('zh', 'CN'),
-        child: DynamicColorBuilder(
-          builder: (lightDynamic, darkDynamic) {
-            final ColorScheme? lightScheme =
-                settings.useDynamicColor ? lightDynamic : null;
-            final ColorScheme? darkScheme =
-                settings.useDynamicColor ? darkDynamic : null;
+      localeOverride: const Locale('zh', 'CN'),
+      child: DynamicColorBuilder(
+        builder: (lightDynamic, darkDynamic) {
+          final ColorScheme? lightScheme = settings.useDynamicColor
+              ? lightDynamic
+              : null;
+          final ColorScheme? darkScheme = settings.useDynamicColor
+              ? darkDynamic
+              : null;
 
-            final isDark = settings.themeMode == ThemeMode.dark ||
-                (settings.themeMode == ThemeMode.system &&
-                    MediaQuery.platformBrightnessOf(context) ==
-                        Brightness.dark);
+          final isDark =
+              settings.themeMode == ThemeMode.dark ||
+              (settings.themeMode == ThemeMode.system &&
+                  MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-            final cupertinoTheme = _buildCupertinoTheme(
-              brightness: isDark ? Brightness.dark : Brightness.light,
+          final cupertinoTheme = _buildCupertinoTheme(
+            brightness: isDark ? Brightness.dark : Brightness.light,
+            seedColor: settings.seedColor,
+            dynamicScheme: isDark ? darkScheme : lightScheme,
+          );
+
+          return MaterialApp(
+            title: '',
+            themeMode: settings.themeMode,
+            theme: _buildTheme(
+              brightness: Brightness.light,
               seedColor: settings.seedColor,
-              dynamicScheme: isDark ? darkScheme : lightScheme,
-            );
-
-            return MaterialApp(
-              title: '',
-              themeMode: settings.themeMode,
-              theme: _buildTheme(
-                brightness: Brightness.light,
-                seedColor: settings.seedColor,
-                dynamicScheme: lightScheme,
-                colorSchemeType: settings.colorSchemeType,
-              ),
-              darkTheme: _buildTheme(
-                brightness: Brightness.dark,
-                seedColor: settings.seedColor,
-                dynamicScheme: darkScheme,
-                colorSchemeType: settings.colorSchemeType,
-              ),
-              builder: (context, child) {
-                if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-                  return CupertinoTheme(
-                    data: cupertinoTheme,
-                    child: child ?? const SizedBox.shrink(),
-                  );
-                }
-                return child ?? const SizedBox.shrink();
-              },
-              home: const MainScreen(),
-            );
-          },
-        ),
-      );
+              dynamicScheme: lightScheme,
+              colorSchemeType: settings.colorSchemeType,
+            ),
+            darkTheme: _buildTheme(
+              brightness: Brightness.dark,
+              seedColor: settings.seedColor,
+              dynamicScheme: darkScheme,
+              colorSchemeType: settings.colorSchemeType,
+            ),
+            builder: (context, child) {
+              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
+                return CupertinoTheme(
+                  data: cupertinoTheme,
+                  child: child ?? const SizedBox.shrink(),
+                );
+              }
+              return child ?? const SizedBox.shrink();
+            },
+            home: const MainScreen(),
+          );
+        },
+      ),
+    );
   }
 }

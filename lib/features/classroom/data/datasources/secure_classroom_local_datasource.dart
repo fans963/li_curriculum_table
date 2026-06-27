@@ -25,10 +25,15 @@ class ClassroomLocalDataSource {
   static const String _lastCampusKey = 'classroom.cache.last_campus_id';
   static const String _lastBuildingKey = 'classroom.cache.last_building_id';
 
-  String _buildingsKey(String campusId) => 'classroom.cache.buildings.$campusId';
+  String _buildingsKey(String campusId) =>
+      'classroom.cache.buildings.$campusId';
 
-  String _availabilityKey(String campusId, String buildingId, int week, int weekday) =>
-      'classroom.cache.availability.$campusId.$buildingId.$week.$weekday';
+  String _availabilityKey(
+    String campusId,
+    String buildingId,
+    int week,
+    int weekday,
+  ) => 'classroom.cache.availability.$campusId.$buildingId.$week.$weekday';
 
   String _bulkScheduleKey(String campusId, String buildingId) =>
       'classroom.cache.bulk_schedule.$campusId.$buildingId';
@@ -38,16 +43,16 @@ class ClassroomLocalDataSource {
       final data = await _store.readAll([_campusesKey]);
       final jsonStr = data[_campusesKey];
       if (jsonStr == null) return null;
-      
+
       return await _runTask(() {
         final dynamic decoded = jsonDecode(jsonStr);
         if (decoded is! Map<String, dynamic>) return null;
-        
+
         final List<dynamic>? campusesRaw = decoded['campuses'];
         final String? term = decoded['currentTerm'];
-        
+
         if (campusesRaw == null || term == null) return null;
-        
+
         final campuses = campusesRaw
             .whereType<Map<String, dynamic>>()
             .map((e) => Campus.fromJson(e))
@@ -76,7 +81,7 @@ class ClassroomLocalDataSource {
       final data = await _store.readAll([key]);
       final jsonStr = data[key];
       if (jsonStr == null) return null;
-      
+
       return await _runTask(() {
         final dynamic decoded = jsonDecode(jsonStr);
         if (decoded is! List) return null;
@@ -109,7 +114,7 @@ class ClassroomLocalDataSource {
       final data = await _store.readAll([key]);
       final jsonStr = data[key];
       if (jsonStr == null) return null;
-      
+
       return await _runTask(() {
         final dynamic decoded = jsonDecode(jsonStr);
         if (decoded is! List) return null;
@@ -141,7 +146,7 @@ class ClassroomLocalDataSource {
     final data = await _store.readAll([key]);
     final jsonStr = data[key];
     if (jsonStr == null) return null;
-    
+
     return await _runTask(() {
       final List<dynamic> decoded = jsonDecode(jsonStr);
       return decoded.map((e) => ClassroomSchedule.fromJson(e)).toList();

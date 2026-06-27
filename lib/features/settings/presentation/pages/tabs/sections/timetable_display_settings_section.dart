@@ -23,7 +23,11 @@ class TimetableDisplaySettingsSection extends StatelessWidget {
         children: [
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            secondary: Icon(Icons.text_fields_rounded, size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            secondary: Icon(
+              Icons.text_fields_rounded,
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             title: const Text('课表文字自适应'),
             subtitle: const Text('自动缩小字号以完整显示课程名和地点，关闭则固定字号'),
             value: settings.autoSizeText,
@@ -37,7 +41,11 @@ class TimetableDisplaySettingsSection extends StatelessWidget {
           const Divider(height: 1),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            secondary: Icon(AppIcons.swapHoriz(ds), size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            secondary: Icon(
+              AppIcons.swapHoriz(ds),
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             title: const Text('按星期滑动'),
             subtitle: const Text('以整周为单位左右对齐滑动，关闭则自由无极滑动'),
             value: settings.weeklyScroll,
@@ -50,7 +58,11 @@ class TimetableDisplaySettingsSection extends StatelessWidget {
           const Divider(height: 1),
           SwitchListTile(
             contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            secondary: Icon(AppIcons.menuBook(ds), size: 20, color: Theme.of(context).colorScheme.onSurfaceVariant),
+            secondary: Icon(
+              AppIcons.menuBook(ds),
+              size: 20,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             title: const Text('图书馆检索封面'),
             subtitle: const Text('自动获取图书封面,目前数据库并不完善，仅有部分热门书籍封面信息'),
             value: settings.enableBookCover,
@@ -67,7 +79,10 @@ class _AutoSizeMinFontSizeSlider extends StatelessWidget {
   final AppSettings settings;
   final SettingsController notifier;
 
-  const _AutoSizeMinFontSizeSlider({required this.settings, required this.notifier});
+  const _AutoSizeMinFontSizeSlider({
+    required this.settings,
+    required this.notifier,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +114,11 @@ class _AutoSizeMinFontSizeSlider extends StatelessWidget {
             child: Text(
               settings.autoSizeMinFontSize.toStringAsFixed(1),
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: cs.primary,
+              ),
             ),
           ),
         ],
@@ -148,7 +167,11 @@ class _FixedTextSettings extends StatelessWidget {
                 child: Text(
                   settings.timetableTextFontSize.toStringAsFixed(1),
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: cs.primary),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: cs.primary,
+                  ),
                 ),
               ),
             ],
@@ -156,7 +179,11 @@ class _FixedTextSettings extends StatelessWidget {
           // Max lines selector
           Row(
             children: [
-              Icon(Icons.format_list_numbered, size: 18, color: cs.onSurfaceVariant),
+              Icon(
+                Icons.format_list_numbered,
+                size: 18,
+                color: cs.onSurfaceVariant,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -177,8 +204,12 @@ class _FixedTextSettings extends StatelessWidget {
                           selectedColor: cs.primaryContainer,
                           labelStyle: TextStyle(
                             fontSize: 12,
-                            fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                            color: selected ? cs.onPrimaryContainer : cs.onSurface,
+                            fontWeight: selected
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                            color: selected
+                                ? cs.onPrimaryContainer
+                                : cs.onSurface,
                           ),
                         );
                       }).toList(),
@@ -217,7 +248,11 @@ class _DaysCountSelector extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.view_column_outlined, size: 20, color: cs.onSurfaceVariant),
+              Icon(
+                Icons.view_column_outlined,
+                size: 20,
+                color: cs.onSurfaceVariant,
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(

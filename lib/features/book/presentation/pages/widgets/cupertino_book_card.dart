@@ -19,7 +19,10 @@ class _CupertinoBookCardState extends State<_CupertinoBookCard> {
   @override
   void initState() {
     super.initState();
-    _cover = BookCoverSignal(detailUrl: widget.book.detailUrl, title: widget.book.title);
+    _cover = BookCoverSignal(
+      detailUrl: widget.book.detailUrl,
+      title: widget.book.title,
+    );
   }
 
   @override
@@ -35,16 +38,28 @@ class _CupertinoBookCardState extends State<_CupertinoBookCard> {
     final enableBookCover = BookCoverSignal.isEnabled;
 
     final cardContent = enableBookCover
-        ? _CoverCardContent(book: widget.book, cover: _cover, cs: cs, secondary: secondary)
+        ? _CoverCardContent(
+            book: widget.book,
+            cover: _cover,
+            cs: cs,
+            secondary: secondary,
+          )
         : _TextOnlyCardContent(book: widget.book, cs: cs, secondary: secondary);
 
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+          color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+            context,
+          ),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
+          border: Border.all(
+            color: CupertinoColors.separator
+                .resolveFrom(context)
+                .withValues(alpha: 0.2),
+            width: 0.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: CupertinoColors.black.withValues(alpha: 0.03),
@@ -97,7 +112,12 @@ class _CoverCardContent extends StatelessWidget {
                 book.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600, color: cs, height: 1.25),
+                style: TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: cs,
+                  height: 1.25,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
@@ -141,10 +161,16 @@ class _TextOnlyCardContent extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.08),
+                  color: CupertinoColors.systemBlue
+                      .resolveFrom(context)
+                      .withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Icon(CupertinoIcons.book, size: 14, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                child: Icon(
+                  CupertinoIcons.book,
+                  size: 14,
+                  color: CupertinoColors.systemBlue.resolveFrom(context),
+                ),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -155,7 +181,12 @@ class _TextOnlyCardContent extends StatelessWidget {
                       book.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.bold, color: cs, height: 1.25),
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                        color: cs,
+                        height: 1.25,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     _DocTypeBadge(docType: book.docType),
@@ -165,17 +196,39 @@ class _TextOnlyCardContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-          Container(height: 0.5, color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2)),
+          Container(
+            height: 0.5,
+            color: CupertinoColors.separator
+                .resolveFrom(context)
+                .withValues(alpha: 0.2),
+          ),
           const SizedBox(height: 8),
-          _BookInfoRow(icon: CupertinoIcons.person, text: book.author, color: secondary),
+          _BookInfoRow(
+            icon: CupertinoIcons.person,
+            text: book.author,
+            color: secondary,
+          ),
           if (book.publisher != '未知出版信息' && book.publisher.isNotEmpty) ...[
             const SizedBox(height: 4),
-            _BookInfoRow(icon: CupertinoIcons.building_2_fill, text: book.publisher, color: secondary),
+            _BookInfoRow(
+              icon: CupertinoIcons.building_2_fill,
+              text: book.publisher,
+              color: secondary,
+            ),
           ],
           const SizedBox(height: 4),
-          _BookInfoRow(icon: CupertinoIcons.bookmark, text: '索书: ${book.callNo}', color: secondary, isMonospace: true),
+          _BookInfoRow(
+            icon: CupertinoIcons.bookmark,
+            text: '索书: ${book.callNo}',
+            color: secondary,
+            isMonospace: true,
+          ),
           const SizedBox(height: 4),
-          _BookInfoRow(icon: CupertinoIcons.collections, text: book.holdingsSummary, color: secondary),
+          _BookInfoRow(
+            icon: CupertinoIcons.collections,
+            text: book.holdingsSummary,
+            color: secondary,
+          ),
         ],
       ),
     );
@@ -190,23 +243,31 @@ class _CoverImage extends SignalWidget {
   @override
   Widget build(BuildContext context) {
     if (cover.loading.value) {
-        return const Center(child: CupertinoActivityIndicator(radius: 10));
-      }
-      final url = cover.url.value;
-      if (url != null) {
-        return CachedNetworkImage(
-          imageUrl: url,
-          fit: BoxFit.cover,
-          httpHeaders: url.contains('doubanio.com') ? const {'Referer': 'https://book.douban.com/'} : const {},
-          placeholder: (_, _) => _bookPlaceholder(context),
-          errorWidget: (_, _, _) => _bookPlaceholder(context),
-        );
-      }
-      return _bookPlaceholder(context);
+      return const Center(child: CupertinoActivityIndicator(radius: 10));
+    }
+    final url = cover.url.value;
+    if (url != null) {
+      return CachedNetworkImage(
+        imageUrl: url,
+        fit: BoxFit.cover,
+        httpHeaders: url.contains('doubanio.com')
+            ? const {'Referer': 'https://book.douban.com/'}
+            : const {},
+        placeholder: (_, _) => _bookPlaceholder(context),
+        errorWidget: (_, _, _) => _bookPlaceholder(context),
+      );
+    }
+    return _bookPlaceholder(context);
   }
 
   static Widget _bookPlaceholder(BuildContext context) {
-    return Center(child: Icon(CupertinoIcons.book, size: 40, color: CupertinoColors.systemGrey3.resolveFrom(context)));
+    return Center(
+      child: Icon(
+        CupertinoIcons.book,
+        size: 40,
+        color: CupertinoColors.systemGrey3.resolveFrom(context),
+      ),
+    );
   }
 }
 
@@ -220,12 +281,18 @@ class _DocTypeBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: CupertinoColors.systemBlue.resolveFrom(context).withValues(alpha: 0.08),
+        color: CupertinoColors.systemBlue
+            .resolveFrom(context)
+            .withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
         docType,
-        style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.bold, color: CupertinoColors.systemBlue.resolveFrom(context)),
+        style: TextStyle(
+          fontSize: 9.5,
+          fontWeight: FontWeight.bold,
+          color: CupertinoColors.systemBlue.resolveFrom(context),
+        ),
       ),
     );
   }
@@ -284,11 +351,16 @@ void showCupertinoBookDetailsSheet(BuildContext context, BookInfo book) {
       return _CupertinoBookDetailDialog(book: book);
     },
     transitionBuilder: (context, animation, secondaryAnimation, child) {
-      final curved = CurvedAnimation(parent: animation, curve: Curves.easeOutCubic);
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+      );
       final t = curved.value;
       final scale = 0.85 + 0.15 * t;
-      return Transform.scale(scale: scale, child: Opacity(opacity: t, child: child));
+      return Transform.scale(
+        scale: scale,
+        child: Opacity(opacity: t, child: child),
+      );
     },
   );
 }
-

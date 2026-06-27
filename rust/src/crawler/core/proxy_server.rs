@@ -14,7 +14,7 @@ pub async fn start_proxy_server(port: u16) -> anyhow::Result<()> {
     loop {
         let (stream, peer_addr) = listener.accept().await?;
         log::debug!("[V9] Accepted connection from {}", peer_addr);
-        
+
         tokio::spawn(async move {
             if let Err(e) = handle_connection(stream).await {
                 log::error!("[V9] Connection error: {}", e);
@@ -26,38 +26,46 @@ pub async fn start_proxy_server(port: u16) -> anyhow::Result<()> {
 async fn handle_connection(mut stream: TcpStream) -> anyhow::Result<()> {
     let mut buffer = Vec::new();
     let mut temp_buf = [0; 4096];
-    
+
     // 1. Read headers until \r\n\r\n
     let mut body_start = 0;
     loop {
         let n = stream.read(&mut temp_buf).await?;
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
         buffer.extend_from_slice(&temp_buf[..n]);
-        
+
         let s = String::from_utf8_lossy(&buffer);
         if let Some(pos) = s.find("\r\n\r\n") {
             body_start = pos + 4;
             break;
         }
-        if buffer.len() > 16384 { break; } // Safety limit for headers
+        if buffer.len() > 16384 {
+            break;
+        } // Safety limit for headers
     }
 
-    if buffer.is_empty() { return Ok(()); }
+    if buffer.is_empty() {
+        return Ok(());
+    }
 
     let request_head = String::from_utf8_lossy(&buffer[..body_start.min(buffer.len())]);
     let mut lines = request_head.lines();
     let first_line = lines.next().unwrap_or("");
     let parts: Vec<&str> = first_line.split_whitespace().collect();
 
-    if parts.len() < 2 { return Ok(()); }
+    if parts.len() < 2 {
+        return Ok(());
+    }
     let method_str = parts[0];
     let path = parts[1];
-    
+
     // Extract relevant headers (Content-Length, Referer, Origin)
     let mut content_length = 0;
     let mut x_referer = None;
     let mut origin = None;
-    
+
     for line in lines {
         let line_lower = line.to_lowercase();
         if line_lower.starts_with("content-length:") {
@@ -79,7 +87,7 @@ async fn handle_connection(mut stream: TcpStream) -> anyhow::Result<()> {
         "OPTIONS" => {
             send_cors_options(&mut stream, origin_str).await?;
             return Ok(());
-        },
+        }
         _ => Method::GET,
     };
 
@@ -88,10 +96,12 @@ async fn handle_connection(mut stream: TcpStream) -> anyhow::Result<()> {
     if body_start < buffer.len() {
         body.extend_from_slice(&buffer[body_start..]);
     }
-    
+
     while body.len() < content_length {
         let n = stream.read(&mut temp_buf).await?;
-        if n == 0 { break; }
+        if n == 0 {
+            break;
+        }
         body.extend_from_slice(&temp_buf[..n]);
     }
     if body.len() > content_length && content_length > 0 {
@@ -104,7 +114,15 @@ async fn handle_connection(mut stream: TcpStream) -> anyhow::Result<()> {
     if path == "/" || path == "/status" {
         send_response(&mut stream, 200, "OK", "Proxy is running", origin_str).await?;
     } else if path.starts_with("/proxy?") {
-        handle_proxy_request(&mut stream, path, method, body_opt, x_referer.as_deref(), origin_str).await?;
+        handle_proxy_request(
+            &mut stream,
+            path,
+            method,
+            body_opt,
+            x_referer.as_deref(),
+            origin_str,
+        )
+        .await?;
     } else {
         send_response(&mut stream, 404, "Not Found", "Not Found", origin_str).await?;
     }
@@ -113,8 +131,8 @@ async fn handle_connection(mut stream: TcpStream) -> anyhow::Result<()> {
 }
 
 async fn handle_proxy_request(
-    stream: &mut TcpStream, 
-    path: &str, 
+    stream: &mut TcpStream,
+    path: &str,
     method: Method,
     body: Option<Vec<u8>>,
     referer: Option<&str>,
@@ -123,7 +141,13 @@ async fn handle_proxy_request(
     // Basic query param parsing: /proxy?url=...
     let url_param = path.split("url=").nth(1).unwrap_or("");
     let target_url = url::form_urlencoded::parse(url_param.as_bytes())
-        .map(|(k, v)| if k.is_empty() { v.into_owned() } else { k.into_owned() })
+        .map(|(k, v)| {
+            if k.is_empty() {
+                v.into_owned()
+            } else {
+                k.into_owned()
+            }
+        })
         .next()
         .unwrap_or_default();
 
@@ -134,8 +158,11 @@ async fn handle_proxy_request(
 
     // Security: Only allow school domain
     let config = CrawlerConfig::default();
-    let portal_host = Url::parse(&config.get_portal_url())?.host_str().unwrap_or("").to_string();
-    
+    let portal_host = Url::parse(&config.get_portal_url())?
+        .host_str()
+        .unwrap_or("")
+        .to_string();
+
     if !target_url.contains(&portal_host) && !target_url.contains(":9080") {
         send_response(stream, 403, "Forbidden", "Target host not allowed", origin).await?;
         return Ok(());
@@ -144,7 +171,7 @@ async fn handle_proxy_request(
     log::info!("[V9] Forwarding {:?} request to: {}", method, target_url);
 
     let session = get_shared_session_manager().await?;
-    
+
     // Forward the request with full parameters
     match session.fetch_raw(&target_url, method, body, referer).await {
         Ok(bytes) => {
@@ -161,7 +188,15 @@ async fn handle_proxy_request(
         Err(e) => {
             let error_msg = format!("Upstream error: {}", e);
             log::error!("[V9] Proxy upstream error for {}: {}", target_url, e);
-            send_binary_response(stream, 500, "Internal Server Error", error_msg.as_bytes(), "text/plain", origin).await?;
+            send_binary_response(
+                stream,
+                500,
+                "Internal Server Error",
+                error_msg.as_bytes(),
+                "text/plain",
+                origin,
+            )
+            .await?;
         }
     }
 
@@ -184,10 +219,10 @@ async fn send_cors_options(stream: &mut TcpStream, origin: &str) -> anyhow::Resu
 }
 
 async fn send_binary_response(
-    stream: &mut TcpStream, 
-    status: u16, 
-    status_text: &str, 
-    body: &[u8], 
+    stream: &mut TcpStream,
+    status: u16,
+    status_text: &str,
+    body: &[u8],
     content_type: &str,
     origin: &str,
 ) -> anyhow::Result<()> {
@@ -200,13 +235,31 @@ async fn send_binary_response(
          Access-Control-Allow-Headers: *\r\n\
          Access-Control-Allow-Credentials: true\r\n\
          Connection: close\r\n\r\n",
-        status, status_text, content_type, body.len(), origin
+        status,
+        status_text,
+        content_type,
+        body.len(),
+        origin
     );
     stream.write_all(header.as_bytes()).await?;
     stream.write_all(body).await?;
     Ok(())
 }
 
-async fn send_response(stream: &mut TcpStream, status: u16, status_text: &str, body: &str, origin: &str) -> anyhow::Result<()> {
-    send_binary_response(stream, status, status_text, body.as_bytes(), "text/html; charset=utf-8", origin).await
+async fn send_response(
+    stream: &mut TcpStream,
+    status: u16,
+    status_text: &str,
+    body: &str,
+    origin: &str,
+) -> anyhow::Result<()> {
+    send_binary_response(
+        stream,
+        status,
+        status_text,
+        body.as_bytes(),
+        "text/html; charset=utf-8",
+        origin,
+    )
+    .await
 }

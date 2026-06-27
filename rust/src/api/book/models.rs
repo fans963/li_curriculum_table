@@ -30,8 +30,7 @@ impl BookSearchParams {
     }
 
     pub fn build_url(&self) -> String {
-        let encoded: String =
-            url::form_urlencoded::byte_serialize(self.query.as_bytes()).collect();
+        let encoded: String = url::form_urlencoded::byte_serialize(self.query.as_bytes()).collect();
         let mut url = format!(
             "http://202.119.83.14:8080/uopac/opac/openlink.php?strSearchType={}&historyCount=1&strText={}&doctype={}&lang_code={}&displaypg={}&sort={}&orderby={}&dept={}&showmode={}&match_flag=forward&with_ebook=on",
             self.search_type, encoded, self.doctype, self.lang_code,

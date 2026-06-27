@@ -40,7 +40,12 @@ class ThemeSettingsSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _ThemeModePicker(settings: settings, notifier: notifier, cs: cs, tt: tt),
+          _ThemeModePicker(
+            settings: settings,
+            notifier: notifier,
+            cs: cs,
+            tt: tt,
+          ),
           const SizedBox(height: 16),
           SettingsTile(
             icon: AppIcons.colorLens(ds),
@@ -53,12 +58,28 @@ class ThemeSettingsSection extends StatelessWidget {
           ),
           if (!settings.useDynamicColor) ...[
             const SizedBox(height: 16),
-            _SeedColorPicker(settings: settings, notifier: notifier, cs: cs, tt: tt),
+            _SeedColorPicker(
+              settings: settings,
+              notifier: notifier,
+              cs: cs,
+              tt: tt,
+            ),
             const SizedBox(height: 16),
-            _ColorSchemeTypePicker(settings: settings, notifier: notifier, cs: cs, tt: tt),
+            _ColorSchemeTypePicker(
+              settings: settings,
+              notifier: notifier,
+              cs: cs,
+              tt: tt,
+            ),
           ],
           const SizedBox(height: 16),
-          _DesignStylePicker(settings: settings, notifier: notifier, cs: cs, tt: tt, ds: ds),
+          _DesignStylePicker(
+            settings: settings,
+            notifier: notifier,
+            cs: cs,
+            tt: tt,
+            ds: ds,
+          ),
         ],
       ),
     );
@@ -71,33 +92,50 @@ class _ThemeModePicker extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _ThemeModePicker({required this.settings, required this.notifier, required this.cs, required this.tt});
+  const _ThemeModePicker({
+    required this.settings,
+    required this.notifier,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text('主题模式', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          '主题模式',
+          style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
+        ),
         const SizedBox(height: 10),
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 360),
             child: M3EToggleButtonGroup(
-            type: M3EButtonGroupType.connected,
-            style: M3EButtonStyle.tonal,
-            size: M3EButtonSize.md,
-            shape: M3EButtonShape.round,
-            selectedIndex: ThemeMode.values.indexOf(settings.themeMode),
-            onSelectedIndexChanged: (i) {
-              if (i != null) notifier.setThemeMode(ThemeMode.values[i]);
-            },
-            actions: const [
-              M3EToggleButtonGroupAction(icon: Icon(Icons.brightness_auto_rounded), label: Text('跟随系统')),
-              M3EToggleButtonGroupAction(icon: Icon(Icons.light_mode_rounded), label: Text('浅色')),
-              M3EToggleButtonGroupAction(icon: Icon(Icons.dark_mode_rounded), label: Text('深色')),
-            ],
+              type: M3EButtonGroupType.connected,
+              style: M3EButtonStyle.tonal,
+              size: M3EButtonSize.md,
+              shape: M3EButtonShape.round,
+              selectedIndex: ThemeMode.values.indexOf(settings.themeMode),
+              onSelectedIndexChanged: (i) {
+                if (i != null) notifier.setThemeMode(ThemeMode.values[i]);
+              },
+              actions: const [
+                M3EToggleButtonGroupAction(
+                  icon: Icon(Icons.brightness_auto_rounded),
+                  label: Text('跟随系统'),
+                ),
+                M3EToggleButtonGroupAction(
+                  icon: Icon(Icons.light_mode_rounded),
+                  label: Text('浅色'),
+                ),
+                M3EToggleButtonGroupAction(
+                  icon: Icon(Icons.dark_mode_rounded),
+                  label: Text('深色'),
+                ),
+              ],
+            ),
           ),
-        ),
         ),
       ],
     );
@@ -110,7 +148,12 @@ class _SeedColorPicker extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _SeedColorPicker({required this.settings, required this.notifier, required this.cs, required this.tt});
+  const _SeedColorPicker({
+    required this.settings,
+    required this.notifier,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -124,37 +167,63 @@ class _SeedColorPicker extends StatelessWidget {
           runSpacing: 10,
           children: [
             ...ThemeSettingsSection.seedColors.map((color) {
-              final selected = settings.seedColor.toARGB32() == color.toARGB32();
+              final selected =
+                  settings.seedColor.toARGB32() == color.toARGB32();
               return GestureDetector(
                 onTap: () => notifier.setSeedColor(color),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: color,
                     shape: BoxShape.circle,
                     border: selected
                         ? Border.all(color: cs.onSurface, width: 2.5)
-                        : Border.all(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+                        : Border.all(
+                            color: cs.outlineVariant.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
                     boxShadow: selected
-                        ? [BoxShadow(color: color.withValues(alpha: 0.35), blurRadius: 8, spreadRadius: 1)]
+                        ? [
+                            BoxShadow(
+                              color: color.withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              spreadRadius: 1,
+                            ),
+                          ]
                         : null,
                   ),
                   child: selected
-                      ? Icon(Icons.check_rounded, color: color.computeLuminance() > 0.5 ? Colors.black87 : Colors.white, size: 20)
+                      ? Icon(
+                          Icons.check_rounded,
+                          color: color.computeLuminance() > 0.5
+                              ? Colors.black87
+                              : Colors.white,
+                          size: 20,
+                        )
                       : null,
                 ),
               );
             }),
             GestureDetector(
-              onTap: () => _showCustomColorPicker(context, settings.seedColor, notifier),
+              onTap: () =>
+                  _showCustomColorPicker(context, settings.seedColor, notifier),
               child: Container(
-                width: 40, height: 40,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.3), width: 1),
+                  border: Border.all(
+                    color: cs.outlineVariant.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
-                child: Icon(Icons.palette_outlined, size: 20, color: cs.primary),
+                child: Icon(
+                  Icons.palette_outlined,
+                  size: 20,
+                  color: cs.primary,
+                ),
               ),
             ),
           ],
@@ -170,14 +239,22 @@ class _ColorSchemeTypePicker extends StatelessWidget {
   final ColorScheme cs;
   final TextTheme tt;
 
-  const _ColorSchemeTypePicker({required this.settings, required this.notifier, required this.cs, required this.tt});
+  const _ColorSchemeTypePicker({
+    required this.settings,
+    required this.notifier,
+    required this.cs,
+    required this.tt,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('配色方案', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          '配色方案',
+          style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
+        ),
         const SizedBox(height: 10),
         M3EToggleButtonGroup(
           type: M3EButtonGroupType.standard,
@@ -185,12 +262,20 @@ class _ColorSchemeTypePicker extends StatelessWidget {
           size: M3EButtonSize.sm,
           shape: M3EButtonShape.round,
           overflow: M3EButtonGroupOverflow.scroll,
-          selectedIndex: ColorSchemeType.values.indexOf(settings.colorSchemeType),
+          selectedIndex: ColorSchemeType.values.indexOf(
+            settings.colorSchemeType,
+          ),
           onSelectedIndexChanged: (i) {
-            if (i != null) notifier.setColorSchemeType(ColorSchemeType.values[i]);
+            if (i != null)
+              notifier.setColorSchemeType(ColorSchemeType.values[i]);
           },
           actions: ColorSchemeType.values
-              .map((t) => M3EToggleButtonGroupAction(icon: Icon(t.icon, size: 18), label: Text(t.label)))
+              .map(
+                (t) => M3EToggleButtonGroupAction(
+                  icon: Icon(t.icon, size: 18),
+                  label: Text(t.label),
+                ),
+              )
               .toList(),
         ),
       ],
@@ -205,14 +290,23 @@ class _DesignStylePicker extends StatelessWidget {
   final TextTheme tt;
   final DesignStyle ds;
 
-  const _DesignStylePicker({required this.settings, required this.notifier, required this.cs, required this.tt, required this.ds});
+  const _DesignStylePicker({
+    required this.settings,
+    required this.notifier,
+    required this.cs,
+    required this.tt,
+    required this.ds,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('设计风格', style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant)),
+        Text(
+          '设计风格',
+          style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
+        ),
         const SizedBox(height: 8),
         ...DesignStyle.values.map((style) {
           final selected = settings.designStyle == style;
@@ -225,33 +319,58 @@ class _DesignStylePicker extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: selected ? cs.primary : cs.outlineVariant.withValues(alpha: 0.4),
+                      color: selected
+                          ? cs.primary
+                          : cs.outlineVariant.withValues(alpha: 0.4),
                       width: selected ? 2 : 1,
                     ),
-                    color: selected ? cs.primaryContainer.withValues(alpha: 0.15) : Colors.transparent,
+                    color: selected
+                        ? cs.primaryContainer.withValues(alpha: 0.15)
+                        : Colors.transparent,
                   ),
                   child: Row(
                     children: [
-                      Icon(style.icon, size: 22, color: selected ? cs.primary : cs.onSurfaceVariant),
+                      Icon(
+                        style.icon,
+                        size: 22,
+                        color: selected ? cs.primary : cs.onSurfaceVariant,
+                      ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(style.label,
-                                style: tt.bodyMedium?.copyWith(
-                                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
-                                  color: selected ? cs.primary : cs.onSurface,
-                                )),
-                            Text(_desc(style), style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+                            Text(
+                              style.label,
+                              style: tt.bodyMedium?.copyWith(
+                                fontWeight: selected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
+                                color: selected ? cs.primary : cs.onSurface,
+                              ),
+                            ),
+                            Text(
+                              _desc(style),
+                              style: tt.bodySmall?.copyWith(
+                                color: cs.onSurfaceVariant,
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      if (selected) Icon(AppIcons.checkCircle(ds), size: 20, color: cs.primary),
+                      if (selected)
+                        Icon(
+                          AppIcons.checkCircle(ds),
+                          size: 20,
+                          color: cs.primary,
+                        ),
                     ],
                   ),
                 ),
@@ -275,7 +394,11 @@ class _DesignStylePicker extends StatelessWidget {
   }
 }
 
-void _showCustomColorPicker(BuildContext context, Color current, SettingsController notifier) {
+void _showCustomColorPicker(
+  BuildContext context,
+  Color current,
+  SettingsController notifier,
+) {
   final hsv = HSVColor.fromColor(current);
   showDialog(
     context: context,
@@ -312,7 +435,12 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final picked = HSVColor.fromAHSV(1, _hue.value, _sat.value, _val.value).toColor();
+    final picked = HSVColor.fromAHSV(
+      1,
+      _hue.value,
+      _sat.value,
+      _val.value,
+    ).toColor();
     final cs = Theme.of(context).colorScheme;
     return AlertDialog(
       title: const Text('自定义颜色'),
@@ -320,31 +448,86 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 64, height: 64,
-            decoration: BoxDecoration(color: picked, shape: BoxShape.circle, border: Border.all(color: cs.outlineVariant, width: 0.5)),
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              color: picked,
+              shape: BoxShape.circle,
+              border: Border.all(color: cs.outlineVariant, width: 0.5),
+            ),
           ),
           const SizedBox(height: 16),
-          _hsvRow('H', _hue.value, 0, 360, SliderM3EEmphasis.secondary, (v) => _hue.value = v),
-          _hsvRow('S', _sat.value, 0, 1, SliderM3EEmphasis.surface, (v) => _sat.value = v),
-          _hsvRow('V', _val.value, 0.2, 1, SliderM3EEmphasis.surface, (v) => _val.value = v),
+          _hsvRow(
+            'H',
+            _hue.value,
+            0,
+            360,
+            SliderM3EEmphasis.secondary,
+            (v) => _hue.value = v,
+          ),
+          _hsvRow(
+            'S',
+            _sat.value,
+            0,
+            1,
+            SliderM3EEmphasis.surface,
+            (v) => _sat.value = v,
+          ),
+          _hsvRow(
+            'V',
+            _val.value,
+            0.2,
+            1,
+            SliderM3EEmphasis.surface,
+            (v) => _val.value = v,
+          ),
         ],
       ),
       actions: [
-        M3ETextButton(onPressed: () => Navigator.pop(context), size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('取消')),
+        M3ETextButton(
+          onPressed: () => Navigator.pop(context),
+          size: M3EButtonSize.md,
+          shape: M3EButtonShape.round,
+          child: const Text('取消'),
+        ),
         M3EFilledButton(
-          onPressed: () { widget.notifier.setSeedColor(picked); Navigator.pop(context); },
-          size: M3EButtonSize.md, shape: M3EButtonShape.round, child: const Text('确定'),
+          onPressed: () {
+            widget.notifier.setSeedColor(picked);
+            Navigator.pop(context);
+          },
+          size: M3EButtonSize.md,
+          shape: M3EButtonShape.round,
+          child: const Text('确定'),
         ),
       ],
     );
   }
 }
 
-Widget _hsvRow(String label, double value, double min, double max, SliderM3EEmphasis emphasis, ValueChanged<double> onChanged) {
+Widget _hsvRow(
+  String label,
+  double value,
+  double min,
+  double max,
+  SliderM3EEmphasis emphasis,
+  ValueChanged<double> onChanged,
+) {
   return Row(
     children: [
-      SizedBox(width: 24, child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600))),
-      Expanded(child: SliderM3E(value: value, min: min, max: max, emphasis: emphasis, shapeFamily: SliderM3EShapeFamily.round, onChanged: onChanged)),
+      SizedBox(
+        width: 24,
+        child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+      ),
+      Expanded(
+        child: SliderM3E(
+          value: value,
+          min: min,
+          max: max,
+          emphasis: emphasis,
+          shapeFamily: SliderM3EShapeFamily.round,
+          onChanged: onChanged,
+        ),
+      ),
     ],
   );
 }

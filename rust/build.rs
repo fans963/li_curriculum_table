@@ -19,9 +19,6 @@ fn main() {
 
     if bpk_path.exists() {
         let size = fs::metadata(&bpk_path).unwrap().len();
-        println!(
-            "cargo:warning=Captcha OCR Model: {} KB",
-            size / 1024
-        );
+        println!("cargo:warning=Captcha OCR Model: {} KB", size / 1024);
     }
 }

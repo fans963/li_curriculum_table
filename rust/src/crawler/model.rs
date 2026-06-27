@@ -15,7 +15,6 @@ pub struct TimeSlot {
     pub week_text: String,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CourseRow {
     #[serde(rename = "courseId")]
@@ -163,7 +162,6 @@ pub struct CrawlerConfig {
     pub login_url: String,
     pub target_url: String,
 }
-
 
 impl CrawlerConfig {
     pub fn get_portal_url(&self) -> String {

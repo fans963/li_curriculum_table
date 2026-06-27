@@ -3,19 +3,28 @@ name: Sync Release to Gitee
 on:
   release:
     types: [published] # Triggers when a new Release is published on GitHub
+  workflow_dispatch: # Allow manual trigger as fallback
+
+permissions:
+  contents: read
 
 jobs:
   sync-gitee:
     name: Sync to Gitee
     runs-on: ubuntu-latest
+    if: ${{ secrets.GITEE_TOKEN != '' }}
     steps:
       - name: Sync GitHub Release to Gitee
-        if: ${{ secrets.GITEE_TOKEN != '' }}
         uses: trustedinster/sync-release-gitee@v1.3
         with:
-          gitee_owner: fans963              # Your Gitee username
-          gitee_repo: li_curriculum_table   # Your Gitee repo name
+          gitee_owner: fans963
+          gitee_repo: li_curriculum_table
           gitee_token: ${{ secrets.GITEE_TOKEN }}
-          github_owner: fans963             # Your GitHub username
-          github_repo: li_curriculum_table  # Your GitHub repo name
+          github_owner: fans963
+          github_repo: li_curriculum_table
           gitee_upload_retry_times: 3
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "::warning::Gitee sync failed for ${{ github.event.release.tag_name }}"

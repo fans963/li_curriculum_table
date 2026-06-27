@@ -21,26 +21,27 @@ class GradeController {
     final creds = await credentialsRepository.loadCredentials();
     if (creds != null && !creds.isEmpty) {
       // Remember cached course codes before remote sync
-      final cachedCodes =
-          _state.value.grades.map((g) => g.courseCode).toSet();
+      final cachedCodes = _state.value.grades.map((g) => g.courseCode).toSet();
       final cachedCount = _state.value.grades.length;
 
-      loadGrades(forceRefresh: true).then((_) {
-        // Detect new grades by comparing with cache
-        final newGrades = _state.value.grades
-            .where((g) => !cachedCodes.contains(g.courseCode))
-            .toList();
-        if (newGrades.isNotEmpty && cachedCount > 0) {
-          final names = newGrades.map((g) => g.courseName).toList();
-          sl<NotificationService>().notifyNewGrades(names).catchError((e) {
-            if (kDebugMode) debugPrint('Grade notification failed: $e');
+      loadGrades(forceRefresh: true)
+          .then((_) {
+            // Detect new grades by comparing with cache
+            final newGrades = _state.value.grades
+                .where((g) => !cachedCodes.contains(g.courseCode))
+                .toList();
+            if (newGrades.isNotEmpty && cachedCount > 0) {
+              final names = newGrades.map((g) => g.courseName).toList();
+              sl<NotificationService>().notifyNewGrades(names).catchError((e) {
+                if (kDebugMode) debugPrint('Grade notification failed: $e');
+              });
+            }
+          })
+          .catchError((e) {
+            if (kDebugMode) {
+              print('Auto remote sync of grades failed: $e');
+            }
           });
-        }
-      }).catchError((e) {
-        if (kDebugMode) {
-          print('Auto remote sync of grades failed: $e');
-        }
-      });
     }
   }
 
@@ -58,10 +59,15 @@ class GradeController {
       _updateGradesState(grades);
     } catch (e) {
       if (e.toString().contains('未登录')) {
-        _state.value = _state.value.copyWith(isLoading: false, needsLogin: true);
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          needsLogin: true,
+        );
       } else {
-        _state.value =
-            _state.value.copyWith(isLoading: false, errorMessage: e.toString());
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          errorMessage: e.toString(),
+        );
       }
     }
   }
@@ -116,8 +122,9 @@ class GradeController {
     }
 
     final double wavg = totalCredits > 0 ? weightedSum / totalCredits : 0.0;
-    final double compulsoryWavg =
-        compulsoryCredits > 0 ? compulsoryWeightedSum / compulsoryCredits : 0.0;
+    final double compulsoryWavg = compulsoryCredits > 0
+        ? compulsoryWeightedSum / compulsoryCredits
+        : 0.0;
 
     // Default selection: all compulsory courses
     final defaultSelected = grades
@@ -140,13 +147,14 @@ class GradeController {
 
   void _applyFilters() {
     if (_state.value.searchQuery.isEmpty) {
-      _state.value =
-          _state.value.copyWith(filteredGrades: _state.value.grades);
+      _state.value = _state.value.copyWith(filteredGrades: _state.value.grades);
     } else {
       final filtered = _state.value.grades
-          .where((g) => g.courseName
-              .toLowerCase()
-              .contains(_state.value.searchQuery.toLowerCase()))
+          .where(
+            (g) => g.courseName.toLowerCase().contains(
+              _state.value.searchQuery.toLowerCase(),
+            ),
+          )
           .toList();
       _state.value = _state.value.copyWith(filteredGrades: filtered);
     }

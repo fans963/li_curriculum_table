@@ -37,7 +37,10 @@ class CacheBackupService {
 
       // On platforms that support file sharing (mobile, macOS, Windows),
       // write to a temp file and share. Otherwise fall back to a save dialog.
-      if (Platform.isAndroid || Platform.isIOS || Platform.isMacOS || Platform.isWindows) {
+      if (Platform.isAndroid ||
+          Platform.isIOS ||
+          Platform.isMacOS ||
+          Platform.isWindows) {
         final dir = await getTemporaryDirectory();
         final file = File(
           '${dir.path}/curriculum_table_backup_${DateTime.now().millisecondsSinceEpoch}.json',
@@ -52,9 +55,14 @@ class CacheBackupService {
       } else {
         // Linux & other desktop platforms: prompt user to choose save location.
         final saveLocation = await getSaveLocation(
-          suggestedName: 'curriculum_table_backup_${DateTime.now().millisecondsSinceEpoch}.json',
+          suggestedName:
+              'curriculum_table_backup_${DateTime.now().millisecondsSinceEpoch}.json',
           acceptedTypeGroups: [
-            const XTypeGroup(label: 'JSON', extensions: ['json'], mimeTypes: ['application/json']),
+            const XTypeGroup(
+              label: 'JSON',
+              extensions: ['json'],
+              mimeTypes: ['application/json'],
+            ),
           ],
         );
         if (saveLocation == null) return null; // user cancelled
@@ -81,8 +89,9 @@ class CacheBackupService {
       if (file == null) return null;
 
       final jsonStr = await File(file.path).readAsString();
-      final backup =
-          await Isolate.run(() => jsonDecode(jsonStr) as Map<String, dynamic>);
+      final backup = await Isolate.run(
+        () => jsonDecode(jsonStr) as Map<String, dynamic>,
+      );
 
       final version = backup['version'] as int?;
       if (version == null || version > _backupVersion) {

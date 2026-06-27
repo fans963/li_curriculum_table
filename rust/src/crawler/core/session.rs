@@ -1,7 +1,7 @@
 use crate::api::http;
-use crate::ocr::DdddOcr;
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::CrawlerConfig;
+use crate::ocr::DdddOcr;
 use encoding_rs::GBK;
 use reqwest::{Client, Method};
 use std::sync::atomic::{AtomicU16, Ordering};
@@ -46,12 +46,17 @@ impl SessionManager {
         {
             let port = get_proxy_port();
             let local_discovery_url = format!("http://localhost:{}/status", port);
-            log::info!("Web: Probing for local native proxy at {}...", local_discovery_url);
+            log::info!(
+                "Web: Probing for local native proxy at {}...",
+                local_discovery_url
+            );
 
             let probe_client = http::build_client();
             if let Ok(resp) = probe_client.get(local_discovery_url).send().await {
                 if resp.status().is_success() {
-                    log::info!("Web: Local native proxy discovered! Switching to hyper-speed mode.");
+                    log::info!(
+                        "Web: Local native proxy discovered! Switching to hyper-speed mode."
+                    );
                     strategy = NetworkingStrategy::LocalNativeProxy;
                 }
             }
@@ -62,14 +67,18 @@ impl SessionManager {
             let b = builder
                 .cookie_store(true)
                 .redirect(reqwest::redirect::Policy::limited(10));
-            
+
             strategy = NetworkingStrategy::Direct;
             log::info!("[V8] Native mode: Using Direct connection.");
             b
         };
 
         let client = builder.build().unwrap_or_default();
-        println!("Crawler: SessionManager initialized. Strategy: {:?}, Port: {}", strategy, get_proxy_port());
+        println!(
+            "Crawler: SessionManager initialized. Strategy: {:?}, Port: {}",
+            strategy,
+            get_proxy_port()
+        );
 
         Self {
             client,
@@ -99,7 +108,7 @@ impl SessionManager {
         for attempt in 1..=max_attempts {
             println!("Crawler: Shared Login attempt {}/{}", attempt, max_attempts);
             let captcha_bytes = self.get_captcha().await?;
-            
+
             let verify_code = {
                 let ocr_guard = self.ocr.lock().await;
                 ocr_guard.recognize(&captcha_bytes)
@@ -107,7 +116,7 @@ impl SessionManager {
 
             let verify_code = verify_code.trim();
             println!("Crawler: Shared OCR result: '{}'", verify_code);
-            
+
             if verify_code.len() != 4 || !verify_code.chars().all(|c| c.is_alphanumeric()) {
                 println!("Crawler: Invalid verification code format, retrying...");
                 continue;
@@ -116,18 +125,27 @@ impl SessionManager {
             println!("Crawler: Submitting shared login credentials...");
             let html = self.submit_login(username, password, verify_code).await?;
 
-            if html.contains("个人中心") || html.contains("理论课表") || html.contains("main.jsp") || html.contains("logout")
+            if html.contains("个人中心")
+                || html.contains("理论课表")
+                || html.contains("main.jsp")
+                || html.contains("logout")
             {
                 println!("Crawler: Shared Login successful!");
                 return Ok(());
             }
 
-            if html.contains("用户名或密码错误") || html.contains("密码错误") || html.contains("账号不存在") {
+            if html.contains("用户名或密码错误")
+                || html.contains("密码错误")
+                || html.contains("账号不存在")
+            {
                 return Err(CrawlerError::InvalidCredentials);
             }
 
             if html.contains("验证码错误") {
-                println!("Crawler: Verification code error, retrying (attempt {}/{})...", attempt, max_attempts);
+                println!(
+                    "Crawler: Verification code error, retrying (attempt {}/{})...",
+                    attempt, max_attempts
+                );
                 continue;
             }
 
@@ -145,9 +163,14 @@ impl SessionManager {
         let url = format!("{}/main.jsp", self.config.get_portal_url());
         match self.fetch_text(&url, Method::GET, None, None).await {
             Ok(html) => {
-                let success = html.contains("个人中心") || html.contains("理论课表") || html.contains("logout");
+                let success = html.contains("个人中心")
+                    || html.contains("理论课表")
+                    || html.contains("logout");
                 if !success {
-                    log::debug!("Crawler: Session check failed (invalid keywords). HTML length: {}", html.len());
+                    log::debug!(
+                        "Crawler: Session check failed (invalid keywords). HTML length: {}",
+                        html.len()
+                    );
                 }
                 success
             }
@@ -200,7 +223,6 @@ impl SessionManager {
         if self.strategy == NetworkingStrategy::LocalNativeProxy {
             #[cfg(target_arch = "wasm32")]
             {
-
                 if let Some(ref_val) = referer {
                     req_builder = req_builder.header("X-Proxy-Referer", ref_val);
                 }
@@ -211,8 +233,11 @@ impl SessionManager {
 
         let resp = req_builder.send().await?;
         let status = resp.status();
-        println!("Crawler: [Response] status: {}, url: {}", status, resp.url());
-
+        println!(
+            "Crawler: [Response] status: {}, url: {}",
+            status,
+            resp.url()
+        );
 
         let bytes = resp.bytes().await?.to_vec();
         println!("Crawler: [Data] received {} bytes", bytes.len());
@@ -278,7 +303,8 @@ impl SessionManager {
         match self.strategy {
             NetworkingStrategy::LocalNativeProxy => {
                 let port = get_proxy_port();
-                let encoded: String = url::form_urlencoded::byte_serialize(url.as_bytes()).collect();
+                let encoded: String =
+                    url::form_urlencoded::byte_serialize(url.as_bytes()).collect();
                 format!("http://localhost:{}/proxy?url={}", port, encoded)
             }
             _ => url.to_string(),

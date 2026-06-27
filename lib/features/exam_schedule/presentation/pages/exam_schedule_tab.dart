@@ -62,14 +62,29 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: cs.surface,
-        border: Border(bottom: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.3), width: 0.5)),
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
       ),
       child: Row(
         children: [
-          Text('考试安排', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: cs.onSurface)),
+          Text(
+            '考试安排',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
           const Spacer(),
           if (total > 0)
-            Text('$upcoming 场待考 / $total 场', style: TextStyle(fontSize: 12, color: cs.outline)),
+            Text(
+              '$upcoming 场待考 / $total 场',
+              style: TextStyle(fontSize: 12, color: cs.outline),
+            ),
         ],
       ),
     );
@@ -82,7 +97,10 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       switchOutCurve: kDefaultAnimationCurve,
       child: () {
         if (state.isLoading && state.exams.isEmpty) {
-          return Center(key: const ValueKey('loading'), child: LoadingIndicatorM3E());
+          return Center(
+            key: const ValueKey('loading'),
+            child: LoadingIndicatorM3E(),
+          );
         }
 
         if (state.needsLogin) {
@@ -91,7 +109,11 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(AppIcons.lock(sl<SettingsController>().designStyle.value), size: 64, color: Theme.of(context).colorScheme.outline),
+                Icon(
+                  AppIcons.lock(sl<SettingsController>().designStyle.value),
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 const SizedBox(height: 16),
                 const Text('需要登录后才能查询考试安排'),
                 const SizedBox(height: 8),
@@ -160,10 +182,15 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       child: TextField(
         decoration: InputDecoration(
           hintText: '搜索课程名称...',
-          prefixIcon: Icon(AppIcons.search(sl<SettingsController>().designStyle.value)),
+          prefixIcon: Icon(
+            AppIcons.search(sl<SettingsController>().designStyle.value),
+          ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
         onChanged: (val) => sl<ExamController>().setSearchQuery(val),
       ),
@@ -184,14 +211,21 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
           const Spacer(),
           Text(
             '共 ${upcoming + expired} 场考试',
-            style: theme.textTheme.bodySmall?.copyWith(color: colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.outline,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildCountBadge(BuildContext context, String count, String label, Color color) {
+  Widget _buildCountBadge(
+    BuildContext context,
+    String count,
+    String label,
+    Color color,
+  ) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -203,9 +237,21 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(count, style: theme.textTheme.titleSmall?.copyWith(color: color, fontWeight: FontWeight.w800)),
+          Text(
+            count,
+            style: theme.textTheme.titleSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
           const SizedBox(width: 3),
-          Text(label, style: theme.textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.8), fontSize: 11)),
+          Text(
+            label,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: color.withValues(alpha: 0.8),
+              fontSize: 11,
+            ),
+          ),
         ],
       ),
     );
@@ -226,9 +272,20 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
             ),
           ),
           const SizedBox(width: 8),
-          Text(title, style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.outline, fontWeight: FontWeight.w600)),
+          Text(
+            title,
+            style: theme.textTheme.labelMedium?.copyWith(
+              color: theme.colorScheme.outline,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: Container(height: 1, color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5))),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+            ),
+          ),
         ],
       ),
     );
@@ -293,7 +350,9 @@ class _ExamCard extends StatelessWidget {
                   width: 4,
                   decoration: BoxDecoration(
                     color: isExpired ? colorScheme.outlineVariant : accentColor,
-                    borderRadius: const BorderRadius.horizontal(left: Radius.circular(16)),
+                    borderRadius: const BorderRadius.horizontal(
+                      left: Radius.circular(16),
+                    ),
                   ),
                 ),
                 Expanded(
@@ -309,22 +368,63 @@ class _ExamCard extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(exam.courseName, style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold, color: isExpired ? colorScheme.onSurfaceVariant.withValues(alpha: 0.75) : colorScheme.onSurface, fontSize: 16)),
+                                  Text(
+                                    exam.courseName,
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: isExpired
+                                              ? colorScheme.onSurfaceVariant
+                                                    .withValues(alpha: 0.75)
+                                              : colorScheme.onSurface,
+                                          fontSize: 16,
+                                        ),
+                                  ),
                                   const SizedBox(height: 3),
-                                  Text(exam.courseCode, style: theme.textTheme.bodySmall?.copyWith(color: isExpired ? colorScheme.outline.withValues(alpha: 0.6) : colorScheme.outline, fontSize: 11)),
+                                  Text(
+                                    exam.courseCode,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: isExpired
+                                          ? colorScheme.outline.withValues(
+                                              alpha: 0.6,
+                                            )
+                                          : colorScheme.outline,
+                                      fontSize: 11,
+                                    ),
+                                  ),
                                 ],
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _buildCountdownBadge(context, accentColor, isExpired, isToday),
+                            _buildCountdownBadge(
+                              context,
+                              accentColor,
+                              isExpired,
+                              isToday,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        _buildInfoRow(context, AppIcons.calendar(ds), '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}', isExpired: isExpired),
+                        _buildInfoRow(
+                          context,
+                          AppIcons.calendar(ds),
+                          '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}',
+                          isExpired: isExpired,
+                        ),
                         const SizedBox(height: 6),
-                        _buildInfoRow(context, AppIcons.locationOutline(ds), exam.location, isExpired: isExpired),
+                        _buildInfoRow(
+                          context,
+                          AppIcons.locationOutline(ds),
+                          exam.location,
+                          isExpired: isExpired,
+                        ),
                         const SizedBox(height: 6),
-                        _buildInfoRow(context, AppIcons.seat(ds), '座位 ${exam.seatNumber}  ·  场次 ${exam.session}', isExpired: isExpired),
+                        _buildInfoRow(
+                          context,
+                          AppIcons.seat(ds),
+                          '座位 ${exam.seatNumber}  ·  场次 ${exam.session}',
+                          isExpired: isExpired,
+                        ),
                       ],
                     ),
                   ),
@@ -337,7 +437,12 @@ class _ExamCard extends StatelessWidget {
     );
   }
 
-  Widget _buildCountdownBadge(BuildContext context, Color accentColor, bool isExpired, bool isToday) {
+  Widget _buildCountdownBadge(
+    BuildContext context,
+    Color accentColor,
+    bool isExpired,
+    bool isToday,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final ds = sl<SettingsController>().designStyle.value;
@@ -347,28 +452,66 @@ class _ExamCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isExpired ? colorScheme.outlineVariant.withValues(alpha: 0.3) : accentColor.withValues(alpha: 0.1),
+        color: isExpired
+            ? colorScheme.outlineVariant.withValues(alpha: 0.3)
+            : accentColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isExpired ? colorScheme.outlineVariant.withValues(alpha: 0.5) : accentColor.withValues(alpha: 0.25)),
+        border: Border.all(
+          color: isExpired
+              ? colorScheme.outlineVariant.withValues(alpha: 0.5)
+              : accentColor.withValues(alpha: 0.25),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (isToday) ...[Icon(AppIcons.bolt(ds), size: 13, color: accentColor), const SizedBox(width: 2)],
-          Text(text, style: theme.textTheme.labelSmall?.copyWith(color: isExpired ? colorScheme.outline : accentColor, fontWeight: FontWeight.w700, fontSize: 11)),
+          if (isToday) ...[
+            Icon(AppIcons.bolt(ds), size: 13, color: accentColor),
+            const SizedBox(width: 2),
+          ],
+          Text(
+            text,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: isExpired ? colorScheme.outline : accentColor,
+              fontWeight: FontWeight.w700,
+              fontSize: 11,
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildInfoRow(BuildContext context, IconData icon, String text, {bool isExpired = false}) {
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    bool isExpired = false,
+  }) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 14, color: isExpired ? cs.outline.withValues(alpha: 0.55) : cs.outline.withValues(alpha: 0.7)),
+        Icon(
+          icon,
+          size: 14,
+          color: isExpired
+              ? cs.outline.withValues(alpha: 0.55)
+              : cs.outline.withValues(alpha: 0.7),
+        ),
         const SizedBox(width: 6),
-        Expanded(child: Text(text, style: theme.textTheme.bodySmall?.copyWith(color: isExpired ? cs.onSurfaceVariant.withValues(alpha: 0.65) : cs.onSurfaceVariant, fontSize: 12.5), overflow: TextOverflow.ellipsis)),
+        Expanded(
+          child: Text(
+            text,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: isExpired
+                  ? cs.onSurfaceVariant.withValues(alpha: 0.65)
+                  : cs.onSurfaceVariant,
+              fontSize: 12.5,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
       ],
     );
   }

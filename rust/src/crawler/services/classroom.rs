@@ -1,8 +1,6 @@
 use crate::crawler::core::SessionManager;
 use crate::crawler::error::CrawlerResult;
-use crate::crawler::model::{
-    Building, CampusPageData, ClassroomAvailability, ClassroomSchedule,
-};
+use crate::crawler::model::{Building, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::crawler::parser::parse_campuses;
 use reqwest::Method;
 use std::sync::Arc;

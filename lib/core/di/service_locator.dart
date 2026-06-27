@@ -3,6 +3,7 @@ import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_local_datasource.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_remote_datasource.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/data/repositories/level_exam_score_repository_impl.dart';
@@ -86,6 +87,9 @@ void setupServiceLocator() {
   sl.registerLazySingleton<CourseColorService>(
     () => CourseColorService(sl<SecureStorageStore>()),
   );
+  sl.registerLazySingleton<CourseOnlineService>(
+    () => CourseOnlineService(sl<SecureStorageStore>()),
+  );
 
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(
@@ -102,7 +106,8 @@ void setupServiceLocator() {
 
   sl.registerLazySingleton<TeachingWeekBaselineRepository>(
     () => TeachingWeekBaselineRepositoryImpl(
-        sl<SecureTeachingWeekBaselineLocalDataSource>()),
+      sl<SecureTeachingWeekBaselineLocalDataSource>(),
+    ),
   );
 
   sl.registerLazySingleton<SecureTimetableLocalDataSource>(
@@ -127,7 +132,8 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<ScheduleEventsRepository>(
-    () => ScheduleEventsRepositoryImpl(sl<SecureScheduleEventsLocalDataSource>()),
+    () =>
+        ScheduleEventsRepositoryImpl(sl<SecureScheduleEventsLocalDataSource>()),
   );
 
   // ─── Classroom ─────────────────────────────────────────────────────────
@@ -164,9 +170,7 @@ void setupServiceLocator() {
   );
 
   // ─── Exams ─────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<ExamRemoteDataSource>(
-    () => ExamRemoteDataSource(),
-  );
+  sl.registerLazySingleton<ExamRemoteDataSource>(() => ExamRemoteDataSource());
 
   sl.registerLazySingleton<ExamLocalDataSource>(
     () => ExamLocalDataSource(sl<SecureStorageStore>()),

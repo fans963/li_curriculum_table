@@ -23,8 +23,9 @@ class NotificationService {
   Future<void> init() async {
     tz.initializeTimeZones();
 
-    const androidSettings =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/launcher_icon',
+    );
     const linuxSettings = LinuxInitializationSettings(
       defaultActionName: 'Open',
     );
@@ -38,39 +39,50 @@ class NotificationService {
     // Create notification channels
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          _courseChannelId,
-          '课程提醒',
-          description: '课前20分钟提醒',
-          importance: Importance.high,
-        ));
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _courseChannelId,
+            '课程提醒',
+            description: '课前20分钟提醒',
+            importance: Importance.high,
+          ),
+        );
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          _examChannelId,
-          '考试提醒',
-          description: '考前1天和2小时提醒',
-          importance: Importance.high,
-        ));
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _examChannelId,
+            '考试提醒',
+            description: '考前1天和2小时提醒',
+            importance: Importance.high,
+          ),
+        );
 
     await _plugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(const AndroidNotificationChannel(
-          _gradeChannelId,
-          '成绩通知',
-          description: '新成绩发布时提醒',
-          importance: Importance.high,
-        ));
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _gradeChannelId,
+            '成绩通知',
+            description: '新成绩发布时提醒',
+            importance: Importance.high,
+          ),
+        );
   }
 
   /// Request notification permission (Android 13+). Other platforms return true.
   Future<bool> requestPermission() async {
-    final android = _plugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final android = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     if (android == null) return true; // Non-Android: no permission needed
     final granted = await android.requestNotificationsPermission();
     return granted ?? false;
@@ -103,7 +115,9 @@ class NotificationService {
     );
 
     if (kDebugMode) {
-      print('[NotificationService] New grade notification: ${newCourses.join(', ')}');
+      print(
+        '[NotificationService] New grade notification: ${newCourses.join(', ')}',
+      );
     }
   }
 
@@ -122,15 +136,19 @@ class NotificationService {
 
     // Spread occurrences for current and next week
     final allOccurrences = <CourseOccurrence>[];
-    for (var week = currentTeachingWeek;
-        week <= currentTeachingWeek + 1;
-        week++) {
+    for (
+      var week = currentTeachingWeek;
+      week <= currentTeachingWeek + 1;
+      week++
+    ) {
       if (week < 1) continue;
-      allOccurrences.addAll(spreadOccurrencesByTeachingWeek(
-        templates: templates,
-        termStartMonday: termStartMonday,
-        currentTeachingWeek: week,
-      ));
+      allOccurrences.addAll(
+        spreadOccurrencesByTeachingWeek(
+          templates: templates,
+          termStartMonday: termStartMonday,
+          currentTeachingWeek: week,
+        ),
+      );
     }
 
     final now = DateTime.now();
@@ -254,8 +272,9 @@ class NotificationService {
         android: AndroidNotificationDetails(
           channelId,
           channelId == _courseChannelId ? '课程提醒' : '考试提醒',
-          channelDescription:
-              channelId == _courseChannelId ? '课前20分钟提醒' : '考前1天和2小时提醒',
+          channelDescription: channelId == _courseChannelId
+              ? '课前20分钟提醒'
+              : '考前1天和2小时提醒',
           importance: Importance.high,
           priority: Priority.high,
           icon: '@mipmap/launcher_icon',

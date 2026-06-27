@@ -12,17 +12,21 @@ class GradeRemoteDataSource {
       password: password,
     );
 
-    return rustGrades.map((g) => GradeEntity(
-      term: g.term,
-      courseCode: g.courseCode,
-      courseName: g.courseName,
-      score: g.score,
-      scoreMark: g.scoreMark,
-      credits: g.credits,
-      totalHours: g.totalHours,
-      assessmentMethod: g.assessmentMethod,
-      courseAttribute: g.courseAttribute,
-      courseNature: g.courseNature,
-    )).toList();
+    return rustGrades
+        .map(
+          (g) => GradeEntity(
+            term: g.term,
+            courseCode: g.courseCode,
+            courseName: g.courseName,
+            score: g.score,
+            scoreMark: g.scoreMark,
+            credits: g.credits,
+            totalHours: g.totalHours,
+            assessmentMethod: g.assessmentMethod,
+            courseAttribute: g.courseAttribute,
+            courseNature: g.courseNature,
+          ),
+        )
+        .toList();
   }
 }

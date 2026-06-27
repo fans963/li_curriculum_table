@@ -95,8 +95,11 @@ class ClassroomController {
   }
 
   Future<void> fetchCampuses({bool forceRefresh = false}) async {
-    _state.value =
-        _state.value.copyWith(isLoading: true, error: null, needsLogin: false);
+    _state.value = _state.value.copyWith(
+      isLoading: true,
+      error: null,
+      needsLogin: false,
+    );
     try {
       final repository = sl<ClassroomRepository>();
       final (user, pass) = await _getCredentials();
@@ -120,8 +123,10 @@ class ClassroomController {
             }
           } catch (_) {}
         }
-        _state.value =
-            _state.value.copyWith(isLoading: false, needsLogin: true);
+        _state.value = _state.value.copyWith(
+          isLoading: false,
+          needsLogin: true,
+        );
         return;
       }
 
@@ -146,8 +151,10 @@ class ClassroomController {
         _state.value = _state.value.copyWith(isLoading: false);
       }
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, error: e.toString());
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 
@@ -188,8 +195,8 @@ class ClassroomController {
         buildings: sortedBuildings,
         selectedBuilding:
             (forceRefresh || _state.value.selectedBuilding == null)
-                ? selection
-                : _state.value.selectedBuilding,
+            ? selection
+            : _state.value.selectedBuilding,
         isLoading: false,
       );
 
@@ -197,8 +204,10 @@ class ClassroomController {
         await fetchAvailability(forceRefresh: forceRefresh);
       }
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, error: e.toString());
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 
@@ -226,8 +235,7 @@ class ClassroomController {
 
       int week = 1;
       if (termStartMonday != null) {
-        week = calculateWeekIndex(
-            _state.value.selectedDate, termStartMonday);
+        week = calculateWeekIndex(_state.value.selectedDate, termStartMonday);
       } else {
         week = timetable.currentTeachingWeek.value;
       }
@@ -249,8 +257,10 @@ class ClassroomController {
 
       _state.value = _state.value.copyWith(results: results, isLoading: false);
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, error: e.toString());
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 
@@ -265,15 +275,16 @@ class ClassroomController {
       final localDataSource = sl<ClassroomLocalDataSource>();
       final (user, pass) = await _getCredentials();
 
-      if (_state.value.campuses.isEmpty ||
-          _resolveTerm().isEmpty) {
+      if (_state.value.campuses.isEmpty || _resolveTerm().isEmpty) {
         final (campuses, term) = await repository.getCampuses(
           username: user,
           password: pass,
           forceRefresh: true,
         );
-        _state.value =
-            _state.value.copyWith(campuses: campuses, currentTerm: term);
+        _state.value = _state.value.copyWith(
+          campuses: campuses,
+          currentTerm: term,
+        );
 
         if (_state.value.selectedCampus == null && campuses.isNotEmpty) {
           final lastId = await localDataSource.readLastCampusId();
@@ -292,8 +303,7 @@ class ClassroomController {
             forceRefresh: true,
           );
           final sortedBuildings = _sortBuildings(buildings, campus);
-          _state.value =
-              _state.value.copyWith(buildings: sortedBuildings);
+          _state.value = _state.value.copyWith(buildings: sortedBuildings);
 
           if (_state.value.selectedBuilding == null &&
               sortedBuildings.isNotEmpty) {
@@ -313,8 +323,10 @@ class ClassroomController {
 
       _state.value = _state.value.copyWith(isLoading: false);
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, error: e.toString());
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 
@@ -330,8 +342,10 @@ class ClassroomController {
           password: pass,
           forceRefresh: true,
         );
-        _state.value =
-            _state.value.copyWith(campuses: campuses, currentTerm: term);
+        _state.value = _state.value.copyWith(
+          campuses: campuses,
+          currentTerm: term,
+        );
       }
 
       await repository.syncAllSchedules(
@@ -347,8 +361,10 @@ class ClassroomController {
 
       _state.value = _state.value.copyWith(isLoading: false);
     } catch (e) {
-      _state.value =
-          _state.value.copyWith(isLoading: false, error: e.toString());
+      _state.value = _state.value.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
     }
   }
 }

@@ -25,12 +25,22 @@ class SecureSettingsLocalDataSource {
 
   Future<AppSettings> loadSettings() async {
     final data = await _store.readAll([
-      _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
-      _kThemeMode, _kSeedColor, _kUseDynamicColor,
-      _kDesignStyle, _kColorSchemeType, _kEnableBookCover,
-      _kCurrentTerm, _kAutoSizeText, _kAutoSizeMinFontSize,
-      _kTimetableTextMaxLines, _kTimetableTextFontSize,
-      _kDaysVisibleCount, _kTermsAccepted,
+      _kProxyEnabled,
+      _kProxyPort,
+      _kWeeklyScroll,
+      _kThemeMode,
+      _kSeedColor,
+      _kUseDynamicColor,
+      _kDesignStyle,
+      _kColorSchemeType,
+      _kEnableBookCover,
+      _kCurrentTerm,
+      _kAutoSizeText,
+      _kAutoSizeMinFontSize,
+      _kTimetableTextMaxLines,
+      _kTimetableTextFontSize,
+      _kDaysVisibleCount,
+      _kTermsAccepted,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -41,7 +51,9 @@ class SecureSettingsLocalDataSource {
       (e) => e.name == data[_kThemeMode],
       orElse: () => ThemeMode.system,
     );
-    final seedColor = Color(int.tryParse(data[_kSeedColor] ?? '') ?? 0xFF0A7C6D);
+    final seedColor = Color(
+      int.tryParse(data[_kSeedColor] ?? '') ?? 0xFF0A7C6D,
+    );
     final useDynamic = data[_kUseDynamicColor] != 'false'; // default true
     final designStyle = DesignStyle.values.firstWhere(
       (e) => e.name == data[_kDesignStyle],
@@ -54,9 +66,12 @@ class SecureSettingsLocalDataSource {
     final enableBookCover = data[_kEnableBookCover] == 'true'; // default false
     final currentTerm = data[_kCurrentTerm] ?? '';
     final autoSizeText = data[_kAutoSizeText] != 'false'; // default true
-    final autoSizeMinFontSize = double.tryParse(data[_kAutoSizeMinFontSize] ?? '') ?? 6.0;
-    final timetableTextMaxLines = int.tryParse(data[_kTimetableTextMaxLines] ?? '') ?? 2;
-    final timetableTextFontSize = double.tryParse(data[_kTimetableTextFontSize] ?? '') ?? 11.0;
+    final autoSizeMinFontSize =
+        double.tryParse(data[_kAutoSizeMinFontSize] ?? '') ?? 6.0;
+    final timetableTextMaxLines =
+        int.tryParse(data[_kTimetableTextMaxLines] ?? '') ?? 2;
+    final timetableTextFontSize =
+        double.tryParse(data[_kTimetableTextFontSize] ?? '') ?? 11.0;
     final daysVisibleCount = int.tryParse(data[_kDaysVisibleCount] ?? '7') ?? 7;
     final termsAccepted = data[_kTermsAccepted] == 'true'; // default false
 
@@ -111,5 +126,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<AppSettings> loadSettings() => _localDataSource.loadSettings();
 
   @override
-  Future<void> saveSettings(AppSettings settings) => _localDataSource.saveSettings(settings);
+  Future<void> saveSettings(AppSettings settings) =>
+      _localDataSource.saveSettings(settings);
 }

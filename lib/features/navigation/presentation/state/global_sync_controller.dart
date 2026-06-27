@@ -48,11 +48,19 @@ class GlobalSyncController {
           break;
         case 2:
           priorityTask = syncGrades();
-          backgroundTasks.addAll([syncTimetable(), syncExams(), syncClassroom()]);
+          backgroundTasks.addAll([
+            syncTimetable(),
+            syncExams(),
+            syncClassroom(),
+          ]);
           break;
         case 3:
           priorityTask = syncExams();
-          backgroundTasks.addAll([syncTimetable(), syncGrades(), syncClassroom()]);
+          backgroundTasks.addAll([
+            syncTimetable(),
+            syncGrades(),
+            syncClassroom(),
+          ]);
           break;
         default:
           backgroundTasks.addAll([

@@ -21,9 +21,9 @@ class GlassDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textStyle = CupertinoTheme.of(context).textTheme.textStyle.copyWith(
-          decoration: TextDecoration.none,
-          color: CupertinoColors.label.resolveFrom(context),
-        );
+      decoration: TextDecoration.none,
+      color: CupertinoColors.label.resolveFrom(context),
+    );
 
     return Center(
       child: ConstrainedBox(
@@ -44,19 +44,19 @@ class GlassDialog extends StatelessWidget {
                 ],
               ),
               child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: CupertinoColors.secondarySystemGroupedBackground
-                          .resolveFrom(context),
-                      borderRadius: BorderRadius.circular(borderRadius),
-                      border: Border.all(
-                        color: CupertinoColors.separator
-                            .resolveFrom(context)
-                            .withValues(alpha: 0.3),
-                        width: 0.5,
-                      ),
-                    ),
-                    child: child,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: CupertinoColors.secondarySystemGroupedBackground
+                      .resolveFrom(context),
+                  borderRadius: BorderRadius.circular(borderRadius),
+                  border: Border.all(
+                    color: CupertinoColors.separator
+                        .resolveFrom(context)
+                        .withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
+                ),
+                child: child,
               ),
             ),
           ),

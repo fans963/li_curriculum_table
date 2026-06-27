@@ -12,8 +12,11 @@ DateTime nextMondayOnOrAfter(DateTime date) {
   if (date.weekday == DateTime.monday) {
     return DateTime(date.year, date.month, date.day);
   }
-  return DateTime(date.year, date.month, date.day)
-      .add(Duration(days: 8 - date.weekday));
+  return DateTime(
+    date.year,
+    date.month,
+    date.day,
+  ).add(Duration(days: 8 - date.weekday));
 }
 
 DateTime mondayOfTermWeekOne({
@@ -24,7 +27,6 @@ DateTime mondayOfTermWeekOne({
   final refMonday = nextMondayOnOrAfter(referenceDate);
   return refMonday.subtract(Duration(days: (safeWeek - 1) * 7));
 }
-
 
 int calculateWeekIndex(DateTime viewedDate, DateTime termStartMonday) {
   final viewedMonday = mondayOfDate(viewedDate);

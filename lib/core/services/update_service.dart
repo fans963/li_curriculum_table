@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:li_curriculum_table/core/rust/api/update.dart'
-    as rust show checkForUpdate;
+    as rust
+    show checkForUpdate;
 
 class UpdateInfo {
   final String currentVersion;
@@ -33,10 +34,7 @@ class UpdateInfo {
   }
 
   static List<int> _parseVersion(String v) {
-    final parts = v
-        .split('.')
-        .map((e) => int.tryParse(e) ?? 0)
-        .toList();
+    final parts = v.split('.').map((e) => int.tryParse(e) ?? 0).toList();
     // Pad to at least 3 parts: major.minor.patch
     while (parts.length < 3) {
       parts.add(0);

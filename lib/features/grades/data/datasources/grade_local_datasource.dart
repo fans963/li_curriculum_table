@@ -24,7 +24,7 @@ class GradeLocalDataSource {
     final data = await _store.readAll([_gradesKey]);
     final jsonStr = data[_gradesKey];
     if (jsonStr == null) return null;
-    
+
     return await _runTask(() {
       final List<dynamic> decoded = jsonDecode(jsonStr);
       return decoded.map((e) => GradeEntity.fromJson(e)).toList();

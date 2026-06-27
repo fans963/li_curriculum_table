@@ -4,7 +4,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:li_curriculum_table/core/rust/api/update.dart' as rust;
 
 // Re-export DownloadProgress so that other files importing this service don't break.
-export 'package:li_curriculum_table/core/rust/api/update.dart' show DownloadProgress;
+export 'package:li_curriculum_table/core/rust/api/update.dart'
+    show DownloadProgress;
 
 const _dlChannelId = 'download_progress';
 const _dlChannelName = '下载通知';
@@ -24,13 +25,16 @@ Future<FlutterLocalNotificationsPlugin> _ensureNotif() async {
   );
   await _notifPlugin!
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>()
-      ?.createNotificationChannel(const AndroidNotificationChannel(
-        _dlChannelId,
-        _dlChannelName,
-        description: '应用更新下载进度',
-        importance: Importance.low,
-      ));
+        AndroidFlutterLocalNotificationsPlugin
+      >()
+      ?.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _dlChannelId,
+          _dlChannelName,
+          description: '应用更新下载进度',
+          importance: Importance.low,
+        ),
+      );
   return _notifPlugin!;
 }
 
@@ -47,7 +51,8 @@ Future<void> _showProgressNotif(BigInt received, BigInt total) async {
     body: '$pct  ${_fmtBytes(current)} / ${_fmtBytes(max)}',
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId, _dlChannelName,
+        _dlChannelId,
+        _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.low,
         priority: Priority.low,
@@ -70,7 +75,8 @@ Future<void> _showCompleteNotif() async {
     body: '点击安装更新',
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId, _dlChannelName,
+        _dlChannelId,
+        _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.high,
         priority: Priority.high,
@@ -88,7 +94,8 @@ Future<void> _showErrorNotif(String error) async {
     body: error,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId, _dlChannelName,
+        _dlChannelId,
+        _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
@@ -139,10 +146,12 @@ Stream<rust.DownloadProgress> downloadWithProgress({
         final now = DateTime.now();
         if (now.difference(lastNotifTime).inMilliseconds >= 500) {
           lastNotifTime = now;
-          unawaited(_showProgressNotif(
-            progress.received,
-            progress.total > BigInt.zero ? progress.total : progress.received,
-          ));
+          unawaited(
+            _showProgressNotif(
+              progress.received,
+              progress.total > BigInt.zero ? progress.total : progress.received,
+            ),
+          );
         }
       }
       yield progress;

@@ -6,6 +6,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 pub mod api;
 pub mod crawler;
+mod frb_generated;
 pub mod model;
 pub mod ocr;
-mod frb_generated;
