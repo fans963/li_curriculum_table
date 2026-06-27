@@ -12,52 +12,6 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<UpdateData> checkForUpdate() =>
     RustLib.instance.api.crateApiUpdateCheckForUpdate();
 
-/// Stub for desktop/web platforms.
-Stream<DownloadProgress> downloadUpdate({
-  required String url,
-  required String savePath,
-  required List<String> mirrorPrefixes,
-}) => RustLib.instance.api.crateApiUpdateDownloadUpdate(
-  url: url,
-  savePath: savePath,
-  mirrorPrefixes: mirrorPrefixes,
-);
-
-class DownloadProgress {
-  final BigInt received;
-  final BigInt total;
-  final bool done;
-  final String savedPath;
-  final String error;
-
-  const DownloadProgress({
-    required this.received,
-    required this.total,
-    required this.done,
-    required this.savedPath,
-    required this.error,
-  });
-
-  @override
-  int get hashCode =>
-      received.hashCode ^
-      total.hashCode ^
-      done.hashCode ^
-      savedPath.hashCode ^
-      error.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is DownloadProgress &&
-          runtimeType == other.runtimeType &&
-          received == other.received &&
-          total == other.total &&
-          done == other.done &&
-          savedPath == other.savedPath &&
-          error == other.error;
-}
-
 class UpdateData {
   final String latestVersion;
   final String releaseUrl;
