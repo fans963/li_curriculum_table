@@ -275,7 +275,7 @@ fn wire__crate__api__update__download_update_impl(
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
             let api_url = <String>::sse_decode(&mut deserializer);
             let api_save_path = <String>::sse_decode(&mut deserializer);
-            let api_proxy = <Option<String>>::sse_decode(&mut deserializer);
+            let api_mirror_prefixes = <Vec<String>>::sse_decode(&mut deserializer);
             let api_sink = <StreamSink<
                 crate::api::update::DownloadProgress,
                 flutter_rust_bridge::for_generated::SseCodec,
@@ -287,7 +287,7 @@ fn wire__crate__api__update__download_update_impl(
                         let output_ok = crate::api::update::download_update(
                             api_url,
                             api_save_path,
-                            api_proxy,
+                            api_mirror_prefixes,
                             api_sink,
                         )
                         .await?;
@@ -1329,8 +1329,8 @@ impl SseDecode for crate::crawler::model::CourseRow {
 impl SseDecode for crate::api::update::DownloadProgress {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
-        let mut var_received = <i32>::sse_decode(deserializer);
-        let mut var_total = <i32>::sse_decode(deserializer);
+        let mut var_received = <u64>::sse_decode(deserializer);
+        let mut var_total = <u64>::sse_decode(deserializer);
         let mut var_done = <bool>::sse_decode(deserializer);
         let mut var_savedPath = <String>::sse_decode(deserializer);
         let mut var_error = <String>::sse_decode(deserializer);
@@ -1705,6 +1705,13 @@ impl SseDecode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
         deserializer.cursor.read_u32::<NativeEndian>().unwrap()
+    }
+}
+
+impl SseDecode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_decode(deserializer: &mut flutter_rust_bridge::for_generated::SseDeserializer) -> Self {
+        deserializer.cursor.read_u64::<NativeEndian>().unwrap()
     }
 }
 
@@ -2580,8 +2587,8 @@ impl SseEncode for crate::crawler::model::CourseRow {
 impl SseEncode for crate::api::update::DownloadProgress {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
-        <i32>::sse_encode(self.received, serializer);
-        <i32>::sse_encode(self.total, serializer);
+        <u64>::sse_encode(self.received, serializer);
+        <u64>::sse_encode(self.total, serializer);
         <bool>::sse_encode(self.done, serializer);
         <String>::sse_encode(self.saved_path, serializer);
         <String>::sse_encode(self.error, serializer);
@@ -2856,6 +2863,13 @@ impl SseEncode for u32 {
     // Codec=Sse (Serialization based), see doc to use other codecs
     fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
         serializer.cursor.write_u32::<NativeEndian>(self).unwrap();
+    }
+}
+
+impl SseEncode for u64 {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    fn sse_encode(self, serializer: &mut flutter_rust_bridge::for_generated::SseSerializer) {
+        serializer.cursor.write_u64::<NativeEndian>(self).unwrap();
     }
 }
 

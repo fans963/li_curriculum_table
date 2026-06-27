@@ -9,11 +9,17 @@ import 'package:path_provider/path_provider.dart';
 import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
-import 'package:li_curriculum_table/core/services/download_service.dart';
+import 'package:li_curriculum_table/core/rust/api/update.dart' as rust;
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
+
+const _mirrorPrefixes = [
+  'https://ghfast.top/',
+  'https://gh-proxy.com/',
+  'https://gh.ddlc.top/',
+];
 
 const _repoOwner = 'fans963';
 const _repoName = 'li_curriculum_table';
@@ -161,13 +167,13 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in downloadWithProgress(url: url, savePath: savePath)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
-          _dl.received = progress.received;
-          _dl.total = progress.total;
-          if (progress.total > 0) {
-            _dl.progress = progress.received / progress.total;
+          _dl.received = progress.received.toInt();
+          _dl.total = progress.total.toInt();
+          if (progress.total > BigInt.zero) {
+            _dl.progress = progress.received.toDouble() / progress.total.toDouble();
           }
           if (progress.done) {
             _dl.downloading = false;
@@ -395,13 +401,13 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in downloadWithProgress(url: url, savePath: savePath)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
-          _dl.received = progress.received;
-          _dl.total = progress.total;
-          if (progress.total > 0) {
-            _dl.progress = progress.received / progress.total;
+          _dl.received = progress.received.toInt();
+          _dl.total = progress.total.toInt();
+          if (progress.total > BigInt.zero) {
+            _dl.progress = progress.received.toDouble() / progress.total.toDouble();
           }
           if (progress.done) {
             _dl.downloading = false;

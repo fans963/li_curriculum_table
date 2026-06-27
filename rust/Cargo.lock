@@ -6407,6 +6407,7 @@ dependencies = [
  "bytes",
  "encoding_rs",
  "flutter_rust_bridge",
+ "futures-util",
  "getrandom 0.4.3",
  "half",
  "image",

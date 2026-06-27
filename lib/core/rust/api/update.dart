@@ -6,9 +6,9 @@
 import '../frb_generated.dart';
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 
-// These functions are ignored because they are not marked as `pub`: `download_fallback`, `fmt_speed`
-// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `GitHubRelease`, `RaceResult`
-// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `clone`, `fmt`, `fmt`, `fmt`
+// These functions are ignored because they are not marked as `pub`: `do_stream`
+// These types are ignored because they are neither used by any `pub` functions nor (for structs and enums) marked `#[frb(unignore)]`: `GitHubRelease`
+// These function are ignored because they are on traits that is not defined in current crate (put an empty `#[frb]` on it to unignore): `clone`, `clone`, `fmt`, `fmt`
 
 Future<UpdateData> checkForUpdate() =>
     RustLib.instance.api.crateApiUpdateCheckForUpdate();
@@ -16,16 +16,16 @@ Future<UpdateData> checkForUpdate() =>
 Stream<DownloadProgress> downloadUpdate({
   required String url,
   required String savePath,
-  String? proxy,
+  required List<String> mirrorPrefixes,
 }) => RustLib.instance.api.crateApiUpdateDownloadUpdate(
   url: url,
   savePath: savePath,
-  proxy: proxy,
+  mirrorPrefixes: mirrorPrefixes,
 );
 
 class DownloadProgress {
-  final int received;
-  final int total;
+  final BigInt received;
+  final BigInt total;
   final bool done;
   final String savedPath;
   final String error;

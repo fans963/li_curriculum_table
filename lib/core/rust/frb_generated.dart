@@ -109,7 +109,7 @@ abstract class RustLibApi extends BaseApi {
   Stream<DownloadProgress> crateApiUpdateDownloadUpdate({
     required String url,
     required String savePath,
-    String? proxy,
+    required List<String> mirrorPrefixes,
   });
 
   Future<BookDetail> crateApiBookSearchFetchBookLocations({
@@ -415,7 +415,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Stream<DownloadProgress> crateApiUpdateDownloadUpdate({
     required String url,
     required String savePath,
-    String? proxy,
+    required List<String> mirrorPrefixes,
   }) {
     final sink = RustStreamSink<DownloadProgress>();
     unawaited(
@@ -425,7 +425,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             final serializer = SseSerializer(generalizedFrbRustBinding);
             sse_encode_String(url, serializer);
             sse_encode_String(savePath, serializer);
-            sse_encode_opt_String(proxy, serializer);
+            sse_encode_list_String(mirrorPrefixes, serializer);
             sse_encode_StreamSink_download_progress_Sse(sink, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
@@ -439,7 +439,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: sse_decode_AnyhowException,
           ),
           constMeta: kCrateApiUpdateDownloadUpdateConstMeta,
-          argValues: [url, savePath, proxy, sink],
+          argValues: [url, savePath, mirrorPrefixes, sink],
           apiImpl: this,
         ),
       ),
@@ -450,7 +450,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiUpdateDownloadUpdateConstMeta =>
       const TaskConstMeta(
         debugName: "download_update",
-        argNames: ["url", "savePath", "proxy", "sink"],
+        argNames: ["url", "savePath", "mirrorPrefixes", "sink"],
       );
 
   @override
@@ -1387,8 +1387,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (arr.length != 5)
       throw Exception('unexpected arr length: expect 5 but see ${arr.length}');
     return DownloadProgress(
-      received: dco_decode_i_32(arr[0]),
-      total: dco_decode_i_32(arr[1]),
+      received: dco_decode_u_64(arr[0]),
+      total: dco_decode_u_64(arr[1]),
       done: dco_decode_bool(arr[2]),
       savedPath: dco_decode_String(arr[3]),
       error: dco_decode_String(arr[4]),
@@ -1620,6 +1620,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   int dco_decode_u_32(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw as int;
+  }
+
+  @protected
+  BigInt dco_decode_u_64(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    return dcoDecodeU64(raw);
   }
 
   @protected
@@ -1942,8 +1948,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   @protected
   DownloadProgress sse_decode_download_progress(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    var var_received = sse_decode_i_32(deserializer);
-    var var_total = sse_decode_i_32(deserializer);
+    var var_received = sse_decode_u_64(deserializer);
+    var var_total = sse_decode_u_64(deserializer);
     var var_done = sse_decode_bool(deserializer);
     var var_savedPath = sse_decode_String(deserializer);
     var var_error = sse_decode_String(deserializer);
@@ -2304,6 +2310,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    return deserializer.buffer.getBigUint64();
+  }
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     return deserializer.buffer.getUint8();
@@ -2604,8 +2616,8 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     SseSerializer serializer,
   ) {
     // Codec=Sse (Serialization based), see doc to use other codecs
-    sse_encode_i_32(self.received, serializer);
-    sse_encode_i_32(self.total, serializer);
+    sse_encode_u_64(self.received, serializer);
+    sse_encode_u_64(self.total, serializer);
     sse_encode_bool(self.done, serializer);
     sse_encode_String(self.savedPath, serializer);
     sse_encode_String(self.error, serializer);
@@ -2886,6 +2898,12 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   void sse_encode_u_32(int self, SseSerializer serializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     serializer.buffer.putUint32(self);
+  }
+
+  @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    serializer.buffer.putBigUint64(self);
   }
 
   @protected
