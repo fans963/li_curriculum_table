@@ -17,8 +17,9 @@ class LevelExamScoreController {
     final creds = await sl<CredentialsRepository>().loadCredentials();
     if (creds != null && !creds.isEmpty) {
       loadScores(forceRefresh: true).catchError((e) {
-        if (kDebugMode)
+        if (kDebugMode) {
           print('Auto remote sync of level exam scores failed: $e');
+        }
       });
     }
   }

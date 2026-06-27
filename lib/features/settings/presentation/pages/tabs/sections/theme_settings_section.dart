@@ -266,8 +266,9 @@ class _ColorSchemeTypePicker extends StatelessWidget {
             settings.colorSchemeType,
           ),
           onSelectedIndexChanged: (i) {
-            if (i != null)
+            if (i != null) {
               notifier.setColorSchemeType(ColorSchemeType.values[i]);
+            }
           },
           actions: ColorSchemeType.values
               .map(

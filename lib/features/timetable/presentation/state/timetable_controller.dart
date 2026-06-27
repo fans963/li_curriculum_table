@@ -370,8 +370,9 @@ class TimetableController {
           currentTeachingWeek: week,
         )
         .catchError((e) {
-          if (kDebugMode)
+          if (kDebugMode) {
             debugPrint('Course notification scheduling failed: $e');
+          }
         });
   }
 

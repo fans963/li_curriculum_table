@@ -487,19 +487,21 @@ class _StorageCard extends StatelessWidget {
                     .restoreCachedTeachingWeekBaseline();
                 await sl<CourseColorService>().reload();
               } on FormatException catch (e) {
-                if (context.mounted)
+                if (context.mounted) {
                   showAdaptiveMessage(
                     context,
                     designStyle: DesignStyle.cupertino,
                     message: e.message,
                   );
+                }
               } catch (_) {
-                if (context.mounted)
+                if (context.mounted) {
                   showAdaptiveMessage(
                     context,
                     designStyle: DesignStyle.cupertino,
                     message: '导入失败',
                   );
+                }
               }
             },
           ),

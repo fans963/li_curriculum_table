@@ -220,11 +220,12 @@ class _CupertinoUpdateDialogState extends State<CupertinoUpdateDialog> {
                                     widget.updateInfo.latestVersion,
                                   ),
                                 );
-                                if (await canLaunchUrl(url))
+                                if (await canLaunchUrl(url)) {
                                   await launchUrl(
                                     url,
                                     mode: LaunchMode.externalApplication,
                                   );
+                                }
                                 if (context.mounted) Navigator.pop(context);
                               },
                               child: const Text(

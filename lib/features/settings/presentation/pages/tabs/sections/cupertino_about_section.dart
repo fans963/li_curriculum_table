@@ -433,16 +433,18 @@ class _CupertinoAboutCard extends StatelessWidget {
     try {
       final info = await sl<UpdateService>().checkForUpdate();
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted)
+      if (context.mounted) {
         await showUpdateDialogIfNeeded(context, info, silent: false);
+      }
     } catch (_) {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
-      if (context.mounted)
+      if (context.mounted) {
         showAdaptiveMessage(
           context,
           designStyle: DesignStyle.cupertino,
           message: '检查更新失败，请稍后重试',
         );
+      }
     }
   }
 }

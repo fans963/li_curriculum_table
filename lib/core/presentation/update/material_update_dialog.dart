@@ -330,8 +330,9 @@ class _MaterialUpdateDialogState extends State<MaterialUpdateDialog> {
                   final url = Uri.parse(
                     buildDownloadUrl(widget.updateInfo.latestVersion),
                   );
-                  if (await canLaunchUrl(url))
+                  if (await canLaunchUrl(url)) {
                     await launchUrl(url, mode: LaunchMode.externalApplication);
+                  }
                   if (context.mounted) Navigator.pop(context);
                 },
               ),

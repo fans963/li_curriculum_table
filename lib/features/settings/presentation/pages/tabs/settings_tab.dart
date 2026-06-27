@@ -336,8 +336,9 @@ class _SettingsTabState extends State<SettingsTab>
     try {
       await sl<CacheBackupService>().exportAndShare();
     } catch (_) {
-      if (context.mounted)
+      if (context.mounted) {
         showAdaptiveMessage(context, designStyle: ds, message: '导出失败');
+      }
     }
   }
 
@@ -354,11 +355,13 @@ class _SettingsTabState extends State<SettingsTab>
       await sl<TimetableController>().restoreCachedTeachingWeekBaseline();
       await sl<CourseColorService>().reload();
     } on FormatException catch (e) {
-      if (context.mounted)
+      if (context.mounted) {
         showAdaptiveMessage(context, designStyle: ds, message: e.message);
+      }
     } catch (_) {
-      if (context.mounted)
+      if (context.mounted) {
         showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
+      }
     }
   }
 }

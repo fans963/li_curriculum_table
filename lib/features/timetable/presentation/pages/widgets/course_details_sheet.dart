@@ -217,8 +217,9 @@ class CourseDetailsSheet extends StatelessWidget {
                               );
                             }
                             if (occurrence.location.trim().isNotEmpty) {
-                              if (liveRows.isNotEmpty)
+                              if (liveRows.isNotEmpty) {
                                 liveRows.add(buildIOSDivider(context));
+                              }
                               liveRows.add(
                                 buildCupertinoInfoRow(
                                   context,
@@ -231,8 +232,9 @@ class CourseDetailsSheet extends StatelessWidget {
                               );
                             }
                             if (occurrence.teacher.trim().isNotEmpty) {
-                              if (liveRows.isNotEmpty)
+                              if (liveRows.isNotEmpty) {
                                 liveRows.add(buildIOSDivider(context));
+                              }
                               liveRows.add(
                                 buildCupertinoInfoRow(
                                   context,
@@ -245,8 +247,9 @@ class CourseDetailsSheet extends StatelessWidget {
                               );
                             }
                             if (otherInfo.trim().isNotEmpty) {
-                              if (liveRows.isNotEmpty)
+                              if (liveRows.isNotEmpty) {
                                 liveRows.add(buildIOSDivider(context));
+                              }
                               liveRows.add(
                                 buildCupertinoInfoRow(
                                   context,

@@ -51,8 +51,9 @@ class WeatherInfo {
   }
 
   static IconData _weatherIcon(int code, bool isDay) {
-    if (code <= 1)
+    if (code <= 1) {
       return isDay ? Icons.wb_sunny_rounded : Icons.nights_stay_rounded;
+    }
     if (code == 2) return Icons.wb_cloudy_rounded;
     if (code == 3) return Icons.cloud_rounded;
     if (code >= 45 && code <= 48) return Icons.foggy;
@@ -83,8 +84,9 @@ class WeatherInfo {
     if (code <= 1) return const Color(0xFFFF9500);
     if (code <= 3) return const Color(0xFF8E8E93);
     if (code >= 45 && code <= 48) return const Color(0xFF8E8E93);
-    if (code >= 61 || (code >= 80 && code <= 82))
+    if (code >= 61 || (code >= 80 && code <= 82)) {
       return const Color(0xFF007AFF);
+    }
     if (code >= 71) return const Color(0xFF5AC8FA);
     if (code >= 95) return const Color(0xFF5856D6);
     return const Color(0xFF8E8E93);
