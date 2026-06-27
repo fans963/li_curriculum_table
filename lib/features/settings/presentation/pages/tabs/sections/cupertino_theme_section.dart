@@ -8,7 +8,7 @@ class _ThemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -40,7 +40,7 @@ class _ThemeCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: settings.seedColor,
                       shape: BoxShape.circle,
-                      border: Border.all(color: CupertinoColors.separator, width: 0.5),
+                      border: Border.all(color: CupertinoColors.separator.resolveFrom(context), width: 0.5),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -131,7 +131,7 @@ class _ThemeCard extends StatelessWidget {
               child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 Container(width: 24, height: 24, decoration: BoxDecoration(
                   color: color, shape: BoxShape.circle,
-                  border: Border.all(color: sel ? CupertinoColors.systemBlue : CupertinoColors.separator, width: sel ? 3 : 0.5),
+                  border: Border.all(color: sel ? CupertinoColors.systemBlue : CupertinoColors.separator.resolveFrom(ctx), width: sel ? 3 : 0.5),
                 )),
                 if (sel) ...[const SizedBox(width: 12), const Icon(CupertinoIcons.check_mark, size: 18)],
               ]),

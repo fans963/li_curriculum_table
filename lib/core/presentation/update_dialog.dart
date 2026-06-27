@@ -1,3 +1,4 @@
+import 'dart:ffi' show Abi;
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
@@ -25,14 +26,29 @@ const _mirrorPrefixes = [
   'https://gh.ddlc.top/',
 ];
 
+/// Map the current device ABI to the release asset filename.
+String _androidApkName() {
+  switch (Abi.current()) {
+    case Abi.androidArm64:
+      return 'app-arm64-v8a-release.apk';
+    case Abi.androidArm:
+      return 'app-armeabi-v7a-release.apk';
+    case Abi.androidX64:
+      return 'app-x86_64-release.apk';
+    case Abi.androidIA32:
+      return 'app-x86-release.apk';
+    default:
+      return 'app-arm64-v8a-release.apk'; // fallback to most common
+  }
+}
+
 /// Build the download URL for the latest release asset.
 String _buildDownloadUrl(String version) {
   if (Platform.isAndroid) {
-    return 'https://github.com/$_repoOwner/$_repoName/releases/download/v$version/app-arm64-v8a-release.apk';
+    return 'https://github.com/$_repoOwner/$_repoName/releases/download/v$version/${_androidApkName()}';
   } else if (Platform.isIOS) {
     return 'https://github.com/$_repoOwner/$_repoName/releases/download/v$version/li-curriculum-table-unsigned.ipa';
   }
-  // Desktop: fall back to release page
   return 'https://github.com/$_repoOwner/$_repoName/releases/tag/v$version';
 }
 

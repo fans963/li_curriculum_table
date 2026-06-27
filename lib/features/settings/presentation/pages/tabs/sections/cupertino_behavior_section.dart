@@ -11,7 +11,7 @@ class _InteractionCard extends StatelessWidget {
     final daysLabel = settings.weeklyScroll
         ? ''
         : ' — 屏幕显示 ${settings.daysVisibleCount} 天';
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -232,7 +232,7 @@ class _ProxyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -321,7 +321,7 @@ class _StorageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [

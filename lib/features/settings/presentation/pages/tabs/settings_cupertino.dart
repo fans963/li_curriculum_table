@@ -179,12 +179,12 @@ class _SectionLabel extends StatelessWidget {
 }
 
 /// iOS 26 style card container with rounded corners and subtle border.
-Widget _iosCard({required Widget child}) {
+Widget _iosCard(BuildContext context, {required Widget child}) {
   return Container(
     decoration: BoxDecoration(
-      color: CupertinoColors.secondarySystemGroupedBackground,
+      color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: CupertinoColors.separator.withValues(alpha: 0.2), width: 0.5),
+      border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
     ),
     clipBehavior: Clip.antiAlias,
     child: child,
@@ -227,21 +227,9 @@ Widget _iosTile(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
-            if (trailing != null) ...[
-              // Trailing widget present (e.g. switch): only content area is tappable.
-              GestureDetector(
-                onTap: onTap,
-                behavior: HitTestBehavior.opaque,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [iconWidget, const SizedBox(width: 12), content],
-                ),
-              ),
-              const SizedBox(width: 8),
-              trailing,
-            ] else ...[
-              // No trailing widget: entire row is tappable.
-              GestureDetector(
+            // Content area (icon + text): always tappable via onTap.
+            Expanded(
+              child: GestureDetector(
                 onTap: onTap,
                 behavior: HitTestBehavior.opaque,
                 child: Row(
@@ -249,11 +237,15 @@ Widget _iosTile(
                     iconWidget,
                     const SizedBox(width: 12),
                     content,
-                    if (onTap != null) chevron,
                   ],
                 ),
               ),
-            ],
+            ),
+            if (trailing != null) ...[
+              const SizedBox(width: 8),
+              trailing,
+            ] else if (onTap != null)
+              chevron,
           ],
         ),
       ),

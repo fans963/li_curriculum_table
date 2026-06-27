@@ -19,7 +19,7 @@ class _AccountCardState extends State<_AccountCard> {
     final termStart = timetableCtrl.termStartMonday.value;
     final state = widget.state;
 
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -255,7 +255,7 @@ class _SyncStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: _iosTile(
         context,
         icon: state.isLoading
@@ -283,7 +283,7 @@ class _FeedbackCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: _iosTile(
         context,
         icon: CupertinoIcons.chat_bubble_2,
@@ -303,7 +303,7 @@ class _CupertinoAboutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _iosCard(
+    return _iosCard(context,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -379,9 +379,9 @@ class _CupertinoAppInfoCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
           decoration: BoxDecoration(
-            color: CupertinoColors.secondarySystemGroupedBackground,
+            color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: CupertinoColors.separator.withValues(alpha: 0.2), width: 0.5),
+            border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -400,7 +400,7 @@ class _CupertinoAppInfoCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              Text('🍐 课表', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+              Text('🍐 课表', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: CupertinoColors.label.resolveFrom(context))),
               const SizedBox(height: 4),
               Text(
                 'v$version${buildNumber.isNotEmpty ? ' ($buildNumber)' : ''}',

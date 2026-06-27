@@ -5,6 +5,7 @@ import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:m3e_core/m3e_core.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 
@@ -145,26 +146,11 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               ),
             ],
             const SizedBox(height: 12),
-            DropdownButtonFormField<String>(
-              initialValue: options.contains(currentTerm) ? currentTerm : null,
-              items: options.map((opt) => DropdownMenuItem(
-                value: opt,
-                child: Text(opt),
-              )).toList(),
-              decoration: InputDecoration(
-                labelText: '当前学期',
-                prefixIcon: const Icon(Icons.school_outlined),
-                helperText: '格式: 学年-学期 (1秋季 2春季 3暑期小学期)',
-                filled: true,
-                fillColor: colorScheme.surface,
-              ),
-              onChanged: state.isLoading
-                  ? null
-                  : (value) {
-                      if (value != null) {
-                        widget.onCurrentTermChanged(value);
-                      }
-                    },
+            _TermDropdown(
+              options: options,
+              currentTerm: currentTerm,
+              isLoading: state.isLoading,
+              onSelected: widget.onCurrentTermChanged,
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -277,6 +263,96 @@ class TimetableStatusBanner extends StatelessWidget {
     const keywords = ['失败', '错误', '异常', '不可用', 'timeout', 'error'];
     final lower = value.toLowerCase();
     return keywords.any((k) => lower.contains(k));
+  }
+}
+
+class _TermDropdown extends StatefulWidget {
+  final List<String> options;
+  final String currentTerm;
+  final bool isLoading;
+  final ValueChanged<String> onSelected;
+
+  const _TermDropdown({
+    required this.options,
+    required this.currentTerm,
+    required this.isLoading,
+    required this.onSelected,
+  });
+
+  @override
+  State<_TermDropdown> createState() => _TermDropdownState();
+}
+
+class _TermDropdownState extends State<_TermDropdown> {
+  late final M3EDropdownController<String> _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = M3EDropdownController<String>();
+    _controller.initialize();
+    _syncItems();
+  }
+
+  @override
+  void didUpdateWidget(_TermDropdown old) {
+    super.didUpdateWidget(old);
+    if (old.options != widget.options || old.currentTerm != widget.currentTerm) {
+      _syncItems();
+    }
+  }
+
+  void _syncItems() {
+    _controller.setItems(widget.options.map((opt) => M3EDropdownItem(
+      label: opt,
+      value: opt,
+      selected: opt == widget.currentTerm,
+    )).toList());
+    if (widget.currentTerm.isNotEmpty) {
+      _controller.selectWhere((item) => item.value == widget.currentTerm);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+
+    return M3EDropdownMenu<String>(
+      singleSelect: true,
+      showChipAnimation: false,
+      items: const [],
+      controller: _controller,
+      enabled: !widget.isLoading,
+      onSelectionChanged: (items) {
+        if (items.isNotEmpty) widget.onSelected(items.first.value);
+      },
+      containerRadius: 16,
+      fieldStyle: M3EDropdownFieldStyle(
+        hintText: '当前学期',
+        prefixIcon: Icon(AppIcons.school(ds), size: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        border: BorderSide(color: cs.outlineVariant, width: 0.5),
+        focusedBorder: BorderSide(color: cs.primary, width: 1),
+        borderRadius: BorderRadius.circular(12),
+        selectedBorderRadius: 12,
+      ),
+      dropdownStyle: M3EDropdownStyle(
+        maxHeight: 300,
+        containerRadius: 16,
+      ),
+      itemStyle: M3EDropdownItemStyle(
+        outerRadius: 12,
+        innerRadius: 6,
+        selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
+      ),
+    );
   }
 }
 
