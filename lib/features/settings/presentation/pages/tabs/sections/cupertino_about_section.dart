@@ -326,7 +326,7 @@ class _CupertinoAboutCard extends StatelessWidget {
               if (!agreed && context.mounted) {
                 await sl<SettingsController>().setTermsAccepted(false);
                 await Future.delayed(const Duration(milliseconds: 200));
-                exit(0);
+                exitApp();
               }
             },
           ),
@@ -412,6 +412,70 @@ class _CupertinoAppInfoCard extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
               ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CupertinoWebDownloadCard extends StatelessWidget {
+  const _CupertinoWebDownloadCard();
+
+  static const _owner = 'fans963';
+  static const _repo = 'li_curriculum_table';
+  static const _assets = [
+    ('app-arm64-v8a-release.apk', 'Android ARM64'),
+    ('app-armeabi-v7a-release.apk', 'Android ARM32'),
+    ('app-x86_64-release.apk', 'Android x86_64'),
+    ('li-curriculum-table-unsigned.ipa', 'iOS (IPA)'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version ?? '';
+        return _iosCard(
+          context,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.device_phone_portrait, size: 18, color: CupertinoColors.systemBlue.resolveFrom(context)),
+                    const SizedBox(width: 10),
+                    const Text('下载本地应用', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                  ],
+                ),
+              ),
+              for (var i = 0; i < _assets.length; i++)
+                _iosTile(
+                  context,
+                  icon: i == 0 ? CupertinoIcons.device_phone_portrait : CupertinoIcons.download_circle,
+                  title: _assets[i].$2,
+                  subtitle: _assets[i].$1,
+                  showDivider: i < _assets.length - 1,
+                  onTap: () async {
+                    final gitee = Uri.parse('https://gitee.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}');
+                    final gh = Uri.parse('https://github.com/$_owner/$_repo/releases/download/v$version/${_assets[i].$1}');
+                    for (final uri in [gitee, gh]) {
+                      try {
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri, mode: LaunchMode.platformDefault);
+                          return;
+                        }
+                      } catch (_) {}
+                    }
+                    if (context.mounted) {
+                      showAdaptiveMessage(context, designStyle: DesignStyle.cupertino, message: '无法打开下载链接');
+                    }
+                  },
+                ),
             ],
           ),
         );

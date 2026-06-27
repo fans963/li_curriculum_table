@@ -12,6 +12,7 @@ import 'package:signals/signals_flutter.dart';
 
 import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/login_credentials.dart';
@@ -22,12 +23,12 @@ import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_cupertino.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 
@@ -250,6 +251,10 @@ class _SettingsTabState extends State<SettingsTab>
                     },
                   ),
                 ),
+                if (kIsWeb) ...[
+                  const SizedBox(height: sectionSpacing),
+                  _buildWebDownloadCard(context),
+                ],
                 const SizedBox(height: sectionSpacing),
                 _buildAboutCard(context),
               ],
@@ -294,7 +299,7 @@ class _SettingsTabState extends State<SettingsTab>
     );
   }
 
-  void _exitApp() => exit(0);
+  void _exitApp() => exitApp();
 
   Future<void> _confirmClearCache(BuildContext context) async {
     final confirmed = await showAdaptiveConfirmDialog(
@@ -335,6 +340,45 @@ class _SettingsTabState extends State<SettingsTab>
     } catch (_) {
       if (context.mounted) showAdaptiveMessage(context, designStyle: ds, message: '导入失败');
     }
+  }
+
+  Widget _buildWebDownloadCard(BuildContext context) {
+    const owner = 'fans963';
+    const repo = 'li_curriculum_table';
+
+    return FutureBuilder<PackageInfo>(
+      future: PackageInfo.fromPlatform(),
+      builder: (context, snapshot) {
+        final version = snapshot.data?.version ?? '';
+
+        final assets = [
+          ('app-arm64-v8a-release.apk', 'Android ARM64'),
+          ('app-armeabi-v7a-release.apk', 'Android ARM32'),
+          ('app-x86_64-release.apk', 'Android x86_64'),
+          ('li-curriculum-table-unsigned.ipa', 'iOS (IPA)'),
+        ];
+
+        return SectionCard(
+          icon: Icons.phone_android_rounded,
+          title: '下载本地应用',
+          subtitle: '在手机或电脑上安装原生版本',
+          child: Column(
+            children: [
+              for (var i = 0; i < assets.length; i++) ...[
+                if (i > 0) const Divider(height: 1),
+                _WebDownloadTile(
+                  label: assets[i].$2,
+                  filename: assets[i].$1,
+                  version: version,
+                  giteeUrl: 'https://gitee.com/$owner/$repo/releases/download/v$version/${assets[i].$1}',
+                  ghUrl: 'https://github.com/$owner/$repo/releases/download/v$version/${assets[i].$1}',
+                ),
+              ],
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildAboutCard(BuildContext context) {
@@ -466,5 +510,45 @@ class _SettingsTabState extends State<SettingsTab>
       if (!context.mounted) return;
       showAdaptiveMessage(context, designStyle: ds, message: '检查更新失败，请稍后重试');
     }
+  }
+}
+
+class _WebDownloadTile extends StatelessWidget {
+  final String label;
+  final String filename;
+  final String version;
+  final String giteeUrl;
+  final String ghUrl;
+
+  const _WebDownloadTile({
+    required this.label,
+    required this.filename,
+    required this.version,
+    required this.giteeUrl,
+    required this.ghUrl,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return ListTile(
+      title: Text(label),
+      subtitle: Text(filename, style: TextStyle(fontSize: 11, color: cs.outline)),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.cloud_download_outlined),
+            tooltip: 'Gitee 下载',
+            onPressed: () => launchUrl(Uri.parse(giteeUrl)),
+          ),
+          IconButton(
+            icon: const Icon(Icons.open_in_new),
+            tooltip: 'GitHub 下载',
+            onPressed: () => launchUrl(Uri.parse(ghUrl)),
+          ),
+        ],
+      ),
+    );
   }
 }

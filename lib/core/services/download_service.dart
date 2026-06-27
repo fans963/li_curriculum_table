@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:li_curriculum_table/core/rust/api/update.dart' as rust;
 
@@ -36,16 +34,17 @@ Future<FlutterLocalNotificationsPlugin> _ensureNotif() async {
   return _notifPlugin!;
 }
 
-Future<void> _showProgressNotif(int received, int total) async {
+Future<void> _showProgressNotif(BigInt received, BigInt total) async {
   final plugin = await _ensureNotif();
-  final max = total > 0 ? total : 0;
-  final current = received.clamp(0, max);
-  final pct = total > 0 ? '${(current * 100 ~/ total)}%' : '';
+  final max = total > BigInt.zero ? total.toInt() : 0;
+  final r = received.toInt();
+  final current = r < 0 ? 0 : (r > max ? max : r);
+  final pct = total > BigInt.zero ? '${(current * 100 ~/ max)}%' : '';
 
   await plugin.show(
     id: _notifId,
     title: '正在下载更新',
-    body: '$pct  ${_fmtBytes(current)} / ${_fmtBytes(total)}',
+    body: '$pct  ${_fmtBytes(current)} / ${_fmtBytes(max)}',
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
         _dlChannelId, _dlChannelName,
@@ -101,6 +100,12 @@ Future<void> _showErrorNotif(String error) async {
 
 // ─── Download ────────────────────────────────────────────────────────────
 
+const _mirrorPrefixes = [
+  'https://ghfast.top/',
+  'https://gh-proxy.com/',
+  'https://gh.ddlc.top/',
+];
+
 /// Delegates the update download to the Rust side via FFI.
 /// Listens to progress events, manages system local notifications, and yields
 /// updates back to the UI.
@@ -110,30 +115,19 @@ Stream<rust.DownloadProgress> downloadWithProgress({
 }) async* {
   var lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
 
-  yield const rust.DownloadProgress(
-    received: 0,
-    total: 0,
+  yield rust.DownloadProgress(
+    received: BigInt.zero,
+    total: BigInt.zero,
     done: false,
     savedPath: '',
     error: '正在连接...',
   );
 
-  String? proxyString;
-  try {
-    proxyString = HttpClient.findProxyFromEnvironment(Uri.parse(url));
-    debugPrint('OTA System Proxy resolved: $proxyString');
-    if (proxyString == 'DIRECT') {
-      debugPrint('提示: 系统代理解析为 DIRECT。如果您在手机上开启了 VPN，请确保在 VPN 软件的“分流/应用过滤”列表中勾选了 "com.example.curriculum_table" (或尝试切换为“全局代理”模式)，否则应用的流量将绕过 VPN 直连，导致下载极慢。');
-    }
-  } catch (e) {
-    debugPrint('OTA: Failed to resolve system proxy: $e');
-  }
-
   try {
     await for (final progress in rust.downloadUpdate(
       url: url,
       savePath: savePath,
-      proxy: proxyString,
+      mirrorPrefixes: _mirrorPrefixes,
     )) {
       if (progress.done) {
         if (progress.error.isNotEmpty) {
@@ -147,7 +141,7 @@ Stream<rust.DownloadProgress> downloadWithProgress({
           lastNotifTime = now;
           unawaited(_showProgressNotif(
             progress.received,
-            progress.total > 0 ? progress.total : progress.received,
+            progress.total > BigInt.zero ? progress.total : progress.received,
           ));
         }
       }
@@ -156,8 +150,8 @@ Stream<rust.DownloadProgress> downloadWithProgress({
   } catch (e) {
     unawaited(_showErrorNotif(e.toString()));
     yield rust.DownloadProgress(
-      received: 0,
-      total: 0,
+      received: BigInt.zero,
+      total: BigInt.zero,
       done: true,
       savedPath: '',
       error: e.toString(),

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:feedback/feedback.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -14,6 +12,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' show ThemeMode;
 import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
@@ -143,6 +142,10 @@ class _BodyState extends State<_Body> {
                   onClearCache: widget.onClearCache,
                   mounted: widget.mounted,
                 ),
+                if (kIsWeb) ...[
+                  const SizedBox(height: 16),
+                  _CupertinoWebDownloadCard(),
+                ],
                 const SizedBox(height: 24),
                 _SectionLabel('关于'),
                 const SizedBox(height: 8),
