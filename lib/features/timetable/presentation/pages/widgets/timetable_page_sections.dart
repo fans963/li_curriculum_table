@@ -285,6 +285,7 @@ class _TermDropdown extends StatefulWidget {
 
 class _TermDropdownState extends State<_TermDropdown> {
   late final M3EDropdownController<String> _controller;
+  final _syncing = ValueNotifier(false);
 
   @override
   void initState() {
@@ -303,6 +304,7 @@ class _TermDropdownState extends State<_TermDropdown> {
   }
 
   void _syncItems() {
+    _syncing.value = true;
     _controller.setItems(widget.options.map((opt) => M3EDropdownItem(
       label: opt,
       value: opt,
@@ -311,10 +313,12 @@ class _TermDropdownState extends State<_TermDropdown> {
     if (widget.currentTerm.isNotEmpty) {
       _controller.selectWhere((item) => item.value == widget.currentTerm);
     }
+    _syncing.value = false;
   }
 
   @override
   void dispose() {
+    _syncing.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -324,20 +328,25 @@ class _TermDropdownState extends State<_TermDropdown> {
     final cs = Theme.of(context).colorScheme;
     final ds = sl<SettingsController>().state.value.designStyle;
 
-    return M3EDropdownMenu<String>(
-      singleSelect: true,
-      showChipAnimation: false,
-      items: const [],
-      controller: _controller,
-      enabled: !widget.isLoading,
-      onSelectionChanged: (items) {
-        if (items.isNotEmpty) widget.onSelected(items.first.value);
-      },
-      containerRadius: 16,
-      fieldStyle: M3EDropdownFieldStyle(
-        hintText: '当前学期',
-        prefixIcon: Icon(AppIcons.school(ds), size: 18),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        M3EDropdownMenu<String>(
+          singleSelect: true,
+          showChipAnimation: false,
+          items: const [],
+          controller: _controller,
+          enabled: !widget.isLoading,
+          onSelectionChanged: (items) {
+            if (!_syncing.value && items.isNotEmpty) {
+              widget.onSelected(items.first.value);
+            }
+          },
+          containerRadius: 16,
+          fieldStyle: M3EDropdownFieldStyle(
+            hintText: '当前学期',
+            prefixIcon: Icon(AppIcons.school(ds), size: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         border: BorderSide(color: cs.outlineVariant, width: 0.5),
         focusedBorder: BorderSide(color: cs.primary, width: 1),
         borderRadius: BorderRadius.circular(12),
@@ -352,6 +361,17 @@ class _TermDropdownState extends State<_TermDropdown> {
         innerRadius: 6,
         selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
       ),
+    ),
+        Padding(
+          padding: const EdgeInsets.only(left: 16, top: 4),
+          child: Text(
+            '格式: 学年-学期 (1秋季 2春季 3暑期小学期)',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

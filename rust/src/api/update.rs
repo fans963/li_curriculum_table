@@ -60,6 +60,21 @@ pub async fn check_for_update() -> Result<UpdateData> {
     })
 }
 
+/// Build a client for binary file downloads — no auto decompression,
+/// since APK/IPA are already compressed and reqwest would fail trying
+/// to gunzip them.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+fn build_download_client() -> reqwest::Client {
+    reqwest::Client::builder()
+        .user_agent("li-curriculum-table")
+        .no_gzip()
+        .no_brotli()
+        .no_zstd()
+        .connect_timeout(std::time::Duration::from_secs(10))
+        .build()
+        .expect("Failed to build download client")
+}
+
 /// Try to start a download from one of the candidate URLs.
 /// Returns Ok(response) on success, Err on connection/HTTP failure.
 #[cfg(any(target_os = "android", target_os = "ios"))]
@@ -95,7 +110,7 @@ pub async fn download_update(
     use futures_util::StreamExt;
     use tokio::io::AsyncWriteExt;
 
-    let client = http::build_client();
+    let client = build_download_client();
 
     // Build candidate URLs: original first, then mirrors
     let mut candidates: Vec<String> = Vec::with_capacity(1 + mirror_prefixes.len());

@@ -228,18 +228,28 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     return labels[weekday];
   }
 
+  bool get _isCupertino =>
+      AdaptiveStyle.isCupertino(sl<SettingsController>().designStyle.value);
+
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _date.value,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-    if (picked != null) _date.value = picked;
+    if (_isCupertino) {
+      final picked = await _showCupertinoDatePicker(_date.value);
+      if (picked != null) _date.value = picked;
+    } else {
+      final picked = await showDatePicker(
+        context: context,
+        initialDate: _date.value,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now().add(const Duration(days: 365)),
+      );
+      if (picked != null) _date.value = picked;
+    }
   }
 
   Future<void> _pickStartTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _startTime.value);
+    final picked = _isCupertino
+        ? await _showCupertinoTimePicker(_startTime.value)
+        : await showTimePicker(context: context, initialTime: _startTime.value);
     if (picked != null) {
       _startTime.value = picked;
       final currentEnd = _endTime.value;
@@ -253,7 +263,9 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   Future<void> _pickEndTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _endTime.value);
+    final picked = _isCupertino
+        ? await _showCupertinoTimePicker(_endTime.value)
+        : await showTimePicker(context: context, initialTime: _endTime.value);
     if (picked != null) {
       final startMin = _startTime.value.hour * 60 + _startTime.value.minute;
       final pickedMin = picked.hour * 60 + picked.minute;
@@ -267,8 +279,77 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   Future<void> _pickNotifyTime() async {
-    final picked = await showTimePicker(context: context, initialTime: _notifyTime.value);
+    final picked = _isCupertino
+        ? await _showCupertinoTimePicker(_notifyTime.value)
+        : await showTimePicker(context: context, initialTime: _notifyTime.value);
     if (picked != null) _notifyTime.value = picked;
+  }
+
+  Future<DateTime?> _showCupertinoDatePicker(DateTime initial) async {
+    DateTime selected = initial;
+    await showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => Container(
+        height: 260,
+        color: CupertinoColors.systemBackground.resolveFrom(ctx),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CupertinoButton(
+                  child: const Text('完成'),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.date,
+                initialDateTime: initial,
+                minimumDate: DateTime(2020),
+                maximumDate: DateTime.now().add(const Duration(days: 365)),
+                onDateTimeChanged: (d) => selected = d,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return selected;
+  }
+
+  Future<TimeOfDay?> _showCupertinoTimePicker(TimeOfDay initial) async {
+    DateTime selected = DateTime(2000, 1, 1, initial.hour, initial.minute);
+    await showCupertinoModalPopup(
+      context: context,
+      builder: (ctx) => Container(
+        height: 260,
+        color: CupertinoColors.systemBackground.resolveFrom(ctx),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                CupertinoButton(
+                  child: const Text('完成'),
+                  onPressed: () => Navigator.pop(ctx),
+                ),
+              ],
+            ),
+            Expanded(
+              child: CupertinoDatePicker(
+                mode: CupertinoDatePickerMode.time,
+                initialDateTime: selected,
+                use24hFormat: true,
+                onDateTimeChanged: (d) => selected = d,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+    return TimeOfDay(hour: selected.hour, minute: selected.minute);
   }
 
   void _submit() {
