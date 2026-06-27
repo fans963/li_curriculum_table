@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 /// Progress event emitted during a download.
@@ -21,7 +22,6 @@ class DownloadProgress {
 }
 
 /// GitHub mirror prefixes — tried first for users in mainland China.
-/// The raw GitHub URL is used as final fallback.
 const _mirrorPrefixes = [
   'https://ghfast.top/',
   'https://gh-proxy.com/',
@@ -31,6 +31,8 @@ const _mirrorPrefixes = [
 const _dlChannelId = 'download_progress';
 const _dlChannelName = '下载通知';
 const _notifId = 90000;
+
+// ─── Notifications ────────────────────────────────────────────────────────
 
 FlutterLocalNotificationsPlugin? _notifPlugin;
 
@@ -66,8 +68,7 @@ Future<void> _showProgressNotif(int received, int total) async {
     body: '$pct  ${_fmtBytes(current)} / ${_fmtBytes(total)}',
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId,
-        _dlChannelName,
+        _dlChannelId, _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.low,
         priority: Priority.low,
@@ -82,7 +83,7 @@ Future<void> _showProgressNotif(int received, int total) async {
   );
 }
 
-Future<void> _showCompleteNotif(String savedPath) async {
+Future<void> _showCompleteNotif() async {
   final plugin = await _ensureNotif();
   await plugin.show(
     id: _notifId,
@@ -90,15 +91,11 @@ Future<void> _showCompleteNotif(String savedPath) async {
     body: '点击安装更新',
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId,
-        _dlChannelName,
+        _dlChannelId, _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.high,
         priority: Priority.high,
         autoCancel: true,
-        // Open the APK when tapped
-        // Note: open_filex handles this from the dialog; the notification
-        // serves as a persistent reminder.
       ),
     ),
   );
@@ -112,8 +109,7 @@ Future<void> _showErrorNotif(String error) async {
     body: error,
     notificationDetails: NotificationDetails(
       android: AndroidNotificationDetails(
-        _dlChannelId,
-        _dlChannelName,
+        _dlChannelId, _dlChannelName,
         channelDescription: '应用更新下载进度',
         importance: Importance.defaultImportance,
         priority: Priority.defaultPriority,
@@ -123,126 +119,182 @@ Future<void> _showErrorNotif(String error) async {
   );
 }
 
-/// Download a file with automatic mirror fallback and progress streaming.
-///
-/// Mirrors are tried first (fastest for mainland China), then the original
-/// GitHub URL as final fallback. If a stream error occurs mid-download,
-/// retries with the next candidate from scratch.
+// ─── Download ────────────────────────────────────────────────────────────
+
+/// Race all mirrors + GitHub in parallel. Use whichever connects first,
+/// then stream from that connection. If the stream errors, fall back to
+/// the next connected response (if available) or re-race remaining candidates.
 Stream<DownloadProgress> downloadWithProgress({
   required String url,
   required String savePath,
 }) async* {
-  // Mirrors first, then original GitHub URL as fallback
   final candidates = <String>[
     ..._mirrorPrefixes.map((p) => '$p$url'),
     url,
   ];
 
+  yield const DownloadProgress(
+    received: 0, total: 0, done: false,
+    error: '正在连接...',
+  );
+
+  // Phase 1: race all candidates — take the first that responds 200
+  final client = HttpClient()
+    ..connectionTimeout = const Duration(seconds: 8)
+    ..autoUncompress = false;
+
+  HttpClientResponse? bestResponse;
+  String bestUrl = '';
+
+  // Fire all connections in parallel
+  final futures = candidates.map((u) async {
+    try {
+      final req = await client.getUrl(Uri.parse(u));
+      req.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+      final resp = await req.close().timeout(const Duration(seconds: 8));
+      return (u, resp);
+    } catch (_) {
+      return null;
+    }
+  }).toList();
+
+  // Wait for the first successful response
+  final completer = Completer<void>();
+  var resolved = false;
+
+  for (final future in futures) {
+    future.then((result) {
+      if (result != null && !resolved) {
+        resolved = true;
+        bestUrl = result.$1;
+        bestResponse = result.$2;
+        if (!completer.isCompleted) completer.complete();
+      }
+    });
+  }
+
+  // Also set a total timeout for the race
+  Future.delayed(const Duration(seconds: 12), () {
+    if (!resolved) {
+      resolved = true;
+      if (!completer.isCompleted) completer.complete();
+    }
+  });
+
+  await completer.future;
+
+  if (bestResponse == null) {
+    client.close(force: true);
+    unawaited(_showErrorNotif('所有下载源均不可达'));
+    yield const DownloadProgress(
+      received: 0, total: 0, done: true,
+      error: '所有下载源均不可达',
+    );
+    return;
+  }
+
+  debugPrint('OTA: using $bestUrl');
+
+  // Phase 2: stream from the winning response
+  final response = bestResponse!;
+  final total = response.contentLength;
+  var received = 0;
+  final file = File(savePath);
+  IOSink? fileSink;
+  var lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
   String lastError = '';
 
-  for (var idx = 0; idx < candidates.length; idx++) {
-    final candidate = candidates[idx];
-    final isMirror = idx < _mirrorPrefixes.length;
+  try {
+    fileSink = file.openWrite();
 
-    // Notify which source we're trying
-    yield DownloadProgress(
-      received: 0,
-      total: 0,
-      done: false,
-      error: isMirror ? '正在尝试镜像 ${idx + 1}...' : '正在连接 GitHub...',
-    );
-
-    try {
-      final client = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 10)
-        ..autoUncompress = false;
-
-      final request = await client.getUrl(Uri.parse(candidate));
-      request.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
-
-      final response = await request.close().timeout(
-        const Duration(seconds: 15),
-      );
-
-      if (response.statusCode != HttpStatus.ok) {
-        lastError = '$candidate: HTTP ${response.statusCode}';
-        client.close(force: true);
-        continue;
-      }
-
-      final total = response.contentLength;
-      var received = 0;
-      final file = File(savePath);
-      final sink = file.openSync(mode: FileMode.write);
-      var streamErr = false;
-      var lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
-
-      await for (final chunk in response) {
-        try {
-          sink.writeFromSync(chunk);
-          received += chunk.length;
-
-          yield DownloadProgress(
-            received: received,
-            total: total > 0 ? total : 0,
-            done: false,
-          );
-
-          // Throttle notification updates to ~2/sec
-          final now = DateTime.now();
-          if (now.difference(lastNotifTime).inMilliseconds >= 500) {
-            lastNotifTime = now;
-            unawaited(_showProgressNotif(received, total > 0 ? total : received));
-          }
-        } catch (e) {
-          lastError = '写入失败: $e';
-          streamErr = true;
-          break;
-        }
-      }
-
-      await sink.close();
-      client.close(force: true);
-
-      if (streamErr) {
-        yield DownloadProgress(
-          received: received,
-          total: total > 0 ? total : 0,
-          done: false,
-          error: '$lastError，尝试下一个源...',
-        );
-        continue;
-      }
-
-      // Success — show completion notification
-      unawaited(_showCompleteNotif(savePath));
+    await for (final chunk in response) {
+      fileSink.add(chunk);
+      received += chunk.length;
 
       yield DownloadProgress(
         received: received,
         total: total > 0 ? total : 0,
-        done: true,
-        savedPath: savePath,
+        done: false,
+      );
+
+      final now = DateTime.now();
+      if (now.difference(lastNotifTime).inMilliseconds >= 500) {
+        lastNotifTime = now;
+        unawaited(_showProgressNotif(received, total > 0 ? total : received));
+      }
+    }
+
+    await fileSink.flush();
+    await fileSink.close();
+    client.close(force: true);
+
+    unawaited(_showCompleteNotif());
+    yield DownloadProgress(
+      received: received,
+      total: total > 0 ? total : 0,
+      done: true,
+      savedPath: savePath,
+    );
+    return;
+  } catch (e) {
+    lastError = '$bestUrl: $e';
+    await fileSink?.close();
+    client.close(force: true);
+  }
+
+  // If we get here, the stream failed — try remaining candidates sequentially
+  debugPrint('OTA: stream error on $bestUrl, trying fallbacks...');
+
+  for (final candidate in candidates) {
+    if (candidate == bestUrl) continue;
+
+    yield DownloadProgress(
+      received: 0, total: 0, done: false,
+      error: '正在回退到 $candidate...',
+    );
+
+    try {
+      final c = HttpClient()
+        ..connectionTimeout = const Duration(seconds: 8)
+        ..autoUncompress = false;
+      final req = await c.getUrl(Uri.parse(candidate));
+      req.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
+      final resp = await req.close().timeout(const Duration(seconds: 8));
+
+      if (resp.statusCode != HttpStatus.ok) {
+        c.close(force: true);
+        continue;
+      }
+
+      final t = resp.contentLength;
+      var r = 0;
+      final sink = File(savePath).openWrite();
+
+      await for (final chunk in resp) {
+        sink.add(chunk);
+        r += chunk.length;
+        yield DownloadProgress(received: r, total: t > 0 ? t : 0, done: false);
+      }
+
+      await sink.flush();
+      await sink.close();
+      c.close(force: true);
+
+      unawaited(_showCompleteNotif());
+      yield DownloadProgress(
+        received: r, total: t > 0 ? t : 0,
+        done: true, savedPath: savePath,
       );
       return;
     } catch (e) {
-      lastError = '$candidate: $e';
-      yield DownloadProgress(
-        received: 0,
-        total: 0,
-        done: false,
-        error: '$lastError，尝试下一个源...',
-      );
+      lastError += '\n$candidate: $e';
       continue;
     }
   }
 
-  // All candidates failed
   unawaited(_showErrorNotif(lastError));
-
   yield DownloadProgress(
-    received: 0,
-    total: 0,
-    done: true,
+    received: 0, total: 0, done: true,
     error: '所有下载源均失败: $lastError',
   );
 }

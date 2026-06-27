@@ -311,20 +311,13 @@ Future<void> _showDetailsDialog(
     timeLine: timeLine,
     isOngoing: isOngoing,
     designStyle: designStyle,
+    onClose: () => Navigator.of(context).pop(),
   );
 
   if (AdaptiveStyle.isCupertino(designStyle)) {
-    return showGeneralDialog(
+    return showCupertinoModalPopup(
       context: context,
-      barrierDismissible: true,
-      barrierLabel: 'course-detail',
-      barrierColor: CupertinoColors.black.withValues(alpha: 0.4),
-      transitionDuration: const Duration(milliseconds: 300),
-      pageBuilder: (context, animation, secondaryAnimation) => sheet,
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final t = Curves.easeOutCubic.transform(animation.value);
-        return Transform.scale(scale: 0.85 + 0.15 * t, child: Opacity(opacity: t, child: child));
-      },
+      builder: (_) => sheet,
     );
   }
 

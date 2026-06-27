@@ -5,7 +5,6 @@ import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/glass_dialog.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
@@ -49,15 +48,8 @@ Widget buildCupertinoAppointmentCard({
       child: Container(
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(8),
           border: Border.all(color: borderColor, width: 0.5),
-          boxShadow: [
-            BoxShadow(
-              color: CupertinoColors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Row(
@@ -102,6 +94,11 @@ class _CardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final s = sl<SettingsController>().state.value;
+    final maxLines = s.timetableTextMaxLines;
+    final minFontSize = s.autoSizeMinFontSize;
+    final fontSize = s.timetableTextFontSize;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -109,11 +106,11 @@ class _CardContent extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: sl<SettingsController>().autoSizeText.value
+              child: s.autoSizeText
                 ? AutoSizeText(
                     title,
-                    maxLines: 2,
-                    minFontSize: 6,
+                    maxLines: maxLines,
+                    minFontSize: minFontSize,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 13,
@@ -125,10 +122,10 @@ class _CardContent extends StatelessWidget {
                   )
                 : Text(
                     title,
-                    maxLines: 2,
+                    maxLines: maxLines,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: fontSize,
                       fontWeight: FontWeight.w600,
                       color: tone.foreground,
                       letterSpacing: -0.2,
@@ -143,45 +140,33 @@ class _CardContent extends StatelessWidget {
           ],
         ),
         if (locationLine.isNotEmpty) ...[
-          const SizedBox(height: 3),
-          Row(
-            children: [
-              Icon(
-                CupertinoIcons.location,
-                size: 10,
-                color: tone.foreground.withValues(alpha: 0.5),
+          const SizedBox(height: 2),
+          s.autoSizeText
+            ? AutoSizeText(
+                locationLine,
+                maxLines: maxLines,
+                minFontSize: minFontSize,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: tone.foreground.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.1,
+                  height: 1.2,
+                ),
+              )
+            : Text(
+                locationLine,
+                maxLines: maxLines,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: fontSize - 2,
+                  color: tone.foreground.withValues(alpha: 0.6),
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: -0.1,
+                  height: 1.2,
+                ),
               ),
-              const SizedBox(width: 2),
-              Expanded(
-                child: sl<SettingsController>().autoSizeText.value
-                  ? AutoSizeText(
-                      locationLine,
-                      maxLines: 2,
-                      minFontSize: 6,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: tone.foreground.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.1,
-                        height: 1.2,
-                      ),
-                    )
-                  : Text(
-                      locationLine,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: tone.foreground.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: -0.1,
-                        height: 1.2,
-                      ),
-                    ),
-              ),
-            ],
-          ),
         ],
       ],
     );
@@ -265,59 +250,241 @@ class CourseDetailsSheet extends StatelessWidget {
     final otherInfo = '${occurrence.courseType}'
         '${occurrence.credit.isNotEmpty ? ' · ${occurrence.credit}学分' : ''}';
 
-    return GlassDialog(
-      child: Stack(
-        children: [
-          SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 32),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: Text(occurrence.courseName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, height: 1.2, letterSpacing: -0.5))),
-                      if (isOngoing) ...[const SizedBox(width: 8), _ongoingBadge(accent, fontSize: 11, hPad: 7, vPad: 3)],
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(occurrence.weekText, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: accent)),
-                const SizedBox(height: 20),
-                Container(height: 0.5, color: sep),
-                const SizedBox(height: 16),
-                _infoRow(context, CupertinoIcons.clock, '时间', timeLine, accent, secondary),
-                _infoRow(context, CupertinoIcons.location, '地点', occurrence.location, accent, secondary),
-                _infoRow(context, CupertinoIcons.person, '教师', occurrence.teacher, accent, secondary),
-                _infoRow(context, CupertinoIcons.book, '其他信息', otherInfo, accent, secondary),
-                const SizedBox(height: 8),
-                _buildColorPicker(context, customColor),
-              ],
-            ),
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final viewPadding = MediaQuery.of(context).padding.bottom;
+
+    final List<Widget> detailRows = [];
+    if (timeLine.trim().isNotEmpty) {
+      detailRows.add(_buildCupertinoInfoRow(context, icon: CupertinoIcons.clock, label: '时间', value: timeLine, iconColor: accent, secondaryColor: secondary));
+    }
+    if (occurrence.location.trim().isNotEmpty) {
+      if (detailRows.isNotEmpty) detailRows.add(_buildIOSDivider(context));
+      detailRows.add(_buildCupertinoInfoRow(context, icon: CupertinoIcons.location, label: '地点', value: occurrence.location, iconColor: accent, secondaryColor: secondary));
+    }
+    if (occurrence.teacher.trim().isNotEmpty) {
+      if (detailRows.isNotEmpty) detailRows.add(_buildIOSDivider(context));
+      detailRows.add(_buildCupertinoInfoRow(context, icon: CupertinoIcons.person, label: '教师', value: occurrence.teacher, iconColor: accent, secondaryColor: secondary));
+    }
+    if (otherInfo.trim().isNotEmpty) {
+      if (detailRows.isNotEmpty) detailRows.add(_buildIOSDivider(context));
+      detailRows.add(_buildCupertinoInfoRow(context, icon: CupertinoIcons.info_circle, label: '其他信息', value: otherInfo, iconColor: accent, secondaryColor: secondary));
+    }
+
+    return CupertinoTheme(
+      data: CupertinoTheme.of(context),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.70,
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
           ),
-          if (onClose != null)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: GestureDetector(
-                onTap: onClose,
+          child: Column(
+            children: [
+              // iOS Drag Handle / Top Margin
+              const SizedBox(height: 10),
+              Center(
                 child: Container(
-                  padding: const EdgeInsets.all(6),
+                  width: 36,
+                  height: 5,
                   decoration: BoxDecoration(
-                    color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    CupertinoIcons.xmark,
-                    size: 16,
-                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                    color: CupertinoColors.inactiveGray.resolveFrom(context),
+                    borderRadius: BorderRadius.circular(2.5),
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+
+              // Title Action Bar
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      occurrence.courseType == '日程' ? '日程详情' : '课程详情',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label.resolveFrom(context),
+                      ),
+                    ),
+                    if (onClose != null)
+                      CupertinoButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: onClose,
+                        child: Text(
+                          '完成',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: CupertinoColors.systemBlue.resolveFrom(context),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              Container(height: 0.5, color: sep),
+
+              // Scrollable Details
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding + viewPadding),
+                  child: Column(
+                    children: [
+                      // Card 1: Title and WeekText
+                      _buildIOSDetailsCard(
+                        context,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        occurrence.courseName,
+                                        style: TextStyle(
+                                          fontSize: 22,
+                                          fontWeight: FontWeight.w700,
+                                          color: CupertinoColors.label.resolveFrom(context),
+                                          height: 1.2,
+                                          letterSpacing: -0.5,
+                                        ),
+                                      ),
+                                    ),
+                                    if (isOngoing) ...[
+                                      const SizedBox(width: 8),
+                                      _ongoingBadge(accent, fontSize: 11, hPad: 7, vPad: 3),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  occurrence.weekText,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: accent,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      // Card 2: Details List
+                      if (detailRows.isNotEmpty) ...[
+                        const SizedBox(height: 20),
+                        _buildIOSDetailsCard(context, children: detailRows),
+                      ],
+
+                      // Card 3: Color Picker
+                      const SizedBox(height: 20),
+                      _buildIOSDetailsCard(
+                        context,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                            child: _buildColorPicker(context, customColor),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIOSDetailsCard(BuildContext context, {required List<Widget> children}) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2),
+          width: 0.5,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildIOSDivider(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 62),
+      child: Container(
+        height: 0.5,
+        color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  Widget _buildCupertinoInfoRow(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+    required Color secondaryColor,
+  }) {
+    if (value.trim().isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: secondaryColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: CupertinoColors.label.resolveFrom(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

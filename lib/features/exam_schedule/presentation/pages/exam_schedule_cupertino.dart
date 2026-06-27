@@ -109,13 +109,54 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
 
   final countdown = exam.countdownText;
 
+  final cardContent = Padding(
+    padding: const EdgeInsets.all(14),
+    child: Row(
+      children: [
+        Container(
+          width: 40, height: 40,
+          decoration: BoxDecoration(
+            color: accentColor.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill, size: 20, color: accentColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(exam.courseName,
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: isExpired ? CupertinoColors.secondaryLabel.resolveFrom(context) : null)),
+              const SizedBox(height: 4),
+              Text('${exam.dateText} ${exam.weekdayName} ${exam.timeRange}',
+                  style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+              const SizedBox(height: 2),
+              Text('${exam.location} · 座位 ${exam.seatNumber}',
+                  style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+            ],
+          ),
+        ),
+        if (countdown.isNotEmpty) ...[
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: accentColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(countdown, style: TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
+        ],
+      ],
+    ),
+  );
+
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     child: Container(
       decoration: BoxDecoration(
-        color: isExpired
-            ? CupertinoColors.systemFill.resolveFrom(context).withValues(alpha: 0.5)
-            : CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
         borderRadius: BorderRadius.circular(18),
         boxShadow: isExpired ? [] : [
           BoxShadow(
@@ -126,47 +167,7 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
         ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-          Container(
-            width: 40, height: 40,
-            decoration: BoxDecoration(
-              color: accentColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill, size: 20, color: accentColor),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(exam.courseName,
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: isExpired ? CupertinoColors.secondaryLabel.resolveFrom(context) : null)),
-                const SizedBox(height: 4),
-                Text('${exam.dateText} ${exam.weekdayName} ${exam.timeRange}',
-                    style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
-                const SizedBox(height: 2),
-                Text('${exam.location} · 座位 ${exam.seatNumber}',
-                    style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
-              ],
-            ),
-          ),
-          if (countdown.isNotEmpty) ...[
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(countdown, style: TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w600)),
-            ),
-          ],
-        ],
-      ),
+      child: isExpired ? Opacity(opacity: 0.6, child: cardContent) : cardContent,
     ),
-  ));
+  );
 }
