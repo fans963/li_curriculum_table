@@ -12,16 +12,6 @@ class _AccountCard extends SignalStatefulWidget {
 }
 
 class _AccountCardState extends State<_AccountCard> {
-  late final _termController = TextEditingController(
-    text: sl<SettingsController>().currentTerm.value,
-  );
-
-  @override
-  void dispose() {
-    _termController.dispose();
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     final settingsCtrl = sl<SettingsController>();
@@ -63,16 +53,35 @@ class _AccountCardState extends State<_AccountCard> {
           // Semester
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            child: CupertinoTextField(
-              controller: _termController,
-              placeholder: '当前学期 (如 2025-2026-1)',
-              prefix: const Padding(padding: EdgeInsets.only(left: 8), child: Icon(CupertinoIcons.book, size: 20)),
-              decoration: BoxDecoration(
-                color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
-                borderRadius: BorderRadius.circular(10),
+            child: CupertinoButton(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              color: CupertinoColors.tertiarySystemFill.resolveFrom(context),
+              borderRadius: BorderRadius.circular(10),
+              onPressed: () => _pickSemester(context, settingsCtrl),
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  Icon(
+                    CupertinoIcons.book,
+                    size: 20,
+                    color: settingsCtrl.currentTerm.value.isNotEmpty
+                        ? CupertinoColors.label.resolveFrom(context)
+                        : CupertinoColors.placeholderText.resolveFrom(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    settingsCtrl.currentTerm.value.isNotEmpty
+                        ? '学期: ${settingsCtrl.currentTerm.value}'
+                        : '当前学期 (点击设置)',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: settingsCtrl.currentTerm.value.isNotEmpty
+                          ? CupertinoColors.label.resolveFrom(context)
+                          : CupertinoColors.placeholderText.resolveFrom(context),
+                    ),
+                  ),
+                ],
               ),
-              clearButtonMode: OverlayVisibilityMode.editing,
-              onSubmitted: (v) => settingsCtrl.setCurrentTerm(v.trim()),
             ),
           ),
           // Term start date
@@ -171,6 +180,66 @@ class _AccountCardState extends State<_AccountCard> {
             child: const Text('确定'),
             onPressed: () {
               controller.setTermStartDate(selectedDate.value);
+              Navigator.pop(ctx);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  List<String> _getSemesterOptions() {
+    final now = DateTime.now();
+    final int currentStartYear = now.month >= 9 ? now.year : now.year - 1;
+    final List<String> options = [];
+    for (int y = currentStartYear + 1; y >= currentStartYear - 4; y--) {
+      options.add('$y-${y + 1}-3');
+      options.add('$y-${y + 1}-2');
+      options.add('$y-${y + 1}-1');
+    }
+    return options;
+  }
+
+  void _pickSemester(BuildContext context, SettingsController settingsCtrl) {
+    final options = _getSemesterOptions();
+    final current = settingsCtrl.currentTerm.value;
+    if (current.isNotEmpty && !options.contains(current)) {
+      options.insert(0, current);
+    }
+    
+    final int initialIndex = options.indexOf(current);
+    final selectedIndex = signal(initialIndex >= 0 ? initialIndex : 0);
+
+    showCupertinoDialog(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('选择当前学期'),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: SizedBox(
+            height: 180,
+            child: CupertinoPicker(
+              scrollController: FixedExtentScrollController(initialItem: selectedIndex.value),
+              itemExtent: 36.0,
+              onSelectedItemChanged: (index) => selectedIndex.value = index,
+              children: options.map((opt) => Center(
+                child: Text(opt, style: const TextStyle(fontSize: 18)),
+              )).toList(),
+            ),
+          ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            child: const Text('取消'),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('确定'),
+            onPressed: () {
+              if (selectedIndex.value >= 0 && selectedIndex.value < options.length) {
+                settingsCtrl.setCurrentTerm(options[selectedIndex.value]);
+              }
               Navigator.pop(ctx);
             },
           ),

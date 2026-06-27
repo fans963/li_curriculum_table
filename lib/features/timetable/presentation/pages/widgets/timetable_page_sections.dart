@@ -30,21 +30,15 @@ class TimetableControlPanel extends SignalStatefulWidget {
 
 class _TimetableControlPanelState extends State<TimetableControlPanel> {
   late final TextEditingController _termStartController;
-  late final TextEditingController _termController;
   late final EffectCleanup _syncTermStart;
-  late final EffectCleanup _syncTerm;
 
   @override
   void initState() {
     super.initState();
     final timetableCtrl = sl<TimetableController>();
-    final settingsCtrl = sl<SettingsController>();
 
     _termStartController = TextEditingController(
       text: _formatTermStart(timetableCtrl.termStartMonday.value),
-    );
-    _termController = TextEditingController(
-      text: settingsCtrl.currentTerm.value,
     );
 
     // Reactively sync term start date display from signal
@@ -52,14 +46,6 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
       final newText = _formatTermStart(timetableCtrl.termStartMonday.value);
       if (_termStartController.text != newText) {
         _termStartController.text = newText;
-      }
-    });
-
-    // Reactively sync term from signal
-    _syncTerm = effect(() {
-      final newText = settingsCtrl.currentTerm.value;
-      if (_termController.text != newText) {
-        _termController.text = newText;
       }
     });
   }
@@ -70,26 +56,32 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
   @override
   void dispose() {
     _syncTermStart();
-    _syncTerm();
     _termStartController.dispose();
-    _termController.dispose();
     super.dispose();
   }
 
-  /// Generate a semester example string based on the current date.
-  String _termExample() {
+  List<String> _getSemesterOptions() {
     final now = DateTime.now();
-    final y = now.year;
-    final m = now.month;
-    if (m >= 9) return '$y-${y + 1}-1';
-    if (m >= 2) return '${y - 1}-$y-2';
-    return '${y - 1}-$y-1';
+    final int currentStartYear = now.month >= 9 ? now.year : now.year - 1;
+    final List<String> options = [];
+    for (int y = currentStartYear + 1; y >= currentStartYear - 4; y--) {
+      options.add('$y-${y + 1}-3');
+      options.add('$y-${y + 1}-2');
+      options.add('$y-${y + 1}-1');
+    }
+    return options;
   }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final state = sl<TimetableController>().state.value;
+    final settingsCtrl = sl<SettingsController>();
+    final options = _getSemesterOptions();
+    final currentTerm = settingsCtrl.currentTerm.value;
+    if (currentTerm.isNotEmpty && !options.contains(currentTerm)) {
+      options.insert(0, currentTerm);
+    }
 
     return Card(
       elevation: 0,
@@ -153,21 +145,26 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               ),
             ],
             const SizedBox(height: 12),
-            TextField(
-              controller: _termController,
-              enabled: !state.isLoading,
-              textInputAction: TextInputAction.next,
+            DropdownButtonFormField<String>(
+              initialValue: options.contains(currentTerm) ? currentTerm : null,
+              items: options.map((opt) => DropdownMenuItem(
+                value: opt,
+                child: Text(opt),
+              )).toList(),
               decoration: InputDecoration(
                 labelText: '当前学期',
                 prefixIcon: const Icon(Icons.school_outlined),
-                hintText: '如 ${_termExample()}',
                 helperText: '格式: 学年-学期 (1秋季 2春季 3暑期小学期)',
                 filled: true,
                 fillColor: colorScheme.surface,
               ),
-              onChanged: (value) {
-                widget.onCurrentTermChanged(value.trim());
-              },
+              onChanged: state.isLoading
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        widget.onCurrentTermChanged(value);
+                      }
+                    },
             ),
             const SizedBox(height: 12),
             TextFormField(
