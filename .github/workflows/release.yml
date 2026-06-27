@@ -89,7 +89,7 @@ jobs:
 
       - name: Install Fastforge & FRB
         run: |
-          dart pub global activate fastforge
+          dart pub global activate fastforge 0.6.5
           rustup component add rustfmt
           cargo install flutter_rust_bridge_codegen
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH

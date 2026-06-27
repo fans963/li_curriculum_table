@@ -33,30 +33,25 @@ pushd "$TEMP_DIR" > /dev/null
 # - Rename groups to group (standard PKGINFO field)
 sed -i 's/(//g; s/)//g' .PKGINFO
 sed -i 's/=/ = /g' .PKGINFO
-# Ensure pkgver doesn't already have -1
-if [[ ! $(grep "^pkgver =" .PKGINFO) =~ -[0-9]+ ]]; then
+# Restore underscores in pkgname (fastforge converts _ to -)
+sed -i 's/^pkgname = li-curriculum-table/pkgname = li_curriculum_table/' .PKGINFO
+# Append pkgrel=-1 if missing (pacman requires pkgver-pkgrel format)
+if ! grep -q "^pkgver = .*-[0-9]" .PKGINFO; then
     sed -i 's/^pkgver = \(.*\)/pkgver = \1-1/' .PKGINFO
 fi
 sed -i 's/^groups =/group =/' .PKGINFO
 
-# Read metadata for naming
-PKGNAME=$(grep "^pkgname =" .PKGINFO | cut -d' ' -f3)
-PKGVER=$(grep "^pkgver =" .PKGINFO | cut -d' ' -f3)
-ARCH=$(grep "^arch =" .PKGINFO | cut -d' ' -f3)
-
-NEW_FILENAME="${PKGNAME}-${PKGVER}-${ARCH}.pkg.tar.xz"
-
-# 3. Regenerate .MTREE
-# options inherited from fastforge source
-bsdtar -czf .MTREE --format=mtree --options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' .PKGINFO .INSTALL usr
+# 3. Regenerate .MTREE (include opt/ if it exists: 0.6.5 puts app in usr/, 0.6.8+ in opt/)
+ARCHIVE_DIRS=".PKGINFO .INSTALL usr"
+[ -d opt ] && ARCHIVE_DIRS="$ARCHIVE_DIRS opt"
+bsdtar -czf .MTREE --format=mtree --options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' $ARCHIVE_DIRS
 
 # 4. Repack
-bsdtar -cf - .MTREE .PKGINFO .INSTALL usr | xz -c -z - > "$NEW_FILENAME"
+bsdtar -cf - .MTREE .PKGINFO .INSTALL usr ${opt:+opt} | xz -c -z - > fixed.pacman
 
 popd > /dev/null
 
-# 5. Cleanup
-mv "$TEMP_DIR/$NEW_FILENAME" "$DEST_DIR/$NEW_FILENAME"
+mv "$TEMP_DIR/fixed.pacman" "$PACMAN_FILE"
 rm -rf "$TEMP_DIR"
 
-echo "Success! Fixed package created: $DEST_DIR/$NEW_FILENAME"
+echo "Fixed: $PACMAN_FILE"

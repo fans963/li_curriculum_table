@@ -1,18 +1,41 @@
 name: Sync Release to Gitee
 
 on:
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Production Release"]
+    types: [completed]
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   sync-gitee:
     name: Sync to Gitee
     runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Get version from pubspec
+        id: get_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Check if release exists
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "v${{ steps.get_version.outputs.version }}" --repo ${{ github.repository }} &>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "tag=v${{ steps.get_version.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check Gitee token
         id: check
         env:
@@ -25,7 +48,7 @@ jobs:
           fi
 
       - name: Sync GitHub Release to Gitee
-        if: steps.check.outputs.has_token == 'true'
+        if: steps.check_release.outputs.exists == 'true' && steps.check.outputs.has_token == 'true'
         uses: trustedinster/sync-release-gitee@v1.3
         with:
           gitee_owner: fans963
@@ -38,4 +61,4 @@ jobs:
       - name: Report failure
         if: failure()
         run: |
-          echo "::warning::Gitee sync failed for ${{ github.event.release.tag_name }}"
+          echo "::warning::Gitee sync failed for ${{ steps.check_release.outputs.tag }}"
