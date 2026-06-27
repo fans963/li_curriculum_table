@@ -55,3 +55,4 @@ android/key.properties
 android/app/release.jks
 # Rust machine-specific config (NDK paths differ per machine)
 rust/.cargo/config.toml
+scripts/.env

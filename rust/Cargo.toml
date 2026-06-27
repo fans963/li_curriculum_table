@@ -17,7 +17,7 @@ wasm-opt = [
 ]
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib", "staticlib"]
 
 [dependencies]
 bytes = "1.12.0"
