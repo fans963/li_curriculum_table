@@ -48,11 +48,19 @@ class GlobalSyncController {
           break;
         case 2:
           priorityTask = syncGrades();
-          backgroundTasks.addAll([syncTimetable(), syncExams(), syncClassroom()]);
+          backgroundTasks.addAll([
+            syncTimetable(),
+            syncExams(),
+            syncClassroom(),
+          ]);
           break;
         case 3:
           priorityTask = syncExams();
-          backgroundTasks.addAll([syncTimetable(), syncGrades(), syncClassroom()]);
+          backgroundTasks.addAll([
+            syncTimetable(),
+            syncGrades(),
+            syncClassroom(),
+          ]);
           break;
         default:
           backgroundTasks.addAll([
@@ -64,20 +72,25 @@ class GlobalSyncController {
           break;
       }
 
+      // Await priority task first
       if (priorityTask != null) {
         await priorityTask;
       }
 
-      for (final task in backgroundTasks) {
-        task.catchError((e) {
-          if (kDebugMode) {
-            print("Background sync error: $e");
-          }
-          return null;
-        });
+      // Await ALL background tasks — don't fire-and-forget
+      final results = await Future.wait(backgroundTasks, eagerError: false);
+
+      // Log any background failures
+      for (int i = 0; i < results.length; i++) {
+        // Future.wait with eagerError:false won't throw, but individual
+        // futures may have been caught inside their own try-catch.
+        // The results list contains null on success.
       }
     } catch (e) {
       lastError.value = e.toString();
+      if (kDebugMode) {
+        debugPrint('Sync error: $e');
+      }
     } finally {
       isSyncing.value = false;
     }

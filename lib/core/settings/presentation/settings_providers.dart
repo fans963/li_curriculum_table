@@ -18,7 +18,20 @@ class SettingsController {
   late final weeklyScroll = computed(() => _state.value.weeklyScroll);
   late final proxyEnabled = computed(() => _state.value.proxyEnabled);
   late final proxyPort = computed(() => _state.value.proxyPort);
-
+  late final enableBookCover = computed(() => _state.value.enableBookCover);
+  late final currentTerm = computed(() => _state.value.currentTerm);
+  late final autoSizeText = computed(() => _state.value.autoSizeText);
+  late final autoSizeMinFontSize = computed(
+    () => _state.value.autoSizeMinFontSize,
+  );
+  late final timetableTextMaxLines = computed(
+    () => _state.value.timetableTextMaxLines,
+  );
+  late final timetableTextFontSize = computed(
+    () => _state.value.timetableTextFontSize,
+  );
+  late final daysVisibleCount = computed(() => _state.value.daysVisibleCount);
+  late final termsAccepted = computed(() => _state.value.termsAccepted);
   Future<void> init() async {
     final repository = sl<SettingsRepository>();
     _state.value = await repository.loadSettings();
@@ -40,6 +53,50 @@ class SettingsController {
 
   Future<void> setWeeklyScroll(bool enabled) async {
     _state.value = _state.value.copyWith(weeklyScroll: enabled);
+    await _save();
+  }
+
+  Future<void> setEnableBookCover(bool enabled) async {
+    _state.value = _state.value.copyWith(enableBookCover: enabled);
+    await _save();
+  }
+
+  Future<void> setCurrentTerm(String term) async {
+    _state.value = _state.value.copyWith(currentTerm: term);
+    await _save();
+  }
+
+  Future<void> setAutoSizeText(bool enabled) async {
+    _state.value = _state.value.copyWith(autoSizeText: enabled);
+    await _save();
+  }
+
+  Future<void> setAutoSizeMinFontSize(double size) async {
+    if (size < 4 || size > 20) return;
+    _state.value = _state.value.copyWith(autoSizeMinFontSize: size);
+    await _save();
+  }
+
+  Future<void> setTimetableTextMaxLines(int lines) async {
+    if (lines < 1 || lines > 5) return;
+    _state.value = _state.value.copyWith(timetableTextMaxLines: lines);
+    await _save();
+  }
+
+  Future<void> setTimetableTextFontSize(double size) async {
+    if (size < 5 || size > 20) return;
+    _state.value = _state.value.copyWith(timetableTextFontSize: size);
+    await _save();
+  }
+
+  Future<void> setTermsAccepted(bool accepted) async {
+    _state.value = _state.value.copyWith(termsAccepted: accepted);
+    await _save();
+  }
+
+  Future<void> setDaysVisibleCount(int days) async {
+    if (days < 1 || days > 14) return;
+    _state.value = _state.value.copyWith(daysVisibleCount: days);
     await _save();
   }
 
@@ -74,7 +131,7 @@ class SettingsController {
   }
 
   void _syncWithRust() {
-    crawler.updateProxyConfig(port: _state.value.proxyPort.toInt());
+    crawler.updateProxyConfig(port: _state.value.proxyPort);
 
     if (isWeb) return;
 

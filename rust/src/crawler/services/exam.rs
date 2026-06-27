@@ -40,11 +40,10 @@ impl ExamService {
             .await?;
         log::info!("ExamService: Query page HTML length={}", query_html.len());
 
-        let term = parse_exam_query_term(&query_html)
-            .unwrap_or_else(|| {
-                log::warn!("ExamService: Could not extract term, using empty string");
-                String::new()
-            });
+        let term = parse_exam_query_term(&query_html).unwrap_or_else(|| {
+            log::warn!("ExamService: Could not extract term, using empty string");
+            String::new()
+        });
         log::info!("ExamService: Using term='{}'", term);
 
         // 3. POST to exam list with the term
@@ -83,7 +82,11 @@ impl ExamService {
         for (i, exam) in record.exams.iter().enumerate() {
             log::info!(
                 "ExamService: Exam[{}] {} - {} - {} - {}",
-                i, exam.course_name, exam.exam_time, exam.location, exam.seat_number
+                i,
+                exam.course_name,
+                exam.exam_time,
+                exam.location,
+                exam.seat_number
             );
         }
 

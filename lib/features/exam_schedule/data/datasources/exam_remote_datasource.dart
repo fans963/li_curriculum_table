@@ -20,13 +20,17 @@ class ExamRemoteDataSource {
       print('[ExamRemote] Rust returned ${rustExams.length} exams');
     }
 
-    return rustExams.map((e) => ExamEntity(
-      session: e.session,
-      courseCode: e.courseCode,
-      courseName: e.courseName,
-      examTime: e.examTime,
-      location: e.location,
-      seatNumber: e.seatNumber,
-    )).toList();
+    return rustExams
+        .map(
+          (e) => ExamEntity(
+            session: e.session,
+            courseCode: e.courseCode,
+            courseName: e.courseName,
+            examTime: e.examTime,
+            location: e.location,
+            seatNumber: e.seatNumber,
+          ),
+        )
+        .toList();
   }
 }

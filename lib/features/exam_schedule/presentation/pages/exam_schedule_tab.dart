@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -10,28 +11,82 @@ import '../state/exam_controller.dart';
 import '../../domain/models/exam.dart';
 import 'exam_schedule_cupertino.dart';
 
-class ExamScheduleTab extends StatelessWidget {
+class ExamScheduleTab extends SignalStatefulWidget {
   const ExamScheduleTab({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      final state = sl<ExamController>().state.value;
-      final isCupertino = AdaptiveStyle.isCupertino(
-        sl<SettingsController>().designStyle.value,
-      );
+  State<ExamScheduleTab> createState() => _ExamScheduleTabState();
+}
 
-      if (isCupertino) {
-        return buildExamScheduleCupertino(context, state);
-      }
-      return _buildMaterial(context, state);
-    });
+class _ExamScheduleTabState extends State<ExamScheduleTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    final state = sl<ExamController>().state.value;
+    final isCupertino = AdaptiveStyle.isCupertino(
+      sl<SettingsController>().designStyle.value,
+    );
+
+    if (isCupertino) {
+      return buildExamScheduleCupertino(context, state);
+    }
+    return _buildMaterial(context, state);
   }
 
   Widget _buildMaterial(BuildContext context, ExamState state) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('考试安排')),
-      body: _buildBody(context, state),
+    final cs = Theme.of(context).colorScheme;
+    return ColoredBox(
+      color: cs.surface,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildCompactHeader(context, state),
+            Expanded(child: _buildBody(context, state)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCompactHeader(BuildContext context, ExamState state) {
+    final cs = Theme.of(context).colorScheme;
+    final upcoming = state.exams.where((e) => !e.isExpired).length;
+    final total = state.exams.length;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '考试安排',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+          const Spacer(),
+          if (total > 0)
+            Text(
+              '$upcoming 场待考 / $total 场',
+              style: TextStyle(fontSize: 12, color: cs.outline),
+            ),
+        ],
+      ),
     );
   }
 
@@ -42,7 +97,10 @@ class ExamScheduleTab extends StatelessWidget {
       switchOutCurve: kDefaultAnimationCurve,
       child: () {
         if (state.isLoading && state.exams.isEmpty) {
-          return const Center(key: ValueKey('loading'), child: CircularProgressIndicator());
+          return Center(
+            key: const ValueKey('loading'),
+            child: LoadingIndicatorM3E(),
+          );
         }
 
         if (state.needsLogin) {
@@ -51,7 +109,11 @@ class ExamScheduleTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(AppIcons.lock(sl<SettingsController>().designStyle.value), size: 64, color: Theme.of(context).colorScheme.outline),
+                Icon(
+                  AppIcons.lock(sl<SettingsController>().designStyle.value),
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 const SizedBox(height: 16),
                 const Text('需要登录后才能查询考试安排'),
                 const SizedBox(height: 8),
@@ -70,7 +132,6 @@ class ExamScheduleTab extends StatelessWidget {
           return const Center(key: ValueKey('empty'), child: Text('暂无考试安排'));
         }
 
-        // Sort: upcoming first (by date asc), then expired (by date desc)
         final sorted = List<ExamEntity>.from(state.filteredExams);
         sorted.sort((a, b) {
           final aExpired = a.isExpired;
@@ -96,7 +157,6 @@ class ExamScheduleTab extends StatelessWidget {
                 itemCount: sorted.length,
                 itemBuilder: (context, index) {
                   final exam = sorted[index];
-                  // Show section header when transitioning from upcoming to expired
                   if (index == upcoming.length && expired.isNotEmpty) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,10 +182,15 @@ class ExamScheduleTab extends StatelessWidget {
       child: TextField(
         decoration: InputDecoration(
           hintText: '搜索课程名称...',
-          prefixIcon: Icon(AppIcons.search(sl<SettingsController>().designStyle.value)),
+          prefixIcon: Icon(
+            AppIcons.search(sl<SettingsController>().designStyle.value),
+          ),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           isDense: true,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 12,
+          ),
         ),
         onChanged: (val) => sl<ExamController>().setSearchQuery(val),
       ),
@@ -140,19 +205,9 @@ class ExamScheduleTab extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
         children: [
-          _buildCountBadge(
-            context,
-            '$upcoming',
-            '场待考',
-            colorScheme.primary,
-          ),
+          _buildCountBadge(context, '$upcoming', '场待考', colorScheme.primary),
           const SizedBox(width: 12),
-          _buildCountBadge(
-            context,
-            '$expired',
-            '场已结束',
-            colorScheme.outline,
-          ),
+          _buildCountBadge(context, '$expired', '场已结束', colorScheme.outline),
           const Spacer(),
           Text(
             '共 ${upcoming + expired} 场考试',
@@ -165,7 +220,12 @@ class ExamScheduleTab extends StatelessWidget {
     );
   }
 
-  Widget _buildCountBadge(BuildContext context, String count, String label, Color color) {
+  Widget _buildCountBadge(
+    BuildContext context,
+    String count,
+    String label,
+    Color color,
+  ) {
     final theme = Theme.of(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -245,7 +305,6 @@ class _ExamCard extends StatelessWidget {
     final daysLeft = exam.daysRemaining;
     final ds = sl<SettingsController>().designStyle.value;
 
-    // Determine accent color based on urgency
     Color accentColor;
     if (isExpired) {
       accentColor = colorScheme.outline;
@@ -287,26 +346,21 @@ class _ExamCard extends StatelessWidget {
           child: IntrinsicHeight(
             child: Row(
               children: [
-                // Left accent bar
                 Container(
                   width: 4,
                   decoration: BoxDecoration(
-                    color: isExpired
-                        ? colorScheme.outlineVariant
-                        : accentColor,
+                    color: isExpired ? colorScheme.outlineVariant : accentColor,
                     borderRadius: const BorderRadius.horizontal(
                       left: Radius.circular(16),
                     ),
                   ),
                 ),
-                // Main content
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top row: course name + countdown badge
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -316,20 +370,24 @@ class _ExamCard extends StatelessWidget {
                                 children: [
                                   Text(
                                     exam.courseName,
-                                    style: theme.textTheme.titleMedium?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: isExpired
-                                          ? colorScheme.onSurfaceVariant.withValues(alpha: 0.75)
-                                          : colorScheme.onSurface,
-                                      fontSize: 16,
-                                    ),
+                                    style: theme.textTheme.titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: isExpired
+                                              ? colorScheme.onSurfaceVariant
+                                                    .withValues(alpha: 0.75)
+                                              : colorScheme.onSurface,
+                                          fontSize: 16,
+                                        ),
                                   ),
                                   const SizedBox(height: 3),
                                   Text(
                                     exam.courseCode,
                                     style: theme.textTheme.bodySmall?.copyWith(
                                       color: isExpired
-                                          ? colorScheme.outline.withValues(alpha: 0.6)
+                                          ? colorScheme.outline.withValues(
+                                              alpha: 0.6,
+                                            )
                                           : colorScheme.outline,
                                       fontSize: 11,
                                     ),
@@ -338,11 +396,15 @@ class _ExamCard extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _buildCountdownBadge(context, accentColor, isExpired, isToday),
+                            _buildCountdownBadge(
+                              context,
+                              accentColor,
+                              isExpired,
+                              isToday,
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
-                        // Info rows
                         _buildInfoRow(
                           context,
                           AppIcons.calendar(ds),
@@ -410,9 +472,7 @@ class _ExamCard extends StatelessWidget {
           Text(
             text,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: isExpired
-                  ? colorScheme.outline
-                  : accentColor,
+              color: isExpired ? colorScheme.outline : accentColor,
               fontWeight: FontWeight.w700,
               fontSize: 11,
             ),

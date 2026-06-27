@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 /// Color scheme generation type (M3 color harmonization).
@@ -124,6 +125,30 @@ class AppSettings {
   final bool useDynamicColor;
   final DesignStyle designStyle;
   final ColorSchemeType colorSchemeType;
+  final bool enableBookCover;
+
+  /// Current semester identifier, e.g. "2025-2026-1". Empty string means unset.
+  final String currentTerm;
+
+  /// Whether to use AutoSizeText for timetable cell text (course name & location).
+  final bool autoSizeText;
+
+  /// Minimum font size when [autoSizeText] is ON.
+  final double autoSizeMinFontSize;
+
+  /// Max lines for course name & location when [autoSizeText] is OFF.
+  final int timetableTextMaxLines;
+
+  /// Font size for course name when [autoSizeText] is OFF.
+  final double timetableTextFontSize;
+
+  /// Number of days to show simultaneously in the timetable week view.
+  /// Only effective when [weeklyScroll] is false (free scrolling mode).
+  /// Default is 7 (full week).
+  final int daysVisibleCount;
+
+  /// Whether the user has accepted the terms of service.
+  final bool termsAccepted;
 
   const AppSettings({
     required this.proxyEnabled,
@@ -134,18 +159,39 @@ class AppSettings {
     required this.useDynamicColor,
     this.designStyle = DesignStyle.system,
     this.colorSchemeType = ColorSchemeType.tonalSpot,
+    required this.enableBookCover,
+    this.currentTerm = '',
+    this.autoSizeText = true,
+    this.autoSizeMinFontSize = 6.0,
+    this.timetableTextMaxLines = 2,
+    this.timetableTextFontSize =
+        11.0, // overridden on mobile in defaultSettings()
+    this.daysVisibleCount = 7,
+    this.termsAccepted = false,
   });
 
   factory AppSettings.defaultSettings() {
-    return const AppSettings(
+    final isMobile =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    return AppSettings(
       proxyEnabled: false,
       proxyPort: 9999,
       weeklyScroll: false,
       themeMode: ThemeMode.system,
-      seedColor: Color(0xFF0A7C6D),
+      seedColor: const Color(0xFF0A7C6D),
       useDynamicColor: true,
       designStyle: DesignStyle.system,
       colorSchemeType: ColorSchemeType.tonalSpot,
+      enableBookCover: false,
+      currentTerm: '',
+      autoSizeText: !isMobile,
+      autoSizeMinFontSize: 6.0,
+      timetableTextMaxLines: isMobile ? 3 : 2,
+      timetableTextFontSize: isMobile ? 8.0 : 11.0,
+      daysVisibleCount: 7,
+      termsAccepted: false,
     );
   }
 
@@ -158,6 +204,14 @@ class AppSettings {
     bool? useDynamicColor,
     DesignStyle? designStyle,
     ColorSchemeType? colorSchemeType,
+    bool? enableBookCover,
+    String? currentTerm,
+    bool? autoSizeText,
+    double? autoSizeMinFontSize,
+    int? timetableTextMaxLines,
+    double? timetableTextFontSize,
+    int? daysVisibleCount,
+    bool? termsAccepted,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -168,6 +222,16 @@ class AppSettings {
       useDynamicColor: useDynamicColor ?? this.useDynamicColor,
       designStyle: designStyle ?? this.designStyle,
       colorSchemeType: colorSchemeType ?? this.colorSchemeType,
+      enableBookCover: enableBookCover ?? this.enableBookCover,
+      currentTerm: currentTerm ?? this.currentTerm,
+      autoSizeText: autoSizeText ?? this.autoSizeText,
+      autoSizeMinFontSize: autoSizeMinFontSize ?? this.autoSizeMinFontSize,
+      timetableTextMaxLines:
+          timetableTextMaxLines ?? this.timetableTextMaxLines,
+      timetableTextFontSize:
+          timetableTextFontSize ?? this.timetableTextFontSize,
+      daysVisibleCount: daysVisibleCount ?? this.daysVisibleCount,
+      termsAccepted: termsAccepted ?? this.termsAccepted,
     );
   }
 }

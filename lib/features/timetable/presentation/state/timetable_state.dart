@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
 
 part 'timetable_state.freezed.dart';
@@ -16,6 +17,7 @@ abstract class TimetableState with _$TimetableState {
     DateTime? termStartMonday,
     TimetableData? data,
     @Default(false) bool needsLogin,
+    @Default([]) List<ScheduleEvent> scheduleEvents,
   }) = _TimetableState;
 }
 
@@ -28,4 +30,3 @@ const initialTimetableState = TimetableState(
   minWeek: 1,
   maxWeek: 18,
 );
-

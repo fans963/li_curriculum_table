@@ -1,4 +1,14 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class SecureStorageException implements Exception {
+  final String message;
+  final Object? cause;
+  SecureStorageException(this.message, [this.cause]);
+
+  @override
+  String toString() => 'SecureStorageException: $message';
+}
 
 class SecureStorageStore {
   SecureStorageStore(this._storage);
@@ -6,31 +16,74 @@ class SecureStorageStore {
   final FlutterSecureStorage _storage;
 
   Future<Map<String, String?>> readAll(List<String> keys) async {
-    final result = <String, String?>{};
-    for (final key in keys) {
-      result[key] = await _storage.read(key: key);
+    try {
+      final result = <String, String?>{};
+      for (final key in keys) {
+        result[key] = await _storage.read(key: key);
+      }
+      return result;
+    } catch (e) {
+      debugPrint('SecureStorageStore.readAll error: $e');
+      throw SecureStorageException('Failed to read from secure storage', e);
     }
-    return result;
   }
 
   Future<void> writeAll(Map<String, String> values) async {
-    for (final entry in values.entries) {
-      await _storage.write(key: entry.key, value: entry.value);
+    try {
+      for (final entry in values.entries) {
+        await _storage.write(key: entry.key, value: entry.value);
+      }
+    } catch (e) {
+      debugPrint('SecureStorageStore.writeAll error: $e');
+      throw SecureStorageException('Failed to write to secure storage', e);
     }
   }
 
   Future<void> deleteAll(List<String> keys) async {
-    for (final key in keys) {
-      await _storage.delete(key: key);
+    try {
+      for (final key in keys) {
+        await _storage.delete(key: key);
+      }
+    } catch (e) {
+      debugPrint('SecureStorageStore.deleteAll error: $e');
+      throw SecureStorageException('Failed to delete from secure storage', e);
     }
   }
 
   Future<void> deleteAllExcept(List<String> preservedKeys) async {
-    final allEntries = await _storage.readAll();
-    for (final key in allEntries.keys) {
-      if (!preservedKeys.contains(key)) {
-        await _storage.delete(key: key);
+    try {
+      final preservedSet = preservedKeys.toSet();
+      final allEntries = await _storage.readAll();
+      for (final key in allEntries.keys) {
+        if (!preservedSet.contains(key)) {
+          await _storage.delete(key: key);
+        }
       }
+    } catch (e) {
+      debugPrint('SecureStorageStore.deleteAllExcept error: $e');
+      throw SecureStorageException('Failed to clean secure storage', e);
+    }
+  }
+
+  /// Read every key-value pair stored in secure storage.
+  Future<Map<String, String>> readAllEntries() async {
+    try {
+      return await _storage.readAll();
+    } catch (e) {
+      debugPrint('SecureStorageStore.readAllEntries error: $e');
+      throw SecureStorageException('Failed to read all entries', e);
+    }
+  }
+
+  /// Import a map of key-value pairs, overwriting existing values.
+  Future<void> importAll(Map<String, String> entries) async {
+    try {
+      for (final entry in entries.entries) {
+        await _storage.write(key: entry.key, value: entry.value);
+      }
+    } catch (e) {
+      debugPrint('SecureStorageStore.importAll error: $e');
+      throw SecureStorageException('Failed to import entries', e);
     }
   }
 }

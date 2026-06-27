@@ -26,23 +26,3 @@ SectionClock? startClockOfSection(int section) {
 SectionClock? endClockOfSection(int section) {
   return sectionTimeMapping[section]?.end;
 }
-
-double get timetableDisplayStartHour {
-  final values = sectionTimeMapping.values;
-  if (values.isEmpty) {
-    return 8;
-  }
-  return values
-      .map((range) => range.start.$1 + range.start.$2 / 60)
-      .reduce((a, b) => a < b ? a : b);
-}
-
-double get timetableDisplayEndHour {
-  final values = sectionTimeMapping.values;
-  if (values.isEmpty) {
-    return 22;
-  }
-  return values
-      .map((range) => range.end.$1 + range.end.$2 / 60)
-      .reduce((a, b) => a > b ? a : b);
-}

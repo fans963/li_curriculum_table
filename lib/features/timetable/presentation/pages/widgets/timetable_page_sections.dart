@@ -1,29 +1,88 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:m3e_core/m3e_core.dart';
+import 'package:signals/signals_flutter.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 
-class TimetableControlPanel extends StatelessWidget {
+class TimetableControlPanel extends SignalStatefulWidget {
   const TimetableControlPanel({
     super.key,
     required this.usernameController,
     required this.passwordController,
-    required this.isLoading,
-    required this.currentTeachingWeek,
-    required this.termStartMonday,
     required this.onTermStartDateChanged,
+    required this.onCurrentTermChanged,
     this.onLoginPressed,
   });
 
   final TextEditingController usernameController;
   final TextEditingController passwordController;
-  final bool isLoading;
-  final int currentTeachingWeek;
-  final DateTime? termStartMonday;
   final ValueChanged<DateTime> onTermStartDateChanged;
+  final ValueChanged<String> onCurrentTermChanged;
   final VoidCallback? onLoginPressed;
+
+  @override
+  State<TimetableControlPanel> createState() => _TimetableControlPanelState();
+}
+
+class _TimetableControlPanelState extends State<TimetableControlPanel> {
+  late final TextEditingController _termStartController;
+  late final EffectCleanup _syncTermStart;
+
+  @override
+  void initState() {
+    super.initState();
+    final timetableCtrl = sl<TimetableController>();
+
+    _termStartController = TextEditingController(
+      text: _formatTermStart(timetableCtrl.termStartMonday.value),
+    );
+
+    // Reactively sync term start date display from signal
+    _syncTermStart = effect(() {
+      final newText = _formatTermStart(timetableCtrl.termStartMonday.value);
+      if (_termStartController.text != newText) {
+        _termStartController.text = newText;
+      }
+    });
+  }
+
+  String _formatTermStart(DateTime? date) =>
+      date != null ? DateFormat('yyyy-MM-dd').format(date) : '未设置';
+
+  @override
+  void dispose() {
+    _syncTermStart();
+    _termStartController.dispose();
+    super.dispose();
+  }
+
+  List<String> _getSemesterOptions() {
+    final now = DateTime.now();
+    final int currentStartYear = now.month >= 9 ? now.year : now.year - 1;
+    final List<String> options = [];
+    for (int y = currentStartYear + 1; y >= currentStartYear - 4; y--) {
+      options.add('$y-${y + 1}-3');
+      options.add('$y-${y + 1}-2');
+      options.add('$y-${y + 1}-1');
+    }
+    return options;
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final state = sl<TimetableController>().state.value;
+    final settingsCtrl = sl<SettingsController>();
+    final options = _getSemesterOptions();
+    final currentTerm = settingsCtrl.currentTerm.value;
+    if (currentTerm.isNotEmpty && !options.contains(currentTerm)) {
+      options.insert(0, currentTerm);
+    }
 
     return Card(
       elevation: 0,
@@ -39,8 +98,8 @@ class TimetableControlPanel extends StatelessWidget {
         child: Column(
           children: [
             TextField(
-              controller: usernameController,
-              enabled: !isLoading,
+              controller: widget.usernameController,
+              enabled: !state.isLoading,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
                 labelText: '教务系统账号',
@@ -52,8 +111,8 @@ class TimetableControlPanel extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextField(
-              controller: passwordController,
-              enabled: !isLoading,
+              controller: widget.passwordController,
+              enabled: !state.isLoading,
               obscureText: true,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
@@ -64,41 +123,48 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
             ),
-            if (onLoginPressed != null) ...[
+            if (widget.onLoginPressed != null) ...[
               const SizedBox(height: 12),
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: FilledButton.icon(
-                  icon: isLoading
-                      ? const SizedBox(
+                child: M3EFilledButton.icon(
+                  icon: state.isLoading
+                      ? SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
+                          child: LoadingIndicatorM3E(
+                            color: colorScheme.onPrimary,
                           ),
                         )
                       : const Icon(Icons.cloud_sync_rounded),
-                  label: Text(isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息'),
-                  onPressed: isLoading ? null : onLoginPressed,
+                  label: AutoSizeText(
+                    state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息',
+                    maxLines: 1,
+                  ),
+                  size: M3EButtonSize.lg,
+                  shape: M3EButtonShape.round,
+                  onPressed: state.isLoading ? null : widget.onLoginPressed,
                 ),
               ),
             ],
             const SizedBox(height: 12),
+            _TermDropdown(
+              options: options,
+              currentTerm: currentTerm,
+              isLoading: state.isLoading,
+              onSelected: widget.onCurrentTermChanged,
+            ),
+            const SizedBox(height: 12),
             TextFormField(
               readOnly: true,
-              controller: TextEditingController(
-                text: termStartMonday != null
-                    ? DateFormat('yyyy-MM-dd').format(termStartMonday!)
-                    : '未设置',
-              ),
-              enabled: !isLoading,
+              controller: _termStartController,
+              enabled: !state.isLoading,
               decoration: InputDecoration(
                 labelText: '本学期开学日期',
                 prefixIcon: const Icon(Icons.calendar_month_outlined),
                 suffixIcon: const Icon(Icons.edit_calendar_outlined, size: 20),
-                helperText: '当前推算为第 $currentTeachingWeek 周',
+                helperText: '当前推算为第 ${state.currentTeachingWeek} 周',
                 helperStyle: TextStyle(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
@@ -107,7 +173,9 @@ class TimetableControlPanel extends StatelessWidget {
                 fillColor: colorScheme.surface,
               ),
               onTap: () async {
-                final initialDate = termStartMonday ?? DateTime.now();
+                final termStart =
+                    sl<TimetableController>().termStartMonday.value;
+                final initialDate = termStart ?? DateTime.now();
                 final pickedDate = await showDatePicker(
                   context: context,
                   initialDate: initialDate,
@@ -116,7 +184,7 @@ class TimetableControlPanel extends StatelessWidget {
                   helpText: '选择开学日期 (第一周周一)',
                 );
                 if (pickedDate != null) {
-                  onTermStartDateChanged(pickedDate);
+                  widget.onTermStartDateChanged(pickedDate);
                 }
               },
             ),
@@ -171,7 +239,7 @@ class TimetableStatusBanner extends StatelessWidget {
               const SizedBox(
                 width: 18,
                 height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
+                child: LoadingIndicatorM3E(),
               )
             else
               Icon(
@@ -202,71 +270,116 @@ class TimetableStatusBanner extends StatelessWidget {
   }
 }
 
-class TimetableSummaryItem {
-  const TimetableSummaryItem({required this.label, required this.value});
+class _TermDropdown extends StatefulWidget {
+  final List<String> options;
+  final String currentTerm;
+  final bool isLoading;
+  final ValueChanged<String> onSelected;
 
-  final String label;
-  final String value;
-}
-
-class TimetableSummaryChip extends StatelessWidget {
-  const TimetableSummaryChip({
-    super.key,
-    required this.label,
-    required this.value,
+  const _TermDropdown({
+    required this.options,
+    required this.currentTerm,
+    required this.isLoading,
+    required this.onSelected,
   });
 
-  final String label;
-  final String value;
-
   @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-          children: [
-            TextSpan(text: '$label: '),
-            TextSpan(
-              text: value,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  State<_TermDropdown> createState() => _TermDropdownState();
 }
 
-class TimetableEmptyCalendarTip extends StatelessWidget {
-  const TimetableEmptyCalendarTip({super.key});
+class _TermDropdownState extends State<_TermDropdown> {
+  late final M3EDropdownController<String> _controller;
+  final _syncing = ValueNotifier(false);
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = M3EDropdownController<String>();
+    _controller.initialize();
+    _syncItems();
+  }
+
+  @override
+  void didUpdateWidget(_TermDropdown old) {
+    super.didUpdateWidget(old);
+    if (old.options != widget.options ||
+        old.currentTerm != widget.currentTerm) {
+      _syncItems();
+    }
+  }
+
+  void _syncItems() {
+    _syncing.value = true;
+    _controller.setItems(
+      widget.options
+          .map(
+            (opt) => M3EDropdownItem(
+              label: opt,
+              value: opt,
+              selected: opt == widget.currentTerm,
+            ),
+          )
+          .toList(),
+    );
+    if (widget.currentTerm.isNotEmpty) {
+      _controller.selectWhere((item) => item.value == widget.currentTerm);
+    }
+    _syncing.value = false;
+  }
+
+  @override
+  void dispose() {
+    _syncing.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.event_note, size: 34, color: Colors.grey.shade500),
-          const SizedBox(height: 8),
-          Text('暂无课表数据', style: textTheme.titleMedium),
-          const SizedBox(height: 4),
-          Text('请先输入账号密码并执行抓取。', style: textTheme.bodySmall),
-        ],
-      ),
+    final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        M3EDropdownMenu<String>(
+          singleSelect: true,
+          showChipAnimation: false,
+          items: const [],
+          controller: _controller,
+          enabled: !widget.isLoading,
+          onSelectionChanged: (items) {
+            if (!_syncing.value && items.isNotEmpty) {
+              widget.onSelected(items.first.value);
+            }
+          },
+          containerRadius: 16,
+          fieldStyle: M3EDropdownFieldStyle(
+            hintText: '当前学期',
+            prefixIcon: Icon(AppIcons.school(ds), size: 18),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            border: BorderSide(color: cs.outlineVariant, width: 0.5),
+            focusedBorder: BorderSide(color: cs.primary, width: 1),
+            borderRadius: BorderRadius.circular(12),
+            selectedBorderRadius: 12,
+          ),
+          dropdownStyle: M3EDropdownStyle(maxHeight: 300, containerRadius: 16),
+          itemStyle: M3EDropdownItemStyle(
+            outerRadius: 12,
+            innerRadius: 6,
+            selectedIcon: Icon(Icons.check, size: 18, color: cs.primary),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 16, top: 4),
+          child: Text(
+            '格式: 学年-学期 (1秋季 2春季 3暑期小学期)',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

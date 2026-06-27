@@ -1,5 +1,4 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
 /// Resolves the effective [DesignStyle] at runtime.
@@ -12,8 +11,8 @@ class AdaptiveStyle {
   /// Returns the concrete style for the given [setting].
   static DesignStyle resolve(DesignStyle setting) {
     if (setting != DesignStyle.system) return setting;
-    if (kIsWeb) return DesignStyle.material;
-    return Platform.isIOS || Platform.isMacOS
+    return defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS
         ? DesignStyle.cupertino
         : DesignStyle.material;
   }

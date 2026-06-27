@@ -13,14 +13,34 @@ class SecureSettingsLocalDataSource {
   static const _kUseDynamicColor = 'use_dynamic_color';
   static const _kDesignStyle = 'design_style';
   static const _kColorSchemeType = 'color_scheme_type';
-
+  static const _kEnableBookCover = 'enable_book_cover';
+  static const _kCurrentTerm = 'current_term';
+  static const _kAutoSizeText = 'auto_size_text';
+  static const _kAutoSizeMinFontSize = 'auto_size_min_font_size';
+  static const _kTimetableTextMaxLines = 'timetable_text_max_lines';
+  static const _kTimetableTextFontSize = 'timetable_text_font_size';
+  static const _kDaysVisibleCount = 'days_visible_count';
+  static const _kTermsAccepted = 'terms_accepted';
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
     final data = await _store.readAll([
-      _kProxyEnabled, _kProxyPort, _kWeeklyScroll,
-      _kThemeMode, _kSeedColor, _kUseDynamicColor,
-      _kDesignStyle, _kColorSchemeType,
+      _kProxyEnabled,
+      _kProxyPort,
+      _kWeeklyScroll,
+      _kThemeMode,
+      _kSeedColor,
+      _kUseDynamicColor,
+      _kDesignStyle,
+      _kColorSchemeType,
+      _kEnableBookCover,
+      _kCurrentTerm,
+      _kAutoSizeText,
+      _kAutoSizeMinFontSize,
+      _kTimetableTextMaxLines,
+      _kTimetableTextFontSize,
+      _kDaysVisibleCount,
+      _kTermsAccepted,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -31,7 +51,9 @@ class SecureSettingsLocalDataSource {
       (e) => e.name == data[_kThemeMode],
       orElse: () => ThemeMode.system,
     );
-    final seedColor = Color(int.tryParse(data[_kSeedColor] ?? '') ?? 0xFF0A7C6D);
+    final seedColor = Color(
+      int.tryParse(data[_kSeedColor] ?? '') ?? 0xFF0A7C6D,
+    );
     final useDynamic = data[_kUseDynamicColor] != 'false'; // default true
     final designStyle = DesignStyle.values.firstWhere(
       (e) => e.name == data[_kDesignStyle],
@@ -41,6 +63,17 @@ class SecureSettingsLocalDataSource {
       (e) => e.name == data[_kColorSchemeType],
       orElse: () => ColorSchemeType.tonalSpot,
     );
+    final enableBookCover = data[_kEnableBookCover] == 'true'; // default false
+    final currentTerm = data[_kCurrentTerm] ?? '';
+    final autoSizeText = data[_kAutoSizeText] != 'false'; // default true
+    final autoSizeMinFontSize =
+        double.tryParse(data[_kAutoSizeMinFontSize] ?? '') ?? 6.0;
+    final timetableTextMaxLines =
+        int.tryParse(data[_kTimetableTextMaxLines] ?? '') ?? 2;
+    final timetableTextFontSize =
+        double.tryParse(data[_kTimetableTextFontSize] ?? '') ?? 11.0;
+    final daysVisibleCount = int.tryParse(data[_kDaysVisibleCount] ?? '7') ?? 7;
+    final termsAccepted = data[_kTermsAccepted] == 'true'; // default false
 
     return AppSettings(
       proxyEnabled: enabled,
@@ -51,6 +84,14 @@ class SecureSettingsLocalDataSource {
       useDynamicColor: useDynamic,
       designStyle: designStyle,
       colorSchemeType: colorSchemeType,
+      enableBookCover: enableBookCover,
+      currentTerm: currentTerm,
+      autoSizeText: autoSizeText,
+      autoSizeMinFontSize: autoSizeMinFontSize,
+      timetableTextMaxLines: timetableTextMaxLines,
+      timetableTextFontSize: timetableTextFontSize,
+      daysVisibleCount: daysVisibleCount,
+      termsAccepted: termsAccepted,
     );
   }
 
@@ -64,6 +105,14 @@ class SecureSettingsLocalDataSource {
       _kUseDynamicColor: settings.useDynamicColor.toString(),
       _kDesignStyle: settings.designStyle.name,
       _kColorSchemeType: settings.colorSchemeType.name,
+      _kEnableBookCover: settings.enableBookCover.toString(),
+      _kCurrentTerm: settings.currentTerm,
+      _kAutoSizeText: settings.autoSizeText.toString(),
+      _kAutoSizeMinFontSize: settings.autoSizeMinFontSize.toString(),
+      _kTimetableTextMaxLines: settings.timetableTextMaxLines.toString(),
+      _kTimetableTextFontSize: settings.timetableTextFontSize.toString(),
+      _kDaysVisibleCount: settings.daysVisibleCount.toString(),
+      _kTermsAccepted: settings.termsAccepted.toString(),
     });
   }
 }
@@ -77,5 +126,6 @@ class SettingsRepositoryImpl implements SettingsRepository {
   Future<AppSettings> loadSettings() => _localDataSource.loadSettings();
 
   @override
-  Future<void> saveSettings(AppSettings settings) => _localDataSource.saveSettings(settings);
+  Future<void> saveSettings(AppSettings settings) =>
+      _localDataSource.saveSettings(settings);
 }

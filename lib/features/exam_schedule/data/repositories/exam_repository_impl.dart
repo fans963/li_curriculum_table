@@ -24,7 +24,7 @@ class ExamRepositoryImpl implements ExamRepository {
 
     if (!forceRefresh) {
       final cached = await _localDataSource.readExams();
-      if (cached != null && cached.isNotEmpty) {
+      if (cached != null) {
         if (kDebugMode) {
           print('[ExamRepo] Returning ${cached.length} cached exams');
         }

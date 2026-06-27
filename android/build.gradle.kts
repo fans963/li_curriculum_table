@@ -1,10 +1,13 @@
 allprojects {
     repositories {
+        val isCi = System.getenv("CI") != null
+        if (!isCi) {
+            // Fallback mirrors for faster downloads in China
+            maven { url = uri("https://maven.aliyun.com/repository/google") }
+            maven { url = uri("https://maven.aliyun.com/repository/public") }
+        }
         google()
         mavenCentral()
-        // Fallback mirrors for faster downloads in China
-        maven { url = uri("https://maven.aliyun.com/repository/google") }
-        maven { url = uri("https://maven.aliyun.com/repository/public") }
     }
 }
 

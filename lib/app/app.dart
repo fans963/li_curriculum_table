@@ -7,13 +7,14 @@ import 'package:li_curriculum_table/features/navigation/presentation/pages/main_
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:m3e_design/m3e_design.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 
 const bool isWeb = kIsWeb;
 
-class CurriculumTableApp extends StatelessWidget {
+class CurriculumTableApp extends SignalWidget {
   const CurriculumTableApp({super.key});
 
   ThemeData _buildTheme({
@@ -38,7 +39,8 @@ class CurriculumTableApp extends StatelessWidget {
       error: scheme.error,
     );
 
-    // M3 Expressive: bolder shapes, more vibrant colors, expressive radii
+    // M3 Expressive: bolder shapes, deeper tonal palettes, expressive radii
+    // Shape tokens: large=20, xLarge=28, xxLarge=32 per M3 Expressive spec
     final subThemes = FlexSubThemesData(
       defaultRadius: 28,
       blendOnLevel: 10,
@@ -53,17 +55,20 @@ class CurriculumTableApp extends StatelessWidget {
       inputDecoratorBackgroundAlpha: 5,
       navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
       navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      // Expressive shape hierarchy: cards & dialogs get xxLarge (32)
       cardRadius: 28,
-      popupMenuRadius: 16,
-      dialogRadius: 28,
-      timePickerDialogRadius: 16,
+      dialogRadius: 32,
+      popupMenuRadius: 20,
+      timePickerDialogRadius: 20,
+      // Buttons: large (20) per expressive spec
       chipRadius: 20,
       elevatedButtonRadius: 20,
       filledButtonRadius: 20,
       outlinedButtonRadius: 20,
       textButtonRadius: 20,
       segmentedButtonRadius: 20,
-      snackBarRadius: 16,
+      fabRadius: 28,
+      snackBarRadius: 20,
       appBarBackgroundSchemeColor: SchemeColor.surface,
       tabBarIndicatorSchemeColor: SchemeColor.primary,
     );
@@ -71,35 +76,37 @@ class CurriculumTableApp extends StatelessWidget {
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
     const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
-    return brightness == Brightness.dark
-        ? FlexThemeData.dark(
-            colors: colors,
-            fontFamily: webFontFamily,
-            useMaterial3: true,
-            swapLegacyOnMaterial3: true,
-            visualDensity: FlexColorScheme.comfortablePlatformDensity,
-            subThemesData: subThemes,
-            keyColors: const FlexKeyColors(
-              useSecondary: true,
-              useTertiary: true,
-              keepPrimary: true,
+    return withM3ETheme(
+      brightness == Brightness.dark
+          ? FlexThemeData.dark(
+              colors: colors,
+              fontFamily: webFontFamily,
+              useMaterial3: true,
+              swapLegacyOnMaterial3: true,
+              visualDensity: FlexColorScheme.comfortablePlatformDensity,
+              subThemesData: subThemes,
+              keyColors: const FlexKeyColors(
+                useSecondary: true,
+                useTertiary: true,
+                keepPrimary: true,
+              ),
+              tones: _flexTones(colorSchemeType, Brightness.dark),
+            )
+          : FlexThemeData.light(
+              colors: colors,
+              fontFamily: webFontFamily,
+              useMaterial3: true,
+              swapLegacyOnMaterial3: true,
+              visualDensity: FlexColorScheme.comfortablePlatformDensity,
+              subThemesData: subThemes,
+              keyColors: const FlexKeyColors(
+                useSecondary: true,
+                useTertiary: true,
+                keepPrimary: true,
+              ),
+              tones: _flexTones(colorSchemeType, Brightness.light),
             ),
-            tones: _flexTones(colorSchemeType, Brightness.dark),
-          )
-        : FlexThemeData.light(
-            colors: colors,
-            fontFamily: webFontFamily,
-            useMaterial3: true,
-            swapLegacyOnMaterial3: true,
-            visualDensity: FlexColorScheme.comfortablePlatformDensity,
-            subThemesData: subThemes,
-            keyColors: const FlexKeyColors(
-              useSecondary: true,
-              useTertiary: true,
-              keepPrimary: true,
-            ),
-            tones: _flexTones(colorSchemeType, Brightness.light),
-          );
+    );
   }
 
   FlexTones _flexTones(ColorSchemeType type, Brightness brightness) {
@@ -126,10 +133,12 @@ class CurriculumTableApp extends StatelessWidget {
     required Color seedColor,
     ColorScheme? dynamicScheme,
   }) {
-    final scheme = dynamicScheme ??
+    final scheme =
+        dynamicScheme ??
         ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
     final primaryColor = scheme.primary;
 
+    // iOS 26 Liquid Glass typography: monochromatic adaptive, crisp weights
     return CupertinoThemeData(
       brightness: brightness,
       primaryColor: primaryColor,
@@ -153,9 +162,9 @@ class CurriculumTableApp extends StatelessWidget {
           color: primaryColor,
         ),
         tabLabelTextStyle: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w400,
-          letterSpacing: 0.12,
+          fontSize: 10,
+          fontWeight: FontWeight.w500,
+          letterSpacing: 0.06,
           color: brightness == Brightness.dark
               ? CupertinoColors.label.darkColor
               : CupertinoColors.label.color,
@@ -205,59 +214,58 @@ class CurriculumTableApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settingsCtrl = sl<SettingsController>();
+    final settings = settingsCtrl.state.value;
 
-    return SignalBuilder(builder: (context) {
-      final settings = settingsCtrl.state.value;
+    return BetterFeedback(
+      localeOverride: const Locale('zh', 'CN'),
+      child: DynamicColorBuilder(
+        builder: (lightDynamic, darkDynamic) {
+          final ColorScheme? lightScheme = settings.useDynamicColor
+              ? lightDynamic
+              : null;
+          final ColorScheme? darkScheme = settings.useDynamicColor
+              ? darkDynamic
+              : null;
 
-      return BetterFeedback(
-        localeOverride: const Locale('zh', 'CN'),
-        child: DynamicColorBuilder(
-          builder: (lightDynamic, darkDynamic) {
-            final ColorScheme? lightScheme =
-                settings.useDynamicColor ? lightDynamic : null;
-            final ColorScheme? darkScheme =
-                settings.useDynamicColor ? darkDynamic : null;
+          final isDark =
+              settings.themeMode == ThemeMode.dark ||
+              (settings.themeMode == ThemeMode.system &&
+                  MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-            final isDark = settings.themeMode == ThemeMode.dark ||
-                (settings.themeMode == ThemeMode.system &&
-                    MediaQuery.platformBrightnessOf(context) ==
-                        Brightness.dark);
+          final cupertinoTheme = _buildCupertinoTheme(
+            brightness: isDark ? Brightness.dark : Brightness.light,
+            seedColor: settings.seedColor,
+            dynamicScheme: isDark ? darkScheme : lightScheme,
+          );
 
-            final cupertinoTheme = _buildCupertinoTheme(
-              brightness: isDark ? Brightness.dark : Brightness.light,
+          return MaterialApp(
+            title: '',
+            themeMode: settings.themeMode,
+            theme: _buildTheme(
+              brightness: Brightness.light,
               seedColor: settings.seedColor,
-              dynamicScheme: isDark ? darkScheme : lightScheme,
-            );
-
-            return MaterialApp(
-              title: '',
-              themeMode: settings.themeMode,
-              theme: _buildTheme(
-                brightness: Brightness.light,
-                seedColor: settings.seedColor,
-                dynamicScheme: lightScheme,
-                colorSchemeType: settings.colorSchemeType,
-              ),
-              darkTheme: _buildTheme(
-                brightness: Brightness.dark,
-                seedColor: settings.seedColor,
-                dynamicScheme: darkScheme,
-                colorSchemeType: settings.colorSchemeType,
-              ),
-              builder: (context, child) {
-                if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-                  return CupertinoTheme(
-                    data: cupertinoTheme,
-                    child: child!,
-                  );
-                }
-                return child!;
-              },
-              home: const MainScreen(),
-            );
-          },
-        ),
-      );
-    });
+              dynamicScheme: lightScheme,
+              colorSchemeType: settings.colorSchemeType,
+            ),
+            darkTheme: _buildTheme(
+              brightness: Brightness.dark,
+              seedColor: settings.seedColor,
+              dynamicScheme: darkScheme,
+              colorSchemeType: settings.colorSchemeType,
+            ),
+            builder: (context, child) {
+              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
+                return CupertinoTheme(
+                  data: cupertinoTheme,
+                  child: child ?? const SizedBox.shrink(),
+                );
+              }
+              return child ?? const SizedBox.shrink();
+            },
+            home: const MainScreen(),
+          );
+        },
+      ),
+    );
   }
 }

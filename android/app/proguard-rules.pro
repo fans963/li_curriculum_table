@@ -17,13 +17,13 @@
 # Keep data classes used by generated Flutter Rust Bridge code
 -keep class ** implements io.flutter.plugin.common.MethodChannel$MethodCallHandler { *; }
 
-# Kotlin
+# Kotlin runtime — required for plugins
 -keep class kotlin.** { *; }
 -dontwarn kotlin.**
 
-# Keep AndroidX core for share_plus and other plugins
+# AndroidX — required for plugins (share_plus, flutter_secure_storage, etc.)
 -keep class androidx.core.** { *; }
 -dontwarn androidx.core.**
 
-# Keep ONNX Runtime (if used by any Java/Kotlin dependency)
--keep class ai.onnxruntime.** { *; }
+# rustls-platform-verifier JVM component
+-keep, includedescriptorclasses class org.rustls.platformverifier.** { *; }

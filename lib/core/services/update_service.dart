@@ -1,6 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:li_curriculum_table/core/rust/api/update.dart'
+    as rust
+    show checkForUpdate;
 
 class UpdateInfo {
   final String currentVersion;
@@ -32,10 +34,7 @@ class UpdateInfo {
   }
 
   static List<int> _parseVersion(String v) {
-    final parts = v
-        .split('.')
-        .map((e) => int.tryParse(e) ?? 0)
-        .toList();
+    final parts = v.split('.').map((e) => int.tryParse(e) ?? 0).toList();
     // Pad to at least 3 parts: major.minor.patch
     while (parts.length < 3) {
       parts.add(0);
@@ -45,75 +44,50 @@ class UpdateInfo {
 }
 
 class UpdateService {
-  static const _repoOwner = 'fans963';
-  static const _repoName = '--table';
-  static const _apiUrl =
-      'https://api.github.com/repos/$_repoOwner/$_repoName/releases/latest';
-
   /// Avoid hitting GitHub API too often (60 req/h unauthenticated).
   static const _cacheDuration = Duration(minutes: 30);
-
-  final Dio _dio;
 
   // Simple in-memory cache so we don't spam the API on every launch.
   UpdateInfo? _cachedResult;
   DateTime? _lastFetchTime;
 
-  UpdateService({Dio? dio}) : _dio = dio ?? Dio();
-
   /// Returns [UpdateInfo] if successful, or null if the check failed
   /// (network error, API rate limit, etc.).
   /// Results are cached for [_cacheDuration] to avoid rate limiting.
   Future<UpdateInfo?> checkForUpdate() async {
-    // Return cached result if still fresh.
-    if (_cachedResult != null && _lastFetchTime != null) {
-      final age = DateTime.now().difference(_lastFetchTime!);
-      if (age < _cacheDuration) {
-        return _cachedResult;
-      }
-    }
-
     final packageInfo = await PackageInfo.fromPlatform();
     final currentVersion = packageInfo.version;
 
-    try {
-      final response = await _dio.get(
-        _apiUrl,
-        options: Options(
-          headers: {'Accept': 'application/vnd.github.v3+json'},
-          receiveTimeout: const Duration(seconds: 10),
-        ),
-      );
+    // Return cached result if still fresh, but always re-check currentVersion
+    // so we don't report stale version info after an app update.
+    if (_cachedResult != null && _lastFetchTime != null) {
+      final age = DateTime.now().difference(_lastFetchTime!);
+      if (age < _cacheDuration) {
+        if (_cachedResult!.currentVersion != currentVersion) {
+          // App was updated — invalidate cache
+          _cachedResult = null;
+        } else {
+          return _cachedResult;
+        }
+      }
+    }
 
-      final data = response.data as Map<String, dynamic>;
-      final tagName = data['tag_name'] as String? ?? '';
-      final latestVersion = tagName.replaceFirst(RegExp(r'^v'), '');
-      final htmlUrl = data['html_url'] as String? ?? '';
-      final body = data['body'] as String? ?? '';
-      final publishedAt =
-          DateTime.tryParse(data['published_at'] as String? ?? '') ??
-              DateTime.now();
+    try {
+      final data = await rust.checkForUpdate();
 
       _cachedResult = UpdateInfo(
         currentVersion: currentVersion,
-        latestVersion: latestVersion,
-        releaseUrl: htmlUrl,
-        releaseNotes: body,
-        publishedAt: publishedAt,
+        latestVersion: data.latestVersion,
+        releaseUrl: data.releaseUrl,
+        releaseNotes: data.releaseNotes,
+        publishedAt: DateTime.tryParse(data.publishedAt) ?? DateTime.now(),
       );
       _lastFetchTime = DateTime.now();
       return _cachedResult;
-    } on DioException catch (e) {
-      debugPrint('Update check failed (network): ${e.message}');
-      // If rate-limited, try to use stale cache as fallback.
-      if (e.response?.statusCode == 403 || e.response?.statusCode == 429) {
-        debugPrint('GitHub API rate limited, using cached result if available');
-        return _cachedResult;
-      }
-      return null;
     } catch (e) {
-      debugPrint('Update check failed (parse): $e');
-      return _cachedResult; // fall back to stale cache on parse errors too
+      debugPrint('Update check failed: $e');
+      // Fall back to stale cache on any error (network, rate limit, parse)
+      return _cachedResult;
     }
   }
 }

@@ -13,6 +13,8 @@ releases:
             target-platform: android-arm,android-arm64,android-x64
             release: true
             split-per-abi: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: android-arm64-apk
         package:
           platform: android
@@ -22,6 +24,8 @@ releases:
             target-platform: android-arm64
             release: true
             split-per-abi: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: android-arm-apk
         package:
           platform: android
@@ -31,6 +35,8 @@ releases:
             target-platform: android-arm
             release: true
             split-per-abi: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: android-x64-apk
         package:
           platform: android
@@ -40,6 +46,8 @@ releases:
             target-platform: android-x64
             release: true
             split-per-abi: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: ios-ipa
         package:
           platform: ios
@@ -47,36 +55,48 @@ releases:
           build_args:
             export-method: ad-hoc
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: linux-pacman
         package:
           platform: linux
           target: pacman
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: linux-appimage
         package:
           platform: linux
           target: appimage
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: linux-deb
         package:
           platform: linux
           target: deb
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: linux-rpm
         package:
           platform: linux
           target: rpm
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: linux-zip
         package:
           platform: linux
           target: zip
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: macos-dmg
         package:
           platform: macos
@@ -84,33 +104,45 @@ releases:
           build_args:
             dart-define-from-file: env.json
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: macos-pkg
         package:
           platform: macos
           target: pkg
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: macos-zip
         package:
           platform: macos
           target: zip
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: windows-exe
         package:
           platform: windows
           target: exe
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: windows-msix
         package:
           platform: windows
           target: msix
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true
       - name: windows-zip
         package:
           platform: windows
           target: zip
           build_args:
             release: true
+            split-debug-info: build/debug-info
+            tree-shake-icons: true

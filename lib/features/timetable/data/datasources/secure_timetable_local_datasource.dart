@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:isolate';
 
+import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/cached_timetable.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
@@ -26,23 +27,32 @@ class SecureTimetableLocalDataSource {
       return null;
     }
 
-    return await Isolate.run(() {
-      final decoded = jsonDecode(rowsJson);
-      if (decoded is! List) {
-        return null;
-      }
-
-      final rows = <CourseRow>[];
-      for (final entry in decoded) {
-        if (entry is! Map<String, dynamic>) {
+    try {
+      return await Isolate.run(() {
+        final decoded = jsonDecode(rowsJson);
+        if (decoded is! List) {
           return null;
         }
-        final row = CourseRow.fromJson(entry);
-        rows.add(row);
-      }
 
-      return CachedTimetable(rows: rows, cachedAt: cachedAt);
-    });
+        final rows = <CourseRow>[];
+        for (final entry in decoded) {
+          if (entry is! Map<String, dynamic>) {
+            continue; // Skip invalid entries instead of returning null
+          }
+          try {
+            rows.add(CourseRow.fromJson(entry));
+          } catch (e) {
+            // Skip corrupted entries
+            debugPrint('Skipping corrupted timetable entry: $e');
+          }
+        }
+
+        return CachedTimetable(rows: rows, cachedAt: cachedAt);
+      });
+    } catch (e) {
+      debugPrint('Failed to decode cached timetable: $e');
+      return null;
+    }
   }
 
   Future<void> saveCachedTimetable(CachedTimetable cached) async {

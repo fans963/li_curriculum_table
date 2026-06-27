@@ -1,7 +1,17 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_local_datasource.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_remote_datasource.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/data/repositories/level_exam_score_repository_impl.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/domain/repositories/level_exam_score_repository.dart';
+import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_controller.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
+import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
@@ -24,15 +34,18 @@ import 'package:li_curriculum_table/features/grades/data/datasources/grade_remot
 import 'package:li_curriculum_table/features/grades/data/repositories/grade_repository_impl.dart';
 import 'package:li_curriculum_table/features/grades/domain/repositories/grade_repository.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_credentials_local_datasource.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_schedule_events_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_teaching_week_baseline_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_timetable_local_datasource.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/timetable_crawler_client.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/credentials_repository_impl.dart';
+import 'package:li_curriculum_table/features/timetable/data/repositories/schedule_events_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/teaching_week_baseline_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/timetable_cache_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/data/repositories/timetable_repository_impl.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
+import 'package:li_curriculum_table/features/timetable/domain/repositories/schedule_events_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/teaching_week_baseline_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_cache_repository.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/timetable_repository.dart';
@@ -54,50 +67,73 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<SecureStorageStore>(
-    () => SecureStorageStore(sl()),
+    () => SecureStorageStore(sl<FlutterSecureStorage>()),
   );
 
   sl.registerLazySingleton<SecureSettingsLocalDataSource>(
-    () => SecureSettingsLocalDataSource(sl()),
+    () => SecureSettingsLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<SettingsRepository>(
-    () => SettingsRepositoryImpl(sl()),
+    () => SettingsRepositoryImpl(sl<SecureSettingsLocalDataSource>()),
   );
 
   sl.registerLazySingleton<UpdateService>(() => UpdateService());
+  sl.registerLazySingleton<WeatherService>(() => WeatherService());
+  sl.registerLazySingleton<NotificationService>(() => NotificationService());
+  sl.registerLazySingleton<CacheBackupService>(
+    () => CacheBackupService(sl<SecureStorageStore>()),
+  );
+  sl.registerLazySingleton<CourseColorService>(
+    () => CourseColorService(sl<SecureStorageStore>()),
+  );
+  sl.registerLazySingleton<CourseOnlineService>(
+    () => CourseOnlineService(sl<SecureStorageStore>()),
+  );
 
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(
-    () => SecureCredentialsLocalDataSource(sl()),
+    () => SecureCredentialsLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<CredentialsRepository>(
-    () => CredentialsRepositoryImpl(sl()),
+    () => CredentialsRepositoryImpl(sl<SecureCredentialsLocalDataSource>()),
   );
 
   sl.registerLazySingleton<SecureTeachingWeekBaselineLocalDataSource>(
-    () => SecureTeachingWeekBaselineLocalDataSource(sl()),
+    () => SecureTeachingWeekBaselineLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<TeachingWeekBaselineRepository>(
-    () => TeachingWeekBaselineRepositoryImpl(sl()),
+    () => TeachingWeekBaselineRepositoryImpl(
+      sl<SecureTeachingWeekBaselineLocalDataSource>(),
+    ),
   );
 
   sl.registerLazySingleton<SecureTimetableLocalDataSource>(
-    () => SecureTimetableLocalDataSource(sl()),
+    () => SecureTimetableLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<TimetableCacheRepository>(
-    () => TimetableCacheRepositoryImpl(sl()),
+    () => TimetableCacheRepositoryImpl(sl<SecureTimetableLocalDataSource>()),
   );
 
   sl.registerLazySingleton<TimetableCrawlerClient>(
     () => TimetableCrawlerClient(),
+    dispose: (c) => c.close(),
   );
 
   sl.registerLazySingleton<TimetableRepository>(
-    () => TimetableRepositoryImpl(sl()),
+    () => TimetableRepositoryImpl(sl<TimetableCrawlerClient>()),
+  );
+
+  sl.registerLazySingleton<SecureScheduleEventsLocalDataSource>(
+    () => SecureScheduleEventsLocalDataSource(sl<SecureStorageStore>()),
+  );
+
+  sl.registerLazySingleton<ScheduleEventsRepository>(
+    () =>
+        ScheduleEventsRepositoryImpl(sl<SecureScheduleEventsLocalDataSource>()),
   );
 
   // ─── Classroom ─────────────────────────────────────────────────────────
@@ -106,11 +142,14 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<ClassroomLocalDataSource>(
-    () => ClassroomLocalDataSource(sl()),
+    () => ClassroomLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<ClassroomRepository>(
-    () => ClassroomRepositoryImpl(sl(), sl()),
+    () => ClassroomRepositoryImpl(
+      sl<ClassroomRemoteDataSource>(),
+      sl<ClassroomLocalDataSource>(),
+    ),
   );
 
   // ─── Grades ────────────────────────────────────────────────────────────
@@ -119,24 +158,51 @@ void setupServiceLocator() {
   );
 
   sl.registerLazySingleton<GradeLocalDataSource>(
-    () => GradeLocalDataSource(sl()),
+    () => GradeLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<GradeRepository>(
-    () => GradeRepositoryImpl(sl(), sl(), sl()),
+    () => GradeRepositoryImpl(
+      sl<GradeRemoteDataSource>(),
+      sl<GradeLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
   );
 
   // ─── Exams ─────────────────────────────────────────────────────────────
-  sl.registerLazySingleton<ExamRemoteDataSource>(
-    () => ExamRemoteDataSource(),
-  );
+  sl.registerLazySingleton<ExamRemoteDataSource>(() => ExamRemoteDataSource());
 
   sl.registerLazySingleton<ExamLocalDataSource>(
-    () => ExamLocalDataSource(sl()),
+    () => ExamLocalDataSource(sl<SecureStorageStore>()),
   );
 
   sl.registerLazySingleton<ExamRepository>(
-    () => ExamRepositoryImpl(sl(), sl(), sl()),
+    () => ExamRepositoryImpl(
+      sl<ExamRemoteDataSource>(),
+      sl<ExamLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
+  );
+
+  // ─── Level Exam Scores ────────────────────────────────────────────────
+  sl.registerLazySingleton<LevelExamScoreRemoteDataSource>(
+    () => LevelExamScoreRemoteDataSource(),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreLocalDataSource>(
+    () => LevelExamScoreLocalDataSource(sl<SecureStorageStore>()),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreRepository>(
+    () => LevelExamScoreRepositoryImpl(
+      sl<LevelExamScoreRemoteDataSource>(),
+      sl<LevelExamScoreLocalDataSource>(),
+      sl<SecureCredentialsLocalDataSource>(),
+    ),
+  );
+
+  sl.registerLazySingleton<LevelExamScoreController>(
+    () => LevelExamScoreController(),
   );
 
   // ─── Controllers (signals-based) ───────────────────────────────────────

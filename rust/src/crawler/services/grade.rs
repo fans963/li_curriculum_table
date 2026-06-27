@@ -46,7 +46,11 @@ impl GradeService {
             .await?;
 
         if html.len() < 500 {
-            log::warn!("GradeService: Received short HTML response (len={}): {}", html.len(), html);
+            log::warn!(
+                "GradeService: Received short HTML response (len={}): {}",
+                html.len(),
+                html
+            );
         }
 
         // 3. Parse

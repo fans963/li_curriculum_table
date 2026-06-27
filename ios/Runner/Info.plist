@@ -70,5 +70,7 @@
 		<true/>
 		<key>UIViewControllerBasedStatusBarAppearance</key>
 		<false/>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>用于获取当前位置的天气信息</string>
 	</dict>
 </plist>

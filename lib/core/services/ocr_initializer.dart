@@ -1,26 +1,29 @@
+import 'dart:async';
+
 import 'package:li_curriculum_table/core/rust/api/crawler.dart';
 import 'package:signals/signals.dart';
 
 final ocrInitialized = signal(false);
 
 class OcrInitializer {
-  bool _isInitializing = false;
+  Completer<void>? _initCompleter;
 
   Future<void> ensureInitialized() async {
     if (ocrInitialized.value) return;
-    if (_isInitializing) {
-      while (_isInitializing && !ocrInitialized.value) {
-        await Future.delayed(const Duration(milliseconds: 100));
-      }
-      return;
+
+    // If already initializing, wait for the existing Completer instead of polling
+    if (_initCompleter != null && !_initCompleter!.isCompleted) {
+      return _initCompleter!.future;
     }
 
-    _isInitializing = true;
+    _initCompleter = Completer<void>();
     try {
       await initOcrEngine();
       ocrInitialized.value = true;
-    } finally {
-      _isInitializing = false;
+      _initCompleter!.complete();
+    } catch (e) {
+      _initCompleter!.completeError(e);
+      rethrow;
     }
   }
 }

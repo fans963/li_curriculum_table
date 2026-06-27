@@ -1,5 +1,8 @@
 import '../../domain/models/grade.dart';
 
+/// Sentinel value to distinguish "not provided" from "explicitly set to null".
+const _unset = Object();
+
 class GradeState {
   final List<GradeEntity> grades;
   final List<GradeEntity> filteredGrades;
@@ -12,6 +15,9 @@ class GradeState {
   final double compulsoryCredits;
   final bool needsLogin;
 
+  /// Set of courseCodes that are currently selected for weighted average calculation.
+  final Set<String> selectedCourseCodes;
+
   const GradeState({
     this.grades = const [],
     this.filteredGrades = const [],
@@ -23,31 +29,62 @@ class GradeState {
     this.compulsoryWeightedAverage = 0.0,
     this.compulsoryCredits = 0.0,
     this.needsLogin = false,
+    this.selectedCourseCodes = const {},
   });
+
+  /// Weighted average of selected courses.
+  double get selectedWeightedAverage {
+    if (grades.isEmpty) return 0.0;
+    double sum = 0;
+    double credits = 0;
+    for (final g in grades) {
+      if (selectedCourseCodes.contains(g.courseCode) && g.credits > 0) {
+        sum += g.numericScore * g.credits;
+        credits += g.credits;
+      }
+    }
+    return credits > 0 ? sum / credits : 0.0;
+  }
+
+  /// Total credits of selected courses.
+  double get selectedCredits {
+    double credits = 0;
+    for (final g in grades) {
+      if (selectedCourseCodes.contains(g.courseCode)) {
+        credits += g.credits;
+      }
+    }
+    return credits;
+  }
 
   GradeState copyWith({
     List<GradeEntity>? grades,
     List<GradeEntity>? filteredGrades,
     bool? isLoading,
-    String? errorMessage,
+    Object? errorMessage = _unset,
     String? searchQuery,
     double? weightedAverage,
     double? totalCredits,
     double? compulsoryWeightedAverage,
     double? compulsoryCredits,
     bool? needsLogin,
+    Set<String>? selectedCourseCodes,
   }) {
     return GradeState(
       grades: grades ?? this.grades,
       filteredGrades: filteredGrades ?? this.filteredGrades,
       isLoading: isLoading ?? this.isLoading,
-      errorMessage: errorMessage,
+      errorMessage: identical(errorMessage, _unset)
+          ? this.errorMessage
+          : errorMessage as String?,
       searchQuery: searchQuery ?? this.searchQuery,
       weightedAverage: weightedAverage ?? this.weightedAverage,
       totalCredits: totalCredits ?? this.totalCredits,
-      compulsoryWeightedAverage: compulsoryWeightedAverage ?? this.compulsoryWeightedAverage,
+      compulsoryWeightedAverage:
+          compulsoryWeightedAverage ?? this.compulsoryWeightedAverage,
       compulsoryCredits: compulsoryCredits ?? this.compulsoryCredits,
       needsLogin: needsLogin ?? this.needsLogin,
+      selectedCourseCodes: selectedCourseCodes ?? this.selectedCourseCodes,
     );
   }
 }

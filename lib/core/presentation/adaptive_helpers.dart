@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:m3e_core/m3e_core.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
@@ -47,23 +49,10 @@ Widget adaptiveActivityIndicator({
   if (AdaptiveStyle.isCupertino(designStyle)) {
     return CupertinoActivityIndicator(radius: size / 2, color: color);
   }
-  return SizedBox(
-    width: size,
-    height: size,
-    child: CircularProgressIndicator(strokeWidth: strokeWidth, color: color),
+  return LoadingIndicatorM3E(
+    constraints: BoxConstraints.tight(Size(size, size)),
+    color: color,
   );
-}
-
-/// Returns an adaptive progress indicator (indeterminate).
-Widget adaptiveProgressIndicator({
-  required DesignStyle designStyle,
-  Color? color,
-  double? minHeight,
-}) {
-  if (AdaptiveStyle.isCupertino(designStyle)) {
-    return CupertinoActivityIndicator(color: color);
-  }
-  return LinearProgressIndicator(color: color, minHeight: minHeight ?? 4);
 }
 
 /// Shows an adaptive confirmation dialog.
@@ -104,20 +93,30 @@ Future<bool> showAdaptiveConfirmDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          TextButton(
+          M3ETextButton(
             onPressed: () => Navigator.pop(ctx, false),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
-          FilledButton(
-            style: isDestructive
-                ? FilledButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.error,
-                    foregroundColor: Theme.of(context).colorScheme.onError,
-                  )
-                : null,
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text(confirmText),
-          ),
+          if (isDestructive)
+            M3EFilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              size: M3EButtonSize.md,
+              shape: M3EButtonShape.round,
+              decoration: M3EButtonDecoration.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              child: Text(confirmText),
+            )
+          else
+            M3EFilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              size: M3EButtonSize.md,
+              shape: M3EButtonShape.round,
+              child: Text(confirmText),
+            ),
         ],
       ),
     );
@@ -177,98 +176,20 @@ Future<String?> showAdaptiveInputDialog(
           autofocus: true,
         ),
         actions: [
-          TextButton(
+          M3ETextButton(
             onPressed: () => Navigator.pop(ctx),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
-          FilledButton(
+          M3EFilledButton(
             onPressed: () => Navigator.pop(ctx, controller.text),
+            size: M3EButtonSize.md,
+            shape: M3EButtonShape.round,
             child: Text(confirmText),
           ),
         ],
       ),
     );
   }
-}
-
-/// Returns adaptive background colors following iOS/Material conventions.
-class AdaptiveColors {
-  const AdaptiveColors._();
-
-  /// Main scaffold background.
-  static Color scaffoldBackground(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.systemGroupedBackground.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.surface;
-  }
-
-  /// Card / section background.
-  static Color cardBackground(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.surfaceContainerLow;
-  }
-
-  /// Primary text color.
-  static Color primaryText(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.label.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.onSurface;
-  }
-
-  /// Secondary text color.
-  static Color secondaryText(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.secondaryLabel.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.onSurfaceVariant;
-  }
-
-  /// Tint / accent color.
-  static Color tint(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.systemBlue.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.primary;
-  }
-
-  /// Destructive color.
-  static Color destructive(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.systemRed.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.error;
-  }
-
-  /// Separator / divider color.
-  static Color separator(BuildContext context, DesignStyle style) {
-    if (AdaptiveStyle.isCupertino(style)) {
-      return CupertinoColors.separator.resolveFrom(context);
-    }
-    return Theme.of(context).colorScheme.outlineVariant;
-  }
-}
-
-/// Returns adaptive border radius following iOS 26 / Material conventions.
-class AdaptiveRadius {
-  const AdaptiveRadius._();
-
-  /// Card corner radius. iOS 26: 18pt, Material: 16pt.
-  static double card(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 18 : 16;
-
-  /// Dialog corner radius. iOS 26: 18pt, Material: 16pt.
-  static double dialog(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 18 : 16;
-
-  /// Search bar corner radius. iOS: 10pt, Material: 12pt.
-  static double searchBar(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 10 : 12;
-
-  /// Button corner radius. iOS: 8pt, Material: 16pt.
-  static double button(DesignStyle style) =>
-      AdaptiveStyle.isCupertino(style) ? 8 : 16;
 }

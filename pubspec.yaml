@@ -1,7 +1,7 @@
 name: li_curriculum_table
 description: "一款轻盈优雅的跨平台课表应用。"
 publish_to: "none"
-version: 1.0.7
+version: 2.0.0
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
@@ -12,33 +12,50 @@ dependencies:
 
   rust_lib_li_curriculum_table:
     path: rust_builder
-  flutter_rust_bridge: 2.12.0
-  intl: ^0.20.2
+  flutter_rust_bridge: ^2.12.0
+  intl: ^0.20.3
   signals: ^7.1.0
   get_it: ^9.2.1
   window_manager: ^0.5.1
   dynamic_color: ^1.8.1
   flex_color_scheme: ^8.4.0
-  web: ^1.1.1
   flutter_secure_storage: ^10.3.1
+  file_selector: ^1.1.0
 
   infinite_calendar_view: ^2.11.5
   auto_size_text: ^3.0.0
   pool: ^1.5.2
   freezed_annotation: ^3.1.0
-  json_annotation: ^4.12.0
   feedback: ^3.2.0
-  path_provider: ^2.1.5
-  share_plus: ^13.1.0
-  cross_file: ^0.3.4+2
+  path_provider: ^2.1.6
+  share_plus: ^13.2.0
   collection: ^1.19.1
-  flutter_native_splash: ^2.4.4
-  package_info_plus: ^10.1.0
-  dio: ^5.9.2
+  package_info_plus: ^10.2.0
   url_launcher: ^6.3.2
   markdown_widget: ^2.3.2+8
   cupertino_icons: ^1.0.9
   cupertino_liquid_glass: ^0.6.0
+  m3e_collection: ^0.3.7
+  loading_indicator_m3e: ^0.1.1
+  progress_indicator_m3e: ^0.1.1
+  expressive_refresh: ^0.1.2
+  m3e_core: ^0.1.0
+  slider_m3e: ^0.1.1
+  app_bar_m3e: ^0.1.2
+  icon_button_m3e: ^0.2.1
+  fab_m3e: ^0.1.1
+  navigation_bar_m3e: ^0.1.1
+  m3e_design: ^0.2.1
+  geolocator: ^14.0.3
+  flutter_local_notifications: ^22.0.1
+  timezone: ^0.11.0
+  cached_network_image: ^3.4.1
+  animations: ^2.2.0
+  open_filex: ^4.7.0
+
+
+dependency_overrides:
+  uuid: ^4.5.0
 
 dev_dependencies:
   flutter_test:
@@ -47,11 +64,11 @@ dev_dependencies:
   flutter_launcher_icons:
     git:
       url: https://github.com/devmil/flutter_launcher_icons.git
-  msix: ^3.16.13
+  msix: ^3.17.0
   freezed: ^3.2.5
   json_serializable: ^6.14.0
   build_runner: ^2.15.0
-  fastforge: ^0.6.6
+  fastforge: ^0.6.8
 
 flutter:
   uses-material-design: true
@@ -66,11 +83,3 @@ msix_config:
   logo_path: assets/icon/icon.png
   capabilities: internetClient, location, microphone, webcam
 
-flutter_native_splash:
-  color: "#0A7C6D"
-  image: assets/icon/icon.png
-  android_12:
-    color: "#0A7C6D"
-    image: assets/icon/icon.png
-  web: false
-  fullscreen: true

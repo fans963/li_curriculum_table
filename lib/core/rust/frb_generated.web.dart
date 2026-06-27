@@ -7,11 +7,17 @@
 // ignore_for_file: argument_type_not_assignable
 
 import 'api/auth.dart';
-import 'api/book.dart';
+import 'api/book/cover.dart';
+import 'api/book/models.dart';
+import 'api/book/search.dart';
 import 'api/classroom.dart';
 import 'api/crawler.dart';
 import 'api/exam.dart';
 import 'api/grade.dart';
+import 'api/http.dart';
+import 'api/level_exam_score.dart';
+import 'api/update.dart';
+import 'api/weather.dart';
 import 'crawler/model.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -30,6 +36,14 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   get rust_arc_decrement_strong_count_ArcSessionManagerPtr => wire
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager;
 
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_ClientPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient;
+
+  CrossPlatformFinalizerArg
+  get rust_arc_decrement_strong_count_ClientBuilderPtr => wire
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder;
+
   @protected
   AnyhowException dco_decode_AnyhowException(dynamic raw);
 
@@ -40,13 +54,45 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Client
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    dynamic raw,
+  );
+
+  @protected
+  ClientBuilder
+  dco_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    dynamic raw,
+  );
+
+  @protected
   ArcSessionManager
   dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
     dynamic raw,
   );
 
   @protected
+  Client
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    dynamic raw,
+  );
+
+  @protected
+  ClientBuilder
+  dco_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<DownloadProgress> dco_decode_StreamSink_download_progress_Sse(
+    dynamic raw,
+  );
+
+  @protected
   String dco_decode_String(dynamic raw);
+
+  @protected
+  BookDetail dco_decode_book_detail(dynamic raw);
 
   @protected
   BookInfo dco_decode_book_info(dynamic raw);
@@ -55,7 +101,19 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BookLocation dco_decode_book_location(dynamic raw);
 
   @protected
+  BookSearchParams dco_decode_book_search_params(dynamic raw);
+
+  @protected
+  BookSearchResult dco_decode_book_search_result(dynamic raw);
+
+  @protected
   bool dco_decode_bool(dynamic raw);
+
+  @protected
+  BookSearchParams dco_decode_box_autoadd_book_search_params(dynamic raw);
+
+  @protected
+  double dco_decode_box_autoadd_f_64(dynamic raw);
 
   @protected
   Building dco_decode_building(dynamic raw);
@@ -76,6 +134,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CourseRow dco_decode_course_row(dynamic raw);
 
   @protected
+  DownloadProgress dco_decode_download_progress(dynamic raw);
+
+  @protected
   Exam dco_decode_exam(dynamic raw);
 
   @protected
@@ -83,6 +144,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Grade dco_decode_grade(dynamic raw);
+
+  @protected
+  int dco_decode_i_32(dynamic raw);
+
+  @protected
+  LevelExamScore dco_decode_level_exam_score(dynamic raw);
 
   @protected
   List<String> dco_decode_list_String(dynamic raw);
@@ -120,6 +187,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Grade> dco_decode_list_grade(dynamic raw);
 
   @protected
+  List<LevelExamScore> dco_decode_list_level_exam_score(dynamic raw);
+
+  @protected
   List<OccupiedSlot> dco_decode_list_occupied_slot(dynamic raw);
 
   @protected
@@ -135,6 +205,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? dco_decode_opt_String(dynamic raw);
 
   @protected
+  double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
+
+  @protected
   TimeSlot dco_decode_time_slot(dynamic raw);
 
   @protected
@@ -147,13 +220,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int dco_decode_u_32(dynamic raw);
 
   @protected
+  BigInt dco_decode_u_64(dynamic raw);
+
+  @protected
   int dco_decode_u_8(dynamic raw);
 
   @protected
   void dco_decode_unit(dynamic raw);
 
   @protected
+  UpdateData dco_decode_update_data(dynamic raw);
+
+  @protected
   BigInt dco_decode_usize(dynamic raw);
+
+  @protected
+  WeatherData dco_decode_weather_data(dynamic raw);
 
   @protected
   AnyhowException sse_decode_AnyhowException(SseDeserializer deserializer);
@@ -165,13 +247,45 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   );
 
   @protected
+  Client
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ClientBuilder
+  sse_decode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   ArcSessionManager
   sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
     SseDeserializer deserializer,
   );
 
   @protected
+  Client
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  ClientBuilder
+  sse_decode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<DownloadProgress> sse_decode_StreamSink_download_progress_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   String sse_decode_String(SseDeserializer deserializer);
+
+  @protected
+  BookDetail sse_decode_book_detail(SseDeserializer deserializer);
 
   @protected
   BookInfo sse_decode_book_info(SseDeserializer deserializer);
@@ -180,7 +294,21 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   BookLocation sse_decode_book_location(SseDeserializer deserializer);
 
   @protected
+  BookSearchParams sse_decode_book_search_params(SseDeserializer deserializer);
+
+  @protected
+  BookSearchResult sse_decode_book_search_result(SseDeserializer deserializer);
+
+  @protected
   bool sse_decode_bool(SseDeserializer deserializer);
+
+  @protected
+  BookSearchParams sse_decode_box_autoadd_book_search_params(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  double sse_decode_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
   Building sse_decode_building(SseDeserializer deserializer);
@@ -203,6 +331,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   CourseRow sse_decode_course_row(SseDeserializer deserializer);
 
   @protected
+  DownloadProgress sse_decode_download_progress(SseDeserializer deserializer);
+
+  @protected
   Exam sse_decode_exam(SseDeserializer deserializer);
 
   @protected
@@ -210,6 +341,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   Grade sse_decode_grade(SseDeserializer deserializer);
+
+  @protected
+  int sse_decode_i_32(SseDeserializer deserializer);
+
+  @protected
+  LevelExamScore sse_decode_level_exam_score(SseDeserializer deserializer);
 
   @protected
   List<String> sse_decode_list_String(SseDeserializer deserializer);
@@ -251,6 +388,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   List<Grade> sse_decode_list_grade(SseDeserializer deserializer);
 
   @protected
+  List<LevelExamScore> sse_decode_list_level_exam_score(
+    SseDeserializer deserializer,
+  );
+
+  @protected
   List<OccupiedSlot> sse_decode_list_occupied_slot(
     SseDeserializer deserializer,
   );
@@ -268,6 +410,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   String? sse_decode_opt_String(SseDeserializer deserializer);
 
   @protected
+  double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
   TimeSlot sse_decode_time_slot(SseDeserializer deserializer);
 
   @protected
@@ -280,16 +425,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   int sse_decode_u_32(SseDeserializer deserializer);
 
   @protected
+  BigInt sse_decode_u_64(SseDeserializer deserializer);
+
+  @protected
   int sse_decode_u_8(SseDeserializer deserializer);
 
   @protected
   void sse_decode_unit(SseDeserializer deserializer);
 
   @protected
+  UpdateData sse_decode_update_data(SseDeserializer deserializer);
+
+  @protected
   BigInt sse_decode_usize(SseDeserializer deserializer);
 
   @protected
-  int sse_decode_i_32(SseDeserializer deserializer);
+  WeatherData sse_decode_weather_data(SseDeserializer deserializer);
 
   @protected
   void sse_encode_AnyhowException(
@@ -306,13 +457,50 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    Client self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_Auto_Owned_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    ClientBuilder self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
   sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
     ArcSessionManager self,
     SseSerializer serializer,
   );
 
   @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    Client self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void
+  sse_encode_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    ClientBuilder self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_download_progress_Sse(
+    RustStreamSink<DownloadProgress> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_String(String self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_book_detail(BookDetail self, SseSerializer serializer);
 
   @protected
   void sse_encode_book_info(BookInfo self, SseSerializer serializer);
@@ -321,7 +509,28 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_book_location(BookLocation self, SseSerializer serializer);
 
   @protected
+  void sse_encode_book_search_params(
+    BookSearchParams self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_book_search_result(
+    BookSearchResult self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_bool(bool self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_box_autoadd_book_search_params(
+    BookSearchParams self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_box_autoadd_f_64(double self, SseSerializer serializer);
 
   @protected
   void sse_encode_building(Building self, SseSerializer serializer);
@@ -351,6 +560,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_course_row(CourseRow self, SseSerializer serializer);
 
   @protected
+  void sse_encode_download_progress(
+    DownloadProgress self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_exam(Exam self, SseSerializer serializer);
 
   @protected
@@ -358,6 +573,15 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_grade(Grade self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_i_32(int self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_level_exam_score(
+    LevelExamScore self,
+    SseSerializer serializer,
+  );
 
   @protected
   void sse_encode_list_String(List<String> self, SseSerializer serializer);
@@ -405,6 +629,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_list_grade(List<Grade> self, SseSerializer serializer);
 
   @protected
+  void sse_encode_list_level_exam_score(
+    List<LevelExamScore> self,
+    SseSerializer serializer,
+  );
+
+  @protected
   void sse_encode_list_occupied_slot(
     List<OccupiedSlot> self,
     SseSerializer serializer,
@@ -426,6 +656,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_opt_String(String? self, SseSerializer serializer);
 
   @protected
+  void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
   void sse_encode_time_slot(TimeSlot self, SseSerializer serializer);
 
   @protected
@@ -441,16 +674,22 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   void sse_encode_u_32(int self, SseSerializer serializer);
 
   @protected
+  void sse_encode_u_64(BigInt self, SseSerializer serializer);
+
+  @protected
   void sse_encode_u_8(int self, SseSerializer serializer);
 
   @protected
   void sse_encode_unit(void self, SseSerializer serializer);
 
   @protected
+  void sse_encode_update_data(UpdateData self, SseSerializer serializer);
+
+  @protected
   void sse_encode_usize(BigInt self, SseSerializer serializer);
 
   @protected
-  void sse_encode_i_32(int self, SseSerializer serializer);
+  void sse_encode_weather_data(WeatherData self, SseSerializer serializer);
 }
 
 // Section: wire_class
@@ -473,6 +712,38 @@ class RustLibWire implements BaseWire {
       .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
         ptr,
       );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+        ptr,
+      );
+
+  void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+        ptr,
+      );
+
+  void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    int ptr,
+  ) => wasmModule
+      .rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+        ptr,
+      );
 }
 
 @JS('wasm_bindgen')
@@ -488,6 +759,26 @@ extension type RustLibWasmModule._(JSObject _) implements JSObject {
 
   external void
   rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerArcSessionManager(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClient(
+    int ptr,
+  );
+
+  external void
+  rust_arc_increment_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
+    int ptr,
+  );
+
+  external void
+  rust_arc_decrement_strong_count_RustOpaque_flutter_rust_bridgefor_generatedRustAutoOpaqueInnerClientBuilder(
     int ptr,
   );
 }

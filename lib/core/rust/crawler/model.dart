@@ -252,6 +252,53 @@ class Grade {
           courseNature == other.courseNature;
 }
 
+class LevelExamScore {
+  final String courseName;
+  final String writtenScore;
+  final String practicalScore;
+  final String totalScore;
+  final String writtenGrade;
+  final String practicalGrade;
+  final String totalGrade;
+  final String examDate;
+
+  const LevelExamScore({
+    required this.courseName,
+    required this.writtenScore,
+    required this.practicalScore,
+    required this.totalScore,
+    required this.writtenGrade,
+    required this.practicalGrade,
+    required this.totalGrade,
+    required this.examDate,
+  });
+
+  @override
+  int get hashCode =>
+      courseName.hashCode ^
+      writtenScore.hashCode ^
+      practicalScore.hashCode ^
+      totalScore.hashCode ^
+      writtenGrade.hashCode ^
+      practicalGrade.hashCode ^
+      totalGrade.hashCode ^
+      examDate.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is LevelExamScore &&
+          runtimeType == other.runtimeType &&
+          courseName == other.courseName &&
+          writtenScore == other.writtenScore &&
+          practicalScore == other.practicalScore &&
+          totalScore == other.totalScore &&
+          writtenGrade == other.writtenGrade &&
+          practicalGrade == other.practicalGrade &&
+          totalGrade == other.totalGrade &&
+          examDate == other.examDate;
+}
+
 class OccupiedSlot {
   final int startWeek;
   final int endWeek;

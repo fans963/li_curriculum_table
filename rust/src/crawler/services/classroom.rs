@@ -1,8 +1,6 @@
 use crate::crawler::core::SessionManager;
 use crate::crawler::error::CrawlerResult;
-use crate::crawler::model::{
-    Building, CampusPageData, ClassroomAvailability, ClassroomSchedule,
-};
+use crate::crawler::model::{Building, CampusPageData, ClassroomAvailability, ClassroomSchedule};
 use crate::crawler::parser::parse_campuses;
 use reqwest::Method;
 use std::sync::Arc;
@@ -100,10 +98,9 @@ impl ClassroomService {
                 if occupied.weekday == weekday
                     && week >= occupied.start_week
                     && week <= occupied.end_week
+                    && occupied.slot_index < 5
                 {
-                    if occupied.slot_index < 5 {
-                        availability[occupied.slot_index as usize] = false;
-                    }
+                    availability[occupied.slot_index as usize] = false;
                 }
             }
             final_list.push(ClassroomAvailability {

@@ -1,51 +1,99 @@
 import 'dart:async';
 
+import 'package:expressive_refresh/expressive_refresh.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:icon_button_m3e/icon_button_m3e.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
+import 'package:li_curriculum_table/core/services/weather_service.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
+import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
+import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/add_schedule_event_sheet.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/async_course_strip.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 
 // UI Constants
 const double _pixelsPerMinute = 1.0;
-const int _startDisplayHour = 8;
-const int _endDisplayHour = 22;
+const _asyncStripPrefKey = 'timetable.async_strip_expanded';
 
-class TimetableTab extends StatefulWidget {
+class TimetableTab extends SignalStatefulWidget {
   const TimetableTab({super.key});
 
   @override
   State<TimetableTab> createState() => _TimetableTabState();
 }
 
-class _TimetableTabState extends State<TimetableTab> {
+class _TimetableTabState extends State<TimetableTab>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
   final _calendarKey = GlobalKey<TimetableWeekViewState>();
+  final _asyncStripKey = GlobalKey<AsyncCourseStripState>(
+    debugLabel: 'asyncStrip',
+  );
   Timer? _nowTicker;
-  DateTime _now = DateTime.now();
+  final _now = signal<DateTime>(DateTime.now());
+  final _localWeeklyScrollOverride = signal<bool?>(null);
+  final _isSwitchingScroll = signal(false);
+  final _showAsyncStrip = signal(true);
+
+  void _toggleAsyncStrip() {
+    _showAsyncStrip.value = !_showAsyncStrip.value;
+    sl<SecureStorageStore>().writeAll({
+      _asyncStripPrefKey: _showAsyncStrip.value.toString(),
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _nowTicker = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
-      setState(() => _now = DateTime.now());
+      _now.value = DateTime.now();
     });
 
-    // Restore cached data on startup
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      sl<CourseColorService>().preload();
+      sl<CourseOnlineService>().preload();
+      // Restore async strip expanded preference
+      final store = sl<SecureStorageStore>();
+      final prefs = await store.readAll([_asyncStripPrefKey]);
+      final saved = prefs[_asyncStripPrefKey];
+      if (saved != null) {
+        _showAsyncStrip.value = saved == 'true';
+      }
       final controller = sl<TimetableController>();
       await controller.restoreCachedTimetable();
       await controller.restoreCachedTeachingWeekBaseline();
+      await controller.loadScheduleEvents();
     });
+  }
+
+  /// All online courses — auto-detected (location=="线上") or manually marked.
+  /// These appear in the collapsible strip instead of the time grid.
+  List<CourseRow> get _asyncCourses {
+    final data = sl<TimetableController>().state.value.data;
+    if (data == null) return [];
+    final onlineService = sl<CourseOnlineService>();
+    return data.rows.where((r) {
+      // Auto-detected: academic system marks online courses with location "线上"
+      if (r.location.trim() == '线上') return true;
+      // Manually marked online (any format: live/async/hybrid)
+      if (onlineService.isOnline(r.courseName)) return true;
+      return false;
+    }).toList();
   }
 
   @override
@@ -56,48 +104,48 @@ class _TimetableTabState extends State<TimetableTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SignalBuilder(builder: (context) {
-      final colorScheme = Theme.of(context).colorScheme;
-      final state = sl<TimetableController>().state.value;
-      final displayWeek = state.displayWeek;
-      final settings = sl<SettingsController>().state.value;
-      final isCupertino = AdaptiveStyle.isCupertino(settings.designStyle);
+    super.build(context);
+    final colorScheme = Theme.of(context).colorScheme;
+    final state = sl<TimetableController>().state.value;
+    final settings = sl<SettingsController>().state.value;
+    final isCupertino = AdaptiveStyle.isCupertino(settings.designStyle);
+    final ds = settings.designStyle;
 
-      final title = Text(
-        state.data != null ? '第 $displayWeek 周' : '我的课表',
-        style: const TextStyle(fontWeight: FontWeight.w600),
-      );
-
-      final ds = settings.designStyle;
-      final scrollToggle = IconButton(
-        icon: Icon(
-          settings.weeklyScroll
-              ? AppIcons.viewWeekFilled(ds)
-              : AppIcons.viewWeek(ds),
-        ),
-        tooltip: settings.weeklyScroll
-            ? '当前：按星期滑动'
-            : '当前：无极滑动',
-        onPressed: () {
-          final currentVal = settings.weeklyScroll;
-          sl<SettingsController>().setWeeklyScroll(!currentVal);
-          showAdaptiveMessage(
-            context,
-            designStyle: ds,
-            message: !currentVal ? '已开启按星期滑动' : '已恢复无极滑动',
-          );
-        },
-      );
-
-      final body = SafeArea(
+    return ColoredBox(
+      color: isCupertino
+          ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
+          : colorScheme.surface,
+      child: SafeArea(
+        bottom: false,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: TimetableStatusBanner(
-                status: state.status,
-                isLoading: state.isLoading,
-                hasData: state.data != null,
+            _CompactHeader(
+              displayWeek: state.displayWeek,
+              hasData: state.data != null,
+              designStyle: ds,
+              isWeeklyScrollActive:
+                  _localWeeklyScrollOverride.value ?? settings.weeklyScroll,
+              isSwitchingScroll: _isSwitchingScroll.value,
+              hasAsyncCourses: _asyncCourses.isNotEmpty,
+              isAsyncStripExpanded: _showAsyncStrip.value,
+              onAddPressed: () => AddScheduleEventSheet.show(context),
+              onScrollToggle: () => _toggleScrollMode(settings),
+              onAsyncToggle: _toggleAsyncStrip,
+            ),
+            // Async online course strip (collapsible).
+            // Dependencies ensure reactivity when:
+            // - user marks/unmarks courses as online
+            // - user changes a course's custom color
+            SignalBuilder(
+              dependencies: [
+                sl<CourseOnlineService>().version,
+                sl<CourseColorService>().version,
+              ],
+              builder: (context) => AsyncCourseStrip(
+                key: _asyncStripKey,
+                asyncCourses: _asyncCourses,
+                isExpanded: _showAsyncStrip.value,
+                onToggle: _toggleAsyncStrip,
               ),
             ),
             Expanded(
@@ -108,23 +156,28 @@ class _TimetableTabState extends State<TimetableTab> {
                 child: state.needsLogin
                     ? _NeedsLoginView(
                         key: const ValueKey('needs_login'),
-                        onSync: () =>
-                            sl<TimetableController>().syncFromCache(),
+                        onSync: () => sl<TimetableController>().syncFromCache(),
                       )
-                    : ScrollConfiguration(
+                    : ExpressiveRefreshIndicator(
                         key: const ValueKey('timetable_view'),
-                        behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
-                        child: NotificationListener<ScrollNotification>(
-                          onNotification: (notification) => true,
-                          child: TimetableWeekView(
-                            key: _calendarKey,
-                            startHour: _startDisplayHour,
-                            endHour: _endDisplayHour,
-                            pixelsPerMinute: _pixelsPerMinute,
-                            now: _now,
-                            onPageChange: (date, page) {
-                              _syncDisplayWeekFromDate(date);
-                            },
+                        color: colorScheme.primary,
+                        onRefresh: () async {
+                          await sl<TimetableController>().syncFromCache();
+                        },
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(
+                            context,
+                          ).copyWith(scrollbars: false),
+                          child: NotificationListener<ScrollNotification>(
+                            onNotification: (_) => false,
+                            child: TimetableWeekView(
+                              key: _calendarKey,
+                              pixelsPerMinute: _pixelsPerMinute,
+                              now: _now.value,
+                              onPageChange: (date, page) {
+                                _syncDisplayWeekFromDate(date);
+                              },
+                            ),
                           ),
                         ),
                       ),
@@ -132,32 +185,27 @@ class _TimetableTabState extends State<TimetableTab> {
             ),
           ],
         ),
-      );
+      ),
+    );
+  }
 
-      if (isCupertino) {
-        return CupertinoPageScaffold(
-          navigationBar: CupertinoNavigationBar(
-            middle: title,
-            trailing: scrollToggle,
-            backgroundColor: CupertinoColors.systemGroupedBackground.resolveFrom(context).withValues(alpha: 0.95),
-            border: null,
-          ),
-          child: body,
-        );
-      }
-
-      return Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          title: title,
-          centerTitle: true,
-          elevation: 0,
-          scrolledUnderElevation: 0,
-          backgroundColor: colorScheme.surface,
-          actions: [scrollToggle],
-        ),
-        body: body,
-      );
+  void _toggleScrollMode(dynamic settings) {
+    if (_isSwitchingScroll.value) return;
+    final ds = settings.designStyle;
+    final currentVal = settings.weeklyScroll;
+    _localWeeklyScrollOverride.value = !currentVal;
+    _isSwitchingScroll.value = true;
+    showAdaptiveMessage(
+      context,
+      designStyle: ds,
+      message: !currentVal ? '已开启按星期滑动' : '已恢复无极滑动',
+    );
+    Future.delayed(const Duration(milliseconds: 300), () async {
+      if (!mounted) return;
+      await sl<SettingsController>().setWeeklyScroll(!currentVal);
+      if (!mounted) return;
+      _localWeeklyScrollOverride.value = null;
+      _isSwitchingScroll.value = false;
     });
   }
 
@@ -167,13 +215,190 @@ class _TimetableTabState extends State<TimetableTab> {
     if (anchor == null) return;
 
     final week = calculateWeekIndex(date, anchor);
-    if (week > state.maxWeek || week < state.minWeek) return;
 
     if (week != state.displayWeek) {
       sl<TimetableController>().updateDisplayWeek(week);
     }
   }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Compact Header — merges week number, weather, and action buttons
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _CompactHeader extends StatelessWidget {
+  final int displayWeek;
+  final bool hasData;
+  final DesignStyle designStyle;
+  final bool isWeeklyScrollActive;
+  final bool isSwitchingScroll;
+  final bool hasAsyncCourses;
+  final bool isAsyncStripExpanded;
+  final VoidCallback onAddPressed;
+  final VoidCallback onScrollToggle;
+  final VoidCallback onAsyncToggle;
+
+  const _CompactHeader({
+    required this.displayWeek,
+    required this.hasData,
+    required this.designStyle,
+    required this.isWeeklyScrollActive,
+    required this.isSwitchingScroll,
+    required this.hasAsyncCourses,
+    required this.isAsyncStripExpanded,
+    required this.onAddPressed,
+    required this.onScrollToggle,
+    required this.onAsyncToggle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isCupertino = AdaptiveStyle.isCupertino(designStyle);
+    final cs = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: isCupertino
+            ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
+            : cs.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          // Week number
+          Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Text(
+              hasData ? '第 $displayWeek 周' : '课表',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: cs.onSurface,
+              ),
+            ),
+          ),
+
+          // Weather inline
+          Expanded(child: _InlineWeather(designStyle: designStyle)),
+
+          // Async online courses toggle (only shown when async courses exist)
+          if (hasAsyncCourses)
+            IconButtonM3E(
+              icon: Icon(
+                isAsyncStripExpanded
+                    ? Icons.live_tv_rounded
+                    : Icons.live_tv_outlined,
+                size: 20,
+              ),
+              variant: IconButtonM3EVariant.standard,
+              shape: IconButtonM3EShapeVariant.round,
+              tooltip: isAsyncStripExpanded ? '收起网课' : '展开网课',
+              onPressed: onAsyncToggle,
+            ),
+
+          // Scroll toggle
+          IconButtonM3E(
+            icon: Icon(
+              isWeeklyScrollActive
+                  ? AppIcons.viewWeekFilled(designStyle)
+                  : AppIcons.viewWeek(designStyle),
+            ),
+            variant: IconButtonM3EVariant.standard,
+            shape: IconButtonM3EShapeVariant.round,
+            tooltip: isWeeklyScrollActive ? '按星期滑动' : '无极滑动',
+            onPressed: isSwitchingScroll ? null : onScrollToggle,
+          ),
+
+          // Add button
+          IconButtonM3E(
+            icon: const Icon(Icons.add_rounded),
+            variant: IconButtonM3EVariant.standard,
+            shape: IconButtonM3EShapeVariant.round,
+            tooltip: '添加日程',
+            onPressed: onAddPressed,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Inline Weather — compact weather display inside the header
+// ═══════════════════════════════════════════════════════════════════════════
+
+class _InlineWeather extends SignalStatefulWidget {
+  final DesignStyle designStyle;
+  const _InlineWeather({required this.designStyle});
+
+  @override
+  State<_InlineWeather> createState() => _InlineWeatherState();
+}
+
+class _InlineWeatherState extends State<_InlineWeather> {
+  final _weather = signal<WeatherInfo?>(null);
+  final _loading = signal(true);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadWeather();
+  }
+
+  Future<void> _loadWeather() async {
+    try {
+      final result = await sl<WeatherService>().fetchWeather();
+      if (mounted) {
+        _weather.value = result;
+        _loading.value = false;
+      }
+    } catch (_) {
+      if (mounted) _loading.value = false;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading.value) return const SizedBox.shrink();
+    final w = _weather.value;
+    if (w == null) return const SizedBox.shrink();
+
+    final cs = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(w.icon, size: 16, color: w.color),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              '${w.minTemperature.round()}~${w.maxTemperature.round()}° ${w.description}',
+              style: TextStyle(
+                fontSize: 12,
+                color: cs.onSurfaceVariant,
+                fontWeight: FontWeight.w500,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Needs Login View
+// ═══════════════════════════════════════════════════════════════════════════
 
 class _NeedsLoginView extends StatelessWidget {
   final VoidCallback onSync;
@@ -189,18 +414,25 @@ class _NeedsLoginView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_view_week_rounded,
-                size: 64, color: colorScheme.primary.withValues(alpha: 0.5)),
+            Icon(
+              Icons.calendar_view_week_rounded,
+              size: 64,
+              color: colorScheme.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 16),
             Text(
               '暂无课表数据',
-              style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               '请先前往「设置」页面输入账号密码，\n然后点击下方「同步课表」按钮。',
               textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

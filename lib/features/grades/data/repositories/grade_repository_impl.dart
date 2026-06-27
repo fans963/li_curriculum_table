@@ -19,7 +19,7 @@ class GradeRepositoryImpl implements GradeRepository {
   Future<List<GradeEntity>> getGrades({bool forceRefresh = false}) async {
     if (!forceRefresh) {
       final cached = await _localDataSource.readGrades();
-      if (cached != null && cached.isNotEmpty) {
+      if (cached != null) {
         return cached;
       }
     }
