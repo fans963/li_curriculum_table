@@ -12,9 +12,9 @@ jobs:
   sync-gitee:
     name: Sync to Gitee
     runs-on: ubuntu-latest
-    if: ${{ secrets.GITEE_TOKEN != '' }}
     steps:
       - name: Sync GitHub Release to Gitee
+        if: ${{ secrets.GITEE_TOKEN != '' }}
         uses: trustedinster/sync-release-gitee@v1.3
         with:
           gitee_owner: fans963
