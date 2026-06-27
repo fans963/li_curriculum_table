@@ -60,9 +60,9 @@ pub async fn check_for_update() -> Result<UpdateData> {
     })
 }
 
-/// Build a client for binary file downloads — no auto decompression,
-/// since APK/IPA are already compressed and reqwest would fail trying
-/// to gunzip them.
+/// Build a client for binary file downloads.
+/// Explicitly requests identity encoding to prevent proxies from applying
+/// Content-Encoding: gzip which would corrupt the binary stream.
 #[cfg(any(target_os = "android", target_os = "ios"))]
 fn build_download_client() -> reqwest::Client {
     reqwest::Client::builder()
@@ -75,15 +75,16 @@ fn build_download_client() -> reqwest::Client {
         .expect("Failed to build download client")
 }
 
-/// Try to start a download from one of the candidate URLs.
-/// Returns Ok(response) on success, Err on connection/HTTP failure.
+/// Try to initiate a download. Returns Ok(response) on success.
 #[cfg(any(target_os = "android", target_os = "ios"))]
-async fn try_download(
+async fn try_connect(
     client: &reqwest::Client,
     url: &str,
 ) -> Result<reqwest::Response, String> {
     let resp = client
         .get(url)
+        // Tell the proxy: do NOT compress the response body
+        .header(reqwest::header::ACCEPT_ENCODING, "identity")
         .timeout(std::time::Duration::from_secs(15))
         .send()
         .await
@@ -96,10 +97,10 @@ async fn try_download(
     Ok(resp)
 }
 
-/// Download a file from [url] to [save_path], streaming progress via [sink].
-/// Tries the original URL first, then each mirror prefix in [mirror_prefixes].
-/// Mirror prefixes are prepended to [url], e.g. "https://ghfast.top/" + url.
-/// Only available on mobile platforms (Android/iOS).
+/// Download a file with mirror fallback.
+///
+/// Tries the original URL first, then each mirror prefix. If a stream error
+/// occurs mid-download, it resets and retries the next candidate from scratch.
 #[cfg(any(target_os = "android", target_os = "ios"))]
 pub async fn download_update(
     url: String,
@@ -119,112 +120,108 @@ pub async fn download_update(
         candidates.push(format!("{}{}", prefix, url));
     }
 
-    // Try each candidate until one succeeds
     let mut last_error = String::new();
-    let mut response: Option<reqwest::Response> = None;
 
-    for candidate in &candidates {
-        match try_download(&client, candidate).await {
-            Ok(resp) => {
-                response = Some(resp);
-                break;
-            }
+    for (idx, candidate) in candidates.iter().enumerate() {
+        // Notify UI which source we're trying
+        let _ = sink.add(DownloadProgress {
+            received: 0,
+            total: 0,
+            done: false,
+            saved_path: String::new(),
+            error: if idx == 0 {
+                "正在连接 GitHub...".to_string()
+            } else {
+                format!("正在尝试镜像 {}...", idx)
+            },
+        });
+
+        let response = match try_connect(&client, candidate).await {
+            Ok(r) => r,
             Err(e) => {
-                last_error = e;
-                // Notify the UI which mirror failed so it can display status
-                let _ = sink.add(DownloadProgress {
-                    received: 0,
-                    total: 0,
-                    done: false,
-                    saved_path: String::new(),
-                    error: format!("尝试 {} 失败: {}", candidate, last_error),
-                });
+                last_error = format!("{}: {}", candidate, e);
                 continue;
-            }
-        }
-    }
-
-    let response = match response {
-        Some(r) => r,
-        None => {
-            let _ = sink.add(DownloadProgress {
-                received: 0,
-                total: 0,
-                done: true,
-                saved_path: String::new(),
-                error: format!("所有下载源均失败，最后错误: {}", last_error),
-            });
-            return Ok(());
-        }
-    };
-
-    let total = response.content_length().unwrap_or(0);
-    let mut stream = response.bytes_stream();
-    let mut file = match tokio::fs::File::create(&save_path).await {
-        Ok(f) => f,
-        Err(e) => {
-            let _ = sink.add(DownloadProgress {
-                received: 0,
-                total,
-                done: true,
-                saved_path: String::new(),
-                error: format!("创建文件失败: {}", e),
-            });
-            return Ok(());
-        }
-    };
-    let mut received: u64 = 0;
-
-    while let Some(chunk_result) = stream.next().await {
-        let chunk = match chunk_result {
-            Ok(c) => c,
-            Err(e) => {
-                let _ = sink.add(DownloadProgress {
-                    received,
-                    total,
-                    done: true,
-                    saved_path: String::new(),
-                    error: format!("下载中断: {}", e),
-                });
-                return Ok(());
             }
         };
 
-        if let Err(e) = file.write_all(&chunk).await {
+        let total = response.content_length().unwrap_or(0);
+        let mut stream = response.bytes_stream();
+
+        // Truncate (or create) the file for this attempt
+        let mut file = match tokio::fs::File::create(&save_path).await {
+            Ok(f) => f,
+            Err(e) => {
+                last_error = format!("创建文件失败: {}", e);
+                continue;
+            }
+        };
+
+        let mut received: u64 = 0;
+        let mut stream_err = false;
+
+        while let Some(chunk_result) = stream.next().await {
+            match chunk_result {
+                Ok(chunk) => {
+                    if let Err(e) = file.write_all(&chunk).await {
+                        last_error = format!("写入失败: {}", e);
+                        stream_err = true;
+                        break;
+                    }
+                    received += chunk.len() as u64;
+
+                    let _ = sink.add(DownloadProgress {
+                        received,
+                        total,
+                        done: false,
+                        saved_path: String::new(),
+                        error: String::new(),
+                    });
+                }
+                Err(e) => {
+                    last_error = format!("{}: 流错误 {}", candidate, e);
+                    stream_err = true;
+                    break;
+                }
+            }
+        }
+
+        if stream_err {
+            // Try next mirror
             let _ = sink.add(DownloadProgress {
                 received,
                 total,
-                done: true,
+                done: false,
                 saved_path: String::new(),
-                error: format!("写入文件失败: {}", e),
+                error: format!("{}，尝试下一个源...", last_error),
             });
-            return Ok(());
+            continue;
         }
-        received += chunk.len() as u64;
 
+        let _ = file.flush().await;
+
+        // Success
         let _ = sink.add(DownloadProgress {
             received,
             total,
-            done: false,
-            saved_path: String::new(),
+            done: true,
+            saved_path: save_path,
             error: String::new(),
         });
+        return Ok(());
     }
 
-    let _ = file.flush().await;
-
+    // All candidates failed
     let _ = sink.add(DownloadProgress {
-        received,
-        total,
+        received: 0,
+        total: 0,
         done: true,
-        saved_path: save_path,
-        error: String::new(),
+        saved_path: String::new(),
+        error: format!("所有下载源均失败: {}", last_error),
     });
-
     Ok(())
 }
 
-/// Stub for desktop/web platforms — download is not supported in-app.
+/// Stub for desktop/web platforms.
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub async fn download_update(
     _url: String,

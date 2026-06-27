@@ -43,7 +43,18 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   final _notifyTime = signal(const TimeOfDay(hour: 8, minute: 0));
 
   @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_onNameChanged);
+  }
+
+  void _onNameChanged() {
+    setState(() {});
+  }
+
+  @override
   void dispose() {
+    _nameController.removeListener(_onNameChanged);
     _nameController.dispose();
     _teacherController.dispose();
     _locationController.dispose();
@@ -52,6 +63,13 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isCupertino) {
+      return _buildCupertino(context);
+    }
+    return _buildMaterial(context);
+  }
+
+  Widget _buildMaterial(BuildContext context) {
     final date = _date.value;
     final startTime = _startTime.value;
     final endTime = _endTime.value;
@@ -219,6 +237,301 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildCupertino(BuildContext context) {
+    final date = _date.value;
+    final startTime = _startTime.value;
+    final endTime = _endTime.value;
+    final enableNotification = _enableNotification.value;
+    final notifyTime = _notifyTime.value;
+
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+
+    return CupertinoTheme(
+      data: CupertinoTheme.of(context),
+      child: Material(
+        type: MaterialType.transparency,
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemGroupedBackground.resolveFrom(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            children: [
+              // iOS Action / Navigation Bar
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  border: Border(
+                    bottom: BorderSide(
+                      color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+                      width: 0.5,
+                    ),
+                  ),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        '取消',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: CupertinoColors.systemBlue.resolveFrom(context),
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '添加日程',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.bold,
+                        color: CupertinoColors.label.resolveFrom(context),
+                      ),
+                    ),
+                    const Spacer(),
+                    CupertinoButton(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      onPressed: _nameController.text.trim().isNotEmpty ? _submit : null,
+                      child: Text(
+                        '添加',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: CupertinoColors.systemBlue.resolveFrom(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Content Area
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPadding),
+                  child: Column(
+                    children: [
+                      _buildCupertinoCard([
+                        CupertinoTextField(
+                          controller: _nameController,
+                          placeholder: '日程名称 *',
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 16),
+                            child: Icon(CupertinoIcons.pencil, size: 20, color: CupertinoColors.systemGrey),
+                          ),
+                          decoration: null,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          placeholderStyle: TextStyle(
+                            color: CupertinoColors.placeholderText.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          style: TextStyle(
+                            color: CupertinoColors.label.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          clearButtonMode: OverlayVisibilityMode.editing,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        _buildCupertinoDivider(),
+                        CupertinoTextField(
+                          controller: _teacherController,
+                          placeholder: '相关人员',
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 16),
+                            child: Icon(CupertinoIcons.person, size: 20, color: CupertinoColors.systemGrey),
+                          ),
+                          decoration: null,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          placeholderStyle: TextStyle(
+                            color: CupertinoColors.placeholderText.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          style: TextStyle(
+                            color: CupertinoColors.label.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          clearButtonMode: OverlayVisibilityMode.editing,
+                          textInputAction: TextInputAction.next,
+                        ),
+                        _buildCupertinoDivider(),
+                        CupertinoTextField(
+                          controller: _locationController,
+                          placeholder: '地点',
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 16),
+                            child: Icon(CupertinoIcons.location, size: 20, color: CupertinoColors.systemGrey),
+                          ),
+                          decoration: null,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          placeholderStyle: TextStyle(
+                            color: CupertinoColors.placeholderText.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          style: TextStyle(
+                            color: CupertinoColors.label.resolveFrom(context),
+                            fontSize: 16,
+                          ),
+                          clearButtonMode: OverlayVisibilityMode.editing,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _submit(),
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+
+                      _buildCupertinoCard([
+                        _buildCupertinoTapRow(
+                          icon: CupertinoIcons.calendar,
+                          label: '日期',
+                          value: '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}  ${_weekdayLabel(date.weekday)}',
+                          onTap: _pickDate,
+                        ),
+                        _buildCupertinoDivider(),
+                        _buildCupertinoTapRow(
+                          icon: CupertinoIcons.clock,
+                          label: '开始时间',
+                          value: startTime.format(context),
+                          onTap: _pickStartTime,
+                        ),
+                        _buildCupertinoDivider(),
+                        _buildCupertinoTapRow(
+                          icon: CupertinoIcons.clock_fill,
+                          label: '结束时间',
+                          value: endTime.format(context),
+                          onTap: _pickEndTime,
+                        ),
+                      ]),
+                      const SizedBox(height: 20),
+
+                      _buildCupertinoCard([
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                          child: Row(
+                            children: [
+                              const Icon(CupertinoIcons.bell, size: 20, color: CupertinoColors.systemGrey),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '开启提醒',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        color: CupertinoColors.label.resolveFrom(context),
+                                      ),
+                                    ),
+                                    Text(
+                                      '在指定时间发送通知提醒',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              CupertinoSwitch(
+                                value: enableNotification,
+                                onChanged: (v) => _enableNotification.value = v,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (enableNotification) ...[
+                          _buildCupertinoDivider(),
+                          _buildCupertinoTapRow(
+                            icon: CupertinoIcons.bell_fill,
+                            label: '提醒时间',
+                            value: notifyTime.format(context),
+                            onTap: _pickNotifyTime,
+                          ),
+                        ],
+                      ]),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCupertinoCard(List<Widget> children) {
+    return Container(
+      decoration: BoxDecoration(
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2),
+          width: 0.5,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: children,
+      ),
+    );
+  }
+
+  Widget _buildCupertinoDivider() {
+    return Padding(
+      padding: const EdgeInsets.only(left: 48),
+      child: Container(
+        height: 0.5,
+        color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+      ),
+    );
+  }
+
+  Widget _buildCupertinoTapRow({
+    required IconData icon,
+    required String label,
+    required String value,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, size: 20, color: CupertinoColors.systemGrey),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.label.resolveFrom(context),
+              ),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 16,
+                color: CupertinoColors.secondaryLabel.resolveFrom(context),
+              ),
+            ),
+            const SizedBox(width: 6),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              size: 16,
+              color: CupertinoColors.tertiaryLabel.resolveFrom(context),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -12,7 +12,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<UpdateData> checkForUpdate() =>
     RustLib.instance.api.crateApiUpdateCheckForUpdate();
 
-/// Stub for desktop/web platforms — download is not supported in-app.
+/// Stub for desktop/web platforms.
 Stream<DownloadProgress> downloadUpdate({
   required String url,
   required String savePath,
