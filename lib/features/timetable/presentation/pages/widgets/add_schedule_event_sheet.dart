@@ -168,16 +168,10 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                         borderRadius: BorderRadius.circular(12),
                         onTap: _pickEndTime,
                         child: InputDecorator(
-                          decoration: InputDecoration(
+                          decoration: const InputDecoration(
                             labelText: '结束',
-                            prefixIcon: const Icon(Icons.stop_outlined),
+                            prefixIcon: Icon(Icons.stop_outlined),
                             filled: true,
-                            suffixText: _isEndTimeNextDay ? '次日' : null,
-                            suffixStyle: TextStyle(
-                              fontSize: 11,
-                              color: cs.tertiary,
-                              fontWeight: FontWeight.w600,
-                            ),
                           ),
                           child: Text(endTime.format(context)),
                         ),
@@ -229,12 +223,6 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     );
   }
 
-  bool get _isEndTimeNextDay {
-    final st = _startTime.value;
-    final et = _endTime.value;
-    return et.hour * 60 + et.minute <= st.hour * 60 + st.minute;
-  }
-
   String _weekdayLabel(int weekday) {
     const labels = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     return labels[weekday];
@@ -255,19 +243,27 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     if (picked != null) {
       _startTime.value = picked;
       final currentEnd = _endTime.value;
-      final startMinutes = picked.hour * 60 + picked.minute;
-      final endMinutes = currentEnd.hour * 60 + currentEnd.minute;
-      if (endMinutes <= startMinutes) {
-        // End <= Start: advance end by 45 min, wrapping past midnight if needed
-        final newEndMin = startMinutes + 45;
-        _endTime.value = TimeOfDay(hour: (newEndMin ~/ 60) % 24, minute: newEndMin % 60);
+      final startMin = picked.hour * 60 + picked.minute;
+      final endMin = currentEnd.hour * 60 + currentEnd.minute;
+      if (endMin <= startMin) {
+        final newEnd = (startMin + 45).clamp(0, 23 * 60 + 59);
+        _endTime.value = TimeOfDay(hour: newEnd ~/ 60, minute: newEnd % 60);
       }
     }
   }
 
   Future<void> _pickEndTime() async {
     final picked = await showTimePicker(context: context, initialTime: _endTime.value);
-    if (picked != null) _endTime.value = picked;
+    if (picked != null) {
+      final startMin = _startTime.value.hour * 60 + _startTime.value.minute;
+      final pickedMin = picked.hour * 60 + picked.minute;
+      if (pickedMin <= startMin) {
+        final adjusted = (startMin + 45).clamp(0, 23 * 60 + 59);
+        _endTime.value = TimeOfDay(hour: adjusted ~/ 60, minute: adjusted % 60);
+      } else {
+        _endTime.value = picked;
+      }
+    }
   }
 
   Future<void> _pickNotifyTime() async {
@@ -290,8 +286,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     final st = _startTime.value;
     final et = _endTime.value;
     final start = DateTime(d.year, d.month, d.day, st.hour, st.minute);
-    var end = DateTime(d.year, d.month, d.day, et.hour, et.minute);
-    if (!end.isAfter(start)) end = end.add(const Duration(days: 1));
+    final end = DateTime(d.year, d.month, d.day, et.hour, et.minute);
 
     final enableNotif = _enableNotification.value;
     final notifyDateTime = enableNotif

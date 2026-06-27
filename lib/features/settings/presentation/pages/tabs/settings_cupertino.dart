@@ -107,37 +107,42 @@ class _BodyState extends State<_Body> {
     final notifier = sl<SettingsController>();
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          children: [
-            _AccountCard(state: widget.state, usernameController: widget.usernameController, passwordController: widget.passwordController),
-            const SizedBox(height: 12),
-            _SyncStatusCard(state: widget.state),
-            const SizedBox(height: 24),
-            _SectionLabel('外观'),
-            const SizedBox(height: 8),
-            _ThemeCard(settings: widget.settings, notifier: notifier),
-            const SizedBox(height: 24),
-            _SectionLabel('交互'),
-            const SizedBox(height: 8),
-            _InteractionCard(settings: widget.settings, notifier: notifier),
-            const SizedBox(height: 24),
-            _SectionLabel('高级'),
-            const SizedBox(height: 8),
-            if (!kIsWeb) _ProxyCard(settings: widget.settings, notifier: notifier, proxyController: _proxyController),
-            if (!kIsWeb) const SizedBox(height: 8),
-            _StorageCard(onClearCache: widget.onClearCache, mounted: widget.mounted),
-            const SizedBox(height: 24),
-            _SectionLabel('关于'),
-            const SizedBox(height: 8),
-            _FeedbackCard(),
-            const SizedBox(height: 8),
-            _CupertinoAboutCard(),
-            const SizedBox(height: 12),
-            _CupertinoAppInfoCard(),
-            const SizedBox(height: 48),
-          ],
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                _AccountCard(state: widget.state, usernameController: widget.usernameController, passwordController: widget.passwordController),
+                const SizedBox(height: 12),
+                _SyncStatusCard(state: widget.state),
+                const SizedBox(height: 24),
+                _SectionLabel('外观'),
+                const SizedBox(height: 8),
+                _ThemeCard(settings: widget.settings, notifier: notifier),
+                const SizedBox(height: 24),
+                _SectionLabel('交互'),
+                const SizedBox(height: 8),
+                _InteractionCard(settings: widget.settings, notifier: notifier),
+                const SizedBox(height: 24),
+                _SectionLabel('高级'),
+                const SizedBox(height: 8),
+                if (!kIsWeb) _ProxyCard(settings: widget.settings, notifier: notifier, proxyController: _proxyController),
+                if (!kIsWeb) const SizedBox(height: 8),
+                _StorageCard(onClearCache: widget.onClearCache, mounted: widget.mounted),
+                const SizedBox(height: 24),
+                _SectionLabel('关于'),
+                const SizedBox(height: 8),
+                _FeedbackCard(),
+                const SizedBox(height: 8),
+                _CupertinoAboutCard(),
+                const SizedBox(height: 12),
+                _CupertinoAppInfoCard(),
+                const SizedBox(height: 48),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -200,35 +205,56 @@ Widget _iosTile(
   final cs = CupertinoColors.label.resolveFrom(context);
   final secondary = CupertinoColors.secondaryLabel.resolveFrom(context);
 
+  final iconWidget = Icon(icon, size: 22, color: iconColor ?? secondary);
+  final content = Expanded(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: TextStyle(fontSize: 16, color: cs, fontWeight: FontWeight.w400)),
+        if (subtitle != null) ...[
+          const SizedBox(height: 2),
+          Text(subtitle, style: TextStyle(fontSize: 13, color: secondary)),
+        ],
+      ],
+    ),
+  );
+  final chevron = Icon(CupertinoIcons.chevron_forward, size: 16, color: CupertinoColors.tertiaryLabel.resolveFrom(context));
+
   return Column(
     mainAxisSize: MainAxisSize.min,
     children: [
-      GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: iconColor ?? secondary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            if (trailing != null) ...[
+              // Trailing widget present (e.g. switch): only content area is tappable.
+              GestureDetector(
+                onTap: onTap,
+                behavior: HitTestBehavior.opaque,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [iconWidget, const SizedBox(width: 12), content],
+                ),
+              ),
+              const SizedBox(width: 8),
+              trailing,
+            ] else ...[
+              // No trailing widget: entire row is tappable.
+              GestureDetector(
+                onTap: onTap,
+                behavior: HitTestBehavior.opaque,
+                child: Row(
                   children: [
-                    Text(title, style: TextStyle(fontSize: 16, color: cs, fontWeight: FontWeight.w400)),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(subtitle, style: TextStyle(fontSize: 13, color: secondary)),
-                    ],
+                    iconWidget,
+                    const SizedBox(width: 12),
+                    content,
+                    if (onTap != null) chevron,
                   ],
                 ),
               ),
-              if (trailing != null) trailing
-              else if (onTap != null)
-                Icon(CupertinoIcons.chevron_forward, size: 16, color: CupertinoColors.tertiaryLabel.resolveFrom(context)),
             ],
-          ),
+          ],
         ),
       ),
       if (showDivider)

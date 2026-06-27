@@ -60,12 +60,36 @@ pub async fn check_for_update() -> Result<UpdateData> {
     })
 }
 
+/// Try to start a download from one of the candidate URLs.
+/// Returns Ok(response) on success, Err on connection/HTTP failure.
+#[cfg(any(target_os = "android", target_os = "ios"))]
+async fn try_download(
+    client: &reqwest::Client,
+    url: &str,
+) -> Result<reqwest::Response, String> {
+    let resp = client
+        .get(url)
+        .timeout(std::time::Duration::from_secs(15))
+        .send()
+        .await
+        .map_err(|e| format!("{}", e))?;
+
+    if !resp.status().is_success() {
+        return Err(format!("HTTP {}", resp.status().as_u16()));
+    }
+
+    Ok(resp)
+}
+
 /// Download a file from [url] to [save_path], streaming progress via [sink].
+/// Tries the original URL first, then each mirror prefix in [mirror_prefixes].
+/// Mirror prefixes are prepended to [url], e.g. "https://ghfast.top/" + url.
 /// Only available on mobile platforms (Android/iOS).
 #[cfg(any(target_os = "android", target_os = "ios"))]
 pub async fn download_update(
     url: String,
     save_path: String,
+    mirror_prefixes: Vec<String>,
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
     use futures_util::StreamExt;
@@ -73,34 +97,67 @@ pub async fn download_update(
 
     let client = http::build_client();
 
-    let response = match client.get(&url).send().await {
-        Ok(r) => r,
-        Err(e) => {
+    // Build candidate URLs: original first, then mirrors
+    let mut candidates: Vec<String> = Vec::with_capacity(1 + mirror_prefixes.len());
+    candidates.push(url.clone());
+    for prefix in &mirror_prefixes {
+        candidates.push(format!("{}{}", prefix, url));
+    }
+
+    // Try each candidate until one succeeds
+    let mut last_error = String::new();
+    let mut response: Option<reqwest::Response> = None;
+
+    for candidate in &candidates {
+        match try_download(&client, candidate).await {
+            Ok(resp) => {
+                response = Some(resp);
+                break;
+            }
+            Err(e) => {
+                last_error = e;
+                // Notify the UI which mirror failed so it can display status
+                let _ = sink.add(DownloadProgress {
+                    received: 0,
+                    total: 0,
+                    done: false,
+                    saved_path: String::new(),
+                    error: format!("尝试 {} 失败: {}", candidate, last_error),
+                });
+                continue;
+            }
+        }
+    }
+
+    let response = match response {
+        Some(r) => r,
+        None => {
             let _ = sink.add(DownloadProgress {
                 received: 0,
                 total: 0,
                 done: true,
                 saved_path: String::new(),
-                error: format!("请求失败: {}", e),
+                error: format!("所有下载源均失败，最后错误: {}", last_error),
             });
             return Ok(());
         }
     };
 
-    if !response.status().is_success() {
-        let _ = sink.add(DownloadProgress {
-            received: 0,
-            total: 0,
-            done: true,
-            saved_path: String::new(),
-            error: format!("服务器返回错误: {}", response.status().as_u16()),
-        });
-        return Ok(());
-    }
-
     let total = response.content_length().unwrap_or(0);
     let mut stream = response.bytes_stream();
-    let mut file = tokio::fs::File::create(&save_path).await?;
+    let mut file = match tokio::fs::File::create(&save_path).await {
+        Ok(f) => f,
+        Err(e) => {
+            let _ = sink.add(DownloadProgress {
+                received: 0,
+                total,
+                done: true,
+                saved_path: String::new(),
+                error: format!("创建文件失败: {}", e),
+            });
+            return Ok(());
+        }
+    };
     let mut received: u64 = 0;
 
     while let Some(chunk_result) = stream.next().await {
@@ -118,7 +175,16 @@ pub async fn download_update(
             }
         };
 
-        file.write_all(&chunk).await?;
+        if let Err(e) = file.write_all(&chunk).await {
+            let _ = sink.add(DownloadProgress {
+                received,
+                total,
+                done: true,
+                saved_path: String::new(),
+                error: format!("写入文件失败: {}", e),
+            });
+            return Ok(());
+        }
         received += chunk.len() as u64;
 
         let _ = sink.add(DownloadProgress {
@@ -130,7 +196,7 @@ pub async fn download_update(
         });
     }
 
-    file.flush().await?;
+    let _ = file.flush().await;
 
     let _ = sink.add(DownloadProgress {
         received,
@@ -148,6 +214,7 @@ pub async fn download_update(
 pub async fn download_update(
     _url: String,
     _save_path: String,
+    _mirror_prefixes: Vec<String>,
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
     let _ = sink.add(DownloadProgress {

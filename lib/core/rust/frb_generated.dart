@@ -109,6 +109,7 @@ abstract class RustLibApi extends BaseApi {
   Stream<DownloadProgress> crateApiUpdateDownloadUpdate({
     required String url,
     required String savePath,
+    required List<String> mirrorPrefixes,
   });
 
   Future<BookDetail> crateApiBookSearchFetchBookLocations({
@@ -414,6 +415,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   Stream<DownloadProgress> crateApiUpdateDownloadUpdate({
     required String url,
     required String savePath,
+    required List<String> mirrorPrefixes,
   }) {
     final sink = RustStreamSink<DownloadProgress>();
     unawaited(
@@ -423,6 +425,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             final serializer = SseSerializer(generalizedFrbRustBinding);
             sse_encode_String(url, serializer);
             sse_encode_String(savePath, serializer);
+            sse_encode_list_String(mirrorPrefixes, serializer);
             sse_encode_StreamSink_download_progress_Sse(sink, serializer);
             pdeCallFfi(
               generalizedFrbRustBinding,
@@ -436,7 +439,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             decodeErrorData: sse_decode_AnyhowException,
           ),
           constMeta: kCrateApiUpdateDownloadUpdateConstMeta,
-          argValues: [url, savePath, sink],
+          argValues: [url, savePath, mirrorPrefixes, sink],
           apiImpl: this,
         ),
       ),
@@ -447,7 +450,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   TaskConstMeta get kCrateApiUpdateDownloadUpdateConstMeta =>
       const TaskConstMeta(
         debugName: "download_update",
-        argNames: ["url", "savePath", "sink"],
+        argNames: ["url", "savePath", "mirrorPrefixes", "sink"],
       );
 
   @override

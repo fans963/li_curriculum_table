@@ -17,6 +17,14 @@ import 'package:li_curriculum_table/core/services/update_service.dart';
 const _repoOwner = 'fans963';
 const _repoName = 'li_curriculum_table';
 
+/// GitHub mirror prefixes for users in mainland China.
+/// Tried in order; the raw GitHub URL is always attempted first.
+const _mirrorPrefixes = [
+  'https://ghfast.top/',
+  'https://gh-proxy.com/',
+  'https://gh.ddlc.top/',
+];
+
 /// Build the download URL for the latest release asset.
 String _buildDownloadUrl(String version) {
   if (Platform.isAndroid) {
@@ -145,7 +153,7 @@ class _MaterialUpdateDialogState extends State<_MaterialUpdateDialog> {
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
           _dl.received = progress.received.toInt();
@@ -379,7 +387,7 @@ class _CupertinoUpdateDialogState extends State<_CupertinoUpdateDialog> {
     final savePath = '${dir.path}/update_v${widget.updateInfo.latestVersion}.$ext';
 
     try {
-      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath)) {
+      await for (final progress in rust.downloadUpdate(url: url, savePath: savePath, mirrorPrefixes: _mirrorPrefixes)) {
         if (!mounted) return;
         setState(() {
           _dl.received = progress.received.toInt();

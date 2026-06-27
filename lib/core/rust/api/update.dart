@@ -16,9 +16,11 @@ Future<UpdateData> checkForUpdate() =>
 Stream<DownloadProgress> downloadUpdate({
   required String url,
   required String savePath,
+  required List<String> mirrorPrefixes,
 }) => RustLib.instance.api.crateApiUpdateDownloadUpdate(
   url: url,
   savePath: savePath,
+  mirrorPrefixes: mirrorPrefixes,
 );
 
 class DownloadProgress {

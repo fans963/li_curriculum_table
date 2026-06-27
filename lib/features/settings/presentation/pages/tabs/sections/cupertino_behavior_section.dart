@@ -20,7 +20,8 @@ class _InteractionCard extends StatelessWidget {
             icon: CupertinoIcons.textformat,
             title: '课表文字自适应',
             subtitle: '自动缩小字号以完整显示课程名和地点',
-            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.autoSizeText, onChanged: notifier.setAutoSizeText)),
+            trailing: CupertinoSwitch(value: settings.autoSizeText, onChanged: notifier.setAutoSizeText),
+            onTap: () => notifier.setAutoSizeText(!settings.autoSizeText),
           ),
           if (settings.autoSizeText)
             _CupertinoAutoSizeSlider(settings: settings, notifier: notifier)
@@ -31,7 +32,8 @@ class _InteractionCard extends StatelessWidget {
             icon: CupertinoIcons.rectangle_grid_1x2,
             title: '按星期滑动',
             subtitle: '以整周为单位左右对齐滑动$daysLabel',
-            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.weeklyScroll, onChanged: notifier.setWeeklyScroll)),
+            trailing: CupertinoSwitch(value: settings.weeklyScroll, onChanged: notifier.setWeeklyScroll),
+            onTap: () => notifier.setWeeklyScroll(!settings.weeklyScroll),
           ),
           if (!settings.weeklyScroll)
             _iosTile(
@@ -57,7 +59,8 @@ class _InteractionCard extends StatelessWidget {
             icon: CupertinoIcons.book,
             title: '图书馆检索封面',
             subtitle: '自动获取图书封面,目前数据库并不完善，仅有部分热门书籍封面信息',
-            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.enableBookCover, onChanged: notifier.setEnableBookCover)),
+            trailing: CupertinoSwitch(value: settings.enableBookCover, onChanged: notifier.setEnableBookCover),
+            onTap: () => notifier.setEnableBookCover(!settings.enableBookCover),
             showDivider: false,
           ),
         ],
@@ -238,7 +241,8 @@ class _ProxyCard extends StatelessWidget {
             icon: CupertinoIcons.wifi,
             title: '开启本地代理网关',
             subtitle: '其他设备可通过此应用共享会话',
-            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.proxyEnabled, onChanged: notifier.setProxyEnabled)),
+            trailing: CupertinoSwitch(value: settings.proxyEnabled, onChanged: notifier.setProxyEnabled),
+            onTap: () => notifier.setProxyEnabled(!settings.proxyEnabled),
           ),
           _iosTile(
             context,

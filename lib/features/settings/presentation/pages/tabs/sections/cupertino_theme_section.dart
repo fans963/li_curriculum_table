@@ -24,7 +24,8 @@ class _ThemeCard extends StatelessWidget {
             icon: CupertinoIcons.color_filter,
             title: '动态取色',
             subtitle: '从壁纸或系统提取主题色',
-            trailing: IgnorePointer(child: CupertinoSwitch(value: settings.useDynamicColor, onChanged: notifier.setUseDynamicColor)),
+            trailing: CupertinoSwitch(value: settings.useDynamicColor, onChanged: notifier.setUseDynamicColor),
+            onTap: () => notifier.setUseDynamicColor(!settings.useDynamicColor),
           ),
           if (!settings.useDynamicColor) ...[
             _iosTile(
