@@ -273,8 +273,8 @@ fn wire__crate__api__update__download_update_impl(
             };
             let mut deserializer =
                 flutter_rust_bridge::for_generated::SseDeserializer::new(message);
-            let api_url = <String>::sse_decode(&mut deserializer);
-            let api_save_path = <String>::sse_decode(&mut deserializer);
+            let api__url = <String>::sse_decode(&mut deserializer);
+            let api__save_path = <String>::sse_decode(&mut deserializer);
             let api_sink = <StreamSink<
                 crate::api::update::DownloadProgress,
                 flutter_rust_bridge::for_generated::SseCodec,
@@ -284,7 +284,7 @@ fn wire__crate__api__update__download_update_impl(
                 transform_result_sse::<_, flutter_rust_bridge::for_generated::anyhow::Error>(
                     (move || async move {
                         let output_ok =
-                            crate::api::update::download_update(api_url, api_save_path, api_sink)
+                            crate::api::update::download_update(api__url, api__save_path, api_sink)
                                 .await?;
                         Ok(output_ok)
                     })()

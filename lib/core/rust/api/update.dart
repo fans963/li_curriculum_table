@@ -12,8 +12,7 @@ import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated.dart';
 Future<UpdateData> checkForUpdate() =>
     RustLib.instance.api.crateApiUpdateCheckForUpdate();
 
-/// Download a file from [url] to a temporary path, streaming progress via [sink].
-/// Returns the final saved file path on success.
+/// Stub for desktop/web platforms — download is not supported in-app.
 Stream<DownloadProgress> downloadUpdate({
   required String url,
   required String savePath,

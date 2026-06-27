@@ -168,10 +168,16 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                         borderRadius: BorderRadius.circular(12),
                         onTap: _pickEndTime,
                         child: InputDecorator(
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             labelText: '结束',
-                            prefixIcon: Icon(Icons.stop_outlined),
+                            prefixIcon: const Icon(Icons.stop_outlined),
                             filled: true,
+                            suffixText: _isEndTimeNextDay ? '次日' : null,
+                            suffixStyle: TextStyle(
+                              fontSize: 11,
+                              color: cs.tertiary,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                           child: Text(endTime.format(context)),
                         ),
@@ -223,6 +229,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     );
   }
 
+  bool get _isEndTimeNextDay {
+    final st = _startTime.value;
+    final et = _endTime.value;
+    return et.hour * 60 + et.minute <= st.hour * 60 + st.minute;
+  }
+
   String _weekdayLabel(int weekday) {
     const labels = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     return labels[weekday];
@@ -243,9 +255,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     if (picked != null) {
       _startTime.value = picked;
       final currentEnd = _endTime.value;
-      if (currentEnd.hour < picked.hour ||
-          (currentEnd.hour == picked.hour && currentEnd.minute <= picked.minute)) {
-        _endTime.value = picked.replacing(minute: (picked.minute + 45) % 60);
+      final startMinutes = picked.hour * 60 + picked.minute;
+      final endMinutes = currentEnd.hour * 60 + currentEnd.minute;
+      if (endMinutes <= startMinutes) {
+        // End <= Start: advance end by 45 min, wrapping past midnight if needed
+        final newEndMin = startMinutes + 45;
+        _endTime.value = TimeOfDay(hour: (newEndMin ~/ 60) % 24, minute: newEndMin % 60);
       }
     }
   }

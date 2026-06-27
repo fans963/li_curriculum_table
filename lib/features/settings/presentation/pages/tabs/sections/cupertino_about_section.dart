@@ -275,7 +275,7 @@ class _SyncStatusCard extends StatelessWidget {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Theme Card
+// Feedback & About Cards
 // ═══════════════════════════════════════════════════════════════════════════
 
 class _FeedbackCard extends StatelessWidget {

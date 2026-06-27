@@ -1,9 +1,6 @@
 use crate::api::http;
 use anyhow::Result;
-use flutter_rust_bridge::frb;
-use futures_util::StreamExt;
 use serde::Deserialize;
-use tokio::io::AsyncWriteExt;
 
 #[derive(Debug, Clone, Deserialize)]
 struct GitHubRelease {
@@ -63,13 +60,17 @@ pub async fn check_for_update() -> Result<UpdateData> {
     })
 }
 
-/// Download a file from [url] to a temporary path, streaming progress via [sink].
-/// Returns the final saved file path on success.
+/// Download a file from [url] to [save_path], streaming progress via [sink].
+/// Only available on mobile platforms (Android/iOS).
+#[cfg(any(target_os = "android", target_os = "ios"))]
 pub async fn download_update(
     url: String,
     save_path: String,
-    sink: flutter_rust_bridge::StreamSink<DownloadProgress>,
+    sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
+    use futures_util::StreamExt;
+    use tokio::io::AsyncWriteExt;
+
     let client = http::build_client();
 
     let response = match client.get(&url).send().await {
@@ -102,8 +103,8 @@ pub async fn download_update(
     let mut file = tokio::fs::File::create(&save_path).await?;
     let mut received: u64 = 0;
 
-    while let Some(chunk) = stream.next().await {
-        let chunk = match chunk {
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = match chunk_result {
             Ok(c) => c,
             Err(e) => {
                 let _ = sink.add(DownloadProgress {
@@ -135,9 +136,26 @@ pub async fn download_update(
         received,
         total,
         done: true,
-        saved_path: save_path.clone(),
+        saved_path: save_path,
         error: String::new(),
     });
 
+    Ok(())
+}
+
+/// Stub for desktop/web platforms — download is not supported in-app.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub async fn download_update(
+    _url: String,
+    _save_path: String,
+    sink: crate::frb_generated::StreamSink<DownloadProgress>,
+) -> Result<()> {
+    let _ = sink.add(DownloadProgress {
+        received: 0,
+        total: 0,
+        done: true,
+        saved_path: String::new(),
+        error: "当前平台不支持应用内下载，请前往 GitHub 下载".to_string(),
+    });
     Ok(())
 }
