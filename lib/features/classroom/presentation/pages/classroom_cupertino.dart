@@ -17,21 +17,15 @@ Widget buildClassroomCupertino(
   return GlassScaffold(
     title: '空闲教室',
     slivers: [
-      SliverToBoxAdapter(
-        child: _buildCupertinoFilterBar(context, state),
-      ),
+      SliverToBoxAdapter(child: _buildCupertinoFilterBar(context, state)),
       if (state.isLoading && state.results.isEmpty)
         const SliverFillRemaining(
           child: Center(child: CupertinoActivityIndicator()),
         )
       else if (state.needsLogin)
-        SliverFillRemaining(
-          child: _buildCupertinoNeedsLogin(context),
-        )
+        SliverFillRemaining(child: _buildCupertinoNeedsLogin(context))
       else if (state.results.isEmpty)
-        const SliverFillRemaining(
-          child: Center(child: Text('暂无搜索结果')),
-        )
+        const SliverFillRemaining(child: Center(child: Text('暂无搜索结果')))
       else
         _buildCupertinoClassroomList(context, state),
     ],
@@ -81,11 +75,11 @@ Widget _buildCupertinoDateChip(BuildContext context, ClassroomState state) {
       await showCupertinoModalPopup<DateTime>(
         context: context,
         builder: (ctx) => Container(
-            height: 280,
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemBackground.resolveFrom(context).withValues(alpha: 0.75),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
+          height: 280,
+          decoration: BoxDecoration(
+            color: CupertinoColors.systemBackground.resolveFrom(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
           child: Column(
             children: [
               Padding(
@@ -94,7 +88,9 @@ Widget _buildCupertinoDateChip(BuildContext context, ClassroomState state) {
                   width: 36,
                   height: 5,
                   decoration: BoxDecoration(
-                    color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+                    color: CupertinoColors.separator
+                        .resolveFrom(context)
+                        .withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(2.5),
                   ),
                 ),
@@ -141,7 +137,9 @@ Widget _buildCupertinoCampusChip(BuildContext context, ClassroomState state) {
           context,
           title: '选择校区',
           items: state.campuses.map((c) => c.name).toList(),
-          selectedIndex: state.campuses.indexWhere((c) => c.id == state.selectedCampus?.id),
+          selectedIndex: state.campuses.indexWhere(
+            (c) => c.id == state.selectedCampus?.id,
+          ),
           onSelected: (index) {
             sl<ClassroomController>().setCampus(state.campuses[index]);
             Navigator.pop(ctx);
@@ -163,7 +161,9 @@ Widget _buildCupertinoBuildingChip(BuildContext context, ClassroomState state) {
           context,
           title: '选择教学楼',
           items: state.buildings.map((b) => b.name).toList(),
-          selectedIndex: state.buildings.indexWhere((b) => b.id == state.selectedBuilding?.id),
+          selectedIndex: state.buildings.indexWhere(
+            (b) => b.id == state.selectedBuilding?.id,
+          ),
           onSelected: (index) {
             sl<ClassroomController>().selectBuilding(state.buildings[index]);
             Navigator.pop(ctx);
@@ -171,7 +171,10 @@ Widget _buildCupertinoBuildingChip(BuildContext context, ClassroomState state) {
         ),
       );
     },
-    child: _CupertinoDropdownChip(label: label, icon: CupertinoIcons.building_2_fill),
+    child: _CupertinoDropdownChip(
+      label: label,
+      icon: CupertinoIcons.building_2_fill,
+    ),
   );
 }
 
@@ -183,20 +186,22 @@ Widget _buildCupertinoPickerSheet(
   required ValueChanged<int> onSelected,
 }) {
   return Container(
-      height: 300,
-      decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground.resolveFrom(context).withValues(alpha: 0.75),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        children: [
+    height: 300,
+    decoration: BoxDecoration(
+      color: CupertinoColors.systemBackground.resolveFrom(context),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    child: Column(
+      children: [
         Padding(
           padding: const EdgeInsets.only(top: 8, bottom: 4),
           child: Container(
             width: 36,
             height: 5,
             decoration: BoxDecoration(
-              color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+              color: CupertinoColors.separator
+                  .resolveFrom(context)
+                  .withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2.5),
             ),
           ),
@@ -205,10 +210,7 @@ Widget _buildCupertinoPickerSheet(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Text(
             title,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
           ),
         ),
         Expanded(
@@ -218,9 +220,13 @@ Widget _buildCupertinoPickerSheet(
               initialItem: selectedIndex >= 0 ? selectedIndex : 0,
             ),
             onSelectedItemChanged: onSelected,
-            children: items.map((item) => Center(
-              child: Text(item, style: const TextStyle(fontSize: 16)),
-            )).toList(),
+            children: items
+                .map(
+                  (item) => Center(
+                    child: Text(item, style: const TextStyle(fontSize: 16)),
+                  ),
+                )
+                .toList(),
           ),
         ),
       ],
@@ -239,17 +245,25 @@ class _CupertinoDropdownChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+          context,
+        ),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3),
+          color: CupertinoColors.separator
+              .resolveFrom(context)
+              .withValues(alpha: 0.3),
           width: 0.5,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: CupertinoColors.systemBlue.resolveFrom(context)),
+          Icon(
+            icon,
+            size: 14,
+            color: CupertinoColors.systemBlue.resolveFrom(context),
+          ),
           const SizedBox(width: 4),
           Text(
             label,
@@ -276,13 +290,20 @@ Widget _buildCupertinoNeedsLogin(BuildContext context) {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(CupertinoIcons.person, size: 64, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+        Icon(
+          CupertinoIcons.person,
+          size: 64,
+          color: CupertinoColors.secondaryLabel.resolveFrom(context),
+        ),
         const SizedBox(height: 16),
         const Text('需要登录'),
         const SizedBox(height: 8),
         Text(
           '请先前往「设置」页面输入账号密码',
-          style: TextStyle(color: CupertinoColors.secondaryLabel.resolveFrom(context), fontSize: 13),
+          style: TextStyle(
+            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+            fontSize: 13,
+          ),
         ),
         const SizedBox(height: 24),
         CupertinoButton.filled(
@@ -295,7 +316,10 @@ Widget _buildCupertinoNeedsLogin(BuildContext context) {
   );
 }
 
-Widget _buildCupertinoClassroomList(BuildContext context, ClassroomState state) {
+Widget _buildCupertinoClassroomList(
+  BuildContext context,
+  ClassroomState state,
+) {
   final sessions = ['1-3节', '4-5节', '6-7节', '8-10节', '11-13节'];
 
   return SliverList(
@@ -305,8 +329,31 @@ Widget _buildCupertinoClassroomList(BuildContext context, ClassroomState state) 
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 4),
         child: Row(
           children: [
-            Expanded(flex: 3, child: Text('教室', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: -0.08, color: CupertinoColors.secondaryLabel.resolveFrom(context)))),
-            ...sessions.map((s) => Expanded(flex: 2, child: Text(s, textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: CupertinoColors.secondaryLabel.resolveFrom(context))))),
+            Expanded(
+              flex: 3,
+              child: Text(
+                '教室',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.08,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
+              ),
+            ),
+            ...sessions.map(
+              (s) => Expanded(
+                flex: 2,
+                child: Text(
+                  s,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -315,44 +362,56 @@ Widget _buildCupertinoClassroomList(BuildContext context, ClassroomState state) 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: Container(
-              decoration: BoxDecoration(
-                color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: CupertinoColors.black.withValues(alpha: 0.03),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
+            decoration: BoxDecoration(
+              color: CupertinoColors.secondarySystemGroupedBackground
+                  .resolveFrom(context),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.black.withValues(alpha: 0.03),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      item.classroomName,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
+                  ...List.generate(5, (sIdx) {
+                    final isFree = item.availability[sIdx];
+                    return Expanded(
+                      flex: 2,
+                      child: Center(
+                        child: Icon(
+                          isFree
+                              ? CupertinoIcons.checkmark
+                              : CupertinoIcons.xmark,
+                          size: 16,
+                          color: isFree
+                              ? CupertinoColors.systemGreen.resolveFrom(context)
+                              : CupertinoColors.systemRed.resolveFrom(context),
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(item.classroomName, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis),
-                    ),
-                    ...List.generate(5, (sIdx) {
-                      final isFree = item.availability[sIdx];
-                      return Expanded(
-                        flex: 2,
-                        child: Center(
-                          child: Icon(
-                            isFree ? CupertinoIcons.checkmark : CupertinoIcons.xmark,
-                            size: 16,
-                            color: isFree ? CupertinoColors.systemGreen.resolveFrom(context) : CupertinoColors.systemRed.resolveFrom(context),
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ),
-              ),
             ),
-          );
+          ),
+        );
       }),
       const SizedBox(height: 40),
     ]),

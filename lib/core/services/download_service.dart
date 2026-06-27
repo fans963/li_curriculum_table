@@ -3,30 +3,10 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:li_curriculum_table/core/rust/api/update.dart' as rust;
 
-/// Progress event emitted during a download.
-class DownloadProgress {
-  final int received;
-  final int total;
-  final bool done;
-  final String savedPath;
-  final String error;
-
-  const DownloadProgress({
-    required this.received,
-    required this.total,
-    required this.done,
-    this.savedPath = '',
-    this.error = '',
-  });
-}
-
-/// GitHub mirror prefixes — tried first for users in mainland China.
-const _mirrorPrefixes = [
-  'https://ghfast.top/',
-  'https://gh-proxy.com/',
-  'https://gh.ddlc.top/',
-];
+// Re-export DownloadProgress so that other files importing this service don't break.
+export 'package:li_curriculum_table/core/rust/api/update.dart' show DownloadProgress;
 
 const _dlChannelId = 'download_progress';
 const _dlChannelName = '下载通知';
@@ -121,182 +101,68 @@ Future<void> _showErrorNotif(String error) async {
 
 // ─── Download ────────────────────────────────────────────────────────────
 
-/// Race all mirrors + GitHub in parallel. Use whichever connects first,
-/// then stream from that connection. If the stream errors, fall back to
-/// the next connected response (if available) or re-race remaining candidates.
-Stream<DownloadProgress> downloadWithProgress({
+/// Delegates the update download to the Rust side via FFI.
+/// Listens to progress events, manages system local notifications, and yields
+/// updates back to the UI.
+Stream<rust.DownloadProgress> downloadWithProgress({
   required String url,
   required String savePath,
 }) async* {
-  final candidates = <String>[
-    ..._mirrorPrefixes.map((p) => '$p$url'),
-    url,
-  ];
+  var lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
 
-  yield const DownloadProgress(
-    received: 0, total: 0, done: false,
+  yield const rust.DownloadProgress(
+    received: 0,
+    total: 0,
+    done: false,
+    savedPath: '',
     error: '正在连接...',
   );
 
-  // Phase 1: race all candidates — take the first that responds 200
-  final client = HttpClient()
-    ..connectionTimeout = const Duration(seconds: 8)
-    ..autoUncompress = false;
-
-  HttpClientResponse? bestResponse;
-  String bestUrl = '';
-
-  // Fire all connections in parallel
-  final futures = candidates.map((u) async {
-    try {
-      final req = await client.getUrl(Uri.parse(u));
-      req.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
-      final resp = await req.close().timeout(const Duration(seconds: 8));
-      return (u, resp);
-    } catch (_) {
-      return null;
+  String? proxyString;
+  try {
+    proxyString = HttpClient.findProxyFromEnvironment(Uri.parse(url));
+    debugPrint('OTA System Proxy resolved: $proxyString');
+    if (proxyString == 'DIRECT') {
+      debugPrint('提示: 系统代理解析为 DIRECT。如果您在手机上开启了 VPN，请确保在 VPN 软件的“分流/应用过滤”列表中勾选了 "com.example.curriculum_table" (或尝试切换为“全局代理”模式)，否则应用的流量将绕过 VPN 直连，导致下载极慢。');
     }
-  }).toList();
-
-  // Wait for the first successful response
-  final completer = Completer<void>();
-  var resolved = false;
-
-  for (final future in futures) {
-    future.then((result) {
-      if (result != null && !resolved) {
-        resolved = true;
-        bestUrl = result.$1;
-        bestResponse = result.$2;
-        if (!completer.isCompleted) completer.complete();
-      }
-    });
+  } catch (e) {
+    debugPrint('OTA: Failed to resolve system proxy: $e');
   }
-
-  // Also set a total timeout for the race
-  Future.delayed(const Duration(seconds: 12), () {
-    if (!resolved) {
-      resolved = true;
-      if (!completer.isCompleted) completer.complete();
-    }
-  });
-
-  await completer.future;
-
-  if (bestResponse == null) {
-    client.close(force: true);
-    unawaited(_showErrorNotif('所有下载源均不可达'));
-    yield const DownloadProgress(
-      received: 0, total: 0, done: true,
-      error: '所有下载源均不可达',
-    );
-    return;
-  }
-
-  debugPrint('OTA: using $bestUrl');
-
-  // Phase 2: stream from the winning response
-  final response = bestResponse!;
-  final total = response.contentLength;
-  var received = 0;
-  final file = File(savePath);
-  IOSink? fileSink;
-  var lastNotifTime = DateTime.fromMillisecondsSinceEpoch(0);
-  String lastError = '';
 
   try {
-    fileSink = file.openWrite();
-
-    await for (final chunk in response) {
-      fileSink.add(chunk);
-      received += chunk.length;
-
-      yield DownloadProgress(
-        received: received,
-        total: total > 0 ? total : 0,
-        done: false,
-      );
-
-      final now = DateTime.now();
-      if (now.difference(lastNotifTime).inMilliseconds >= 500) {
-        lastNotifTime = now;
-        unawaited(_showProgressNotif(received, total > 0 ? total : received));
+    await for (final progress in rust.downloadUpdate(
+      url: url,
+      savePath: savePath,
+      proxy: proxyString,
+    )) {
+      if (progress.done) {
+        if (progress.error.isNotEmpty) {
+          unawaited(_showErrorNotif(progress.error));
+        } else {
+          unawaited(_showCompleteNotif());
+        }
+      } else {
+        final now = DateTime.now();
+        if (now.difference(lastNotifTime).inMilliseconds >= 500) {
+          lastNotifTime = now;
+          unawaited(_showProgressNotif(
+            progress.received,
+            progress.total > 0 ? progress.total : progress.received,
+          ));
+        }
       }
+      yield progress;
     }
-
-    await fileSink.flush();
-    await fileSink.close();
-    client.close(force: true);
-
-    unawaited(_showCompleteNotif());
-    yield DownloadProgress(
-      received: received,
-      total: total > 0 ? total : 0,
-      done: true,
-      savedPath: savePath,
-    );
-    return;
   } catch (e) {
-    lastError = '$bestUrl: $e';
-    await fileSink?.close();
-    client.close(force: true);
-  }
-
-  // If we get here, the stream failed — try remaining candidates sequentially
-  debugPrint('OTA: stream error on $bestUrl, trying fallbacks...');
-
-  for (final candidate in candidates) {
-    if (candidate == bestUrl) continue;
-
-    yield DownloadProgress(
-      received: 0, total: 0, done: false,
-      error: '正在回退到 $candidate...',
+    unawaited(_showErrorNotif(e.toString()));
+    yield rust.DownloadProgress(
+      received: 0,
+      total: 0,
+      done: true,
+      savedPath: '',
+      error: e.toString(),
     );
-
-    try {
-      final c = HttpClient()
-        ..connectionTimeout = const Duration(seconds: 8)
-        ..autoUncompress = false;
-      final req = await c.getUrl(Uri.parse(candidate));
-      req.headers.set(HttpHeaders.acceptEncodingHeader, 'identity');
-      final resp = await req.close().timeout(const Duration(seconds: 8));
-
-      if (resp.statusCode != HttpStatus.ok) {
-        c.close(force: true);
-        continue;
-      }
-
-      final t = resp.contentLength;
-      var r = 0;
-      final sink = File(savePath).openWrite();
-
-      await for (final chunk in resp) {
-        sink.add(chunk);
-        r += chunk.length;
-        yield DownloadProgress(received: r, total: t > 0 ? t : 0, done: false);
-      }
-
-      await sink.flush();
-      await sink.close();
-      c.close(force: true);
-
-      unawaited(_showCompleteNotif());
-      yield DownloadProgress(
-        received: r, total: t > 0 ? t : 0,
-        done: true, savedPath: savePath,
-      );
-      return;
-    } catch (e) {
-      lastError += '\n$candidate: $e';
-      continue;
-    }
   }
-
-  unawaited(_showErrorNotif(lastError));
-  yield DownloadProgress(
-    received: 0, total: 0, done: true,
-    error: '所有下载源均失败: $lastError',
-  );
 }
 
 String _fmtBytes(int bytes) {

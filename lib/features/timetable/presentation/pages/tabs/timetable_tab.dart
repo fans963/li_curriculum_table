@@ -98,8 +98,7 @@ class _TimetableTabState extends State<TimetableTab>
                 child: state.needsLogin
                     ? _NeedsLoginView(
                         key: const ValueKey('needs_login'),
-                        onSync: () =>
-                            sl<TimetableController>().syncFromCache(),
+                        onSync: () => sl<TimetableController>().syncFromCache(),
                       )
                     : ExpressiveRefreshIndicator(
                         key: const ValueKey('timetable_view'),
@@ -108,8 +107,9 @@ class _TimetableTabState extends State<TimetableTab>
                           await sl<TimetableController>().syncFromCache();
                         },
                         child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(context)
-                              .copyWith(scrollbars: false),
+                          behavior: ScrollConfiguration.of(
+                            context,
+                          ).copyWith(scrollbars: false),
                           child: NotificationListener<ScrollNotification>(
                             onNotification: (_) => false,
                             child: TimetableWeekView(
@@ -222,9 +222,7 @@ class _CompactHeader extends StatelessWidget {
           ),
 
           // Weather inline
-          Expanded(
-            child: _InlineWeather(designStyle: designStyle),
-          ),
+          Expanded(child: _InlineWeather(designStyle: designStyle)),
 
           // Scroll toggle
           IconButtonM3E(
@@ -337,21 +335,25 @@ class _NeedsLoginView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.calendar_view_week_rounded,
-                size: 64,
-                color: colorScheme.primary.withValues(alpha: 0.5)),
+            Icon(
+              Icons.calendar_view_week_rounded,
+              size: 64,
+              color: colorScheme.primary.withValues(alpha: 0.5),
+            ),
             const SizedBox(height: 16),
             Text(
               '暂无课表数据',
-              style:
-                  textTheme.titleMedium?.copyWith(color: colorScheme.onSurface),
+              style: textTheme.titleMedium?.copyWith(
+                color: colorScheme.onSurface,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               '请先前往「设置」页面输入账号密码，\n然后点击下方「同步课表」按钮。',
               textAlign: TextAlign.center,
-              style: textTheme.bodyMedium
-                  ?.copyWith(color: colorScheme.onSurfaceVariant),
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
           ],
         ),

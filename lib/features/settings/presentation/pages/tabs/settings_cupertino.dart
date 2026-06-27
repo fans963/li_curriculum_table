@@ -114,7 +114,11 @@ class _BodyState extends State<_Body> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               children: [
-                _AccountCard(state: widget.state, usernameController: widget.usernameController, passwordController: widget.passwordController),
+                _AccountCard(
+                  state: widget.state,
+                  usernameController: widget.usernameController,
+                  passwordController: widget.passwordController,
+                ),
                 const SizedBox(height: 12),
                 _SyncStatusCard(state: widget.state),
                 const SizedBox(height: 24),
@@ -128,9 +132,17 @@ class _BodyState extends State<_Body> {
                 const SizedBox(height: 24),
                 _SectionLabel('高级'),
                 const SizedBox(height: 8),
-                if (!kIsWeb) _ProxyCard(settings: widget.settings, notifier: notifier, proxyController: _proxyController),
+                if (!kIsWeb)
+                  _ProxyCard(
+                    settings: widget.settings,
+                    notifier: notifier,
+                    proxyController: _proxyController,
+                  ),
                 if (!kIsWeb) const SizedBox(height: 8),
-                _StorageCard(onClearCache: widget.onClearCache, mounted: widget.mounted),
+                _StorageCard(
+                  onClearCache: widget.onClearCache,
+                  mounted: widget.mounted,
+                ),
                 const SizedBox(height: 24),
                 _SectionLabel('关于'),
                 const SizedBox(height: 8),
@@ -182,9 +194,16 @@ class _SectionLabel extends StatelessWidget {
 Widget _iosCard(BuildContext context, {required Widget child}) {
   return Container(
     decoration: BoxDecoration(
-      color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+      color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+        context,
+      ),
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.2), width: 0.5),
+      border: Border.all(
+        color: CupertinoColors.separator
+            .resolveFrom(context)
+            .withValues(alpha: 0.2),
+        width: 0.5,
+      ),
     ),
     clipBehavior: Clip.antiAlias,
     child: child,
@@ -210,7 +229,14 @@ Widget _iosTile(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: TextStyle(fontSize: 16, color: cs, fontWeight: FontWeight.w400)),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            color: cs,
+            fontWeight: FontWeight.w400,
+          ),
+        ),
         if (subtitle != null) ...[
           const SizedBox(height: 2),
           Text(subtitle, style: TextStyle(fontSize: 13, color: secondary)),
@@ -218,7 +244,11 @@ Widget _iosTile(
       ],
     ),
   );
-  final chevron = Icon(CupertinoIcons.chevron_forward, size: 16, color: CupertinoColors.tertiaryLabel.resolveFrom(context));
+  final chevron = Icon(
+    CupertinoIcons.chevron_forward,
+    size: 16,
+    color: CupertinoColors.tertiaryLabel.resolveFrom(context),
+  );
 
   return Column(
     mainAxisSize: MainAxisSize.min,
@@ -233,11 +263,7 @@ Widget _iosTile(
                 onTap: onTap,
                 behavior: HitTestBehavior.opaque,
                 child: Row(
-                  children: [
-                    iconWidget,
-                    const SizedBox(width: 12),
-                    content,
-                  ],
+                  children: [iconWidget, const SizedBox(width: 12), content],
                 ),
               ),
             ),
@@ -252,7 +278,12 @@ Widget _iosTile(
       if (showDivider)
         Padding(
           padding: const EdgeInsets.only(left: 50),
-          child: Container(height: 0.5, color: CupertinoColors.separator.resolveFrom(context).withValues(alpha: 0.3)),
+          child: Container(
+            height: 0.5,
+            color: CupertinoColors.separator
+                .resolveFrom(context)
+                .withValues(alpha: 0.3),
+          ),
         ),
     ],
   );

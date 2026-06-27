@@ -41,14 +41,39 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
   }
 
   void _handleInitialJump() {
+    // Retry up to 3 times with increasing delay to ensure the planner is laid out.
+    _attemptJump(0);
+  }
+
+  void _attemptJump(int attempt) {
+    if (attempt > 3) return;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final state = sl<TimetableController>().state.value;
-      final anchor = state.termStartMonday;
+      if (!mounted) return;
+      final planner = _plannerKey.currentState;
+      if (planner == null) {
+        _attemptJump(attempt + 1);
+        return;
+      }
+
+      final settings = sl<SettingsController>().state.value;
+      final weeklyScroll = settings.weeklyScroll;
+      final daysCount = weeklyScroll ? 7 : settings.daysVisibleCount;
+      final now = DateTime.now().withoutTime;
+
+      DateTime targetDate;
+      if (weeklyScroll || daysCount == 7) {
+        targetDate = mondayOfDate(now);
+      } else {
+        targetDate = now;
+      }
+
+      planner.jumpToDate(targetDate);
+
+      // Sync displayWeek with the visible date
+      final anchor = sl<TimetableController>().state.value.termStartMonday;
       if (anchor != null) {
-        final targetDate = anchor.add(
-          Duration(days: (state.displayWeek - 1) * 7),
-        );
-        _plannerKey.currentState?.jumpToDate(targetDate);
+        final week = calculateWeekIndex(targetDate, anchor);
+        sl<TimetableController>().updateDisplayWeek(week);
       }
     });
   }

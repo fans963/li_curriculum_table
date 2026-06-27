@@ -6404,6 +6404,7 @@ dependencies = [
  "burn-flex",
  "burn-onnx",
  "burn-store",
+ "bytes",
  "encoding_rs",
  "flutter_rust_bridge",
  "getrandom 0.4.3",

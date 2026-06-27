@@ -1,0 +1,21 @@
+name: Sync Release to Gitee
+
+on:
+  release:
+    types: [published] # Triggers when a new Release is published on GitHub
+
+jobs:
+  sync-gitee:
+    name: Sync to Gitee
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync GitHub Release to Gitee
+        if: ${{ secrets.GITEE_TOKEN != '' }}
+        uses: trustedinster/sync-release-gitee@v1.3
+        with:
+          gitee_owner: fans963              # Your Gitee username
+          gitee_repo: li_curriculum_table   # Your Gitee repo name
+          gitee_token: ${{ secrets.GITEE_TOKEN }}
+          github_owner: fans963             # Your GitHub username
+          github_repo: li_curriculum_table  # Your GitHub repo name
+          gitee_upload_retry_times: 3

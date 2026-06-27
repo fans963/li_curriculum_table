@@ -11,7 +11,9 @@ Widget buildExamScheduleCupertino(BuildContext context, ExamState state) {
     title: '考试安排',
     slivers: [
       if (state.isLoading && state.exams.isEmpty)
-        const SliverFillRemaining(child: Center(child: CupertinoActivityIndicator()))
+        const SliverFillRemaining(
+          child: Center(child: CupertinoActivityIndicator()),
+        )
       else if (state.needsLogin)
         SliverFillRemaining(child: _buildCupertinoNeedsLogin(context))
       else if (state.exams.isEmpty)
@@ -27,11 +29,21 @@ Widget _buildCupertinoNeedsLogin(BuildContext context) {
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(CupertinoIcons.lock, size: 64, color: CupertinoColors.secondaryLabel.resolveFrom(context)),
+        Icon(
+          CupertinoIcons.lock,
+          size: 64,
+          color: CupertinoColors.secondaryLabel.resolveFrom(context),
+        ),
         const SizedBox(height: 16),
         const Text('需要登录后才能查询考试安排'),
         const SizedBox(height: 8),
-        Text('请先前往「设置」页面输入账号密码', style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+        Text(
+          '请先前往「设置」页面输入账号密码',
+          style: TextStyle(
+            fontSize: 13,
+            color: CupertinoColors.secondaryLabel.resolveFrom(context),
+          ),
+        ),
       ],
     ),
   );
@@ -63,9 +75,22 @@ Widget _buildCupertinoExamList(BuildContext context, ExamState state) {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
         child: Row(
           children: [
-            Text('${upcoming.length} 场待考', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: CupertinoColors.systemBlue.resolveFrom(context))),
+            Text(
+              '${upcoming.length} 场待考',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: CupertinoColors.systemBlue.resolveFrom(context),
+              ),
+            ),
             const SizedBox(width: 16),
-            Text('${expired.length} 场已结束', style: TextStyle(fontSize: 13, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+            Text(
+              '${expired.length} 场已结束',
+              style: TextStyle(
+                fontSize: 13,
+                color: CupertinoColors.secondaryLabel.resolveFrom(context),
+              ),
+            ),
           ],
         ),
       ),
@@ -85,7 +110,15 @@ Widget _buildCupertinoExamList(BuildContext context, ExamState state) {
 Widget _sectionHeader(BuildContext context, String text) {
   return Padding(
     padding: const EdgeInsets.fromLTRB(20, 16, 20, 4),
-    child: Text(text, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: -0.08, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+    child: Text(
+      text,
+      style: TextStyle(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.08,
+        color: CupertinoColors.secondaryLabel.resolveFrom(context),
+      ),
+    ),
   );
 }
 
@@ -114,26 +147,49 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
     child: Row(
       children: [
         Container(
-          width: 40, height: 40,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
             color: accentColor.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill, size: 20, color: accentColor),
+          child: Icon(
+            isExpired ? CupertinoIcons.doc_text : CupertinoIcons.doc_text_fill,
+            size: 20,
+            color: accentColor,
+          ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(exam.courseName,
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15, color: isExpired ? CupertinoColors.secondaryLabel.resolveFrom(context) : null)),
+              Text(
+                exam.courseName,
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                  color: isExpired
+                      ? CupertinoColors.secondaryLabel.resolveFrom(context)
+                      : null,
+                ),
+              ),
               const SizedBox(height: 4),
-              Text('${exam.dateText} ${exam.weekdayName} ${exam.timeRange}',
-                  style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+              Text(
+                '${exam.dateText} ${exam.weekdayName} ${exam.timeRange}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
+              ),
               const SizedBox(height: 2),
-              Text('${exam.location} · 座位 ${exam.seatNumber}',
-                  style: TextStyle(fontSize: 12, color: CupertinoColors.secondaryLabel.resolveFrom(context))),
+              Text(
+                '${exam.location} · 座位 ${exam.seatNumber}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: CupertinoColors.secondaryLabel.resolveFrom(context),
+                ),
+              ),
             ],
           ),
         ),
@@ -145,7 +201,14 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
               color: accentColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Text(countdown, style: TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w600)),
+            child: Text(
+              countdown,
+              style: TextStyle(
+                color: accentColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ],
@@ -156,18 +219,24 @@ Widget _buildCupertinoExamCard(BuildContext context, ExamEntity exam) {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
     child: Container(
       decoration: BoxDecoration(
-        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context),
+        color: CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
+          context,
+        ),
         borderRadius: BorderRadius.circular(18),
-        boxShadow: isExpired ? [] : [
-          BoxShadow(
-            color: CupertinoColors.black.withValues(alpha: 0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        boxShadow: isExpired
+            ? []
+            : [
+                BoxShadow(
+                  color: CupertinoColors.black.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       clipBehavior: Clip.antiAlias,
-      child: isExpired ? Opacity(opacity: 0.6, child: cardContent) : cardContent,
+      child: isExpired
+          ? Opacity(opacity: 0.6, child: cardContent)
+          : cardContent,
     ),
   );
 }
