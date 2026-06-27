@@ -46,8 +46,10 @@ ARCHIVE_DIRS=".PKGINFO .INSTALL usr"
 [ -d opt ] && ARCHIVE_DIRS="$ARCHIVE_DIRS opt"
 bsdtar -czf .MTREE --format=mtree --options='!all,use-set,type,uid,gid,mode,time,size,md5,sha256,link' $ARCHIVE_DIRS
 
-# 4. Repack
-bsdtar -cf - .MTREE .PKGINFO .INSTALL usr ${opt:+opt} | xz -c -z - > fixed.pacman
+# 4. Repack (use same ARCHIVE_DIRS, substitute .PKGINFO/.INSTALL with .MTREE)
+REPACK_DIRS=".MTREE .PKGINFO .INSTALL usr"
+[ -d opt ] && REPACK_DIRS="$REPACK_DIRS opt"
+bsdtar -cf - $REPACK_DIRS | xz -c -z - > fixed.pacman
 
 popd > /dev/null
 
