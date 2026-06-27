@@ -3,11 +3,11 @@ use anyhow::Result;
 use serde::Deserialize;
 
 #[derive(Debug, Clone, Deserialize)]
-struct GitHubRelease {
+struct GiteeRelease {
     tag_name: Option<String>,
-    html_url: Option<String>,
+    name: Option<String>,
     body: Option<String>,
-    published_at: Option<String>,
+    created_at: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -26,12 +26,17 @@ pub struct DownloadProgress {
     pub error: String,
 }
 
+const GITEE_OWNER: &str = "fans963";
+const GITEE_REPO: &str = "li_curriculum_table";
+
 pub async fn check_for_update() -> Result<UpdateData> {
     let client = http::build_client();
 
     let response = client
-        .get("https://api.github.com/repos/fans963/--table/releases/latest")
-        .header("Accept", "application/vnd.github.v3+json")
+        .get(format!(
+            "https://gitee.com/api/v5/repos/{}/{}/releases/latest",
+            GITEE_OWNER, GITEE_REPO
+        ))
         .header("User-Agent", "li-curriculum-table")
         .send()
         .await?;
@@ -39,18 +44,21 @@ pub async fn check_for_update() -> Result<UpdateData> {
     let status = response.status();
     if !status.is_success() {
         return Err(anyhow::anyhow!(
-            "GitHub API returned status {}",
+            "Gitee API returned status {}",
             status.as_u16()
         ));
     }
 
-    let data: GitHubRelease = response.json().await?;
+    let data: GiteeRelease = response.json().await?;
 
     let tag = data.tag_name.unwrap_or_default();
     let latest_version = tag.trim_start_matches('v').to_string();
-    let release_url = data.html_url.unwrap_or_default();
+    let release_url = format!(
+        "https://gitee.com/{}/{}/releases/tag/{}",
+        GITEE_OWNER, GITEE_REPO, tag
+    );
     let release_notes = data.body.unwrap_or_default();
-    let published_at = data.published_at.unwrap_or_default();
+    let published_at = data.created_at.unwrap_or_default();
 
     Ok(UpdateData {
         latest_version,
@@ -58,6 +66,19 @@ pub async fn check_for_update() -> Result<UpdateData> {
         release_notes,
         published_at,
     })
+}
+
+/// Extract version from a release download URL path.
+/// e.g. ".../download/v2.0.0/app.apk" → Some("2.0.0")
+fn extract_version_from_url(url: &str) -> Option<String> {
+    let segments: Vec<&str> = url.split('/').collect();
+    for (i, seg) in segments.iter().enumerate() {
+        if *seg == "download" && i + 1 < segments.len() {
+            let v = segments[i + 1];
+            return Some(v.trim_start_matches('v').to_string());
+        }
+    }
+    None
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -86,11 +107,24 @@ pub async fn download_update(
         .build()
         .expect("Failed to build download client");
 
-    // Candidates: mirrors first, original GitHub URL last
-    let mut candidates: Vec<String> = mirror_prefixes
-        .iter()
-        .map(|p| format!("{}{}", p, url))
-        .collect();
+    // Build Gitee download URL from the original GitHub URL.
+    // e.g. "...releases/download/v2.0.0/app.apk" → gitee.com/.../download/v2.0.0/app.apk
+    let filename = url.rsplit('/').next().unwrap_or("");
+    let version = extract_version_from_url(&url).unwrap_or_default();
+
+    // Priority: Gitee first (fastest in China), then mirrors, then GitHub
+    let mut candidates: Vec<String> = Vec::new();
+    if !filename.is_empty() && !version.is_empty() {
+        candidates.push(format!(
+            "https://gitee.com/{}/{}/releases/download/v{}/{}",
+            GITEE_OWNER, GITEE_REPO, version, filename
+        ));
+    }
+    candidates.extend(
+        mirror_prefixes
+            .iter()
+            .map(|p| format!("{}{}", p, url))
+    );
     candidates.push(url);
 
     let _ = sink.add(DownloadProgress {
