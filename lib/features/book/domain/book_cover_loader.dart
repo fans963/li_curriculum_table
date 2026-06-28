@@ -1,6 +1,4 @@
-import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:pool/pool.dart';
 import 'package:signals/signals.dart';
 
