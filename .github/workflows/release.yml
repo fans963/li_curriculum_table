@@ -197,3 +197,35 @@ jobs:
             - **iOS**: Unsigned .ipa (preview)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-vercel:
+    name: Deploy to Vercel CDN
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+          merge-multiple: true
+
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Prepare Vercel deploy directory
+        run: |
+          mkdir -p vercel-deploy/releases/v${{ steps.get_version.outputs.version }}
+          find all-artifacts -type f -exec cp {} vercel-deploy/releases/v${{ steps.get_version.outputs.version }}/ \;
+          echo '{"version":"${{ steps.get_version.outputs.version }}","published":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' \
+            > vercel-deploy/releases/v${{ steps.get_version.outputs.version }}/manifest.json
+          cp vercel.json vercel-deploy/vercel.json
+          ls -lh vercel-deploy/releases/v${{ steps.get_version.outputs.version }}/
+
+      - name: Deploy to Vercel
+        run: npx vercel deploy --prod --yes --name=li-table --token=${{ secrets.VERCEL_TOKEN }} vercel-deploy

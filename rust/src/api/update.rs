@@ -112,9 +112,13 @@ pub async fn download_update(
     let filename = url.rsplit('/').next().unwrap_or("");
     let version = extract_version_from_url(&url).unwrap_or_default();
 
-    // Priority: Gitee first (fastest in China), then mirrors, then GitHub
+    // Priority: Vercel CDN first (fastest globally), then Gitee, then mirrors, then GitHub
     let mut candidates: Vec<String> = Vec::new();
     if !filename.is_empty() && !version.is_empty() {
+        candidates.push(format!(
+            "https://li-table.vercel.app/releases/v{}/{}",
+            version, filename
+        ));
         candidates.push(format!(
             "https://gitee.com/{}/{}/releases/download/v{}/{}",
             GITEE_OWNER, GITEE_REPO, version, filename

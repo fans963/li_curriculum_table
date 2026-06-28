@@ -26,6 +26,10 @@ class Asset {
   const Asset(this.filename, this.label);
 }
 
+/// Vercel CDN URL (fastest globally, no proxy needed).
+String vercelUrl(String version, String filename) =>
+    'https://li-table.vercel.app/releases/v$version/$filename';
+
 /// Gitee download URL (fastest in mainland China).
 String giteeUrl(String version, String filename) =>
     'https://gitee.com/$giteeOwner/$giteeRepo/releases/download/v$version/$filename';
@@ -39,6 +43,7 @@ String ghMirrorUrl(String version, String filename) =>
     '${ghMirrorPrefixes.first}${ghUrl(version, filename)}';
 
 /// Build the download URL for the current device (native in-app download).
+/// Priority: Vercel CDN > Gitee > GitHub mirror > GitHub raw
 String buildDownloadUrl(String version) {
   String filename;
   if (defaultTargetPlatform == TargetPlatform.android) {
@@ -48,8 +53,7 @@ String buildDownloadUrl(String version) {
   } else {
     return 'https://github.com/$ghOwner/$ghRepo/releases/tag/v$version';
   }
-  // Native: use fastest mirror first
-  return ghMirrorUrl(version, filename);
+  return vercelUrl(version, filename);
 }
 
 class DownloadState {
