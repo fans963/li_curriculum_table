@@ -57,9 +57,8 @@ class BookCoverSignal {
 
   // ── Static helpers ──
 
-  static bool get isEnabled {
-    return sl<SettingsController>().state.value.enableBookCover;
-  }
+  // Disabled for stable release — feature is incomplete.
+  static bool get isEnabled => false;
 
   static String? sanitizeIsbn(String raw) {
     final clean = raw.replaceAll(RegExp(r'[^0-9Xx]'), '');

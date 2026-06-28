@@ -55,19 +55,6 @@ class TimetableDisplaySettingsSection extends StatelessWidget {
             const Divider(height: 1),
             _DaysCountSelector(settings: settings, notifier: notifier),
           ],
-          const Divider(height: 1),
-          SwitchListTile(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-            secondary: Icon(
-              AppIcons.menuBook(ds),
-              size: 20,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-            title: const Text('图书馆检索封面'),
-            subtitle: const Text('自动获取图书封面,目前数据库并不完善，仅有部分热门书籍封面信息'),
-            value: settings.enableBookCover,
-            onChanged: (v) => notifier.setEnableBookCover(v),
-          ),
         ],
       ),
     );

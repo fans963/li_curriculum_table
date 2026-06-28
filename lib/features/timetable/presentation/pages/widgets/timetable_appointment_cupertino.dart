@@ -5,7 +5,6 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/mark_online_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/ongoing_badge.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 
@@ -50,7 +49,7 @@ Widget buildCupertinoAppointmentCard({
       onTap: onTap,
       onLongPress: occurrence.courseType == '日程'
           ? () => confirmRemoveScheduleEvent(context, occurrence)
-          : () => _showMarkOnlineSheetCupertino(context, occurrence),
+          : null,
       child: Stack(
         children: [
           // Dashed border overlay for live online courses
@@ -217,18 +216,6 @@ CupertinoTone resolveCupertinoTone(
 // _ongoingBadge extracted to ongoing_badge.dart
 // CourseDetailsSheet extracted to course_details_sheet.dart
 // confirmRemoveScheduleEvent extracted to course_details_sheet.dart
-
-// ─── Mark as Online (Cupertino) ─────────────────────────────────────────
-
-void _showMarkOnlineSheetCupertino(
-  BuildContext context,
-  CourseOccurrence occurrence,
-) {
-  showCupertinoModalPopup(
-    context: context,
-    builder: (_) => MarkOnlineSheet(occurrence: occurrence),
-  );
-}
 
 // ─── Cupertino Dashed Border Painter ────────────────────────────────────
 

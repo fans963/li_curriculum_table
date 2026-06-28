@@ -15,7 +15,6 @@ import 'package:li_curriculum_table/features/timetable/presentation/pages/widget
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/dashed_border_painter.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/show_mark_online_sheet.dart';
 
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart'
     show CourseDetailsSheet;
@@ -184,20 +183,13 @@ class _AnimatedAppointmentCard extends StatelessWidget {
   }) {
     final cs = Theme.of(context).colorScheme;
 
-    // Long-press handler: schedule events get delete, all courses get mark-as-online.
-    void handleLongPress() {
-      if (occurrence.courseType == '日程') {
-        confirmRemoveScheduleEvent(context, occurrence);
-      } else {
-        showMarkOnlineSheet(context, occurrence);
-      }
-    }
-
     return Padding(
       padding: const EdgeInsets.all(1.5),
       child: GestureDetector(
         onTap: onTap,
-        onLongPress: handleLongPress,
+        onLongPress: occurrence.courseType == '日程'
+            ? () => confirmRemoveScheduleEvent(context, occurrence)
+            : null,
         child: Stack(
           clipBehavior: Clip.none,
           children: [

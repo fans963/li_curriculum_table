@@ -70,18 +70,6 @@ class _InteractionCard extends StatelessWidget {
               ),
               onTap: () => _showDaysCountPicker(context),
             ),
-          _iosTile(
-            context,
-            icon: CupertinoIcons.book,
-            title: '图书馆检索封面',
-            subtitle: '自动获取图书封面,目前数据库并不完善，仅有部分热门书籍封面信息',
-            trailing: CupertinoSwitch(
-              value: settings.enableBookCover,
-              onChanged: notifier.setEnableBookCover,
-            ),
-            onTap: () => notifier.setEnableBookCover(!settings.enableBookCover),
-            showDivider: false,
-          ),
         ],
       ),
     );
