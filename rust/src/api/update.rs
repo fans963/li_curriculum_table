@@ -28,10 +28,53 @@ pub struct DownloadProgress {
 
 const GITEE_OWNER: &str = "fans963";
 const GITEE_REPO: &str = "li_curriculum_table";
+const VERCEL_MANIFEST: &str = "https://li-table.vercel.app/manifest.json";
+
+#[derive(Debug, Clone, Deserialize)]
+struct VercelManifest {
+    version: Option<String>,
+    published: Option<String>,
+}
 
 pub async fn check_for_update() -> Result<UpdateData> {
     let client = http::build_client();
 
+    // Try Vercel manifest first (fastest, no rate limit)
+    if let Ok(vercel) = check_vercel_manifest(&client).await {
+        return Ok(vercel);
+    }
+
+    // Fall back to Gitee API
+    check_gitee_api(&client).await
+}
+
+async fn check_vercel_manifest(client: &reqwest::Client) -> Result<UpdateData> {
+    let response = client
+        .get(VERCEL_MANIFEST)
+        .header("User-Agent", "li-curriculum-table")
+        .send()
+        .await?;
+
+    let status = response.status();
+    if !status.is_success() {
+        return Err(anyhow::anyhow!("Vercel manifest returned {}", status.as_u16()));
+    }
+
+    let data: VercelManifest = response.json().await?;
+    let version = data.version.unwrap_or_default();
+    if version.is_empty() {
+        return Err(anyhow::anyhow!("Empty version in Vercel manifest"));
+    }
+
+    Ok(UpdateData {
+        latest_version: version.clone(),
+        release_url: format!("https://li-table.vercel.app/releases/v{}", version),
+        release_notes: String::new(),
+        published_at: data.published.unwrap_or_default(),
+    })
+}
+
+async fn check_gitee_api(client: &reqwest::Client) -> Result<UpdateData> {
     let response = client
         .get(format!(
             "https://gitee.com/api/v5/repos/{}/{}/releases/latest",

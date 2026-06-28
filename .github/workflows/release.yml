@@ -225,6 +225,9 @@ jobs:
           echo '{"version":"${{ steps.get_version.outputs.version }}","published":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' \
             > vercel-deploy/releases/v${{ steps.get_version.outputs.version }}/manifest.json
           cp vercel.json vercel-deploy/vercel.json
+          # Top-level manifest for version check
+          echo '{"version":"${{ steps.get_version.outputs.version }}","published":"'"$(date -u +%Y-%m-%dT%H:%M:%SZ)"'"}' \
+            > vercel-deploy/manifest.json
           ls -lh vercel-deploy/releases/v${{ steps.get_version.outputs.version }}/
 
       - name: Deploy to Vercel
