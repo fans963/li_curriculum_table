@@ -59,10 +59,14 @@ Future<void> main() async {
   // Await settings so the first frame renders with persisted theme, not defaults
   await sl<SettingsController>().init();
 
-  // Initialize notifications and request permission
+  // Initialize notifications (Windows unsupported by flutter_local_notifications)
   final notifications = sl<NotificationService>();
-  await notifications.init();
-  await notifications.requestPermission();
+  try {
+    await notifications.init();
+    await notifications.requestPermission();
+  } catch (e) {
+    if (kDebugMode) debugPrint('Notification init skipped (unsupported platform): $e');
+  }
 
   // Fire-and-forget: these load data into signals asynchronously
   sl<GradeController>().init().catchError((e) {

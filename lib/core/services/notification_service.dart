@@ -26,12 +26,32 @@ class NotificationService {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/launcher_icon',
     );
+    const iOSSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const macOSSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     const linuxSettings = LinuxInitializationSettings(
       defaultActionName: 'Open',
     );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: '🍐课表',
+      appUserModelId: 'com.fans963.li_curriculum_table',
+      guid: '6B29FC40-CA47-1067-B31D-00DD010662DA',
+    );
+    const webSettings = WebInitializationSettings();
     final initSettings = InitializationSettings(
-      android: kIsWeb ? null : androidSettings,
-      linux: kIsWeb ? null : linuxSettings,
+      android: androidSettings,
+      iOS: iOSSettings,
+      macOS: macOSSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
+      web: webSettings,
     );
 
     await _plugin.initialize(settings: initSettings);
