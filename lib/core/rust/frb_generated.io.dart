@@ -13,13 +13,17 @@ import 'api/exam.dart';
 import 'api/grade.dart';
 import 'api/http.dart';
 import 'api/level_exam_score.dart';
+import 'api/rust_logger.dart';
 import 'api/update.dart';
 import 'api/weather.dart';
 import 'crawler/model.dart';
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ffi' as ffi;
+
 import 'frb_generated.dart';
+
 import 'package:flutter_rust_bridge/flutter_rust_bridge_for_generated_io.dart';
 
 abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
@@ -83,6 +87,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<DownloadProgress> dco_decode_StreamSink_download_progress_Sse(
+    dynamic raw,
+  );
+
+  @protected
+  RustStreamSink<RustLogEntry> dco_decode_StreamSink_rust_log_entry_Sse(
     dynamic raw,
   );
 
@@ -206,6 +215,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  RustLogEntry dco_decode_rust_log_entry(dynamic raw);
+
+  @protected
   TimeSlot dco_decode_time_slot(dynamic raw);
 
   @protected
@@ -276,6 +288,11 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   RustStreamSink<DownloadProgress> sse_decode_StreamSink_download_progress_Sse(
+    SseDeserializer deserializer,
+  );
+
+  @protected
+  RustStreamSink<RustLogEntry> sse_decode_StreamSink_rust_log_entry_Sse(
     SseDeserializer deserializer,
   );
 
@@ -411,6 +428,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
 
   @protected
+  RustLogEntry sse_decode_rust_log_entry(SseDeserializer deserializer);
+
+  @protected
   TimeSlot sse_decode_time_slot(SseDeserializer deserializer);
 
   @protected
@@ -491,6 +511,12 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   @protected
   void sse_encode_StreamSink_download_progress_Sse(
     RustStreamSink<DownloadProgress> self,
+    SseSerializer serializer,
+  );
+
+  @protected
+  void sse_encode_StreamSink_rust_log_entry_Sse(
+    RustStreamSink<RustLogEntry> self,
     SseSerializer serializer,
   );
 
@@ -655,6 +681,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_rust_log_entry(RustLogEntry self, SseSerializer serializer);
 
   @protected
   void sse_encode_time_slot(TimeSlot self, SseSerializer serializer);

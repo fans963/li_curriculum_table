@@ -74,7 +74,7 @@ impl SessionManager {
         };
 
         let client = builder.build().unwrap_or_default();
-        println!(
+        log::info!(
             "Crawler: SessionManager initialized. Strategy: {:?}, Port: {}",
             strategy,
             get_proxy_port()
@@ -106,7 +106,7 @@ impl SessionManager {
         }
 
         for attempt in 1..=max_attempts {
-            println!("Crawler: Shared Login attempt {}/{}", attempt, max_attempts);
+            log::debug!("Crawler: Shared Login attempt {}/{}", attempt, max_attempts);
             let captcha_bytes = self.get_captcha().await?;
 
             let verify_code = {
@@ -115,14 +115,14 @@ impl SessionManager {
             };
 
             let verify_code = verify_code.trim();
-            println!("Crawler: Shared OCR result: '{}'", verify_code);
+            log::debug!("Crawler: Shared OCR result: '{}'", verify_code);
 
             if verify_code.len() != 4 || !verify_code.chars().all(|c| c.is_alphanumeric()) {
-                println!("Crawler: Invalid verification code format, retrying...");
+                log::warn!("Crawler: Invalid verification code format, retrying...");
                 continue;
             }
 
-            println!("Crawler: Submitting shared login credentials...");
+            log::debug!("Crawler: Submitting shared login credentials...");
             let html = self.submit_login(username, password, verify_code).await?;
 
             if html.contains("个人中心")
@@ -130,7 +130,7 @@ impl SessionManager {
                 || html.contains("main.jsp")
                 || html.contains("logout")
             {
-                println!("Crawler: Shared Login successful!");
+                log::debug!("Crawler: Shared Login successful!");
                 return Ok(());
             }
 
@@ -142,7 +142,7 @@ impl SessionManager {
             }
 
             if html.contains("验证码错误") {
-                println!(
+                log::warn!(
                     "Crawler: Verification code error, retrying (attempt {}/{})...",
                     attempt, max_attempts
                 );
@@ -153,7 +153,7 @@ impl SessionManager {
                 return Err(CrawlerError::Maintenance);
             }
 
-            println!("Crawler: Shared Login failed (unknown reason, HTML check), retrying...");
+            log::warn!("Crawler: Shared Login failed (unknown reason, HTML check), retrying...");
         }
 
         Err(CrawlerError::LoginFailed(max_attempts))
@@ -175,7 +175,7 @@ impl SessionManager {
                 success
             }
             Err(e) => {
-                println!("Crawler: Session check error: {}", e);
+                log::warn!("Crawler: Session check error: {}", e);
                 false
             }
         }
@@ -189,7 +189,7 @@ impl SessionManager {
         referer: Option<&str>,
     ) -> CrawlerResult<Vec<u8>> {
         let wrapped_url = self.wrap_url(url);
-        println!("Crawler: [Request] {} -> {}", url, wrapped_url);
+        log::debug!("Crawler: [Request] {} -> {}", url, wrapped_url);
 
         let mut headers = reqwest::header::HeaderMap::new();
         let ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
@@ -233,14 +233,14 @@ impl SessionManager {
 
         let resp = req_builder.send().await?;
         let status = resp.status();
-        println!(
+        log::debug!(
             "Crawler: [Response] status: {}, url: {}",
             status,
             resp.url()
         );
 
         let bytes = resp.bytes().await?.to_vec();
-        println!("Crawler: [Data] received {} bytes", bytes.len());
+        log::debug!("Crawler: [Data] received {} bytes", bytes.len());
         Ok(bytes)
     }
 
@@ -270,7 +270,7 @@ impl SessionManager {
         let resp = self
             .fetch_raw(&captcha_url, Method::GET, None, None)
             .await?;
-        println!("Crawler: Captcha fetched, length: {}", resp.len());
+        log::debug!("Crawler: Captcha fetched, length: {}", resp.len());
         Ok(resp)
     }
 

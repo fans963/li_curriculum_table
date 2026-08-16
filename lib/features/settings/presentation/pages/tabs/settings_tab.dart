@@ -24,6 +24,7 @@ import 'package:li_curriculum_table/util/feedback_handler.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_cupertino.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_about_card.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_web_download_card.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/log_settings_section.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
 
 class SettingsTab extends SignalStatefulWidget {
@@ -212,6 +213,8 @@ class _SettingsTabState extends State<SettingsTab>
                     ],
                   ),
                 ),
+                const SizedBox(height: sectionSpacing),
+                const LogSettingsSection(),
 
                 // ── About ──
                 const SizedBox(height: 24),

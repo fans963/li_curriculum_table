@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/rust/api/exam.dart' as rust_api;
 import 'package:li_curriculum_table/core/rust/crawler/model.dart' as rust_model;
 import '../../domain/models/exam.dart';
@@ -8,17 +8,19 @@ class ExamRemoteDataSource {
     required String username,
     required String password,
   }) async {
-    if (kDebugMode) {
-      print('[ExamRemote] Calling rust_api.getExams()...');
-    }
+    AppLogger.instance.info(
+      'Calling rust_api.getExams()...',
+      tag: 'ExamRemote',
+    );
     final List<rust_model.Exam> rustExams = await rust_api.getExams(
       username: username,
       password: password,
     );
 
-    if (kDebugMode) {
-      print('[ExamRemote] Rust returned ${rustExams.length} exams');
-    }
+    AppLogger.instance.info(
+      'Rust returned ${rustExams.length} exams',
+      tag: 'ExamRemote',
+    );
 
     return rustExams
         .map(

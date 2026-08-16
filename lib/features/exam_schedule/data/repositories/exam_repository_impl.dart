@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import '../datasources/exam_local_datasource.dart';
 import '../datasources/exam_remote_datasource.dart';
 import '../../domain/models/exam.dart';
@@ -18,43 +18,46 @@ class ExamRepositoryImpl implements ExamRepository {
 
   @override
   Future<List<ExamEntity>> getExams({bool forceRefresh = false}) async {
-    if (kDebugMode) {
-      print('[ExamRepo] getExams(forceRefresh=$forceRefresh)');
-    }
+    AppLogger.instance.info(
+      'getExams(forceRefresh=$forceRefresh)',
+      tag: 'ExamRepo',
+    );
 
     if (!forceRefresh) {
       final cached = await _localDataSource.readExams();
       if (cached != null) {
-        if (kDebugMode) {
-          print('[ExamRepo] Returning ${cached.length} cached exams');
-        }
+        AppLogger.instance.info(
+          'Returning ${cached.length} cached exams',
+          tag: 'ExamRepo',
+        );
         return cached;
       }
-      if (kDebugMode) {
-        print('[ExamRepo] No cache found, fetching from remote');
-      }
+      AppLogger.instance.info(
+        'No cache found, fetching from remote',
+        tag: 'ExamRepo',
+      );
     }
 
     final credentials = await _credentialsDataSource.readCredentials();
     if (credentials == null || credentials.isEmpty) {
-      if (kDebugMode) {
-        print('[ExamRepo] No credentials found');
-      }
+      AppLogger.instance.warning('No credentials found', tag: 'ExamRepo');
       throw Exception('未登录，无法获取考试安排');
     }
 
-    if (kDebugMode) {
-      print('[ExamRepo] Fetching exams for user: ${credentials.username}');
-    }
+    AppLogger.instance.info(
+      'Fetching exams for user: ${credentials.username}',
+      tag: 'ExamRepo',
+    );
 
     final exams = await _remoteDataSource.getExams(
       username: credentials.username,
       password: credentials.password,
     );
 
-    if (kDebugMode) {
-      print('[ExamRepo] Fetched ${exams.length} exams, saving to cache');
-    }
+    AppLogger.instance.info(
+      'Fetched ${exams.length} exams, saving to cache',
+      tag: 'ExamRepo',
+    );
 
     await _localDataSource.saveExams(exams);
     return exams;

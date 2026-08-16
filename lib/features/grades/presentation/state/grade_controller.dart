@@ -1,10 +1,10 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/grades/domain/models/grade.dart';
 import 'package:li_curriculum_table/features/grades/domain/repositories/grade_repository.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
-import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
 import 'package:li_curriculum_table/features/timetable/domain/repositories/credentials_repository.dart';
 
@@ -33,14 +33,20 @@ class GradeController {
             if (newGrades.isNotEmpty && cachedCount > 0) {
               final names = newGrades.map((g) => g.courseName).toList();
               sl<NotificationService>().notifyNewGrades(names).catchError((e) {
-                if (kDebugMode) debugPrint('Grade notification failed: $e');
+                AppLogger.instance.warning(
+                  'Grade notification failed',
+                  tag: 'GradeController',
+                  error: e,
+                );
               });
             }
           })
           .catchError((e) {
-            if (kDebugMode) {
-              print('Auto remote sync of grades failed: $e');
-            }
+            AppLogger.instance.warning(
+              'Auto remote sync of grades failed',
+              tag: 'GradeController',
+              error: e,
+            );
           });
     }
   }

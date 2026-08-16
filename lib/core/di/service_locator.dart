@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/level_exam_score_local_datasource.dart';
@@ -86,6 +87,7 @@ void setupServiceLocator() {
   sl.registerLazySingleton<CourseColorService>(
     () => CourseColorService(sl<SecureStorageStore>()),
   );
+  sl.registerLazySingleton<AppLogger>(() => AppLogger.instance);
   // ─── Timetable ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<SecureCredentialsLocalDataSource>(
     () => SecureCredentialsLocalDataSource(sl<SecureStorageStore>()),

@@ -11,6 +11,7 @@ import 'package:signals/signals_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:li_curriculum_table/core/services/update_service.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
@@ -143,6 +144,8 @@ class _BodyState extends State<_Body> {
                   onClearCache: widget.onClearCache,
                   mounted: widget.mounted,
                 ),
+                const SizedBox(height: 8),
+                const _CupertinoLogCard(),
                 if (kIsWeb) ...[
                   const SizedBox(height: 16),
                   _CupertinoWebDownloadCard(),
@@ -162,6 +165,95 @@ class _BodyState extends State<_Body> {
         ),
       ),
     );
+  }
+}
+
+class _CupertinoLogCard extends StatelessWidget {
+  const _CupertinoLogCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _iosCard(
+      context,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _iosTile(
+            context,
+            icon: CupertinoIcons.doc_text,
+            title: '查看日志',
+            subtitle: '查看当前应用运行日志',
+            showDivider: true,
+            onTap: () => _viewLogs(context),
+          ),
+          _iosTile(
+            context,
+            icon: CupertinoIcons.trash,
+            title: '清除日志',
+            subtitle: '删除本地日志文件',
+            iconColor: CupertinoColors.systemRed.resolveFrom(context),
+            showDivider: false,
+            onTap: () => _confirmClear(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _viewLogs(BuildContext context) async {
+    final logs = await AppLogger.instance.exportRecentLogs();
+    if (!context.mounted) return;
+    await showCupertinoDialog<void>(
+      context: context,
+      builder: (ctx) => CupertinoAlertDialog(
+        title: const Text('运行日志'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 360,
+          child: logs.trim().isEmpty
+              ? const Center(child: Text('暂无日志'))
+              : SingleChildScrollView(
+                  child: Text(
+                    logs,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      height: 1.35,
+                    ),
+                  ),
+                ),
+        ),
+        actions: [
+          CupertinoDialogAction(
+            isDefaultAction: true,
+            child: const Text('关闭'),
+            onPressed: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmClear(BuildContext context) async {
+    final confirmed = await showAdaptiveConfirmDialog(
+      context,
+      designStyle: sl<SettingsController>().designStyle.value,
+      title: '清除日志？',
+      content: '删除后无法恢复，反馈历史日志也将被清空。',
+      confirmText: '清除',
+      cancelText: '取消',
+      isDestructive: true,
+    );
+    if (!confirmed) return;
+
+    await AppLogger.instance.clearLogs();
+    if (context.mounted) {
+      showAdaptiveMessage(
+        context,
+        designStyle: sl<SettingsController>().designStyle.value,
+        message: '日志已清除',
+      );
+    }
   }
 }
 

@@ -1,7 +1,8 @@
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:material_ui/material_ui.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:li_curriculum_table/core/rust/api/weather.dart' as rust;
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 
 class WeatherInfo {
   final double minTemperature;
@@ -110,7 +111,7 @@ class WeatherService {
     }
     // Web and some desktop platforms don't support geolocator well
     if (kIsWeb) {
-      debugPrint('Weather: skipped on web');
+      AppLogger.instance.debug('skipped on web', tag: 'Weather');
       return null;
     }
 
@@ -118,7 +119,7 @@ class WeatherService {
       // Check if location services are enabled
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
-        debugPrint('Weather: location services disabled');
+        AppLogger.instance.debug('location services disabled', tag: 'Weather');
         return null;
       }
 
@@ -127,12 +128,15 @@ class WeatherService {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
-          debugPrint('Weather: location permission denied');
+          AppLogger.instance.debug('location permission denied', tag: 'Weather');
           return null;
         }
       }
       if (permission == LocationPermission.deniedForever) {
-        debugPrint('Weather: location permission permanently denied');
+        AppLogger.instance.debug(
+          'location permission permanently denied',
+          tag: 'Weather',
+        );
         return null;
       }
 
@@ -144,8 +148,9 @@ class WeatherService {
         ),
       );
 
-      debugPrint(
-        'Weather: position ${position.latitude}, ${position.longitude}',
+      AppLogger.instance.debug(
+        'position ${position.latitude}, ${position.longitude}',
+        tag: 'Weather',
       );
 
       // Fetch weather via Rust bridge
@@ -156,17 +161,21 @@ class WeatherService {
 
       final weather = WeatherInfo.fromRust(data);
 
-      debugPrint(
-        'Weather: ${weather.minTemperature}°C-${weather.maxTemperature}°C code=${weather.weatherCode}',
+      AppLogger.instance.info(
+        '${weather.minTemperature}°C-${weather.maxTemperature}°C code=${weather.weatherCode}',
+        tag: 'Weather',
       );
       _cachedWeather = weather;
       _lastFetchTime = DateTime.now();
       return weather;
     } on LocationServiceDisabledException {
-      debugPrint('Weather: location service disabled during fetch');
+      AppLogger.instance.warning(
+        'location service disabled during fetch',
+        tag: 'Weather',
+      );
       return _cachedWeather; // fall back to stale cache
     } catch (e) {
-      debugPrint('Weather error: $e');
+      AppLogger.instance.warning('fetch failed', tag: 'Weather', error: e);
       return _cachedWeather; // fall back to stale cache
     }
   }

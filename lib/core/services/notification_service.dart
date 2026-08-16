@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -134,11 +134,10 @@ class NotificationService {
       ),
     );
 
-    if (kDebugMode) {
-      print(
-        '[NotificationService] New grade notification: ${newCourses.join(', ')}',
-      );
-    }
+    AppLogger.instance.info(
+      'New grade notification: ${newCourses.join(', ')}',
+      tag: 'NotificationService',
+    );
   }
 
   /// Schedule course reminders for the upcoming week.
@@ -195,9 +194,10 @@ class NotificationService {
       scheduled++;
     }
 
-    if (kDebugMode) {
-      print('[NotificationService] Scheduled $scheduled course reminders');
-    }
+    AppLogger.instance.info(
+      'Scheduled $scheduled course reminders',
+      tag: 'NotificationService',
+    );
   }
 
   /// Schedule a notification for a custom schedule event at the specified time.
@@ -269,9 +269,10 @@ class NotificationService {
       }
     }
 
-    if (kDebugMode) {
-      print('[NotificationService] Scheduled $scheduled exam reminders');
-    }
+    AppLogger.instance.info(
+      'Scheduled $scheduled exam reminders',
+      tag: 'NotificationService',
+    );
   }
 
   Future<void> _scheduleNotification({
