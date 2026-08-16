@@ -6,7 +6,6 @@ import 'package:li_curriculum_table/core/settings/presentation/settings_provider
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart'
     show openCourseDetails, resolveAppointmentTone;
 
@@ -176,8 +175,6 @@ class _AsyncCourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final onlineService = sl<CourseOnlineService>();
-    final override = onlineService.getOverride(course.courseName);
     // Use the same color resolver as grid cards, including custom color overrides.
     final customColor = sl<CourseColorService>().getColor(course.courseName);
     final tone = resolveAppointmentTone(
@@ -187,9 +184,8 @@ class _AsyncCourseCard extends StatelessWidget {
     );
     final color = tone.accent;
 
-    // Location display: manual platform override > auto-detected "线上" > raw location
+    // Location display: auto-detected "线上" > raw location
     final locText =
-        override?.platform ??
         (course.location.trim() == '线上' ? '线上' : course.location.trim());
 
     return GestureDetector(

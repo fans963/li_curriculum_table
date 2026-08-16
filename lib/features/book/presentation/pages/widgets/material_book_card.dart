@@ -122,7 +122,7 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
                           child: SizedBox(
                             width: 24,
                             height: 24,
-                            child: LoadingIndicatorM3E(
+                            child: M3ELoadingIndicator(
                               color: cs.primary,
                               constraints: BoxConstraints.tight(
                                 const Size(24, 24),

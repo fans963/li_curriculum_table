@@ -211,7 +211,7 @@ return $default(_that.rows,_that.occurrences,_that.loginLikelySuccess);case _:
 @JsonSerializable()
 
 class _TimetableData implements TimetableData {
-  const _TimetableData({required final  List<CourseRow> rows, required final  List<CourseOccurrence> occurrences, required this.loginLikelySuccess}): _rows = rows,_occurrences = occurrences;
+  const _TimetableData({required List<CourseRow> rows, required List<CourseOccurrence> occurrences, required this.loginLikelySuccess}): _rows = rows,_occurrences = occurrences;
   factory _TimetableData.fromJson(Map<String, dynamic> json) => _$TimetableDataFromJson(json);
 
  final  List<CourseRow> _rows;

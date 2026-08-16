@@ -1,7 +1,7 @@
 import 'package:infinite_calendar_view/infinite_calendar_view.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -141,7 +141,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
             child: Center(
               child: isCupertino
                   ? const CupertinoActivityIndicator()
-                  : const LoadingIndicatorM3E(),
+                  : const M3ELoadingIndicator(),
             ),
           );
         }

@@ -1,5 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -230,12 +232,15 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 const SizedBox(height: 20),
 
                 // Notification
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('开启提醒'),
-                  subtitle: const Text('在指定时间发送通知提醒'),
-                  value: enableNotification,
-                  onChanged: (v) => _enableNotification.value = v,
+                Material(
+                  type: MaterialType.transparency,
+                  child: SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: const Text('开启提醒'),
+                    subtitle: const Text('在指定时间发送通知提醒'),
+                    value: enableNotification,
+                    onChanged: (v) => _enableNotification.value = v,
+                  ),
                 ),
                 if (enableNotification) ...[
                   const SizedBox(height: 8),
@@ -257,9 +262,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 SizedBox(
                   width: double.infinity,
                   height: 48,
-                  child: FilledButton.icon(
+                  child: M3EButton.icon(
                     icon: const Icon(Icons.add_rounded),
                     label: const Text('添加日程'),
+                    style: M3EButtonStyle.filled,
+                    size: M3EButtonSize.md,
+                    shape: M3EButtonShape.round,
                     onPressed: _submit,
                   ),
                 ),

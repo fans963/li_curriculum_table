@@ -7,20 +7,27 @@ import 'package:li_curriculum_table/features/navigation/presentation/pages/main_
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:m3e_design/m3e_design.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart' as legacy;
 import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart' as m3e_new;
 import 'package:signals/signals_flutter.dart';
 
 // ignore_for_file: deprecated_member_use
 
 const bool isWeb = kIsWeb;
 
+class _ThemeBundle {
+  const _ThemeBundle({required this.modern, required this.expressive});
+
+  final ThemeData modern;
+  final m3e_new.M3EThemeData expressive;
+}
+
 class CurriculumTableApp extends SignalWidget {
   const CurriculumTableApp({super.key});
 
-  ThemeData _buildTheme({
+  _ThemeBundle _buildTheme({
     required Brightness brightness,
     required Color seedColor,
     legacy.ColorScheme? dynamicScheme,
@@ -80,48 +87,91 @@ class CurriculumTableApp extends SignalWidget {
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
     const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
-    return _modernThemeFromLegacy(
-      withM3ETheme(
-        brightness == Brightness.dark
-            ? FlexThemeData.dark(
-                colors: colors,
-                fontFamily: webFontFamily,
-                useMaterial3: true,
-                swapLegacyOnMaterial3: true,
-                visualDensity: FlexColorScheme.comfortablePlatformDensity,
-                subThemesData: subThemes,
-                keyColors: const FlexKeyColors(
-                  useSecondary: true,
-                  useTertiary: true,
-                  keepPrimary: true,
-                ),
-                tones: _flexTones(colorSchemeType, Brightness.dark),
-              )
-            : FlexThemeData.light(
-                colors: colors,
-                fontFamily: webFontFamily,
-                useMaterial3: true,
-                swapLegacyOnMaterial3: true,
-                visualDensity: FlexColorScheme.comfortablePlatformDensity,
-                subThemesData: subThemes,
-                keyColors: const FlexKeyColors(
-                  useSecondary: true,
-                  useTertiary: true,
-                  keepPrimary: true,
-                ),
-                tones: _flexTones(colorSchemeType, Brightness.light),
-              ),
-      ),
+    final legacyTheme = brightness == Brightness.dark
+        ? FlexThemeData.dark(
+            colors: colors,
+            fontFamily: webFontFamily,
+            useMaterial3: true,
+            swapLegacyOnMaterial3: true,
+            visualDensity: FlexColorScheme.comfortablePlatformDensity,
+            subThemesData: subThemes,
+            keyColors: const FlexKeyColors(
+              useSecondary: true,
+              useTertiary: true,
+              keepPrimary: true,
+            ),
+            tones: _flexTones(colorSchemeType, Brightness.dark),
+          )
+        : FlexThemeData.light(
+            colors: colors,
+            fontFamily: webFontFamily,
+            useMaterial3: true,
+            swapLegacyOnMaterial3: true,
+            visualDensity: FlexColorScheme.comfortablePlatformDensity,
+            subThemesData: subThemes,
+            keyColors: const FlexKeyColors(
+              useSecondary: true,
+              useTertiary: true,
+              keepPrimary: true,
+            ),
+            tones: _flexTones(colorSchemeType, Brightness.light),
+          );
+
+    final modern = _modernThemeFromLegacy(legacyTheme, subThemes);
+    return _ThemeBundle(
+      modern: modern,
+      expressive: m3e_new.M3EThemeData.fromMaterial(modern),
     );
   }
 
-  ThemeData _modernThemeFromLegacy(legacy.ThemeData theme) {
+  ThemeData _modernThemeFromLegacy(
+    legacy.ThemeData theme,
+    FlexSubThemesData subThemes,
+  ) {
+    final scheme = _modernColorScheme(theme.colorScheme);
+    final defaultRadius = subThemes.defaultRadius ?? 28;
+    final cardRadius = subThemes.cardRadius ?? defaultRadius;
+    final dialogRadius = subThemes.dialogRadius ?? 32;
+    final inputRadius = subThemes.inputDecoratorRadius ?? 16;
+
     return ThemeData(
       useMaterial3: true,
       platform: theme.platform,
-      colorScheme: _modernColorScheme(theme.colorScheme),
+      colorScheme: scheme,
       textTheme: _modernTextTheme(theme.textTheme),
       primaryTextTheme: _modernTextTheme(theme.primaryTextTheme),
+      applyElevationOverlayColor: theme.applyElevationOverlayColor,
+      scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
+      canvasColor: theme.canvasColor,
+      cardColor: theme.cardColor,
+      dividerColor: theme.dividerColor,
+      dialogBackgroundColor: theme.dialogBackgroundColor,
+      indicatorColor: theme.indicatorColor,
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(dialogRadius),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationThemeData(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+      ),
       visualDensity: VisualDensity(
         horizontal: theme.visualDensity.horizontal,
         vertical: theme.visualDensity.vertical,
@@ -335,33 +385,39 @@ class CurriculumTableApp extends SignalWidget {
             seedColor: settings.seedColor,
             dynamicScheme: isDark ? darkScheme : lightScheme,
           );
+          final lightTheme = _buildTheme(
+            brightness: Brightness.light,
+            seedColor: settings.seedColor,
+            dynamicScheme: lightScheme,
+            colorSchemeType: settings.colorSchemeType,
+          );
+          final darkTheme = _buildTheme(
+            brightness: Brightness.dark,
+            seedColor: settings.seedColor,
+            dynamicScheme: darkScheme,
+            colorSchemeType: settings.colorSchemeType,
+          );
 
           return MaterialApp(
-            title: '',
+            title: '🍐课表',
             themeMode: settings.themeMode,
-            theme: _buildTheme(
-              brightness: Brightness.light,
-              seedColor: settings.seedColor,
-              dynamicScheme: lightScheme,
-              colorSchemeType: settings.colorSchemeType,
-            ),
-            darkTheme: _buildTheme(
-              brightness: Brightness.dark,
-              seedColor: settings.seedColor,
-              dynamicScheme: darkScheme,
-              colorSchemeType: settings.colorSchemeType,
-            ),
+            theme: lightTheme.modern,
+            darkTheme: darkTheme.modern,
             builder: (context, child) {
               final content = child ?? const SizedBox.shrink();
+              final m3eTheme = m3e_new.M3ETheme(
+                data: isDark ? darkTheme.expressive : lightTheme.expressive,
+                child: content,
+              );
               if (AdaptiveStyle.isCupertino(settings.designStyle)) {
                 return CupertinoUiCompatibilityBridge(
                   child: CupertinoTheme(
                     data: cupertinoTheme,
-                    child: content,
+                    child: m3eTheme,
                   ),
                 );
               }
-              return MaterialUiCompatibilityBridge(child: content);
+              return MaterialUiCompatibilityBridge(child: m3eTheme);
             },
             home: const MainScreen(),
           );

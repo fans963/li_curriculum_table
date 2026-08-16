@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
@@ -99,7 +99,7 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
         if (state.isLoading && state.exams.isEmpty) {
           return Center(
             key: const ValueKey('loading'),
-            child: LoadingIndicatorM3E(),
+            child: M3ELoadingIndicator(),
           );
         }
 
@@ -185,7 +185,7 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
           prefixIcon: Icon(
             AppIcons.search(sl<SettingsController>().designStyle.value),
           ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(
             horizontal: 16,

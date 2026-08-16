@@ -1,8 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
-import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
@@ -32,7 +31,7 @@ Widget buildMaterialBody(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const LoadingIndicatorM3E(),
+          const M3ELoadingIndicator(),
           const SizedBox(height: 16),
           Text(
             '正在为您检索南理工馆藏图书...',
@@ -69,9 +68,10 @@ Widget buildMaterialBody(
               ),
             ),
             const SizedBox(height: 24),
-            M3EFilledButton.icon(
+            M3EButton.icon(
               icon: Icon(AppIcons.refresh(ds), size: 18),
               label: const Text('重新尝试'),
+              style: M3EButtonStyle.filled,
               size: M3EButtonSize.md,
               shape: M3EButtonShape.round,
               onPressed: onRetry,

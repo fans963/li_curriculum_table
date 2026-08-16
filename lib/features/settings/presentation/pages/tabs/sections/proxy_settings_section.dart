@@ -25,17 +25,20 @@ class ProxySettingsSection extends StatelessWidget {
       child: Column(
         children: [
           if (!kIsWeb) ...[
-            SwitchListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              secondary: Icon(
-                AppIcons.router(ds),
-                size: 20,
-                color: cs.onSurfaceVariant,
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                secondary: Icon(
+                  AppIcons.router(ds),
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
+                title: const Text('开启本地代理网关'),
+                subtitle: const Text('其他设备或本机网页版可通过此应用共享会话'),
+                value: settings.proxyEnabled,
+                onChanged: (v) => notifier.setProxyEnabled(v),
               ),
-              title: const Text('开启本地代理网关'),
-              subtitle: const Text('其他设备或本机网页版可通过此应用共享会话'),
-              value: settings.proxyEnabled,
-              onChanged: (v) => notifier.setProxyEnabled(v),
             ),
             SettingsTile(
               icon: AppIcons.numbers(ds),

@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
+import 'package:material_3_expressive/components/toggle_button_group/models/m3e_button_group_action.dart';
 import 'package:signals/signals_flutter.dart';
-import 'package:slider_m3e/slider_m3e.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -111,25 +112,27 @@ class _ThemeModePicker extends StatelessWidget {
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 360),
-            child: M3EToggleButtonGroup(
+            child: M3EButtonGroup(
               type: M3EButtonGroupType.connected,
               style: M3EButtonStyle.tonal,
-              size: M3EButtonSize.md,
+              size: M3EButtonSize.sm,
               shape: M3EButtonShape.round,
+              overflow: M3EButtonGroupOverflow.none,
+              neighborSquish: false,
               selectedIndex: ThemeMode.values.indexOf(settings.themeMode),
               onSelectedIndexChanged: (i) {
                 if (i != null) notifier.setThemeMode(ThemeMode.values[i]);
               },
               actions: const [
-                M3EToggleButtonGroupAction(
+                M3EButtonGroupAction(
                   icon: Icon(Icons.brightness_auto_rounded),
                   label: Text('跟随系统'),
                 ),
-                M3EToggleButtonGroupAction(
+                M3EButtonGroupAction(
                   icon: Icon(Icons.light_mode_rounded),
                   label: Text('浅色'),
                 ),
-                M3EToggleButtonGroupAction(
+                M3EButtonGroupAction(
                   icon: Icon(Icons.dark_mode_rounded),
                   label: Text('深色'),
                 ),
@@ -256,7 +259,7 @@ class _ColorSchemeTypePicker extends StatelessWidget {
           style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
         ),
         const SizedBox(height: 10),
-        M3EToggleButtonGroup(
+        M3EButtonGroup(
           type: M3EButtonGroupType.standard,
           style: M3EButtonStyle.tonal,
           size: M3EButtonSize.sm,
@@ -272,7 +275,7 @@ class _ColorSchemeTypePicker extends StatelessWidget {
           },
           actions: ColorSchemeType.values
               .map(
-                (t) => M3EToggleButtonGroupAction(
+                (t) => M3EButtonGroupAction(
                   icon: Icon(t.icon, size: 18),
                   label: Text(t.label),
                 ),
@@ -463,7 +466,6 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
             _hue.value,
             0,
             360,
-            SliderM3EEmphasis.secondary,
             (v) => _hue.value = v,
           ),
           _hsvRow(
@@ -471,7 +473,6 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
             _sat.value,
             0,
             1,
-            SliderM3EEmphasis.surface,
             (v) => _sat.value = v,
           ),
           _hsvRow(
@@ -479,19 +480,18 @@ class _ColorPickerDialogState extends State<_ColorPickerDialog> {
             _val.value,
             0.2,
             1,
-            SliderM3EEmphasis.surface,
             (v) => _val.value = v,
           ),
         ],
       ),
       actions: [
-        M3ETextButton(
+        M3EButton.text(
           onPressed: () => Navigator.pop(context),
           size: M3EButtonSize.md,
           shape: M3EButtonShape.round,
           child: const Text('取消'),
         ),
-        M3EFilledButton(
+        M3EButton.filled(
           onPressed: () {
             widget.notifier.setSeedColor(picked);
             Navigator.pop(context);
@@ -510,7 +510,6 @@ Widget _hsvRow(
   double value,
   double min,
   double max,
-  SliderM3EEmphasis emphasis,
   ValueChanged<double> onChanged,
 ) {
   return Row(
@@ -520,12 +519,10 @@ Widget _hsvRow(
         child: Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
       ),
       Expanded(
-        child: SliderM3E(
+        child: M3ESlider(
           value: value,
           min: min,
           max: max,
-          emphasis: emphasis,
-          shapeFamily: SliderM3EShapeFamily.round,
           onChanged: onChanged,
         ),
       ),

@@ -1,6 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -422,7 +423,7 @@ class CourseDetailsSheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        M3EFilledButton(
+                        M3EButton.filled(
                           onPressed: onClose ?? () {},
                           size: M3EButtonSize.md,
                           shape: M3EButtonShape.round,

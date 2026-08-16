@@ -1,8 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -84,18 +84,16 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
       options.insert(0, currentTerm);
     }
 
-    return Card(
+    return M3ECard(
+      variant: M3ECardVariant.outlined,
+      borderRadius: BorderRadius.circular(28),
       elevation: 0,
       color: colorScheme.surfaceContainerLow,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(28),
-        side: BorderSide(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
+      border: BorderSide(
+        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      padding: const EdgeInsets.all(16),
+      child: Column(
           children: [
             TextField(
               controller: widget.usernameController,
@@ -128,12 +126,12 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               SizedBox(
                 width: double.infinity,
                 height: 48,
-                child: M3EFilledButton.icon(
+                child: M3EButton.icon(
                   icon: state.isLoading
                       ? SizedBox(
                           width: 20,
                           height: 20,
-                          child: LoadingIndicatorM3E(
+                          child: M3ELoadingIndicator(
                             color: colorScheme.onPrimary,
                           ),
                         )
@@ -142,6 +140,7 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                     state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息',
                     maxLines: 1,
                   ),
+                  style: M3EButtonStyle.filled,
                   size: M3EButtonSize.lg,
                   shape: M3EButtonShape.round,
                   onPressed: state.isLoading ? null : widget.onLoginPressed,
@@ -189,7 +188,6 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               },
             ),
           ],
-        ),
       ),
     );
   }
@@ -227,19 +225,19 @@ class TimetableStatusBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Card(
+    return M3ECard(
+      variant: M3ECardVariant.filled,
+      borderRadius: BorderRadius.circular(16),
       elevation: 0,
       color: backgroundColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
           children: [
             if (isLoading)
               const SizedBox(
                 width: 18,
                 height: 18,
-                child: LoadingIndicatorM3E(),
+                child: M3ELoadingIndicator(),
               )
             else
               Icon(
@@ -258,7 +256,6 @@ class TimetableStatusBanner extends StatelessWidget {
               ),
             ),
           ],
-        ),
       ),
     );
   }
@@ -363,7 +360,10 @@ class _TermDropdownState extends State<_TermDropdown> {
             borderRadius: BorderRadius.circular(12),
             selectedBorderRadius: 12,
           ),
-          dropdownStyle: M3EDropdownStyle(maxHeight: 300, containerRadius: 16),
+          dropdownStyle: M3EDropdownPanelStyle(
+            maxHeight: 300,
+            containerRadius: 16,
+          ),
           itemStyle: M3EDropdownItemStyle(
             outerRadius: 12,
             innerRadius: 6,

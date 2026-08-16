@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:intl/intl.dart';
-import 'package:m3e_core/m3e_core.dart';
-import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
+import 'package:material_3_expressive/components/toggle_button_group/models/m3e_button_group_action.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -24,17 +25,14 @@ class QueryControlCard extends StatelessWidget {
     final notifier = sl<ClassroomController>();
     final ds = sl<SettingsController>().state.value.designStyle;
 
-    return Card(
+    return M3ECard(
+      variant: M3ECardVariant.outlined,
+      borderRadius: BorderRadius.circular(28),
       elevation: 0,
       color: colorScheme.surfaceContainerLow,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8.0),
-        child: Column(
+      border: BorderSide(color: colorScheme.outlineVariant),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Column(
           children: [
             if (state.campuses.isNotEmpty) ...[
               SelectionHeader(
@@ -93,13 +91,12 @@ class QueryControlCard extends StatelessWidget {
               SelectionHeader(title: '教学楼', icon: AppIcons.apartment(ds)),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                child: LinearProgressIndicatorM3E(
-                  size: LinearProgressM3ESize.s,
+                child: M3EProgressIndicator.linear(
+                  linearSize: M3EProgressIndicatorSize.s,
                 ),
               ),
             ],
           ],
-        ),
       ),
     );
   }
@@ -166,7 +163,7 @@ class QuickDateSelector extends StatelessWidget {
     final selectedIndex = isQuickDate ? quickDateIndex : 4;
     final dateString = DateFormat('MM-dd').format(selectedDate);
 
-    return M3EToggleButtonGroup(
+    return M3EButtonGroup(
       style: M3EButtonStyle.tonal,
       size: M3EButtonSize.sm,
       shape: M3EButtonShape.round,
@@ -188,12 +185,12 @@ class QuickDateSelector extends StatelessWidget {
       },
       actions: [
         for (int i = 0; i < 4; i++)
-          M3EToggleButtonGroupAction(
+          M3EButtonGroupAction(
             label: Text(
               '${labels[i]} (${DateFormat('MM-dd').format(dates[i])})',
             ),
           ),
-        M3EToggleButtonGroupAction(
+        M3EButtonGroupAction(
           icon: Icon(AppIcons.calendarMonth(ds), size: 16),
           label: Text(!isQuickDate ? '其他: $dateString' : '选择日期...'),
         ),
@@ -275,7 +272,10 @@ class _CampusDropdownState extends State<CampusDropdown> {
           borderRadius: BorderRadius.circular(12),
           selectedBorderRadius: 12,
         ),
-        dropdownStyle: M3EDropdownStyle(maxHeight: 300, containerRadius: 16),
+        dropdownStyle: M3EDropdownPanelStyle(
+          maxHeight: 300,
+          containerRadius: 16,
+        ),
         itemStyle: M3EDropdownItemStyle(
           outerRadius: 12,
           innerRadius: 6,
@@ -359,7 +359,10 @@ class _BuildingDropdownState extends State<BuildingDropdown> {
           borderRadius: BorderRadius.circular(12),
           selectedBorderRadius: 12,
         ),
-        dropdownStyle: M3EDropdownStyle(maxHeight: 350, containerRadius: 16),
+        dropdownStyle: M3EDropdownPanelStyle(
+          maxHeight: 350,
+          containerRadius: 16,
+        ),
         itemStyle: M3EDropdownItemStyle(
           outerRadius: 12,
           innerRadius: 6,
@@ -387,7 +390,7 @@ class BuildingSelector extends StatelessWidget {
     final selectedIndex = buildings.indexWhere(
       (b) => b.id == selectedBuilding?.id,
     );
-    return M3EToggleButtonGroup(
+    return M3EButtonGroup(
       style: M3EButtonStyle.tonal,
       size: M3EButtonSize.sm,
       shape: M3EButtonShape.round,
@@ -397,7 +400,7 @@ class BuildingSelector extends StatelessWidget {
         if (index != null) onSelected(buildings[index]);
       },
       actions: buildings
-          .map((b) => M3EToggleButtonGroupAction(label: Text(b.name)))
+          .map((b) => M3EButtonGroupAction(label: Text(b.name)))
           .toList(),
     );
   }
@@ -420,7 +423,7 @@ class CampusSelector extends StatelessWidget {
     final selectedIndex = campuses.indexWhere(
       (c) => c.id == selectedCampus?.id,
     );
-    return M3EToggleButtonGroup(
+    return M3EButtonGroup(
       style: M3EButtonStyle.tonal,
       size: M3EButtonSize.sm,
       shape: M3EButtonShape.round,
@@ -430,7 +433,7 @@ class CampusSelector extends StatelessWidget {
         if (index != null) onSelected(campuses[index]);
       },
       actions: campuses
-          .map((c) => M3EToggleButtonGroupAction(label: Text(c.name)))
+          .map((c) => M3EButtonGroupAction(label: Text(c.name)))
           .toList(),
     );
   }

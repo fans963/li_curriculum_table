@@ -1,7 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
@@ -15,16 +15,42 @@ void showAdaptiveMessage(
   if (AdaptiveStyle.isCupertino(designStyle)) {
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (_) => Center(
-        child: CupertinoAlertDialog(
-          content: Text(message, style: const TextStyle(fontSize: 13)),
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              child: const Text('好的'),
-              onPressed: () => entry.remove(),
+      builder: (overlayContext) => Positioned(
+        left: 16,
+        right: 16,
+        bottom: 24 + MediaQuery.of(overlayContext).padding.bottom,
+        child: IgnorePointer(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: CupertinoColors.secondarySystemGroupedBackground
+                  .resolveFrom(overlayContext)
+                  .withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: CupertinoColors.separator
+                    .resolveFrom(overlayContext)
+                    .withValues(alpha: 0.45),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: CupertinoColors.black.withValues(alpha: 0.12),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
-          ],
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                letterSpacing: -0.2,
+                color: CupertinoColors.label.resolveFrom(overlayContext),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -49,7 +75,7 @@ Widget adaptiveActivityIndicator({
   if (AdaptiveStyle.isCupertino(designStyle)) {
     return CupertinoActivityIndicator(radius: size / 2, color: color);
   }
-  return LoadingIndicatorM3E(
+  return M3ELoadingIndicator(
     constraints: BoxConstraints.tight(Size(size, size)),
     color: color,
   );
@@ -93,14 +119,14 @@ Future<bool> showAdaptiveConfirmDialog(
         title: Text(title),
         content: Text(content),
         actions: [
-          M3ETextButton(
+          M3EButton.text(
             onPressed: () => Navigator.pop(ctx, false),
             size: M3EButtonSize.md,
             shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
           if (isDestructive)
-            M3EFilledButton(
+            M3EButton.filled(
               onPressed: () => Navigator.pop(ctx, true),
               size: M3EButtonSize.md,
               shape: M3EButtonShape.round,
@@ -111,7 +137,7 @@ Future<bool> showAdaptiveConfirmDialog(
               child: Text(confirmText),
             )
           else
-            M3EFilledButton(
+            M3EButton.filled(
               onPressed: () => Navigator.pop(ctx, true),
               size: M3EButtonSize.md,
               shape: M3EButtonShape.round,
@@ -176,13 +202,13 @@ Future<String?> showAdaptiveInputDialog(
           autofocus: true,
         ),
         actions: [
-          M3ETextButton(
+          M3EButton.text(
             onPressed: () => Navigator.pop(ctx),
             size: M3EButtonSize.md,
             shape: M3EButtonShape.round,
             child: Text(cancelText),
           ),
-          M3EFilledButton(
+          M3EButton.filled(
             onPressed: () => Navigator.pop(ctx, controller.text),
             size: M3EButtonSize.md,
             shape: M3EButtonShape.round,

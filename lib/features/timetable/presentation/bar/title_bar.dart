@@ -1,5 +1,5 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
-import 'package:icon_button_m3e/icon_button_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -183,7 +183,7 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
                 TextSpan(
                   text: '🍐',
                   style: TextStyle(
-                    fontSize: 25,
+                    fontSize: 18,
                     color: colorScheme.primary,
                     fontFamily: 'NotoColorEmoji',
                   ),
@@ -191,9 +191,10 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
                 TextSpan(
                   text: '课表',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 16,
                     color: colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
                   ),
                 ),
               ],
@@ -201,16 +202,16 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
           ),
           const Spacer(),
           if (isDesktop) ...[
-            IconButtonM3E(
+            M3EIconButton(
               onPressed: () async {
                 await windowManager.minimize();
               },
               icon: const Icon(Icons.minimize),
               tooltip: '最小化',
-              size: IconButtonM3ESize.xs,
-              variant: IconButtonM3EVariant.standard,
+              size: M3EIconButtonSize.xs,
+              variant: M3EIconButtonVariant.standard,
             ),
-            IconButtonM3E(
+            M3EIconButton(
               onPressed: () async {
                 _isMaximized.value
                     ? await windowManager.unmaximize()
@@ -220,17 +221,17 @@ class _TitleBarState extends State<TitleBar> with WindowListener {
                 _isMaximized.value ? Icons.fullscreen_exit : Icons.fullscreen,
               ),
               tooltip: _isMaximized.value ? '还原' : '最大化',
-              size: IconButtonM3ESize.xs,
-              variant: IconButtonM3EVariant.standard,
+              size: M3EIconButtonSize.xs,
+              variant: M3EIconButtonVariant.standard,
             ),
-            IconButtonM3E(
+            M3EIconButton(
               icon: const Icon(Icons.close),
               onPressed: () async {
                 await windowManager.close();
               },
               tooltip: '关闭',
-              size: IconButtonM3ESize.xs,
-              variant: IconButtonM3EVariant.standard,
+              size: M3EIconButtonSize.xs,
+              variant: M3EIconButtonVariant.standard,
             ),
           ],
         ],

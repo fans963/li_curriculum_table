@@ -1,5 +1,5 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -68,7 +68,7 @@ class _ClassroomTabState extends State<ClassroomTab>
                     child: state.isLoading && state.results.isEmpty
                         ? const Center(
                             key: ValueKey('loading'),
-                            child: LoadingIndicatorM3E(),
+                            child: M3ELoadingIndicator(),
                           )
                         : CustomScrollView(
                             key: const ValueKey('results_list'),
@@ -216,7 +216,7 @@ class _ClassroomTabState extends State<ClassroomTab>
                   const SizedBox(
                     width: 16,
                     height: 16,
-                    child: LoadingIndicatorM3E(),
+                    child: M3ELoadingIndicator(),
                   ),
                 ],
               ],

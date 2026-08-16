@@ -1,7 +1,7 @@
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -20,14 +20,15 @@ class MaterialAboutCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Card(
+    return M3ECard(
+      variant: M3ECardVariant.outlined,
+      borderRadius: BorderRadius.circular(28),
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4)),
+      color: cs.surfaceContainerLow,
+      border: BorderSide(
+        color: cs.outlineVariant.withValues(alpha: 0.4),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: FutureBuilder<PackageInfo>(
           future: PackageInfo.fromPlatform(),
           builder: (context, snapshot) {
@@ -77,16 +78,18 @@ class MaterialAboutCard extends StatelessWidget {
                   runSpacing: 8,
                   alignment: WrapAlignment.center,
                   children: [
-                    M3EFilledButton.tonalIcon(
+                    M3EButton.icon(
                       icon: const Icon(Icons.system_update_rounded, size: 18),
                       label: const Text('检查更新'),
+                      style: M3EButtonStyle.tonal,
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,
                       onPressed: () => _checkForUpdateManually(context),
                     ),
-                    M3EOutlinedButton.icon(
+                    M3EButton.icon(
                       icon: const Icon(Icons.code_rounded, size: 18),
                       label: const Text('GitHub'),
+                      style: M3EButtonStyle.outlined,
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,
                       onPressed: () => launchUrl(
@@ -99,7 +102,6 @@ class MaterialAboutCard extends StatelessWidget {
               ],
             );
           },
-        ),
       ),
     );
   }
@@ -137,7 +139,7 @@ class MaterialAboutCard extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  LoadingIndicatorM3E(),
+                  M3ELoadingIndicator(),
                   SizedBox(height: 16),
                   Text('正在检查更新...'),
                 ],

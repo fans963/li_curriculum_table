@@ -218,7 +218,7 @@ return $default(_that.courseId,_that.order,_that.courseName,_that.teacher,_that.
 @JsonSerializable()
 
 class _CourseRow implements CourseRow {
-  const _CourseRow({required this.courseId, required this.order, required this.courseName, required this.teacher, required this.timeText, required this.credit, required this.location, required this.courseType, required this.stage, required final  List<TimeSlot> slots}): _slots = slots;
+  const _CourseRow({required this.courseId, required this.order, required this.courseName, required this.teacher, required this.timeText, required this.credit, required this.location, required this.courseType, required this.stage, required List<TimeSlot> slots}): _slots = slots;
   factory _CourseRow.fromJson(Map<String, dynamic> json) => _$CourseRowFromJson(json);
 
 @override final  String courseId;

@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -131,19 +130,20 @@ class _SettingsTabState extends State<SettingsTab>
     final cs = Theme.of(context).colorScheme;
     final ds = settings.designStyle;
 
-    return Scaffold(
-      appBar: const AppBarM3E(
-        title: Text('设置'),
-        centerTitle: true,
-        shapeFamily: AppBarM3EShapeFamily.square,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
-              children: [
+    return ColoredBox(
+      color: cs.surface,
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _buildSettingsHeader(context),
+            Expanded(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 640),
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 48),
+                    children: [
                 // ── Account ──
                 SectionCard(
                   icon: AppIcons.vpnKey(ds),
@@ -169,19 +169,19 @@ class _SettingsTabState extends State<SettingsTab>
                 const SizedBox(height: 24),
                 _buildSectionHeader(context, '外观', Icons.palette_rounded),
                 const SizedBox(height: sectionSpacing),
-                const ThemeSettingsSection(),
+                ThemeSettingsSection(),
 
                 // ── Behavior ──
                 const SizedBox(height: 24),
                 _buildSectionHeader(context, '交互', Icons.touch_app_rounded),
                 const SizedBox(height: sectionSpacing),
-                const TimetableDisplaySettingsSection(),
+                TimetableDisplaySettingsSection(),
 
                 // ── Advanced ──
                 const SizedBox(height: 24),
                 _buildSectionHeader(context, '高级', Icons.tune_rounded),
                 const SizedBox(height: sectionSpacing),
-                const ProxySettingsSection(),
+                ProxySettingsSection(),
                 const SizedBox(height: sectionSpacing),
                 SectionCard(
                   icon: AppIcons.storage(ds),
@@ -258,10 +258,42 @@ class _SettingsTabState extends State<SettingsTab>
                 ],
                 const SizedBox(height: sectionSpacing),
                 const MaterialAboutCard(),
-              ],
+                    ],
+                  ),
+                ),
+              ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsHeader(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        border: Border(
+          bottom: BorderSide(
+            color: cs.outlineVariant.withValues(alpha: 0.3),
+            width: 0.5,
           ),
         ),
+      ),
+      child: Row(
+        children: [
+          Text(
+            '设置',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: cs.onSurface,
+            ),
+          ),
+        ],
       ),
     );
   }

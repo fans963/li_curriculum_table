@@ -228,7 +228,7 @@ return $default(_that.isLoading,_that.status,_that.currentTeachingWeek,_that.dis
 
 
 class _TimetableState implements TimetableState {
-  const _TimetableState({required this.isLoading, required this.status, required this.currentTeachingWeek, required this.displayWeek, required this.referenceWeek, required this.minWeek, required this.maxWeek, this.termStartMonday, this.data, this.needsLogin = false, final  List<ScheduleEvent> scheduleEvents = const []}): _scheduleEvents = scheduleEvents;
+  const _TimetableState({required this.isLoading, required this.status, required this.currentTeachingWeek, required this.displayWeek, required this.referenceWeek, required this.minWeek, required this.maxWeek, this.termStartMonday, this.data, this.needsLogin = false, List<ScheduleEvent> scheduleEvents = const []}): _scheduleEvents = scheduleEvents;
   
 
 @override final  bool isLoading;

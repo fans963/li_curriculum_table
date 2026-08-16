@@ -1,9 +1,8 @@
 import 'dart:async';
 
-import 'package:expressive_refresh/expressive_refresh.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:icon_button_m3e/icon_button_m3e.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -15,7 +14,6 @@ import 'package:li_curriculum_table/core/settings/domain/settings_repository.dar
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
@@ -66,7 +64,6 @@ class _TimetableTabState extends State<TimetableTab>
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       sl<CourseColorService>().preload();
-      sl<CourseOnlineService>().preload();
       // Restore async strip expanded preference
       final store = sl<SecureStorageStore>();
       final prefs = await store.readAll([_asyncStripPrefKey]);
@@ -86,12 +83,9 @@ class _TimetableTabState extends State<TimetableTab>
   List<CourseRow> get _asyncCourses {
     final data = sl<TimetableController>().state.value.data;
     if (data == null) return [];
-    final onlineService = sl<CourseOnlineService>();
     return data.rows.where((r) {
       // Auto-detected: academic system marks online courses with location "线上"
       if (r.location.trim() == '线上') return true;
-      // Manually marked online (any format: live/async/hybrid)
-      if (onlineService.isOnline(r.courseName)) return true;
       return false;
     }).toList();
   }
@@ -133,12 +127,9 @@ class _TimetableTabState extends State<TimetableTab>
               onAsyncToggle: _toggleAsyncStrip,
             ),
             // Async online course strip (collapsible).
-            // Dependencies ensure reactivity when:
-            // - user marks/unmarks courses as online
-            // - user changes a course's custom color
+            // Dependencies ensure reactivity when custom course colors change.
             SignalBuilder(
               dependencies: [
-                sl<CourseOnlineService>().version,
                 sl<CourseColorService>().version,
               ],
               builder: (context) => AsyncCourseStrip(
@@ -158,7 +149,7 @@ class _TimetableTabState extends State<TimetableTab>
                         key: const ValueKey('needs_login'),
                         onSync: () => sl<TimetableController>().syncFromCache(),
                       )
-                    : ExpressiveRefreshIndicator(
+                    : M3ERefreshIndicator(
                         key: const ValueKey('timetable_view'),
                         color: colorScheme.primary,
                         onRefresh: () async {
@@ -290,37 +281,37 @@ class _CompactHeader extends StatelessWidget {
 
           // Async online courses toggle (only shown when async courses exist)
           if (hasAsyncCourses)
-            IconButtonM3E(
+            M3EIconButton(
               icon: Icon(
                 isAsyncStripExpanded
                     ? Icons.live_tv_rounded
                     : Icons.live_tv_outlined,
                 size: 20,
               ),
-              variant: IconButtonM3EVariant.standard,
-              shape: IconButtonM3EShapeVariant.round,
+              variant: M3EIconButtonVariant.standard,
+              shape: M3EIconButtonShapeVariant.round,
               tooltip: isAsyncStripExpanded ? '收起网课' : '展开网课',
               onPressed: onAsyncToggle,
             ),
 
           // Scroll toggle
-          IconButtonM3E(
+          M3EIconButton(
             icon: Icon(
               isWeeklyScrollActive
                   ? AppIcons.viewWeekFilled(designStyle)
                   : AppIcons.viewWeek(designStyle),
             ),
-            variant: IconButtonM3EVariant.standard,
-            shape: IconButtonM3EShapeVariant.round,
+            variant: M3EIconButtonVariant.standard,
+            shape: M3EIconButtonShapeVariant.round,
             tooltip: isWeeklyScrollActive ? '按星期滑动' : '无极滑动',
             onPressed: isSwitchingScroll ? null : onScrollToggle,
           ),
 
           // Add button
-          IconButtonM3E(
+          M3EIconButton(
             icon: const Icon(Icons.add_rounded),
-            variant: IconButtonM3EVariant.standard,
-            shape: IconButtonM3EShapeVariant.round,
+            variant: M3EIconButtonVariant.standard,
+            shape: M3EIconButtonShapeVariant.round,
             tooltip: '添加日程',
             onPressed: onAddPressed,
           ),

@@ -1,10 +1,12 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
-import 'package:fab_m3e/fab_m3e.dart';
+import 'package:material_3_expressive/components/navigation_bar/models/m3e_navigation_bar_destination.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/floating_action_buttons/enums/m3e_fab.dart';
+import 'package:material_3_expressive/components/navigation_bar/enums/m3e_nav_bar_enums.dart';
 
 import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -144,11 +146,10 @@ class _MainScreenState extends State<MainScreen> {
       body: _buildPageContent(),
       floatingActionButton: (currentIndex == 4 || currentIndex == 5)
           ? null
-          : FabM3E(
+          : M3EFab(
               onPressed: isSyncing ? null : () => _sync.syncGlobal(),
               tooltip: '同步数据',
-              kind: FabM3EKind.secondary,
-              shapeFamily: FabM3EShapeFamily.round,
+              color: M3EFabColor.secondary,
               icon: isSyncing
                   ? adaptiveActivityIndicator(
                       designStyle: ds,
@@ -162,43 +163,43 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildMaterialNavBar(int currentIndex, DesignStyle ds) {
-    return NavigationBarM3E(
+    return M3ENavigationBar(
       selectedIndex: currentIndex,
-      indicatorStyle: NavBarM3EIndicatorStyle.pill,
-      labelBehavior: NavBarM3ELabelBehavior.alwaysShow,
-      shapeFamily: NavBarM3EShapeFamily.square,
+      indicatorStyle: M3ENavBarIndicatorStyle.pill,
+      labelBehavior: M3ENavBarLabelBehavior.alwaysShow,
+      shapeFamily: M3ENavBarShapeFamily.square,
       onDestinationSelected: (index) {
         FocusScope.of(context).unfocus();
         _nav.setIndex(index);
         _pageController.jumpToPage(index);
       },
       destinations: [
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.timetableOutline(ds)),
           selectedIcon: Icon(AppIcons.timetable(ds)),
           label: '课表',
         ),
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.classroomOutline(ds)),
           selectedIcon: Icon(AppIcons.classroom(ds)),
           label: '空闲教室',
         ),
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.gradeOutline(ds)),
           selectedIcon: Icon(AppIcons.grade(ds)),
           label: '成绩',
         ),
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.examOutline(ds)),
           selectedIcon: Icon(AppIcons.exam(ds)),
           label: '考试',
         ),
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.bookOutline(ds)),
           selectedIcon: Icon(AppIcons.book(ds)),
           label: '图书',
         ),
-        NavigationDestinationM3E(
+        M3ENavigationBarDestination(
           icon: Icon(AppIcons.settingsOutline(ds)),
           selectedIcon: Icon(AppIcons.settings(ds)),
           label: '设置',

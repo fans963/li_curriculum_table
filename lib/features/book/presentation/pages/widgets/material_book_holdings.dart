@@ -58,7 +58,7 @@ Widget buildMaterialHoldings(
         return Column(
           children: [
             const SizedBox(height: 8),
-            const LinearProgressIndicatorM3E(),
+            const M3EProgressIndicator.linear(),
             const SizedBox(height: 16),
             Center(
               child: Text(

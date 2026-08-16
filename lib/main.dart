@@ -32,16 +32,18 @@ Future<void> main() async {
   }
 
   // Hide system status bar for a more unified look on mobile
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   if (isDesktop) {
     await windowManager.ensureInitialized();
 
     const windowOptions = WindowOptions(
       size: Size(1500, 1000),
+      minimumSize: Size(960, 680),
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
+      title: '🍐课表',
       titleBarStyle: TitleBarStyle.hidden,
     );
     windowManager.waitUntilReadyToShow(windowOptions, () async {

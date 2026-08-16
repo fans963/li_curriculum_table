@@ -2,7 +2,8 @@ import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 
 const _termsTitle = '使用条款与隐私政策';
 
@@ -173,7 +174,7 @@ class _MaterialTermsDialog extends StatelessWidget {
               child: Row(
                 children: [
                   Expanded(
-                    child: M3ETextButton(
+                    child: M3EButton.text(
                       onPressed: () => Navigator.pop(context, false),
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,
@@ -182,7 +183,7 @@ class _MaterialTermsDialog extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: M3EFilledButton(
+                    child: M3EButton.filled(
                       onPressed: () => Navigator.pop(context, true),
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,

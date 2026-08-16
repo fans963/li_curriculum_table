@@ -4,7 +4,7 @@ publish_to: "none"
 version: 2.0.1
 
 environment:
-  sdk: ">=3.8.0 <4.0.0"
+  sdk: ">=3.13.0 <4.0.0"
 
 dependencies:
   flutter:
@@ -21,7 +21,6 @@ dependencies:
   flex_color_scheme: ^8.4.0
   flutter_secure_storage: ^11.0.0
   file_selector: ^1.1.0
-
   infinite_calendar_view: ^2.11.5
   auto_size_text: ^3.0.0
   pool: ^1.5.2
@@ -35,27 +34,16 @@ dependencies:
   markdown_widget: ^2.3.2+8
   cupertino_icons: ^1.0.9
   cupertino_liquid_glass: ^0.7.0
-  m3e_collection: ^0.3.7
-  loading_indicator_m3e: ^0.1.1
-  progress_indicator_m3e: ^0.1.1
-  expressive_refresh: ^0.1.2
-  m3e_core: ^0.1.0
-  slider_m3e: ^0.1.1
-  app_bar_m3e: ^0.1.2
-  icon_button_m3e: ^0.2.1
-  fab_m3e: ^0.1.1
-  navigation_bar_m3e: ^0.1.1
-  m3e_design: ^0.2.1
   geolocator: ^14.0.3
   flutter_local_notifications: ^22.0.1
   timezone: ^0.11.1
   cached_network_image: ^3.4.1
   animations: ^2.2.0
   open_filex: ^4.7.0
+  cupertino_ui: 1.0.0
+  material_ui: 1.0.0
+  material_3_expressive: ^1.0.8
 
-
-  cupertino_ui: any
-  material_ui: any
 dependency_overrides:
   uuid: ^4.5.0
 

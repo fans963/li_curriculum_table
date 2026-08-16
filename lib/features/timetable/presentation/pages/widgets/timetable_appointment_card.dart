@@ -4,9 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
-import 'package:li_curriculum_table/features/timetable/domain/entities/course_format.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -97,16 +95,12 @@ class _AnimatedAppointmentCard extends StatelessWidget {
 
     // Check online status: manual override takes priority, then auto-detect
     // from location field (academic system uses "线上" for online courses).
-    final onlineService = sl<CourseOnlineService>();
-    final override = onlineService.getOverride(title);
     final isAutoOnline = occurrence.location.trim() == '线上';
-    final isOnline = (override != null && override.isOnline) || isAutoOnline;
-    final isLiveOnline =
-        (override?.format == CourseFormat.liveOnline) ||
-        (isAutoOnline && override?.format != CourseFormat.asyncOnline);
+    final isOnline = isAutoOnline;
+    final isLiveOnline = isAutoOnline;
 
     // For online courses, show platform info instead of classroom.
-    final locationLine = _buildLocationLine(occurrence, override);
+    final locationLine = isAutoOnline ? '🌐 线上课程' : occurrence.location.trim();
 
     // Internal tap handler — used only when no external onTap is provided.
     void handleTap() => openCourseDetails(context, occurrence);
@@ -143,29 +137,6 @@ class _AnimatedAppointmentCard extends StatelessWidget {
       onTap:
           cardOnTap, // null when externally handled — GestureDetector skips tap
     );
-  }
-
-  String _buildLocationLine(
-    CourseOccurrence occurrence,
-    CourseFormatOverride? override,
-  ) {
-    // Manual override: show platform + meeting ID
-    if (override != null && override.isOnline) {
-      final parts = <String>[];
-      if (override.platform != null && override.platform!.isNotEmpty) {
-        parts.add(override.platform!);
-      }
-      if (override.meetingId != null && override.meetingId!.isNotEmpty) {
-        parts.add(override.meetingId!);
-      }
-      if (parts.isNotEmpty) return parts.join(' · ');
-      return '🌐 线上课程';
-    }
-    // Auto-detected: academic system location field is "线上"
-    if (occurrence.location.trim() == '线上') {
-      return '🌐 线上课程';
-    }
-    return occurrence.location.trim();
   }
 
   Widget _buildMaterialCard(
@@ -505,5 +476,4 @@ String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
   return '$start-$end';
 }
 
-// _showMarkOnlineSheet → show_mark_online_sheet.dart
 // _DashedBorderPainter + dashPath → dashed_border_painter.dart
