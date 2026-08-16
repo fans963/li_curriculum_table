@@ -9,3 +9,6 @@ pub mod crawler;
 mod frb_generated;
 pub mod model;
 pub mod ocr;
+
+#[cfg(target_os = "android")]
+mod android_rustls;

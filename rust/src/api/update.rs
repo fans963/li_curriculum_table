@@ -5,7 +5,6 @@ use serde::Deserialize;
 #[derive(Debug, Clone, Deserialize)]
 struct GiteeRelease {
     tag_name: Option<String>,
-    name: Option<String>,
     body: Option<String>,
     created_at: Option<String>,
 }
@@ -92,10 +91,8 @@ pub async fn download_update(
     mirror_prefixes: Vec<String>,
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
-    use futures_util::StreamExt;
     use reqwest::header::{HeaderValue, ACCEPT_ENCODING};
     use std::path::Path;
-    use tokio::io::{AsyncWriteExt, BufWriter};
     use tokio::time::Duration;
 
     let client = reqwest::Client::builder()
@@ -120,11 +117,7 @@ pub async fn download_update(
             GITEE_OWNER, GITEE_REPO, version, filename
         ));
     }
-    candidates.extend(
-        mirror_prefixes
-            .iter()
-            .map(|p| format!("{}{}", p, url))
-    );
+    candidates.extend(mirror_prefixes.iter().map(|p| format!("{}{}", p, url)));
     candidates.push(url);
 
     let _ = sink.add(DownloadProgress {
