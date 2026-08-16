@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:li_curriculum_table/core/rust/api/weather.dart' as rust;
 

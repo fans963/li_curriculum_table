@@ -1,5 +1,5 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/cupertino_form_widgets.dart';
 import 'package:signals/signals_flutter.dart';
 

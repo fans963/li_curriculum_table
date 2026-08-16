@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart' show ThemeMode;
+import 'package:material_ui/material_ui.dart' show ThemeMode;
 
 String statusText(dynamic state) {
   if (state.isLoading) return '正在同步...';

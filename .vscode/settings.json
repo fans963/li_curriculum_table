@@ -1,5 +1,6 @@
 {
   "java.configuration.updateBuildConfiguration": "interactive",
   "cmake.sourceDirectory": "/home/fan/workspace/flutter/curriculum_table/linux",
-  "dart.flutterSdkPath": ".fvm/versions/master"
+  "dart.flutterSdkPath": ".fvm/versions/master",
+  "python.analysis.stubPath": "/home/fan/.kendryte/k230_canmv_pylance/fa3c3e9ad66eec2a/typings"
 }

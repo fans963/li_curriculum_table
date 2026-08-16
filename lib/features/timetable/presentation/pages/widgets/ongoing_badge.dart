@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// A small "进行中" badge widget used in timetable cards and detail sheets.
 Widget ongoingBadge(

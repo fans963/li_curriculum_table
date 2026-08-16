@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// Reusable Cupertino form card container with iOS styling.
 class CupertinoFormCard extends StatelessWidget {

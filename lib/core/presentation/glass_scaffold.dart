@@ -1,6 +1,6 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Colors;
+import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart' show Colors;
 
 /// A zero-overhead scaffold that flattens the 7-layer
 /// `CupertinoPageScaffold → Stack → Positioned.fill(ColoredBox(CustomScrollView))

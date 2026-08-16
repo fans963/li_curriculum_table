@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:app_bar_m3e/app_bar_m3e.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:signals/signals_flutter.dart';
 

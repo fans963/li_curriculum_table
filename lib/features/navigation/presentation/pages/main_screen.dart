@@ -1,9 +1,9 @@
 import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
 import 'package:fab_m3e/fab_m3e.dart';
 
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:navigation_bar_m3e/navigation_bar_m3e.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';

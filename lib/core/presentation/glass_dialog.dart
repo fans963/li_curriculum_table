@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// A zero-overhead wrapper that flattens the 8-layer Cupertino detail dialog
 /// `Center → ConstrainedBox → DefaultTextStyle → Padding → Container(shadow) →

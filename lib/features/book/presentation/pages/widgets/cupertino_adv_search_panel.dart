@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:signals/signals_flutter.dart';
 
 /// Cupertino styled collapsible advanced search panel for book search.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 export 'sections/theme_settings_section.dart';
 export 'sections/timetable_display_settings_section.dart';

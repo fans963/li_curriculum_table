@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:m3e_core/m3e_core.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:slider_m3e/slider_m3e.dart';

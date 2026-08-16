@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/domain/models/level_exam_score.dart';
 
 class LevelExamScoresSection extends StatelessWidget {

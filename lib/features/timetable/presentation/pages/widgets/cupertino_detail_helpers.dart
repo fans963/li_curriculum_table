@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:cupertino_ui/cupertino_ui.dart';
 
 /// iOS-style details card container with rounded corners and subtle border.
 Widget buildIOSDetailsCard(
