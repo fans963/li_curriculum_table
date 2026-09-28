@@ -40,6 +40,13 @@ jobs:
         with:
           lfs: true
 
+      - name: Setup Java for Android
+        if: runner.os == 'Linux'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Install Linux Build Tools
         if: runner.os == 'Linux'
         run: |
@@ -80,8 +87,12 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: 'master'
+          channel: 'stable'
           cache: true
+
+      - name: Use Java 21 for Flutter Android builds
+        if: runner.os == 'Linux'
+        run: flutter config --jdk-dir="$JAVA_HOME"
       
       - name: Disable SPM (macOS only)
         if: runner.os == 'macOS'
@@ -89,7 +100,7 @@ jobs:
 
       - name: Install Fastforge & FRB
         run: |
-          dart pub global activate fastforge
+          dart pub global activate fastforge 
           rustup component add rustfmt
           cargo install flutter_rust_bridge_codegen
           echo "$HOME/.pub-cache/bin" >> $GITHUB_PATH

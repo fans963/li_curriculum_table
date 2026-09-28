@@ -212,7 +212,7 @@ return $default(_that.classroomName,_that.availability,_that.hasNoClassesThisTer
 @JsonSerializable()
 
 class _ClassroomAvailability extends ClassroomAvailability {
-  const _ClassroomAvailability({required this.classroomName, required final  List<bool> availability, this.hasNoClassesThisTerm = false}): _availability = availability,super._();
+  const _ClassroomAvailability({required this.classroomName, required List<bool> availability, this.hasNoClassesThisTerm = false}): _availability = availability,super._();
   factory _ClassroomAvailability.fromJson(Map<String, dynamic> json) => _$ClassroomAvailabilityFromJson(json);
 
 @override final  String classroomName;

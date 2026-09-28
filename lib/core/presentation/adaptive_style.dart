@@ -1,23 +1,13 @@
-import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
-/// Resolves the effective [DesignStyle] at runtime.
-///
-/// When the user picks [DesignStyle.system], this returns
-/// [DesignStyle.cupertino] on iOS/macOS and [DesignStyle.material] everywhere else.
+/// Resolves design style. Since Cupertino UI has been removed,
+/// this always resolves to Material 3.
 class AdaptiveStyle {
   const AdaptiveStyle._();
 
-  /// Returns the concrete style for the given [setting].
-  static DesignStyle resolve(DesignStyle setting) {
-    if (setting != DesignStyle.system) return setting;
-    return defaultTargetPlatform == TargetPlatform.iOS ||
-            defaultTargetPlatform == TargetPlatform.macOS
-        ? DesignStyle.cupertino
-        : DesignStyle.material;
-  }
+  /// Always returns [DesignStyle.material].
+  static DesignStyle resolve([DesignStyle? setting]) => DesignStyle.material;
 
-  /// Convenience: `true` when the resolved style is Cupertino.
-  static bool isCupertino(DesignStyle setting) =>
-      resolve(setting) == DesignStyle.cupertino;
+  /// Always false since the app is unified on Material 3.
+  static bool isCupertino([DesignStyle? setting]) => false;
 }

@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/domain/models/level_exam_score.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/domain/repositories/level_exam_score_repository.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_state.dart';
@@ -17,18 +16,16 @@ class LevelExamScoreController {
     final creds = await sl<CredentialsRepository>().loadCredentials();
     if (creds != null && !creds.isEmpty) {
       loadScores(forceRefresh: true).catchError((e) {
-        if (kDebugMode) {
-          print('Auto remote sync of level exam scores failed: $e');
-        }
+        AppLogger.instance.warning(
+          'Auto remote sync of level exam scores failed',
+          tag: 'LevelExamScoreController',
+          error: e,
+        );
       });
     }
   }
 
   Future<void> loadScores({bool forceRefresh = false}) async {
-    if (forceRefresh) {
-      await sl<OcrInitializer>().ensureInitialized();
-    }
-
     _state.value = _state.value.copyWith(isLoading: true, errorMessage: null);
 
     try {

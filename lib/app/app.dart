@@ -1,23 +1,30 @@
 import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:m3e_design/m3e_design.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart' as m3e_new;
 import 'package:signals/signals_flutter.dart';
 
+// ignore_for_file: deprecated_member_use
+
 const bool isWeb = kIsWeb;
+
+class _ThemeBundle {
+  const _ThemeBundle({required this.modern, required this.expressive});
+
+  final ThemeData modern;
+  final m3e_new.M3EThemeData expressive;
+}
 
 class CurriculumTableApp extends SignalWidget {
   const CurriculumTableApp({super.key});
 
-  ThemeData _buildTheme({
+  _ThemeBundle _buildTheme({
     required Brightness brightness,
     required Color seedColor,
     ColorScheme? dynamicScheme,
@@ -54,7 +61,8 @@ class CurriculumTableApp extends SignalWidget {
       inputDecoratorFocusedHasBorder: true,
       inputDecoratorBackgroundAlpha: 5,
       navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
-      navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      navigationBarLabelBehavior:
+          NavigationDestinationLabelBehavior.alwaysShow,
       // Expressive shape hierarchy: cards & dialogs get xxLarge (32)
       cardRadius: 28,
       dialogRadius: 32,
@@ -76,36 +84,79 @@ class CurriculumTableApp extends SignalWidget {
     // On Web, use system fonts to avoid downloading ~200KB+ of Google Fonts.
     const String? webFontFamily = kIsWeb ? 'Noto Sans SC' : null;
 
-    return withM3ETheme(
-      brightness == Brightness.dark
-          ? FlexThemeData.dark(
-              colors: colors,
-              fontFamily: webFontFamily,
-              useMaterial3: true,
-              swapLegacyOnMaterial3: true,
-              visualDensity: FlexColorScheme.comfortablePlatformDensity,
-              subThemesData: subThemes,
-              keyColors: const FlexKeyColors(
-                useSecondary: true,
-                useTertiary: true,
-                keepPrimary: true,
-              ),
-              tones: _flexTones(colorSchemeType, Brightness.dark),
-            )
-          : FlexThemeData.light(
-              colors: colors,
-              fontFamily: webFontFamily,
-              useMaterial3: true,
-              swapLegacyOnMaterial3: true,
-              visualDensity: FlexColorScheme.comfortablePlatformDensity,
-              subThemesData: subThemes,
-              keyColors: const FlexKeyColors(
-                useSecondary: true,
-                useTertiary: true,
-                keepPrimary: true,
-              ),
-              tones: _flexTones(colorSchemeType, Brightness.light),
+    final legacyTheme = brightness == Brightness.dark
+        ? FlexThemeData.dark(
+            colors: colors,
+            fontFamily: webFontFamily,
+            useMaterial3: true,
+            swapLegacyOnMaterial3: true,
+            visualDensity: FlexColorScheme.comfortablePlatformDensity,
+            subThemesData: subThemes,
+            keyColors: const FlexKeyColors(
+              useSecondary: true,
+              useTertiary: true,
+              keepPrimary: true,
             ),
+            tones: _flexTones(colorSchemeType, Brightness.dark),
+          )
+        : FlexThemeData.light(
+            colors: colors,
+            fontFamily: webFontFamily,
+            useMaterial3: true,
+            swapLegacyOnMaterial3: true,
+            visualDensity: FlexColorScheme.comfortablePlatformDensity,
+            subThemesData: subThemes,
+            keyColors: const FlexKeyColors(
+              useSecondary: true,
+              useTertiary: true,
+              keepPrimary: true,
+            ),
+            tones: _flexTones(colorSchemeType, Brightness.light),
+          );
+
+    final modern = _modernThemeFromLegacy(legacyTheme, subThemes);
+    return _ThemeBundle(
+      modern: modern,
+      expressive: m3e_new.M3EThemeData.fromMaterial(modern),
+    );
+  }
+
+  ThemeData _modernThemeFromLegacy(
+    ThemeData theme,
+    FlexSubThemesData subThemes,
+  ) {
+    final scheme = theme.colorScheme;
+    final defaultRadius = subThemes.defaultRadius ?? 28;
+    final cardRadius = subThemes.cardRadius ?? defaultRadius;
+    final dialogRadius = subThemes.dialogRadius ?? 32;
+    final inputRadius = subThemes.inputDecoratorRadius ?? 16;
+
+    return theme.copyWith(
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cardRadius),
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(dialogRadius),
+        ),
+      ),
+      inputDecorationTheme: InputDecorationThemeData(
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+          borderSide: BorderSide(color: scheme.outlineVariant),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(inputRadius),
+          borderSide: BorderSide(color: scheme.primary, width: 1.5),
+        ),
+      ),
     );
   }
 
@@ -126,89 +177,6 @@ class CurriculumTableApp extends SignalWidget {
       case ColorSchemeType.monochrome:
         return FlexTones.oneHue(brightness);
     }
-  }
-
-  CupertinoThemeData _buildCupertinoTheme({
-    required Brightness brightness,
-    required Color seedColor,
-    ColorScheme? dynamicScheme,
-  }) {
-    final scheme =
-        dynamicScheme ??
-        ColorScheme.fromSeed(seedColor: seedColor, brightness: brightness);
-    final primaryColor = scheme.primary;
-
-    // iOS 26 Liquid Glass typography: monochromatic adaptive, crisp weights
-    return CupertinoThemeData(
-      brightness: brightness,
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: brightness == Brightness.dark
-          ? CupertinoColors.systemGroupedBackground.darkColor
-          : CupertinoColors.systemGroupedBackground.color,
-      textTheme: CupertinoTextThemeData(
-        primaryColor: primaryColor,
-        textStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        actionTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: primaryColor,
-        ),
-        tabLabelTextStyle: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.06,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navTitleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navLargeTitleTextStyle: TextStyle(
-          fontSize: 34,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.37,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navActionTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: primaryColor,
-        ),
-        pickerTextStyle: TextStyle(
-          fontSize: 21,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        dateTimePickerTextStyle: TextStyle(
-          fontSize: 21,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-      ),
-    );
   }
 
   @override
@@ -232,35 +200,31 @@ class CurriculumTableApp extends SignalWidget {
               (settings.themeMode == ThemeMode.system &&
                   MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-          final cupertinoTheme = _buildCupertinoTheme(
-            brightness: isDark ? Brightness.dark : Brightness.light,
+          final lightTheme = _buildTheme(
+            brightness: Brightness.light,
             seedColor: settings.seedColor,
-            dynamicScheme: isDark ? darkScheme : lightScheme,
+            dynamicScheme: lightScheme,
+            colorSchemeType: settings.colorSchemeType,
+          );
+          final darkTheme = _buildTheme(
+            brightness: Brightness.dark,
+            seedColor: settings.seedColor,
+            dynamicScheme: darkScheme,
+            colorSchemeType: settings.colorSchemeType,
           );
 
           return MaterialApp(
-            title: '',
+            title: '🍐课表',
             themeMode: settings.themeMode,
-            theme: _buildTheme(
-              brightness: Brightness.light,
-              seedColor: settings.seedColor,
-              dynamicScheme: lightScheme,
-              colorSchemeType: settings.colorSchemeType,
-            ),
-            darkTheme: _buildTheme(
-              brightness: Brightness.dark,
-              seedColor: settings.seedColor,
-              dynamicScheme: darkScheme,
-              colorSchemeType: settings.colorSchemeType,
-            ),
+            theme: lightTheme.modern,
+            darkTheme: darkTheme.modern,
             builder: (context, child) {
-              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-                return CupertinoTheme(
-                  data: cupertinoTheme,
-                  child: child ?? const SizedBox.shrink(),
-                );
-              }
-              return child ?? const SizedBox.shrink();
+              final content = child ?? const SizedBox.shrink();
+              final m3eTheme = m3e_new.M3ETheme(
+                data: isDark ? darkTheme.expressive : lightTheme.expressive,
+                child: content,
+              );
+              return MaterialUiCompatibilityBridge(child: m3eTheme);
             },
             home: const MainScreen(),
           );

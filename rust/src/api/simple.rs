@@ -1,10 +1,9 @@
 #[flutter_rust_bridge::frb(init)]
 pub fn init_app() {
-    // Default utilities - feel free to customize
-    flutter_rust_bridge::setup_default_user_utils();
-
-    // Logging is now bridged to Dart via flutter_rust_bridge v2.13+.
-    // No platform-specific logger backends needed.
-    log::set_max_level(log::LevelFilter::Info);
+    // Keep FRB's panic backtrace setup without installing its platform logger.
+    // rust_logger installs the single logger that both prints to the console
+    // and forwards records to Dart/AppLogger.
+    flutter_rust_bridge::setup_backtrace();
+    crate::api::rust_logger::install_rust_log_bridge();
     log::info!("Rust: Logger initialized.");
 }

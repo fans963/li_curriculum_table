@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_storage_store.dart';
 import 'package:signals/signals.dart';
 

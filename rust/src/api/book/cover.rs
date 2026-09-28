@@ -16,10 +16,8 @@ pub async fn fetch_cover_url(isbn: String, title: String) -> anyhow::Result<Opti
     );
 
     // Return the first successful result (priority order)
-    for result in [ol_isbn, ol_title, dangdang, douban, google] {
-        if let Some(url) = result {
-            return Ok(Some(url));
-        }
+    if let Some(url) = [ol_isbn, ol_title, dangdang, douban, google].into_iter().flatten().next() {
+        return Ok(Some(url));
     }
 
     Ok(None)

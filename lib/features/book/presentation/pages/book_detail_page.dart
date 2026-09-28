@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
@@ -9,7 +9,7 @@ import 'package:li_curriculum_table/features/book/domain/book_cover_loader.dart'
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
 import 'package:li_curriculum_table/core/presentation/info_row.dart';
 import 'package:signals/signals_flutter.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 
 class BookDetailDialog extends SignalStatefulWidget {
   final BookInfo book;
@@ -437,7 +437,7 @@ class _MaterialCloseButton extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          M3EFilledButton(
+          M3EButton.filled(
             onPressed: () {
               if (onClose != null) {
                 onClose!();

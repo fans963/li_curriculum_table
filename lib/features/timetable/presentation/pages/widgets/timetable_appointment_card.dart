@@ -1,26 +1,20 @@
 import 'package:animations/animations.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
-import 'package:li_curriculum_table/features/timetable/domain/entities/course_format.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/dashed_border_painter.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/show_mark_online_sheet.dart';
+import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart'
     show CourseDetailsSheet;
-export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart'
-    show CupertinoTone, resolveCupertinoTone;
 
 /// Open the course details dialog for the given [occurrence].
 /// Callable from both the card's internal tap handler and external callers
@@ -98,16 +92,12 @@ class _AnimatedAppointmentCard extends StatelessWidget {
 
     // Check online status: manual override takes priority, then auto-detect
     // from location field (academic system uses "线上" for online courses).
-    final onlineService = sl<CourseOnlineService>();
-    final override = onlineService.getOverride(title);
     final isAutoOnline = occurrence.location.trim() == '线上';
-    final isOnline = (override != null && override.isOnline) || isAutoOnline;
-    final isLiveOnline =
-        (override?.format == CourseFormat.liveOnline) ||
-        (isAutoOnline && override?.format != CourseFormat.asyncOnline);
+    final isOnline = isAutoOnline;
+    final isLiveOnline = isAutoOnline;
 
     // For online courses, show platform info instead of classroom.
-    final locationLine = _buildLocationLine(occurrence, override);
+    final locationLine = isAutoOnline ? '🌐 线上课程' : occurrence.location.trim();
 
     // Internal tap handler — used only when no external onTap is provided.
     void handleTap() => openCourseDetails(context, occurrence);
@@ -117,19 +107,7 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     // the callback fires twice. Only use the internal handler as fallback.
     final cardOnTap = onTap == null ? handleTap : null;
 
-    if (AdaptiveStyle.isCupertino(designStyle)) {
-      return buildCupertinoAppointmentCard(
-        context: context,
-        occurrence: occurrence,
-        title: title,
-        locationLine: locationLine,
-        isOngoing: isOngoing,
-        isOnline: isOnline,
-        isLiveOnline: isLiveOnline,
-        // When externally handled, provide a no-op — Cupertino requires non-null.
-        onTap: cardOnTap ?? () {},
-      );
-    }
+
     return _buildMaterialCard(
       context,
       occurrence,
@@ -144,29 +122,6 @@ class _AnimatedAppointmentCard extends StatelessWidget {
       onTap:
           cardOnTap, // null when externally handled — GestureDetector skips tap
     );
-  }
-
-  String _buildLocationLine(
-    CourseOccurrence occurrence,
-    CourseFormatOverride? override,
-  ) {
-    // Manual override: show platform + meeting ID
-    if (override != null && override.isOnline) {
-      final parts = <String>[];
-      if (override.platform != null && override.platform!.isNotEmpty) {
-        parts.add(override.platform!);
-      }
-      if (override.meetingId != null && override.meetingId!.isNotEmpty) {
-        parts.add(override.meetingId!);
-      }
-      if (parts.isNotEmpty) return parts.join(' · ');
-      return '🌐 线上课程';
-    }
-    // Auto-detected: academic system location field is "线上"
-    if (occurrence.location.trim() == '线上') {
-      return '🌐 线上课程';
-    }
-    return occurrence.location.trim();
   }
 
   Widget _buildMaterialCard(
@@ -184,20 +139,13 @@ class _AnimatedAppointmentCard extends StatelessWidget {
   }) {
     final cs = Theme.of(context).colorScheme;
 
-    // Long-press handler: schedule events get delete, all courses get mark-as-online.
-    void handleLongPress() {
-      if (occurrence.courseType == '日程') {
-        confirmRemoveScheduleEvent(context, occurrence);
-      } else {
-        showMarkOnlineSheet(context, occurrence);
-      }
-    }
-
     return Padding(
       padding: const EdgeInsets.all(1.5),
       child: GestureDetector(
         onTap: onTap,
-        onLongPress: handleLongPress,
+        onLongPress: occurrence.courseType == '日程'
+            ? () => confirmRemoveScheduleEvent(context, occurrence)
+            : null,
         child: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -378,9 +326,60 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Course-level DDL badge (top-right). Shown only when this
+              // course has at least one open todo.
+              Positioned(
+                top: -2,
+                right: -2,
+                child: _CourseTodoBadge(courseName: occurrence.courseName),
+              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CourseTodoBadge extends StatelessWidget {
+  final String courseName;
+  const _CourseTodoBadge({required this.courseName});
+
+  @override
+  Widget build(BuildContext context) {
+    final todoCtrl = sl<TodoController>();
+    return SignalBuilder(
+      dependencies: [todoCtrl.openTodos],
+      builder: (context) {
+        final count =
+            todoCtrl.openCountByCourse.value[courseName.trim()] ?? 0;
+        if (count == 0) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+          decoration: BoxDecoration(
+            color: cs.error,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            count > 99 ? '99+' : '\$count',
+            style: TextStyle(
+              color: cs.onError,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              height: 1.0,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -402,9 +401,6 @@ Future<void> _showDetailsDialog(
     onClose: () => Navigator.of(context).pop(),
   );
 
-  if (AdaptiveStyle.isCupertino(designStyle)) {
-    return showCupertinoModalPopup(context: context, builder: (_) => sheet);
-  }
 
   return Navigator.of(context).push(
     PageRouteBuilder(
@@ -513,5 +509,4 @@ String _formatOccurrenceTimeRange(CourseOccurrence occurrence) {
   return '$start-$end';
 }
 
-// _showMarkOnlineSheet → show_mark_online_sheet.dart
 // _DashedBorderPainter + dashPath → dashed_border_painter.dart

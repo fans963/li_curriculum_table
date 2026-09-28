@@ -4,7 +4,6 @@ import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/timetable_data.dart';
-import 'package:li_curriculum_table/features/timetable/domain/services/course_online_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:signals/signals.dart';
@@ -21,23 +20,19 @@ EventsController _createEventsController() {
   DateTime? prevTermStart;
   int prevTeachingWeek = 0;
   List<ScheduleEvent> prevEvents = [];
-  int prevOnlineVersion = 0;
 
   effect(() {
     final s = timetable.state.value;
-    final onlineVersion = sl<CourseOnlineService>().version.value;
 
     final dataChanged = !identical(s.data, prevData);
     final termStartChanged = s.termStartMonday != prevTermStart;
     final weekChanged = s.currentTeachingWeek != prevTeachingWeek;
     final eventsChanged = !identical(s.scheduleEvents, prevEvents);
-    final onlineChanged = onlineVersion != prevOnlineVersion;
 
     if (!dataChanged &&
         !termStartChanged &&
         !weekChanged &&
-        !eventsChanged &&
-        !onlineChanged) {
+        !eventsChanged) {
       return;
     }
 
@@ -49,10 +44,6 @@ EventsController _createEventsController() {
     prevTermStart = s.termStartMonday;
     prevTeachingWeek = s.currentTeachingWeek;
     prevEvents = s.scheduleEvents;
-    prevOnlineVersion = onlineVersion;
-
-    final onlineService = sl<CourseOnlineService>();
-
     // Spread course occurrences only if we have data and a term start.
     final events = <Event>[];
     if (s.data != null && s.termStartMonday != null) {
@@ -61,12 +52,10 @@ EventsController _createEventsController() {
         termStartMonday: s.termStartMonday!,
         currentTeachingWeek: s.currentTeachingWeek,
       );
-      // Filter out online courses — they appear in the AsyncCourseStrip instead.
-      // This covers: auto-detected (location=="线上"), manually marked async,
-      // and any other online format.
+      // Filter out auto-detected online courses — they appear in the AsyncCourseStrip instead.
       for (final o in occurrences) {
         final isAutoOnline = o.location.trim() == '线上';
-        if (!isAutoOnline && !onlineService.isOnline(o.courseName)) {
+        if (!isAutoOnline) {
           events.add(o.toInfiniteCalendarEvent());
         }
       }

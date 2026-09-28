@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A small "进行中" badge widget used in timetable cards and detail sheets.
 Widget ongoingBadge(
@@ -8,7 +8,7 @@ Widget ongoingBadge(
   double vPad = 3,
   Color? foreground,
 }) {
-  final fg = foreground ?? CupertinoColors.white;
+  final fg = foreground ?? Colors.white;
   return Container(
     padding: EdgeInsets.symmetric(horizontal: hPad, vertical: vPad),
     decoration: BoxDecoration(

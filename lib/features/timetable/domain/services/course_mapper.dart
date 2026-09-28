@@ -1,7 +1,7 @@
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/section_time_mapping.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 DateTime mondayOfCurrentWeek() {
   final now = DateTime.now();

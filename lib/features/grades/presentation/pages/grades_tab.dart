@@ -1,8 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
@@ -12,7 +11,6 @@ import 'package:li_curriculum_table/util/util.dart';
 import '../../domain/models/grade.dart';
 import 'package:collection/collection.dart';
 import 'package:signals/signals_flutter.dart';
-import 'grades_cupertino.dart';
 
 class GradesTab extends SignalStatefulWidget {
   const GradesTab({super.key});
@@ -36,13 +34,6 @@ class _GradesTabState extends State<GradesTab>
   Widget build(BuildContext context) {
     super.build(context);
     final state = sl<GradeController>().state.value;
-    final isCupertino = AdaptiveStyle.isCupertino(
-      sl<SettingsController>().designStyle.value,
-    );
-
-    if (isCupertino) {
-      return buildGradesCupertino(context, state);
-    }
     return _buildMaterial(context, state);
   }
 
@@ -205,7 +196,7 @@ class _GradesTabState extends State<GradesTab>
         if (state.isLoading && state.grades.isEmpty) {
           return Center(
             key: const ValueKey('loading'),
-            child: LoadingIndicatorM3E(),
+            child: M3ELoadingIndicator(),
           );
         }
 
@@ -286,7 +277,7 @@ class _GradesTabState extends State<GradesTab>
               hintText: '搜索课程名称...',
               prefixIcon: Icon(AppIcons.search(ds)),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
             onChanged: (val) => controller.setSearchQuery(val),

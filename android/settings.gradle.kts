@@ -25,11 +25,8 @@ pluginManagement {
 
 plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
-    id("com.android.application") version "8.11.1" apply false
-    // Kotlin version must be declared here because plugins (package_info_plus, share_plus, etc.)
-    // require kotlin-stdlib 2.2.0+, and Flutter's built-in Kotlin (2.0.0) is too old.
-    // Remove this once all plugins migrate to Built-in Kotlin.
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
+    id("com.android.application") version "9.3.0" apply false
+    id("org.jetbrains.kotlin.android") version "2.4.10" apply false
 }
 
 include(":app")

@@ -3,10 +3,10 @@
 [![Flutter](https://img.shields.io/badge/Flutter-3.21+-02569B?logo=flutter&logoColor=white)](https://flutter.dev)
 [![Rust](https://img.shields.io/badge/Rust-1.75+-000000?logo=rust&logoColor=white)](https://www.rust-lang.org)
 [![Signals](https://img.shields.io/badge/Signals-7.x-FF6B35?logo=dart&logoColor=white)](https://pub.dev/packages/signals)
+[![Material 3 Expressive](https://img.shields.io/badge/Material_3-Expressive-6750A4?logo=materialdesign&logoColor=white)](https://m3.material.io)
 [![License](https://img.shields.io/badge/License-GPL--3.0-green.svg)](LICENSE)
 
-> 一款轻盈、优雅且高性能的跨平台课表应用。
-
+> 一款轻盈、优雅且高性能的跨平台课表与校园助手应用，全端统一采用 Material 3 Expressive 设计系统与纯 Rust 高效爬虫引擎构建。
 
 ---
 
@@ -14,14 +14,15 @@
 
 | 特性 | 说明 |
 |------|------|
-| 🧠 **自研 OCR** | 基于 Burn 框架推理自研 OCR 模型，仅 200KB，本地识别验证码，无需联网 |
-| 🌈 **动态取色** | 支持根据系统壁纸动态调整 UI 配色 |
-| 🔐 **隐私至上** | 所有数据本地存储，敏感信息通过 `flutter_secure_storage` 硬件级加密 |
-| 🌐 **全平台** | Android / iOS / Windows / macOS / Linux / Web 六端覆盖 |
-| 📡 **本地代理** | Web 端通过跨进程本地网关解决跨域抓取难题 |
-| 📅 **自定义日程** | 支持添加一次性日程到课表，支持当天定时通知提醒，长按即可删除 |
-| 🔔 **智能通知** | 课前 20 分钟、考前 1 天 + 2 小时、成绩发布等多场景提醒 |
-| 📖 **图书封面** | 图书馆检索支持自动获取豆瓣图书封面（可开关） |
+| 🎨 **Material 3 Expressive** | 全面统一采用 Material 3 Expressive 设计语言，高质感动态配色与精致微动效 |
+| 🔐 **原生 CAS 统一认证** | 基于 Rust 原生实现的 CAS 加密与会话管理，零模型依赖，毫秒级快速登录 |
+| 🌈 **动态取色与主题系统** | 支持跟随系统壁纸动态取色 (`dynamic_color`)，内置多种丰富色调方案 (`flex_color_scheme`) |
+| 🛡️ **隐私至上** | 所有数据均存放在本地，敏感凭证采用系统级硬件密钥库 (`flutter_secure_storage`) 严密加密 |
+| 🌐 **跨平台支持** | 覆盖 Android / Windows / macOS / Linux / iOS / Web |
+| 📡 **本地跨域代理** | Web 端支持通过跨进程本地网关透明解决教务跨域抓取痛点 |
+| 📅 **自定义日程与异步课** | 支持在课表网格中穿插添加单次/周期自定义日程，顶部支持录播/网课折叠栏 |
+| 🔔 **智能通知提醒** | 课程开课前 20 分钟提醒、考试日程前置提醒等多场景通知 |
+| 📖 **图书馆检索** | 快速检索图书馆藏并自动匹配豆瓣图书封面与详细借阅状态 |
 
 ---
 
@@ -32,10 +33,10 @@
 ```mermaid
 graph TB
     subgraph "UI Layer (Flutter)"
-        A[Material UI] --> C[SignalBuilder]
-        B[Cupertino UI] --> C
+        A[Material 3 Expressive UI] --> C[SignalWidget / SignalBuilder]
+        M3E[Material 3 & Expressive Tokens] --> C
         C --> D["Signal / Computed"]
-        C --> Gl["GlassScaffold (navbar)"]
+        C --> Nav["M3ENavigationBar"]
         C --> We["WeatherBanner"]
     end
 
@@ -52,26 +53,25 @@ graph TB
     subgraph "Data Layer"
         G --> I["Remote Data Source"]
         G --> J["Local Data Source"]
-        I --> K["Rust FFI Bridge"]
+        I --> K["Rust FFI Bridge (FRB)"]
         J --> L["Secure Storage"]
     end
 
     subgraph "Rust Core"
-        K --> M[Crawler Engine]
-        K --> N["OCR Engine (200KB)"]
-        K --> O[Proxy Server]
+        K --> M[Crawler Engine & CAS Auth]
+        K --> O[Local Proxy Server]
     end
 
     subgraph "Services"
         E --> No["NotificationService"]
         E --> We2["WeatherService"]
+        E --> Up["UpdateService"]
     end
 
-    style A fill:#4CAF50,color:#fff
-    style B fill:#2196F3,color:#fff
+    style A fill:#6750A4,color:#fff
+    style M3E fill:#7C4DFF,color:#fff
     style K fill:#FF5722,color:#fff
     style M fill:#FF5722,color:#fff
-    style N fill:#FF5722,color:#fff
 ```
 
 ### 数据流
@@ -79,8 +79,8 @@ graph TB
 ```mermaid
 sequenceDiagram
     participant U as 👤 用户
-    participant UI as 🖥️ UI (SignalBuilder)
-    participant Ctrl as 🎛️ Controller (signal)
+    participant UI as 🖥️ UI (SignalWidget)
+    participant Ctrl as 🎛️ Controller (Signal)
     participant Repo as 📦 Repository
     participant Rust as 🦀 Rust FFI
     participant Storage as 🔒 Secure Storage
@@ -97,26 +97,26 @@ sequenceDiagram
         Repo-->>Ctrl: TimetableData
     and
         Ctrl->>Storage: cacheTimetable()
-        Storage-->>Ctrl: ✅
+        Storage-->>Ctrl: ✅ 缓存完成
     and
-        Ctrl->>Ctrl: 同步教室/成绩/考试
+        Ctrl->>Ctrl: 并行预热教室/成绩/考试
     end
 
     Ctrl->>Notif: scheduleCourseReminders()
-    Notif-->>Ctrl: ✅ 课前20分钟提醒已设置
+    Notif-->>Ctrl: ✅ 课程提醒已注册
     Ctrl->>Ctrl: state.value = data + success
-    Ctrl-->>UI: signal 变化触发重建
-    UI-->>U: ✨ 展示课表 + 天气横幅
+    Ctrl-->>UI: signal 变化自动响应式重建
+    UI-->>U: ✨ 渲染精致课表 + 天气信息
 
     Note over U,UI: 📅 自定义日程
     U->>UI: 点击 + 添加日程
     UI->>Ctrl: addScheduleEvent(event)
     Ctrl->>Storage: saveScheduleEvents()
     Ctrl->>Notif: scheduleEventReminder()
-    Ctrl-->>UI: 日程卡片显示在课表
+    Ctrl-->>UI: 实时显示自定义日程事件
 ```
 
-### 状态管理 (signals)
+### 状态管理 (Signals)
 
 ```mermaid
 graph LR
@@ -127,7 +127,7 @@ graph LR
     end
 
     subgraph "UI"
-        E[SignalBuilder] --> F[Widget Tree]
+        E[SignalWidget] --> F[Widget Tree]
         G[SignalBuilder] --> H[Widget Tree]
     end
 
@@ -141,42 +141,18 @@ graph LR
     style D fill:#FFA726,color:#fff
 ```
 
-### 依赖注入 (get_it)
+---
 
-```mermaid
-graph TB
-    subgraph "Service Locator"
-        SL[get_it]
-    end
+## 🎨 视觉与交互设计 (Material 3 Expressive)
 
-    subgraph "Singletons"
-        SL --> SS[SecureStorageStore]
-        SL --> TC[TimetableCrawlerClient]
-        SL --> CC[ClassroomRepository]
-        SL --> GR[GradeRepository]
-        SL --> ER[ExamRepository]
-        SL --> SE[ScheduleEventsRepository]
-        SL --> NS[NotificationService]
-        SL --> WS[WeatherService]
-    end
+本项目已全面统一至 Google **Material 3 Expressive** 设计体系：
 
-    subgraph "Controllers"
-        SL --> NC[NavigationController]
-        SL --> SC[SettingsController]
-        SL --> TT[TimetableController]
-        SL --> CT[ClassroomController]
-        SL --> GC[GradeController]
-        SL --> EC[ExamController]
-        SL --> GS[GlobalSyncController]
-    end
-
-    TT --> SL
-    CT --> SL
-    GC --> SL
-    EC --> SL
-
-    style SL fill:#9C27B0,color:#fff
-```
+- **动态取色与色调方案**：集成 `dynamic_color` 与 `flex_color_scheme`，提供 Tonal Spot、Vivid、Expressive、High Contrast 等多种色彩模式，在 Android 12+ 上完美契合系统壁纸风格。
+- **现代化组件集**：
+  - **底部导航**：全端统一的 `M3ENavigationBar`，搭配状态微交互动效。
+  - **按钮与控件**：全面采用圆润且表现力丰富的 `M3EButton` 系列（Filled, Tonal, Outlined, Text）。
+  - **课表视图**：基于 Material 3 色彩令牌自适应高亮当前周、当前星期与正在进行的课程（带呼吸灯 Badge）。
+  - **弹窗与面板**：采用圆角底栏 Sheet（`showModalBottomSheet`）与自适应对话框，排版轻快明确。
 
 ---
 
@@ -186,270 +162,69 @@ graph TB
 
 ```text
 lib/
-├── main.dart                                    # 应用入口
+├── main.dart                                    # 应用入口及服务定位器预热
 ├── app/
-│   └── app.dart                                 # MaterialApp 配置 + 双风格主题
+│   └── app.dart                                 # MaterialApp 配置 + M3EExpressive 主题绑定
 ├── core/
 │   ├── di/
-│   │   └── service_locator.dart                 # get_it 依赖注入 (30+ 注册)
+│   │   └── service_locator.dart                 # get_it 依赖注入服务中心
 │   ├── presentation/
-│   │   ├── adaptive_style.dart                  # DesignStyle 枚举 + 运行时切换
-│   │   ├── adaptive_icons.dart                  # 自适应图标 (Material ↔ Cupertino)
-│   │   ├── adaptive_helpers.dart                # 通用工具 (对话框/消息/加载指示器)
-│   │   ├── adaptive_widgets.dart                # 自适应组件 (NavigationBar/Dialog)
-│   │   ├── update_dialog.dart                   # 更新提示 (Material + Cupertino 双版本)
-│   │   ├── glass_scaffold.dart                  # 毛玻璃导航栏容器 (card 已退化为实色)
-│   │   └── glass_dialog.dart                    # 毛玻璃弹窗容器
-│   ├── rust/                                    # flutter_rust_bridge 生成代码
-│   │   ├── api/                                 # Rust → Dart 接口
-│   │   │   ├── auth.dart                        # 登录认证
-│   │   │   ├── crawler.dart                     # 课表爬虫 + 代理服务器
-│   │   │   ├── classroom.dart                   # 教室查询
+│   │   ├── adaptive_style.dart                  # 统一设计规范辅助
+│   │   ├── adaptive_icons.dart                  # Material 3 统一矢量图标集
+│   │   ├── adaptive_helpers.dart                # 对话框/提示/加载指示器通用工具
+│   │   ├── update_dialog.dart                   # 版本更新提示对话框
+│   │   ├── info_row.dart                        # 详情信息行通用展示组件
+│   │   └── terms_of_service.dart                # 隐私与服务协议弹窗
+│   ├── rust/                                    # flutter_rust_bridge 自动生成胶水代码
+│   │   ├── api/                                 # Rust 开放给 Dart 的 FFI 接口
+│   │   │   ├── auth.dart                        # CAS 认证
+│   │   │   ├── crawler.dart                     # 课表抓取与代理服务
+│   │   │   ├── classroom.dart                   # 空闲教室查询
 │   │   │   ├── grade.dart                       # 成绩查询
-│   │   │   ├── exam.dart                        # 考试查询
-│   │   │   └── book.dart                        # 图书查询
-│   │   └── crawler/
-│   │       └── model.dart                       # Rust 共享数据模型
-│   ├── services/
-│   │   ├── notification_service.dart            # 本地通知 (课程/考试/日程提醒)
-│   │   ├── weather_service.dart                 # 天气查询服务
-│   │   ├── ocr_initializer.dart                 # OCR 引擎初始化 (signal)
-│   │   └── update_service.dart                  # GitHub Release 更新检查 (Dio)
-│   └── settings/
-│       ├── domain/
-│       │   └── settings_repository.dart         # AppSettings 实体 + Repository 接口
-│       ├── data/
-│       │   └── settings_repository_impl.dart    # Repository 实现 (SecureStorage)
-│       └── presentation/
-│           └── settings_providers.dart           # SettingsController (signal + computed)
+│   │   │   ├── exam.dart                        # 考试安排查询
+│   │   │   └── book/                            # 图书检索与封面接口
+│   │   └── frb_generated.dart                   # FRB 核心运行时绑定
+│   └── services/
+│       ├── app_logger.dart                      # 统一日志服务 (接入 Rust 日志流)
+│       ├── notification_service.dart            # 本地定时通知服务
+│       ├── weather_service.dart                 # 天气数据查询服务
+│       └── update_service.dart                  # GitHub Release 自动更新检查
 ├── features/
-│   ├── navigation/
-│   │   └── presentation/
-│   │       ├── pages/
-│   │       │   └── main_screen.dart             # 主屏幕 (PageView + 底部导航)
-│   │       └── state/
-│   │           ├── navigation_controller.dart   # Tab 索引 (signal)
-│   │           └── global_sync_controller.dart  # 全局同步调度 (signal)
-│   │
-│   ├── timetable/                               # 📅 课表
-│   │   ├── domain/
-│   │   │   ├── entities/
-│   │   │   │   ├── course_row.dart              # 课表行 (freezed)
-│   │   │   │   ├── course_occurrence.dart       # 课程实例 (freezed)
-│   │   │   │   ├── timetable_data.dart          # 课表数据 (freezed)
-│   │   │   │   ├── cached_timetable.dart        # 缓存课表
-│   │   │   │   ├── login_credentials.dart       # 登录凭据 (freezed)
-│   │   │   │   ├── teaching_week_baseline.dart  # 教学周基准 (freezed)
-│   │   │   │   ├── time_slot.dart               # 时间段 (freezed)
-│   │   │   │   └── schedule_event.dart          # 自定义日程 (freezed)
-│   │   │   ├── repositories/                    # 抽象接口
-│   │   │   └── services/
-│   │   │       ├── course_mapper.dart           # Rust → Domain 映射
-│   │   │       ├── teaching_week_scheduler.dart # 教学周计算
-│   │   │       ├── teaching_week_inference.dart # 教学周推断
-│   │   │       ├── section_range_utils.dart     # 节次范围工具
-│   │   │       └── section_time_mapping.dart    # 节次时间映射
-│   │   ├── data/
-│   │   │   ├── datasources/
-│   │   │   │   ├── secure_storage_store.dart    # 批量安全存储封装
-│   │   │   │   ├── secure_credentials_local_datasource.dart
-│   │   │   │   ├── secure_timetable_local_datasource.dart
-│   │   │   │   ├── secure_teaching_week_baseline_local_datasource.dart
-│   │   │   │   ├── secure_schedule_events_local_datasource.dart
-│   │   │   │   └── timetable_crawler_client.dart # Rust 爬虫客户端
-│   │   │   └── repositories/                    # 接口实现
-│   │   └── presentation/
-│   │       ├── state/
-│   │       │   ├── timetable_controller.dart    # 课表控制器 (signal)
-│   │       │   └── timetable_state.dart         # 课表状态 (freezed)
-│   │       ├── bar/
-│   │       │   └── title_bar.dart               # 桌面端标题栏
-│   │       ├── calendar_view/
-│   │       │   ├── calendar_view_adapter.dart   # EventsController 适配 (effect)
-│   │       │   ├── timetable_week_view.dart     # 周视图组件
-│   │       │   └── timetable_week_view_components.dart
-│   │       └── pages/
-│   │           ├── tabs/
-│   │           │   └── timetable_tab.dart       # 课表 Tab 入口
-│   │           └── widgets/
-│   │               ├── timetable_appointment_card.dart       # 课程卡片 (Material)
-│   │               ├── timetable_appointment_cupertino.dart  # 课程卡片 (Cupertino)
-│   │               ├── timetable_page_sections.dart          # 登录面板 + 状态横幅
-│   │               ├── add_schedule_event_sheet.dart         # 添加日程弹窗
-│   │               ├── weather_banner.dart                  # 天气横幅
-│   │               └── timetable_ruler_components.dart       # 时间标尺
-│   │
-│   ├── classroom/                               # 🏫 空闲教室
-│   │   ├── domain/
-│   │   │   ├── models/
-│   │   │   │   ├── campus.dart                  # 校区 (freezed)
-│   │   │   │   ├── building.dart                # 教学楼 (freezed)
-│   │   │   │   ├── classroom_availability.dart  # 教室可用性 (freezed)
-│   │   │   │   └── classroom_schedule.dart      # 教室课表 (freezed)
-│   │   │   └── repositories/
-│   │   ├── data/
-│   │   │   ├── datasources/
-│   │   │   │   ├── classroom_remote_datasource.dart
-│   │   │   │   └── secure_classroom_local_datasource.dart
-│   │   │   └── repositories/
-│   │   └── presentation/
-│   │       ├── state/
-│   │       │   ├── classroom_controller.dart    # 教室控制器 (signal)
-│   │       │   └── classroom_state.dart         # 教室状态 (freezed)
-│   │       └── pages/
-│   │           ├── classroom_tab.dart           # 教室 Tab 入口 + Material
-│   │           ├── classroom_cupertino.dart     # Cupertino 教室 UI
-│   │           └── classroom_widgets.dart       # 共享组件 (11 个)
-│   │
-│   ├── grades/                                  # 📊 成绩
-│   │   ├── domain/
-│   │   │   ├── models/grade.dart
-│   │   │   └── repositories/
-│   │   ├── data/
-│   │   │   ├── datasources/
-│   │   │   │   ├── grade_remote_datasource.dart
-│   │   │   │   └── grade_local_datasource.dart
-│   │   │   └── repositories/
-│   │   └── presentation/
-│   │       ├── state/
-│   │       │   ├── grade_controller.dart        # 成绩控制器 (signal)
-│   │       │   └── grade_state.dart
-│   │       └── pages/
-│   │           ├── grades_tab.dart              # 成绩 Tab 入口 + Material
-│   │           └── grades_cupertino.dart        # Cupertino 成绩 UI
-│   │
-│   ├── exam_schedule/                           # 📝 考试
-│   │   ├── domain/
-│   │   │   ├── models/exam.dart
-│   │   │   └── repositories/
-│   │   ├── data/
-│   │   │   ├── datasources/
-│   │   │   │   ├── exam_remote_datasource.dart
-│   │   │   │   └── exam_local_datasource.dart
-│   │   │   └── repositories/
-│   │   └── presentation/
-│   │       ├── state/
-│   │       │   ├── exam_controller.dart         # 考试控制器 (signal)
-│   │       │   └── exam_state.dart
-│   │       └── pages/
-│   │           ├── exam_schedule_tab.dart        # 考试 Tab 入口 + Material
-│   │           └── exam_schedule_cupertino.dart  # Cupertino 考试 UI
-│   │
-│   ├── book/                                    # 📚 图书
-│   │   └── presentation/pages/
-│   │       ├── book_tab.dart                    # 图书 Tab 入口 + 状态管理
-│   │       ├── book_material.dart               # Material 图书 UI
-│   │       └── book_cupertino.dart              # Cupertino 图书 UI
-│   │
-│   └── settings/                                # ⚙️ 设置 (主题/学期/交互/高级)
-│       └── presentation/pages/tabs/
-│           ├── settings_tab.dart                # 设置 Tab 入口 + 状态管理
-│           ├── settings_sections.dart           # 共享 Section 组件 (5 个)
-│           └── settings_cupertino.dart          # Cupertino 设置 UI
-│
+│   ├── navigation/                              # 🧭 全局主导航
+│   │   └── presentation/pages/main_screen.dart  # 主屏幕与 M3ENavigationBar
+│   ├── timetable/                               # 📅 课表核心
+│   │   ├── domain/                              # 课程实体、周次推断、基准时间计算
+│   │   ├── data/                                # 本地安全存储与 Rust 爬虫桥接
+│   │   └── presentation/                        # 周视图组件、课程详情卡片、自定义日程添加
+│   ├── classroom/                               # 🏫 空闲教室查询
+│   ├── grades/                                  # 📊 成绩管理与绩点计算
+│   ├── exam_schedule/                           # 📝 考试日程与倒计时
+│   ├── book/                                    # 📚 图书检索与馆藏借阅
+│   └── settings/                                # ⚙️ 个性化设置 (主题/学期/行为)
 └── util/
     ├── util.dart                                # 平台检测 (isDesktop / isWeb)
-    └── feedback_handler.dart                    # 用户反馈截图处理
+    └── feedback_handler.dart                    # 用户反馈与截图管理
 ```
 
-### Rust (`rust/`)
+### Rust 核心引擎 (`rust/`)
 
 ```text
 rust/
-├── Cargo.toml                                   # Rust 依赖配置
+├── Cargo.toml                                   # Rust 依赖配置 (reqwest, aes, base64, scraper, tokio)
 └── src/
-    ├── lib.rs                                   # Crate 入口
-    ├── frb_generated.rs                         # flutter_rust_bridge 生成代码
-    ├── ocr.rs                                   # OCR 引擎入口 (Burn 模型)
-    ├── api/                                     # 暴露给 Dart 的接口
-    │   ├── mod.rs
-    │   ├── auth.rs                              # 登录认证
-    │   ├── crawler.rs                           # 课表爬取 + 代理服务器控制
-    │   ├── classroom.rs                         # 教室查询
-    │   ├── grade.rs                             # 成绩查询
-    │   ├── exam.rs                              # 考试查询
-    │   ├── book.rs                              # 图书查询
-    │   └── simple.rs                            # 简单测试接口
-    ├── crawler/                                 # 爬虫引擎核心
-    │   ├── mod.rs
-    │   ├── error.rs                             # 错误类型定义
-    │   ├── model.rs                             # 共享数据模型 (Dart ↔ Rust)
-    │   ├── parser.rs                            # HTML 解析器
-    │   └── core/
-    │       ├── mod.rs
-    │       ├── session.rs                       # HTTP 会话管理 (Reqwest + Cookie)
-    │       └── proxy_server.rs                  # 本地代理服务器 (Web 端跨域方案)
-    └── model/
-        └── mod.rs                               # 通用模型定义
+    ├── lib.rs                                   # Crate 导出与初始化
+    ├── frb_generated.rs                         # flutter_rust_bridge 自动生成代码
+    ├── api/                                     # 暴露给 Dart 的安全接口 (auth/crawler/grade/exam...)
+    └── crawler/                                 # 核心爬虫引擎
+        ├── error.rs                             # 强类型错误定义
+        ├── model.rs                             # Dart ↔ Rust 共享实体
+        ├── parser.rs                            # HTML 解析器 (基于 scraper / regex)
+        ├── services/                            # 业务爬虫服务 (课表/成绩/考试/空教室)
+        └── core/
+            ├── cas.rs                           # CAS 统一认证 (纯 Rust AES-128 加密与表单提取)
+            ├── session.rs                       # Reqwest 会话管理与自动重试
+            └── proxy_server.rs                  # Web 端本地跨域网关
 ```
-
-### 架构分层对照
-
-```mermaid
-graph LR
-    subgraph "Flutter Dart"
-        A["presentation/<br/>(Material + Cupertino)"] -->|"signal / SignalBuilder"| B["state/"]
-        B -->|"get_it sl()"| C["data/"]
-        C -->|"flutter_rust_bridge"| D["core/rust/api/"]
-        B -->|"sl()"| SVC["services/<br/>(通知 / 天气 / OCR / 更新)"]
-    end
-
-    subgraph "Rust"
-        D --> E["api/"]
-        E --> F["crawler/"]
-        F --> G["Reqwest + Scraper"]
-        F --> H["OCR Burn (200KB)"]
-        F --> I["Proxy Server"]
-    end
-
-    C -->|"SecureStorage"| J[("本地存储<br/>(课表/日程/设置)")]
-
-    style A fill:#4CAF50,color:#fff
-    style D fill:#FF5722,color:#fff
-    style F fill:#FF5722,color:#fff
-```
-
-
-## 🎨 双设计风格
-
-```mermaid
-graph LR
-    subgraph "DesignStyle"
-        M[material]
-        C[cupertino]
-        S[system]
-    end
-
-    M --> |"Android / Google"| MD[Material 3 Expressive]
-    C --> |"iOS / Apple"| CD[Cupertino Design]
-    S --> |"跟随平台"| AUTO{Platform?}
-    AUTO --> |Android| MD
-    AUTO --> |iOS| CD
-
-    MD --> T1["AppBarM3E + NavigationBarM3E + FabM3E"]
-    CD --> T2["CupertinoNavigationBar + CupertinoTabBar"]
-
-    style M fill:#4CAF50,color:#fff
-    style C fill:#2196F3,color:#fff
-    style S fill:#9E9E9E,color:#fff
-```
-
-Material 侧全面采用 [M3E Expressive](https://pub.dev/packages/m3e_collection) 组件库，运行时切换设计风格，所有 UI 组件自动适配：
-
-| 组件 | Material 3 Expressive | Cupertino |
-|------|-----------------------|-----------|
-| 导航栏 | `NavigationBarM3E` | `CupertinoTabBar` |
-| 页面头 | `AppBarM3E` | `GlassScaffold` (毛玻璃导航栏) |
-| 图标按钮 | `IconButtonM3E` | `CupertinoButton` |
-| 浮动按钮 | `FabM3E` / `ExtendedFabM3E` | `CupertinoButton` (导航栏 +) |
-| 滑块 | `SliderM3E` | `CupertinoSlider` |
-| 加载器 | `LoadingIndicatorM3E` | `CupertinoActivityIndicator` |
-| 进度条 | `CircularProgressIndicatorM3E` | `CupertinoActivityIndicator` |
-| 按钮 | `M3EFilledButton` / `M3ETextButton` | `CupertinoButton` |
-| 课程卡片 | `Card` + 阴影 | `Container` + 圆角实色 |
-| 对话框 | `AlertDialog` | `CupertinoAlertDialog` |
-| 详情弹窗 | `showModalBottomSheet` | `CupertinoActionSheet` / `GlassDialog` |
-| 消息提示 | `SnackBar` (Adaptive) | `CupertinoAlertDialog` (自动消失) |
 
 ---
 
@@ -457,25 +232,25 @@ Material 侧全面采用 [M3E Expressive](https://pub.dev/packages/m3e_collectio
 
 ```mermaid
 graph TD
-    A["App 启动 或 用户点击同步"] --> B["GlobalSyncController.syncGlobal"]
-    B --> C{"当前 Tab?"}
-    C --> |"课表"| D["优先: Timetable + 日程"]
-    C --> |"教室"| E["优先: Classroom"]
-    C --> |"成绩"| F["优先: Grades"]
-    C --> |"考试"| G["优先: Exams"]
+    A["应用启动 或 用户点击同步"] --> B["GlobalSyncController.syncGlobal"]
+    B --> C{"当前所在 Tab?"}
+    C --> |"课表"| D["前台优先: 课表 + 自定义日程"]
+    C --> |"教室"| E["前台优先: 空闲教室"]
+    C --> |"成绩"| F["前台优先: 考试成绩"]
+    C --> |"考试"| G["前台优先: 考试安排"]
 
-    D --> D1["合并自定义日程 → EventsController"]
-    D1 --> H["后台: Grades + Exams + Classroom + 通知调度"]
-    E --> I["后台: Timetable + Grades + Exams"]
-    F --> J["后台: Timetable + Exams + Classroom"]
-    G --> K["后台: Timetable + Grades + Classroom"]
+    D --> D1["渲染周课表视图"]
+    D1 --> H["后台静默更新: 成绩 + 考试 + 教室 + 本地通知调度"]
+    E --> I["后台静默更新: 课表 + 成绩 + 考试"]
+    F --> J["后台静默更新: 课表 + 考试 + 教室"]
+    G --> K["后台静默更新: 课表 + 成绩 + 教室"]
 
-    H --> L["优先任务完成后 isSyncing = false"]
+    H --> L["优先任务完成后解除加载状态"]
     I --> L
     J --> L
     K --> L
 
-    L --> M["后台任务 + 通知继续运行"]
+    L --> M["后台任务继续无感同步"]
 
     style A fill:#FF6B35,color:#fff
     style B fill:#FF6B35,color:#fff
@@ -486,65 +261,73 @@ graph TD
 
 ## 🚀 开发上手
 
-### 环境准备
+### 1. 环境准备
 
-```bash
-fvm use master
+- **Flutter**: 建议通过 [FVM](https://fvm.app/) 管理 Flutter SDK：
+  ```bash
+  fvm use
+  ```
+- **Rust**: 安装最新稳定版或 nightly 工具链：
+  ```bash
+  rustup default stable
+  cargo install flutter_rust_bridge_codegen
+  ```
 
-rustup default nightly
-
-cargo install flutter_rust_bridge_codegen
-```
-
-### 依赖安装
+### 2. 依赖安装
 
 ```bash
 fvm flutter pub get
 ```
 
-### 代码生成
+### 3. 代码生成
+
+修改 Rust 接口或 Dart 实体后运行：
 
 ```bash
-# flutter_rust_bridge (修改 rust/ 接口后)
+# 自动生成 Rust ↔ Dart FFI 桥接
 flutter_rust_bridge_codegen generate
 
-# freezed + json_serializable (修改实体后)
+# 自动生成 freezed / json_serializable 代码
 fvm dart run build_runner build --delete-conflicting-outputs
 ```
 
-### 运行
+### 4. 本地运行
 
 ```bash
-# 移动端 / 桌面端
+# 启动桌面端调试
 fvm flutter run
 
-# Web 端
-fvm flutter run -d chrome
+# 开启 Impeller 渲染引擎测试
+fvm flutter run --enable-impeller
 
-# 指定设备
+# 指定平台运行
+fvm flutter run -d linux
 fvm flutter run -d windows
 fvm flutter run -d macos
+fvm flutter run -d chrome
 ```
 
-### 构建发布
+### 5. 构建发布
 
 ```bash
-# Android APK
-fvm flutter build apk --release
+# Android APK (按架构分包)
+fvm flutter build apk --release --split-per-abi --target-platform=android-arm64,android-arm,android-x64
 
-# Windows MSIX
+# Linux 发行包
+fvm flutter build linux --release
+
+# Windows 安装包
 fvm flutter build windows --release
 
 # macOS
 fvm flutter build macos --release
-
-# Web
-fvm flutter build web --release
 ```
+
+---
 
 ## ☘️ 参与贡献
 
-我们欢迎任何形式的贡献！无论是提交 Issue 还是 Pull Request。
+我们欢迎任何形式的贡献！无论是提交 Issue 提出建议，还是发起 Pull Request：
 
 1. Fork 本仓库
 2. 创建特性分支 (`git checkout -b feature/amazing-feature`)
@@ -554,14 +337,14 @@ fvm flutter build web --release
 
 ### Commit 规范
 
-```
+```text
 feat: 新功能
 fix: 修复 Bug
-refactor: 重构
+refactor: 重构代码
 perf: 性能优化
-style: 代码风格
-docs: 文档
-chore: 构建/工具
+style: 代码格式/样式微调
+docs: 文档更新
+chore: 构建配置与工具链变动
 ```
 
 ---
@@ -570,7 +353,7 @@ chore: 构建/工具
 
 本项目基于 **[GNU General Public License v3.0](LICENSE)** 开源。
 
-```
+```text
 Copyright (C) 2026 fan
 
 This program is free software: you can redistribute it and/or modify
@@ -579,7 +362,7 @@ the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 ```
 
-简而言之：你可以自由使用、修改和分发本项目，但**衍生作品必须同样以 GPL-3.0 开源**。
+你可以自由使用、修改和分发本项目，但**任何衍生作品均必须同样以 GPL-3.0 协议开源**。
 
 ---
 

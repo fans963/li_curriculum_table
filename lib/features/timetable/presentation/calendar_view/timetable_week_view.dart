@@ -1,11 +1,9 @@
 import 'package:infinite_calendar_view/infinite_calendar_view.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/calendar_view_adapter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
@@ -102,35 +100,15 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
       _handleInitialJump();
     }
 
-    final ds = sl<SettingsController>().state.value.designStyle;
-    final isCupertino = AdaptiveStyle.isCupertino(ds);
     final colorScheme = Theme.of(context).colorScheme;
     const headerHeight = 44.0;
 
-    // Adaptive colors — use Cupertino system colors when in Cupertino mode
-    final surfaceColor = isCupertino
-        ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-        : colorScheme.surface;
-    final cardColor = isCupertino
-        ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(context)
-        : colorScheme.surface;
-    final separatorColor = isCupertino
-        ? CupertinoColors.separator.resolveFrom(context)
-        : colorScheme.outlineVariant;
-    final primaryColor = isCupertino
-        ? CupertinoColors.systemBlue.resolveFrom(context)
-        : colorScheme.primary;
-    final onSurfaceColor = isCupertino
-        ? CupertinoColors.label.resolveFrom(context)
-        : colorScheme.onSurface;
-    final onSurfaceVariantColor = isCupertino
-        ? CupertinoColors.secondaryLabel.resolveFrom(context)
-        : colorScheme.onSurfaceVariant;
-    final onPrimaryColor = isCupertino
-        ? CupertinoColors.white
-        : colorScheme.onPrimary;
-
-    // No horizontal scroll limit — allow free scrolling beyond data range
+    final surfaceColor = colorScheme.surface;
+    final separatorColor = colorScheme.outlineVariant.withValues(alpha: 0.3);
+    final primaryColor = colorScheme.primary;
+    final onSurfaceColor = colorScheme.onSurface;
+    final onSurfaceVariantColor = colorScheme.onSurfaceVariant;
+    final onPrimaryColor = colorScheme.onPrimary;
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -138,10 +116,8 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
         if (constraints.maxWidth < 120 || constraints.maxHeight < 100) {
           return Container(
             color: surfaceColor,
-            child: Center(
-              child: isCupertino
-                  ? const CupertinoActivityIndicator()
-                  : const LoadingIndicatorM3E(),
+            child: const Center(
+              child: M3ELoadingIndicator(),
             ),
           );
         }
@@ -205,7 +181,7 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
                   const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
                   return Container(
                     decoration: BoxDecoration(
-                      color: isCupertino ? cardColor : surfaceColor,
+                      color: surfaceColor,
                       border: Border(
                         bottom: BorderSide(color: separatorColor, width: 0.5),
                         right: BorderSide(color: separatorColor, width: 0.5),

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 
 /// A dropdown widget for Material advanced search (book tab).
 class M3EAdvDropdown extends StatefulWidget {
@@ -79,7 +79,7 @@ class _M3EAdvDropdownState extends State<M3EAdvDropdown> {
         borderRadius: BorderRadius.circular(12),
         selectedBorderRadius: 12,
       ),
-      dropdownStyle: const M3EDropdownStyle(
+      dropdownStyle: const M3EDropdownPanelStyle(
         maxHeight: 300,
         containerRadius: 12,
       ),

@@ -25,14 +25,10 @@ impl ExamService {
             .login_if_needed(username, password, max_attempts)
             .await?;
 
-        let portal_url = self.session.config.get_portal_url();
-        let base_url = portal_url.replace(":8080", ":9080");
+        let base_url = self.session.config.get_base_url();
 
         // 2. Fetch the exam query page to get the current term
-        let query_url = format!(
-            "{}/njlgdx/xsks/xsksap_query?Ves632DSdyV=NEW_XSD_KSBM",
-            base_url
-        );
+        let query_url = format!("{}/xsks/xsksap_query?Ves632DSdyV=NEW_XSD_KSBM", base_url);
         log::info!("ExamService: GET query page {}", query_url);
         let query_html = self
             .session
@@ -47,7 +43,7 @@ impl ExamService {
         log::info!("ExamService: Using term='{}'", term);
 
         // 3. POST to exam list with the term
-        let target_url = format!("{}/njlgdx/xsks/xsksap_list", base_url);
+        let target_url = format!("{}/xsks/xsksap_list", base_url);
         let body = url::form_urlencoded::Serializer::new(String::new())
             .append_pair("xnxqid", &term)
             .finish()

@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:progress_indicator_m3e/progress_indicator_m3e.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/presentation/update/update_constants.dart';
 import 'package:li_curriculum_table/core/presentation/update/download_asset_tiles.dart';
@@ -149,9 +148,9 @@ class _MaterialUpdateDialogState extends State<MaterialUpdateDialog> {
                 ),
                 if (dl.downloading) ...[
                   const SizedBox(height: 20),
-                  LinearProgressIndicatorM3E(
+                  M3EProgressIndicator.linear(
                     value: dl.progress.isNaN ? null : dl.progress,
-                    size: LinearProgressM3ESize.m,
+                    linearSize: M3EProgressIndicatorSize.m,
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -283,47 +282,51 @@ class _MaterialUpdateDialogState extends State<MaterialUpdateDialog> {
           ),
           actions: [
             if (!dl.downloading && dl.savedPath == null)
-              M3ETextButton(
+              M3EButton.text(
                 onPressed: () => Navigator.pop(context),
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 child: const Text('稍后再说'),
               ),
             if (dl.downloading)
-              M3ETextButton(
+              M3EButton.text(
                 onPressed: null,
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 child: const Text('下载中...'),
               )
             else if (dl.savedPath != null)
-              M3EFilledButton.icon(
+              M3EButton.icon(
                 icon: const Icon(Icons.install_mobile_rounded, size: 18),
                 label: const Text('安装更新'),
+                style: M3EButtonStyle.filled,
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 onPressed: _installOrOpen,
               )
             else if (canDownload)
-              M3EFilledButton.icon(
+              M3EButton.icon(
                 icon: const Icon(Icons.download_rounded, size: 18),
                 label: const Text('下载更新'),
+                style: M3EButtonStyle.filled,
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 onPressed: _startDownload,
               )
             else if (kIsWeb)
-              M3EFilledButton.icon(
+              M3EButton.icon(
                 icon: const Icon(Icons.phone_android_rounded, size: 18),
                 label: const Text('下载本地应用'),
+                style: M3EButtonStyle.filled,
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 onPressed: () => _showWebDownloadSheet(context),
               )
             else
-              M3EFilledButton.icon(
+              M3EButton.icon(
                 icon: const Icon(Icons.open_in_browser_rounded, size: 18),
                 label: const Text('前往下载'),
+                style: M3EButtonStyle.filled,
                 size: M3EButtonSize.md,
                 shape: M3EButtonShape.round,
                 onPressed: () async {

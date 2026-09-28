@@ -1,5 +1,4 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
@@ -77,8 +76,6 @@ class ClassroomController {
   }
 
   Future<void> init() async {
-    final ocr = sl<OcrInitializer>();
-    ocr.ensureInitialized();
     if (_state.value.campuses.isNotEmpty) return;
     await fetchCampuses();
   }

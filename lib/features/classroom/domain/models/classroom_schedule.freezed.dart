@@ -482,7 +482,7 @@ return $default(_that.classroomName,_that.occupiedSlots);case _:
 @JsonSerializable()
 
 class _ClassroomSchedule implements ClassroomSchedule {
-  const _ClassroomSchedule({required this.classroomName, required final  List<OccupiedSlot> occupiedSlots}): _occupiedSlots = occupiedSlots;
+  const _ClassroomSchedule({required this.classroomName, required List<OccupiedSlot> occupiedSlots}): _occupiedSlots = occupiedSlots;
   factory _ClassroomSchedule.fromJson(Map<String, dynamic> json) => _$ClassroomScheduleFromJson(json);
 
 @override final  String classroomName;

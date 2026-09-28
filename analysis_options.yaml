@@ -13,3 +13,4 @@ analyzer:
 
 linter:
   rules:
+    - unreachable_from_main

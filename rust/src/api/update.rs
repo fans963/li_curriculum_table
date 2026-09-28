@@ -5,7 +5,6 @@ use serde::Deserialize;
 #[derive(Debug, Clone, Deserialize)]
 struct GiteeRelease {
     tag_name: Option<String>,
-    name: Option<String>,
     body: Option<String>,
     created_at: Option<String>,
 }
@@ -70,6 +69,7 @@ pub async fn check_for_update() -> Result<UpdateData> {
 
 /// Extract version from a release download URL path.
 /// e.g. ".../download/v2.0.0/app.apk" → Some("2.0.0")
+#[cfg(not(target_arch = "wasm32"))]
 fn extract_version_from_url(url: &str) -> Option<String> {
     let segments: Vec<&str> = url.split('/').collect();
     for (i, seg) in segments.iter().enumerate() {
@@ -92,10 +92,8 @@ pub async fn download_update(
     mirror_prefixes: Vec<String>,
     sink: crate::frb_generated::StreamSink<DownloadProgress>,
 ) -> Result<()> {
-    use futures_util::StreamExt;
     use reqwest::header::{HeaderValue, ACCEPT_ENCODING};
     use std::path::Path;
-    use tokio::io::{AsyncWriteExt, BufWriter};
     use tokio::time::Duration;
 
     let client = reqwest::Client::builder()
@@ -120,11 +118,7 @@ pub async fn download_update(
             GITEE_OWNER, GITEE_REPO, version, filename
         ));
     }
-    candidates.extend(
-        mirror_prefixes
-            .iter()
-            .map(|p| format!("{}{}", p, url))
-    );
+    candidates.extend(mirror_prefixes.iter().map(|p| format!("{}{}", p, url)));
     candidates.push(url);
 
     let _ = sink.add(DownloadProgress {

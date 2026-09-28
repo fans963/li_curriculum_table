@@ -6,6 +6,7 @@ pub mod exam;
 pub mod grade;
 pub mod http;
 pub mod level_exam_score;
+pub mod rust_logger;
 pub mod simple;
 pub mod update;
 pub mod weather;

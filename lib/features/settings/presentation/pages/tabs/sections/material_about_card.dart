@@ -1,15 +1,11 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:loading_indicator_m3e/loading_indicator_m3e.dart';
-import 'package:m3e_core/m3e_core.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
 /// Material styled "关于" card with app icon, version, update check and GitHub link.
 class MaterialAboutCard extends StatelessWidget {
@@ -20,14 +16,15 @@ class MaterialAboutCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
 
-    return Card(
+    return M3ECard(
+      variant: M3ECardVariant.outlined,
+      borderRadius: BorderRadius.circular(28),
       elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(24),
-        side: BorderSide(color: cs.outlineVariant.withValues(alpha: 0.4)),
+      color: cs.surfaceContainerLow,
+      border: BorderSide(
+        color: cs.outlineVariant.withValues(alpha: 0.4),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
         child: FutureBuilder<PackageInfo>(
           future: PackageInfo.fromPlatform(),
           builder: (context, snapshot) {
@@ -77,16 +74,18 @@ class MaterialAboutCard extends StatelessWidget {
                   runSpacing: 8,
                   alignment: WrapAlignment.center,
                   children: [
-                    M3EFilledButton.tonalIcon(
+                    M3EButton.icon(
                       icon: const Icon(Icons.system_update_rounded, size: 18),
                       label: const Text('检查更新'),
+                      style: M3EButtonStyle.tonal,
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,
                       onPressed: () => _checkForUpdateManually(context),
                     ),
-                    M3EOutlinedButton.icon(
+                    M3EButton.icon(
                       icon: const Icon(Icons.code_rounded, size: 18),
                       label: const Text('GitHub'),
+                      style: M3EButtonStyle.outlined,
                       size: M3EButtonSize.md,
                       shape: M3EButtonShape.round,
                       onPressed: () => launchUrl(
@@ -99,54 +98,30 @@ class MaterialAboutCard extends StatelessWidget {
               ],
             );
           },
-        ),
       ),
     );
   }
 
   Future<void> _checkForUpdateManually(BuildContext context) async {
-    final ds = sl<SettingsController>().designStyle.value;
-    final isCupertino = AdaptiveStyle.isCupertino(ds);
-
-    if (isCupertino) {
-      showCupertinoDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const CupertinoAlertDialog(
-          content: Padding(
-            padding: EdgeInsets.only(top: 16),
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(
+        child: Card(
+          child: Padding(
+            padding: EdgeInsets.all(24),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CupertinoActivityIndicator(),
-                SizedBox(height: 12),
+                M3ELoadingIndicator(),
+                SizedBox(height: 16),
                 Text('正在检查更新...'),
               ],
             ),
           ),
         ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(
-          child: Card(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  LoadingIndicatorM3E(),
-                  SizedBox(height: 16),
-                  Text('正在检查更新...'),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
+      ),
+    );
 
     try {
       final updateInfo = await sl<UpdateService>().checkForUpdate();
@@ -157,7 +132,7 @@ class MaterialAboutCard extends StatelessWidget {
     } catch (e) {
       if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!context.mounted) return;
-      showAdaptiveMessage(context, designStyle: ds, message: '检查更新失败，请稍后重试');
+      showAdaptiveMessage(context, message: '检查更新失败，请稍后重试');
     }
   }
 }

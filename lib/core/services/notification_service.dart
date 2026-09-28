@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/teaching_week_scheduler.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 
@@ -14,11 +14,14 @@ class NotificationService {
   static const _courseChannelId = 'course_reminders';
   static const _examChannelId = 'exam_reminders';
   static const _gradeChannelId = 'grade_updates';
+  static const _todoChannelId = 'todo_reminders';
 
   // Notification ID ranges
   // Course: 10000 - 19999
   // Exam 1-day: 20000 - 20999
   // Exam 2-hour: 21000 - 21999
+  // Schedule event: 30000 - 39999
+  // Todo / DDL: 40000 - 49999
 
   Future<void> init() async {
     tz.initializeTimeZones();
@@ -26,12 +29,32 @@ class NotificationService {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/launcher_icon',
     );
+    const iOSSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    const macOSSettings = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
     const linuxSettings = LinuxInitializationSettings(
       defaultActionName: 'Open',
     );
+    const windowsSettings = WindowsInitializationSettings(
+      appName: '🍐课表',
+      appUserModelId: 'com.fans963.li_curriculum_table',
+      guid: '6B29FC40-CA47-1067-B31D-00DD010662DA',
+    );
+    const webSettings = WebInitializationSettings();
     final initSettings = InitializationSettings(
-      android: kIsWeb ? null : androidSettings,
-      linux: kIsWeb ? null : linuxSettings,
+      android: androidSettings,
+      iOS: iOSSettings,
+      macOS: macOSSettings,
+      linux: linuxSettings,
+      windows: windowsSettings,
+      web: webSettings,
     );
 
     await _plugin.initialize(settings: initSettings);
@@ -75,6 +98,19 @@ class NotificationService {
             importance: Importance.high,
           ),
         );
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _todoChannelId,
+            '作业 / DDL 提醒',
+            description: '课程待办与作业截止前提醒',
+            importance: Importance.high,
+          ),
+        );
   }
 
   /// Request notification permission (Android 13+). Other platforms return true.
@@ -114,11 +150,10 @@ class NotificationService {
       ),
     );
 
-    if (kDebugMode) {
-      print(
-        '[NotificationService] New grade notification: ${newCourses.join(', ')}',
-      );
-    }
+    AppLogger.instance.info(
+      'New grade notification: ${newCourses.join(', ')}',
+      tag: 'NotificationService',
+    );
   }
 
   /// Schedule course reminders for the upcoming week.
@@ -175,9 +210,10 @@ class NotificationService {
       scheduled++;
     }
 
-    if (kDebugMode) {
-      print('[NotificationService] Scheduled $scheduled course reminders');
-    }
+    AppLogger.instance.info(
+      'Scheduled $scheduled course reminders',
+      tag: 'NotificationService',
+    );
   }
 
   /// Schedule a notification for a custom schedule event at the specified time.
@@ -249,9 +285,10 @@ class NotificationService {
       }
     }
 
-    if (kDebugMode) {
-      print('[NotificationService] Scheduled $scheduled exam reminders');
-    }
+    AppLogger.instance.info(
+      'Scheduled $scheduled exam reminders',
+      tag: 'NotificationService',
+    );
   }
 
   Future<void> _scheduleNotification({
@@ -263,25 +300,29 @@ class NotificationService {
   }) async {
     final tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
-    await _plugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: tzTime,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          channelId == _courseChannelId ? '课程提醒' : '考试提醒',
-          channelDescription: channelId == _courseChannelId
-              ? '课前20分钟提醒'
-              : '考前1天和2小时提醒',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
+    try {
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzTime,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            channelId,
+            channelId == _courseChannelId ? '课程提醒' : '考试提醒',
+            channelDescription: channelId == _courseChannelId
+                ? '课前20分钟提醒'
+                : '考前1天和2小时提醒',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/launcher_icon',
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } on UnimplementedError {
+      // Platform (e.g. Linux desktop) does not support scheduled notifications
+    }
   }
 
   /// Generate a deterministic notification ID from course occurrence.
@@ -300,8 +341,44 @@ class NotificationService {
     }
   }
 
+  /// Schedule a reminder for a course todo / DDL before its deadline.
+  /// Uses the reserved notification ID range 40000-49999.
+  Future<void> scheduleTodoReminder({
+    required String todoId,
+    required String title,
+    required String body,
+    required DateTime notifyTime,
+  }) async {
+    if (notifyTime.isBefore(DateTime.now())) return;
+    final id = _todoNotificationId(todoId);
+    await _scheduleNotification(
+      id: id,
+      title: title,
+      body: body,
+      scheduledTime: notifyTime,
+      channelId: _todoChannelId,
+    );
+  }
+
+  /// Cancel a previously-scheduled todo reminder by todo UUID.
+  Future<void> cancelTodoReminder(String todoId) async {
+    await _plugin.cancel(id: _todoNotificationId(todoId));
+  }
+
+  /// Cancel every todo reminder in the reserved 40000-49999 range.
+  Future<void> cancelAllTodoReminders() async {
+    await _cancelNotificationsInRange(40000, 49999);
+  }
+
+  /// Generate a deterministic notification ID for a todo UUID.
+  int _todoNotificationId(String todoId) {
+    final hash = todoId.hashCode.toUnsigned(31);
+    return 40000 + (hash % 10000);
+  }
+
   /// Cancel all scheduled notifications.
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
 }
+

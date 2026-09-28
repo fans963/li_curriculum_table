@@ -4,13 +4,16 @@ import 'dart:typed_data';
 import 'package:feedback/feedback.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 
 class FeedbackHandler {
   static Future<void> shareFeedback(UserFeedback feedback) async {
     final screenshotFile = await _writeImageToStorage(feedback.screenshot);
+    final logFile = await AppLogger.instance.writeFeedbackLogFile();
 
     // Create an XFile from the temporary file
     final XFile xFile = XFile(screenshotFile.path);
+    final XFile logXFile = XFile(logFile.path);
 
     final String shareText = feedback.text.isEmpty
         ? '来自用户的应用反馈'
@@ -19,7 +22,11 @@ class FeedbackHandler {
     try {
       // Use the ShareParams API as required by share_plus 12.0.2
       await SharePlus.instance.share(
-        ShareParams(text: shareText, subject: '🍐课表 - 应用反馈', files: [xFile]),
+        ShareParams(
+          text: shareText,
+          subject: '🍐课表 - 应用反馈',
+          files: [xFile, logXFile],
+        ),
       );
     } catch (e) {
       // Fallback if file sharing fails

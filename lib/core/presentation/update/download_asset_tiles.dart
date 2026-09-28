@@ -1,5 +1,4 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Material styled web download asset tile.
@@ -111,97 +110,5 @@ class DownloadAssetTile extends StatelessWidget {
     if (await canLaunchUrl(fallback)) {
       await launchUrl(fallback, mode: LaunchMode.platformDefault);
     }
-  }
-}
-
-/// Cupertino styled web download asset row.
-class CupertinoAssetRow extends StatelessWidget {
-  final String label;
-  final String filename;
-  final String primaryUrl;
-  final String fallbackUrl;
-
-  const CupertinoAssetRow({
-    super.key,
-    required this.label,
-    required this.filename,
-    required this.primaryUrl,
-    required this.fallbackUrl,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cardColor = CupertinoColors.secondarySystemGroupedBackground
-        .resolveFrom(context);
-    final secondaryLabel = CupertinoColors.secondaryLabel.resolveFrom(context);
-    final accent = CupertinoColors.systemBlue.resolveFrom(context);
-
-    return GestureDetector(
-      onTap: () async {
-        final primary = Uri.parse(primaryUrl);
-        try {
-          if (await canLaunchUrl(primary)) {
-            await launchUrl(primary, mode: LaunchMode.platformDefault);
-            return;
-          }
-        } catch (_) {}
-        final fb = Uri.parse(fallbackUrl);
-        if (await canLaunchUrl(fb)) {
-          await launchUrl(fb, mode: LaunchMode.platformDefault);
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            Icon(CupertinoIcons.device_phone_portrait, size: 20, color: accent),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    filename,
-                    style: TextStyle(fontSize: 11, color: secondaryLabel),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                'Gitee',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: accent,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              CupertinoIcons.cloud_download,
-              size: 18,
-              color: secondaryLabel,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

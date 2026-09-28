@@ -1,6 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/repositories/exam_repository.dart';
@@ -21,43 +20,45 @@ class ExamController {
     final creds = await credentialsRepository.loadCredentials();
     if (creds != null && !creds.isEmpty) {
       loadExams(forceRefresh: true).catchError((e) {
-        if (kDebugMode) {
-          print('Auto remote sync of exams failed: $e');
-        }
+        AppLogger.instance.warning(
+          'Auto remote sync of exams failed',
+          tag: 'ExamController',
+          error: e,
+        );
       });
     }
   }
 
   Future<void> loadExams({bool forceRefresh = false}) async {
-    if (forceRefresh) {
-      final ocr = sl<OcrInitializer>();
-      await ocr.ensureInitialized();
-    }
-
     _state.value = _state.value.copyWith(isLoading: true, errorMessage: null);
 
     try {
       final repository = sl<ExamRepository>();
-      if (kDebugMode) {
-        print('[ExamController] loadExams(forceRefresh=$forceRefresh)');
-      }
+      AppLogger.instance.info(
+        'loadExams(forceRefresh=$forceRefresh)',
+        tag: 'ExamController',
+      );
       final exams = await repository.getExams(forceRefresh: forceRefresh);
 
-      if (kDebugMode) {
-        print('[ExamController] Got ${exams.length} exams');
-        for (final e in exams) {
-          print(
-            '[ExamController]   ${e.courseName} | ${e.examTime} | ${e.location}',
-          );
-        }
+      AppLogger.instance.info(
+        'Got ${exams.length} exams',
+        tag: 'ExamController',
+      );
+      for (final e in exams) {
+        AppLogger.instance.debug(
+          '  ${e.courseName} | ${e.examTime} | ${e.location}',
+          tag: 'ExamController',
+        );
       }
 
       _updateExamsState(exams);
     } catch (e, st) {
-      if (kDebugMode) {
-        print('[ExamController] Error: $e');
-        print('[ExamController] Stack: $st');
-      }
+      AppLogger.instance.error(
+        'loadExams failed',
+        tag: 'ExamController',
+        error: e,
+        stack: st,
+      );
       if (e.toString().contains('未登录')) {
         _state.value = _state.value.copyWith(
           isLoading: false,
@@ -87,7 +88,11 @@ class ExamController {
 
     // Schedule exam notifications (fire-and-forget)
     sl<NotificationService>().scheduleExamReminders(exams).catchError((e) {
-      if (kDebugMode) debugPrint('Exam notification scheduling failed: $e');
+      AppLogger.instance.warning(
+        'Exam notification scheduling failed',
+        tag: 'ExamController',
+        error: e,
+      );
     });
   }
 

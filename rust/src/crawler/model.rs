@@ -161,16 +161,26 @@ pub struct KbtableWeekHint {
 pub struct CrawlerConfig {
     pub login_url: String,
     pub target_url: String,
+    pub cas_host: String,
+    pub academic_base: String,
+    pub portal_base: String,
 }
 
 impl CrawlerConfig {
     pub fn get_portal_url(&self) -> String {
-        const DEFAULT_PORTAL_URL: &str = "http://202.119.81.112:8080";
-        DEFAULT_PORTAL_URL.to_string()
+        if self.portal_base.is_empty() {
+            "https://bkjw.njust.edu.cn".to_string()
+        } else {
+            self.portal_base.clone()
+        }
     }
 
     pub fn get_base_url(&self) -> String {
-        "http://202.119.81.112:9080/njlgdx".to_string()
+        if self.academic_base.is_empty() {
+            "https://bkjw.njust.edu.cn/njlgdx".to_string()
+        } else {
+            self.academic_base.clone()
+        }
     }
 
     pub fn get_target_url(&self) -> String {
@@ -179,6 +189,19 @@ impl CrawlerConfig {
             self.get_base_url()
         )
     }
+
+    /// Origin (scheme + authority) the unified-auth login form must post
+    /// to. Defaults to the production CAS server. Tests override this with a
+    /// local mock base (for example `http://127.0.0.1:1234`) so the full
+    /// login flow runs without depending on the school accepting
+    /// independent clients.
+    pub fn get_cas_host(&self) -> &str {
+        if self.cas_host.is_empty() {
+            "https://ids.njust.edu.cn"
+        } else {
+            &self.cas_host
+        }
+    }
 }
 
 impl Default for CrawlerConfig {
@@ -186,6 +209,9 @@ impl Default for CrawlerConfig {
         Self {
             login_url: "".to_string(),
             target_url: "".to_string(),
+            cas_host: "".to_string(),
+            academic_base: "".to_string(),
+            portal_base: "".to_string(),
         }
     }
 }

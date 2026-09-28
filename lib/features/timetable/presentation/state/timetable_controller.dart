@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -176,7 +176,11 @@ class TimetableController {
           )
           .catchError((e) {
             if (kDebugMode) {
-              debugPrint('Failed to cache teaching week baseline: $e');
+              AppLogger.instance.warning(
+                'Failed to cache teaching week baseline',
+                tag: 'TimetableController',
+                error: e,
+              );
             }
           }),
     );
@@ -220,22 +224,8 @@ class TimetableController {
     _state.value = _state.value.copyWith(
       isLoading: true,
       needsLogin: false,
-      status: '正在初始化 OCR 引擎 (仅需一次)...',
+      status: '正在爬取课表并生成对比视图...',
     );
-
-    try {
-      final ocr = sl<OcrInitializer>();
-      await ocr.ensureInitialized();
-    } catch (e) {
-      _state.value = _state.value.copyWith(
-        isLoading: false,
-        status: 'OCR 引擎初始化失败: $e',
-      );
-      _isFetching = false;
-      return;
-    }
-
-    _state.value = _state.value.copyWith(status: '正在爬取课表并生成对比视图...');
 
     final repository = sl<TimetableRepository>();
 
@@ -252,7 +242,11 @@ class TimetableController {
         );
       } catch (e) {
         if (kDebugMode) {
-          debugPrint('Failed to cache timetable: $e');
+          AppLogger.instance.warning(
+            'Failed to cache timetable',
+            tag: 'TimetableController',
+            error: e,
+          );
         }
       }
 
@@ -264,7 +258,11 @@ class TimetableController {
           );
         } catch (e) {
           if (kDebugMode) {
-            debugPrint('Failed to cache credentials: $e');
+            AppLogger.instance.warning(
+              'Failed to cache credentials',
+              tag: 'TimetableController',
+              error: e,
+            );
           }
         }
       }
@@ -288,7 +286,12 @@ class TimetableController {
       } catch (e, st) {
         failedSyncs.add('教室');
         if (kDebugMode) {
-          debugPrint('Classroom sync failed: $e\n$st');
+          AppLogger.instance.error(
+            'Classroom sync failed',
+            tag: 'TimetableController',
+            error: e,
+            stack: st,
+          );
         }
       }
 
@@ -299,7 +302,12 @@ class TimetableController {
       } catch (e, st) {
         failedSyncs.add('成绩');
         if (kDebugMode) {
-          debugPrint('Grades sync failed: $e\n$st');
+          AppLogger.instance.error(
+            'Grades sync failed',
+            tag: 'TimetableController',
+            error: e,
+            stack: st,
+          );
         }
       }
 
@@ -310,7 +318,12 @@ class TimetableController {
       } catch (e, st) {
         failedSyncs.add('考试');
         if (kDebugMode) {
-          debugPrint('Exams sync failed: $e\n$st');
+          AppLogger.instance.error(
+            'Exams sync failed',
+            tag: 'TimetableController',
+            error: e,
+            stack: st,
+          );
         }
       }
 
@@ -371,7 +384,11 @@ class TimetableController {
         )
         .catchError((e) {
           if (kDebugMode) {
-            debugPrint('Course notification scheduling failed: $e');
+            AppLogger.instance.warning(
+              'Course notification scheduling failed',
+              tag: 'TimetableController',
+              error: e,
+            );
           }
         });
   }

@@ -1,5 +1,5 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -25,17 +25,20 @@ class ProxySettingsSection extends StatelessWidget {
       child: Column(
         children: [
           if (!kIsWeb) ...[
-            SwitchListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4),
-              secondary: Icon(
-                AppIcons.router(ds),
-                size: 20,
-                color: cs.onSurfaceVariant,
+            Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                secondary: Icon(
+                  AppIcons.router(ds),
+                  size: 20,
+                  color: cs.onSurfaceVariant,
+                ),
+                title: const Text('开启本地代理网关'),
+                subtitle: const Text('其他设备或本机网页版可通过此应用共享会话'),
+                value: settings.proxyEnabled,
+                onChanged: (v) => notifier.setProxyEnabled(v),
               ),
-              title: const Text('开启本地代理网关'),
-              subtitle: const Text('其他设备或本机网页版可通过此应用共享会话'),
-              value: settings.proxyEnabled,
-              onChanged: (v) => notifier.setProxyEnabled(v),
             ),
             SettingsTile(
               icon: AppIcons.numbers(ds),

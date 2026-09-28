@@ -239,7 +239,7 @@ return $default(_that.campuses,_that.selectedCampus,_that.buildings,_that.select
 
 
 class _ClassroomState implements ClassroomState {
-  const _ClassroomState({final  List<Campus> campuses = const [], this.selectedCampus, final  List<Building> buildings = const [], this.selectedBuilding, required this.selectedDate, final  List<ClassroomAvailability> results = const [], this.isLoading = false, this.error, this.needsLogin = false, this.currentTerm = ''}): _campuses = campuses,_buildings = buildings,_results = results;
+  const _ClassroomState({List<Campus> campuses = const [], this.selectedCampus, List<Building> buildings = const [], this.selectedBuilding, required this.selectedDate, List<ClassroomAvailability> results = const [], this.isLoading = false, this.error, this.needsLogin = false, this.currentTerm = ''}): _campuses = campuses,_buildings = buildings,_results = results;
   
 
  final  List<Campus> _campuses;

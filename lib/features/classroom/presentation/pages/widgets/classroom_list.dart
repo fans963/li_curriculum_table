@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -93,19 +94,20 @@ class ClassroomSliverList extends StatelessWidget {
         final item = results[index];
         final colorScheme = Theme.of(context).colorScheme;
         final textTheme = Theme.of(context).textTheme;
-        return Card(
-          elevation: 0,
-          margin: const EdgeInsets.only(bottom: 8),
-          color: colorScheme.surfaceContainerLowest,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-            side: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
+        return Padding(
+          padding: EdgeInsets.only(
+            bottom: index == results.length - 1 ? 0 : 8,
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
+          child: M3ECard(
+          variant: M3ECardVariant.outlined,
+          borderRadius: BorderRadius.circular(16),
+          elevation: 0,
+          color: colorScheme.surfaceContainerLowest,
+          border: BorderSide(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
               children: [
                 Expanded(
                   flex: 3,
@@ -141,7 +143,7 @@ class ClassroomSliverList extends StatelessWidget {
                   );
                 }),
               ],
-            ),
+          ),
           ),
         );
       }, childCount: results.length),
