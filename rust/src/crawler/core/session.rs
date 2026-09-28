@@ -3,9 +3,11 @@ use crate::crawler::core::cas::{encrypt_password, LoginForm};
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::CrawlerConfig;
 use encoding_rs::GBK;
+#[cfg(not(target_arch = "wasm32"))]
 use reqwest::cookie::Jar;
 use reqwest::{Client, Method};
 use std::sync::atomic::{AtomicU16, Ordering};
+#[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
@@ -29,6 +31,7 @@ pub enum NetworkingStrategy {
 
 pub struct SessionManager {
     pub client: Client,
+    #[cfg(not(target_arch = "wasm32"))]
     pub jar: Arc<Jar>,
     pub config: CrawlerConfig,
     pub login_lock: Mutex<()>,
@@ -42,6 +45,7 @@ impl SessionManager {
         #[cfg(not(target_arch = "wasm32"))]
         let strategy: NetworkingStrategy;
 
+        #[cfg(not(target_arch = "wasm32"))]
         let jar = Arc::new(Jar::default());
         let builder = http::client_builder();
 
@@ -85,6 +89,7 @@ impl SessionManager {
 
         Self {
             client,
+            #[cfg(not(target_arch = "wasm32"))]
             jar,
             config: CrawlerConfig::default(),
             login_lock: Mutex::new(()),
@@ -98,6 +103,7 @@ impl SessionManager {
     /// and `cookie_header` is a `Set-Cookie`-style string such as
     /// `JSESSIONID=ABC123; Path=/njlgdx`.
     pub fn inject_cookies(&self, cookies: &[(String, String)]) {
+        #[cfg(not(target_arch = "wasm32"))]
         for (raw_url, cookie_str) in cookies {
             if let Ok(url) = Url::parse(raw_url) {
                 self.jar.add_cookie_str(cookie_str, &url);
@@ -110,6 +116,8 @@ impl SessionManager {
                 log::warn!("Crawler: Skipping invalid cookie URL");
             }
         }
+        #[cfg(target_arch = "wasm32")]
+        let _ = cookies;
     }
 
     pub async fn login_if_needed(
@@ -170,7 +178,7 @@ impl SessionManager {
             .await?;
         let captcha_url = Url::parse_with_params(
             &format!("{cas_base}/authserver/checkNeedCaptcha.htl"),
-            &[("username", username)],
+            [("username", username)],
         )
         .map_err(|e| CrawlerError::Parse(format!("Invalid captcha check URL: {e}")))?;
         let captcha_status = self

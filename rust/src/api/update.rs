@@ -69,6 +69,7 @@ pub async fn check_for_update() -> Result<UpdateData> {
 
 /// Extract version from a release download URL path.
 /// e.g. ".../download/v2.0.0/app.apk" → Some("2.0.0")
+#[cfg(not(target_arch = "wasm32"))]
 fn extract_version_from_url(url: &str) -> Option<String> {
     let segments: Vec<&str> = url.split('/').collect();
     for (i, seg) in segments.iter().enumerate() {

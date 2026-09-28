@@ -58,7 +58,7 @@ impl LoginForm {
             .and_then(|input| input.value().attr("value"))
             .ok_or_else(|| CrawlerError::Parse("CAS password salt missing".into()))?
             .to_string();
-        if salt.as_bytes().len() != 16 {
+        if salt.len() != 16 {
             return Err(CrawlerError::Parse(
                 "Unexpected CAS password salt length".into(),
             ));
@@ -134,7 +134,7 @@ fn encrypt_with_prefix_and_iv(
     prefix: &str,
     iv: &str,
 ) -> CrawlerResult<String> {
-    if salt.as_bytes().len() != 16 || iv.as_bytes().len() != 16 || prefix.len() != 64 {
+    if salt.len() != 16 || iv.len() != 16 || prefix.len() != 64 {
         return Err(CrawlerError::Parse("Invalid CAS AES input length".into()));
     }
     let cipher = Aes128::new_from_slice(salt.as_bytes())
@@ -146,6 +146,7 @@ fn encrypt_with_prefix_and_iv(
 
     let mut previous = [0u8; 16];
     previous.copy_from_slice(iv.as_bytes());
+    #[allow(clippy::chunks_exact_to_as_chunks)]
     for chunk in plaintext.chunks_exact_mut(16) {
         for (byte, prev) in chunk.iter_mut().zip(previous) {
             *byte ^= prev;
