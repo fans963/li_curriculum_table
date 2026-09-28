@@ -62,7 +62,7 @@ class TodoCountdownStrip extends StatelessWidget {
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: visible.length + (extra > 0 ? 1 : 0),
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
+                  separatorBuilder: (_, _) => const SizedBox(width: 10),
                   itemBuilder: (context, index) {
                     if (extra > 0 && index == visible.length) {
                       return _MoreChip(count: extra);

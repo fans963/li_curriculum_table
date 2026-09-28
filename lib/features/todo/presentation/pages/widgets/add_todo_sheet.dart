@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/todo/domain/entities/course_todo.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
@@ -181,7 +179,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
   }
 
   String _formatDeadline(DateTime dt) {
-    final pad = (int v) => v.toString().padLeft(2, '0');
+    String pad(int v) => v.toString().padLeft(2, '0');
     return '${dt.year}-${pad(dt.month)}-${pad(dt.day)} '
         '${pad(dt.hour)}:${pad(dt.minute)}';
   }
