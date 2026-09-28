@@ -6,10 +6,12 @@ import 'package:li_curriculum_table/features/timetable/domain/services/course_co
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/dashed_border_painter.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
+import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart'
     show CourseDetailsSheet;
@@ -324,9 +326,60 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Course-level DDL badge (top-right). Shown only when this
+              // course has at least one open todo.
+              Positioned(
+                top: -2,
+                right: -2,
+                child: _CourseTodoBadge(courseName: occurrence.courseName),
+              ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _CourseTodoBadge extends StatelessWidget {
+  final String courseName;
+  const _CourseTodoBadge({required this.courseName});
+
+  @override
+  Widget build(BuildContext context) {
+    final todoCtrl = sl<TodoController>();
+    return SignalBuilder(
+      dependencies: [todoCtrl.openTodos],
+      builder: (context) {
+        final count =
+            todoCtrl.openCountByCourse.value[courseName.trim()] ?? 0;
+        if (count == 0) return const SizedBox.shrink();
+        final cs = Theme.of(context).colorScheme;
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+          constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+          decoration: BoxDecoration(
+            color: cs.error,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 2,
+                offset: const Offset(0, 1),
+              ),
+            ],
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            count > 99 ? '99+' : '\$count',
+            style: TextStyle(
+              color: cs.onError,
+              fontSize: 9,
+              fontWeight: FontWeight.w700,
+              height: 1.0,
+            ),
+          ),
+        );
+      },
     );
   }
 }

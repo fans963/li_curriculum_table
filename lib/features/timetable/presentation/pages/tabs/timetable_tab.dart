@@ -16,6 +16,7 @@ import 'package:li_curriculum_table/features/timetable/domain/services/teaching_
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/timetable_week_view.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/add_schedule_event_sheet.dart';
+import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/todo_countdown_strip.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/async_course_strip.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
@@ -88,6 +89,7 @@ class _TimetableTabState extends State<TimetableTab>
     }).toList();
   }
 
+
   @override
   void dispose() {
     _nowTicker?.cancel();
@@ -121,6 +123,9 @@ class _TimetableTabState extends State<TimetableTab>
               onScrollToggle: () => _toggleScrollMode(settings),
               onAsyncToggle: _toggleAsyncStrip,
             ),
+            // Upcoming DDL countdown strip.
+            const TodoCountdownStrip(),
+
             // Async online course strip (collapsible).
             // Dependencies ensure reactivity when custom course colors change.
             SignalBuilder(

@@ -7,6 +7,9 @@ import 'package:li_curriculum_table/core/settings/domain/settings_repository.dar
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/ongoing_badge.dart';
+import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/add_todo_sheet.dart';
+import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/todo_management_sheet.dart';
+import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_card.dart';
 
 /// Full-screen style course/schedule detail dialog in Material 3 Expressive.
@@ -131,6 +134,8 @@ class CourseDetailsSheet extends StatelessWidget {
                           liveTone.accent,
                         ),
                         const SizedBox(height: 8),
+                        _buildTodoSection(context),
+                        const SizedBox(height: 16),
                         _buildColorPicker(context, customColor),
                       ],
                     );
@@ -159,7 +164,128 @@ class CourseDetailsSheet extends StatelessWidget {
     );
   }
 
-  static const _palette = <Color>[
+
+  Widget _buildTodoSection(BuildContext context) {
+    final todoCtrl = sl<TodoController>();
+    final cs = Theme.of(context).colorScheme;
+    return SignalBuilder(
+      dependencies: [todoCtrl.openTodos],
+      builder: (context) {
+        final todos = todoCtrl.todosForCourse(occurrence.courseName);
+        return Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: cs.outlineVariant.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_note_rounded,
+                    size: 16,
+                    color: cs.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '本课程待办 / DDL',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const Spacer(),
+                  if (todos.isNotEmpty)
+                    Text(
+                      '${todos.length} 项',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (todos.isEmpty)
+                Text(
+                  '尚未添加此课程的作业或 DDL。',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                )
+              else
+                ...todos.take(3).map(
+                      (t) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.circle,
+                              size: 6,
+                              color: t.isOverdue
+                                  ? cs.error
+                                  : cs.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                t.title,
+                                style: const TextStyle(fontSize: 13),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              t.remainingTimeText,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: t.isOverdue ? cs.error : cs.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  Expanded(
+                    child: M3EButton.tonal(
+                      onPressed: () => AddTodoSheet.show(
+                        context,
+                        presetCourseName: occurrence.courseName,
+                      ),
+                      size: M3EButtonSize.sm,
+                      shape: M3EButtonShape.round,
+                      child: const Text('+ 添加此课程 DDL'),
+                    ),
+                  ),
+                  if (todos.isNotEmpty) ...[
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: M3EButton.text(
+                        onPressed: () => TodoManagementSheet.show(context),
+                        size: M3EButtonSize.sm,
+                        shape: M3EButtonShape.round,
+                        child: const Text('管理全部'),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+    static const _palette = <Color>[
     Color(0xFFD32F2F),
     Color(0xFFE64A19),
     Color(0xFFF57C00),

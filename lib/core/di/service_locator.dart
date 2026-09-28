@@ -8,8 +8,8 @@ import 'package:li_curriculum_table/features/level_exam_scores/data/datasources/
 import 'package:li_curriculum_table/features/level_exam_scores/data/repositories/level_exam_score_repository_impl.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/domain/repositories/level_exam_score_repository.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_controller.dart';
-import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
+import 'package:li_curriculum_table/core/services/update_service.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
@@ -18,6 +18,8 @@ import 'package:li_curriculum_table/features/grades/presentation/state/grade_con
 import 'package:li_curriculum_table/features/navigation/presentation/state/global_sync_controller.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
+import 'package:li_curriculum_table/features/todo/data/todo_repository.dart';
+import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 import 'package:li_curriculum_table/core/settings/data/settings_repository_impl.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/classroom_remote_datasource.dart';
@@ -132,6 +134,10 @@ void setupServiceLocator() {
         ScheduleEventsRepositoryImpl(sl<SecureScheduleEventsLocalDataSource>()),
   );
 
+  // ─── Todo / DDL ─────────────────────────────────────────────────────────
+  sl.registerLazySingleton<TodoRepository>(() => TodoRepositoryImpl(sl<SecureStorageStore>()));
+
+
   // ─── Classroom ─────────────────────────────────────────────────────────
   sl.registerLazySingleton<ClassroomRemoteDataSource>(
     () => ClassroomRemoteDataSourceImpl(),
@@ -205,6 +211,8 @@ void setupServiceLocator() {
   sl.registerLazySingleton<NavigationController>(() => NavigationController());
   sl.registerLazySingleton<SettingsController>(() => SettingsController());
   sl.registerLazySingleton<TimetableController>(() => TimetableController());
+  sl.registerLazySingleton<TodoController>(() => TodoController());
+
   sl.registerLazySingleton<ClassroomController>(() => ClassroomController());
   sl.registerLazySingleton<GradeController>(() => GradeController());
   sl.registerLazySingleton<ExamController>(() => ExamController());

@@ -9,6 +9,7 @@ import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
+import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:window_manager/window_manager.dart';
@@ -98,5 +99,12 @@ Future<void> main() async {
     if (kDebugMode) debugPrint('ExamController init error: $e');
   });
 
+  // Course todo / DDL controller — fire-and-forget load.
+  sl<TodoController>().init().catchError((e) {
+    if (kDebugMode) debugPrint('TodoController init error: $e');
+  });
+
   runApp(const CurriculumTableApp());
+
+
 }

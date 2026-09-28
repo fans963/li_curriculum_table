@@ -14,11 +14,14 @@ class NotificationService {
   static const _courseChannelId = 'course_reminders';
   static const _examChannelId = 'exam_reminders';
   static const _gradeChannelId = 'grade_updates';
+  static const _todoChannelId = 'todo_reminders';
 
   // Notification ID ranges
   // Course: 10000 - 19999
   // Exam 1-day: 20000 - 20999
   // Exam 2-hour: 21000 - 21999
+  // Schedule event: 30000 - 39999
+  // Todo / DDL: 40000 - 49999
 
   Future<void> init() async {
     tz.initializeTimeZones();
@@ -92,6 +95,19 @@ class NotificationService {
             _gradeChannelId,
             '成绩通知',
             description: '新成绩发布时提醒',
+            importance: Importance.high,
+          ),
+        );
+
+    await _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(
+          const AndroidNotificationChannel(
+            _todoChannelId,
+            '作业 / DDL 提醒',
+            description: '课程待办与作业截止前提醒',
             importance: Importance.high,
           ),
         );
@@ -325,8 +341,44 @@ class NotificationService {
     }
   }
 
+  /// Schedule a reminder for a course todo / DDL before its deadline.
+  /// Uses the reserved notification ID range 40000-49999.
+  Future<void> scheduleTodoReminder({
+    required String todoId,
+    required String title,
+    required String body,
+    required DateTime notifyTime,
+  }) async {
+    if (notifyTime.isBefore(DateTime.now())) return;
+    final id = _todoNotificationId(todoId);
+    await _scheduleNotification(
+      id: id,
+      title: title,
+      body: body,
+      scheduledTime: notifyTime,
+      channelId: _todoChannelId,
+    );
+  }
+
+  /// Cancel a previously-scheduled todo reminder by todo UUID.
+  Future<void> cancelTodoReminder(String todoId) async {
+    await _plugin.cancel(id: _todoNotificationId(todoId));
+  }
+
+  /// Cancel every todo reminder in the reserved 40000-49999 range.
+  Future<void> cancelAllTodoReminders() async {
+    await _cancelNotificationsInRange(40000, 49999);
+  }
+
+  /// Generate a deterministic notification ID for a todo UUID.
+  int _todoNotificationId(String todoId) {
+    final hash = todoId.hashCode.toUnsigned(31);
+    return 40000 + (hash % 10000);
+  }
+
   /// Cancel all scheduled notifications.
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
   }
 }
+
