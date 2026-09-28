@@ -40,6 +40,13 @@ jobs:
         with:
           lfs: true
 
+      - name: Setup Java for Android
+        if: runner.os == 'Linux'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Install Linux Build Tools
         if: runner.os == 'Linux'
         run: |
@@ -82,6 +89,10 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Use Java 21 for Flutter Android builds
+        if: runner.os == 'Linux'
+        run: flutter config --jdk-dir="$JAVA_HOME"
       
       - name: Disable SPM (macOS only)
         if: runner.os == 'macOS'

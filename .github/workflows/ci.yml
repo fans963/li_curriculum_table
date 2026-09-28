@@ -16,6 +16,12 @@ jobs:
         with:
           lfs: true
 
+      - name: Setup Java for Android
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - name: Decode Android Keystore
         if: ${{ env.KEYSTORE_BASE64 != '' }}
         env:
@@ -44,6 +50,9 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Use Java 21 for Flutter Android builds
+        run: flutter config --jdk-dir="$JAVA_HOME"
 
       - name: Install Development Tools
         run: |
