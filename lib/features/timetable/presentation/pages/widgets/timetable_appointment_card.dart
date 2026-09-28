@@ -1,23 +1,18 @@
 import 'package:animations/animations.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/dashed_border_painter.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_remover.dart';
 
 export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/course_details_sheet.dart'
     show CourseDetailsSheet;
-export 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_appointment_cupertino.dart'
-    show CupertinoTone, resolveCupertinoTone;
 
 /// Open the course details dialog for the given [occurrence].
 /// Callable from both the card's internal tap handler and external callers
@@ -110,19 +105,7 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     // the callback fires twice. Only use the internal handler as fallback.
     final cardOnTap = onTap == null ? handleTap : null;
 
-    if (AdaptiveStyle.isCupertino(designStyle)) {
-      return buildCupertinoAppointmentCard(
-        context: context,
-        occurrence: occurrence,
-        title: title,
-        locationLine: locationLine,
-        isOngoing: isOngoing,
-        isOnline: isOnline,
-        isLiveOnline: isLiveOnline,
-        // When externally handled, provide a no-op — Cupertino requires non-null.
-        onTap: cardOnTap ?? () {},
-      );
-    }
+
     return _buildMaterialCard(
       context,
       occurrence,
@@ -365,9 +348,6 @@ Future<void> _showDetailsDialog(
     onClose: () => Navigator.of(context).pop(),
   );
 
-  if (AdaptiveStyle.isCupertino(designStyle)) {
-    return showCupertinoModalPopup(context: context, builder: (_) => sheet);
-  }
 
   return Navigator.of(context).push(
     PageRouteBuilder(

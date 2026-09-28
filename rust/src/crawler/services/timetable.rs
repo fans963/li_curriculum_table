@@ -27,8 +27,7 @@ impl TimetableService {
 
         // 2. Fetch timetable HTML
         let target_url = self.session.config.get_target_url();
-        let portal_url = self.session.config.get_portal_url();
-        let init_url = format!("{}/Logon.do?method=logonurl", portal_url);
+        let init_url = format!("{}/framework/main.jsp", self.session.config.get_base_url());
 
         log::info!("TimetableService: Fetching target HTML from {}", target_url);
         let html = self

@@ -6,7 +6,6 @@ import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/api/rust_logger.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -75,9 +74,6 @@ Future<void> main() async {
 
   // Setup dependency injection
   setupServiceLocator();
-
-  // Start loading OCR engine in background to avoid blocking startup
-  sl<OcrInitializer>().ensureInitialized();
 
   // Await settings so the first frame renders with persisted theme, not defaults
   await sl<SettingsController>().init();

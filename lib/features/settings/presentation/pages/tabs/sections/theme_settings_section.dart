@@ -1,7 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
-import 'package:material_3_expressive/components/toggle_button_group/models/m3e_button_group_action.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
@@ -73,14 +71,6 @@ class ThemeSettingsSection extends StatelessWidget {
               tt: tt,
             ),
           ],
-          const SizedBox(height: 16),
-          _DesignStylePicker(
-            settings: settings,
-            notifier: notifier,
-            cs: cs,
-            tt: tt,
-            ds: ds,
-          ),
         ],
       ),
     );
@@ -284,117 +274,6 @@ class _ColorSchemeTypePicker extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-class _DesignStylePicker extends StatelessWidget {
-  final AppSettings settings;
-  final SettingsController notifier;
-  final ColorScheme cs;
-  final TextTheme tt;
-  final DesignStyle ds;
-
-  const _DesignStylePicker({
-    required this.settings,
-    required this.notifier,
-    required this.cs,
-    required this.tt,
-    required this.ds,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '设计风格',
-          style: tt.labelLarge?.copyWith(color: cs.onSurfaceVariant),
-        ),
-        const SizedBox(height: 8),
-        ...DesignStyle.values.map((style) {
-          final selected = settings.designStyle == style;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => notifier.setDesignStyle(style),
-                borderRadius: BorderRadius.circular(16),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: selected
-                          ? cs.primary
-                          : cs.outlineVariant.withValues(alpha: 0.4),
-                      width: selected ? 2 : 1,
-                    ),
-                    color: selected
-                        ? cs.primaryContainer.withValues(alpha: 0.15)
-                        : Colors.transparent,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        style.icon,
-                        size: 22,
-                        color: selected ? cs.primary : cs.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              style.label,
-                              style: tt.bodyMedium?.copyWith(
-                                fontWeight: selected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
-                                color: selected ? cs.primary : cs.onSurface,
-                              ),
-                            ),
-                            Text(
-                              _desc(style),
-                              style: tt.bodySmall?.copyWith(
-                                color: cs.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (selected)
-                        Icon(
-                          AppIcons.checkCircle(ds),
-                          size: 20,
-                          color: cs.primary,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  String _desc(DesignStyle s) {
-    switch (s) {
-      case DesignStyle.material:
-        return 'Google Material Design 3 风格';
-      case DesignStyle.cupertino:
-        return 'Apple iOS/macOS 风格';
-      case DesignStyle.system:
-        return 'Android 用 Material，iOS 用 Cupertino';
-    }
   }
 }
 

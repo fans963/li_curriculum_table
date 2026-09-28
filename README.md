@@ -14,7 +14,7 @@
 
 | 特性 | 说明 |
 |------|------|
-| 🧠 **自研 OCR** | 基于 Burn 框架推理自研 OCR 模型，仅 200KB，本地识别验证码，无需联网 |
+| 🔐 **CAS 统一认证** | 基于 Rust 原生实现的统一身份认证与会话管理，毫秒级快速登录 |
 | 🌈 **动态取色** | 支持根据系统壁纸动态调整 UI 配色 |
 | 🔐 **隐私至上** | 所有数据本地存储，敏感信息通过 `flutter_secure_storage` 硬件级加密 |
 | 🌐 **全平台** | Android / iOS / Windows / macOS / Linux / Web 六端覆盖 |
@@ -58,7 +58,6 @@ graph TB
 
     subgraph "Rust Core"
         K --> M[Crawler Engine]
-        K --> N["OCR Engine (200KB)"]
         K --> O[Proxy Server]
     end
 
@@ -71,7 +70,6 @@ graph TB
     style B fill:#2196F3,color:#fff
     style K fill:#FF5722,color:#fff
     style M fill:#FF5722,color:#fff
-    style N fill:#FF5722,color:#fff
 ```
 
 ### 数据流
@@ -213,7 +211,6 @@ lib/
 │   ├── services/
 │   │   ├── notification_service.dart            # 本地通知 (课程/考试/日程提醒)
 │   │   ├── weather_service.dart                 # 天气查询服务
-│   │   ├── ocr_initializer.dart                 # OCR 引擎初始化 (signal)
 │   │   └── update_service.dart                  # GitHub Release 更新检查 (Dio)
 │   └── settings/
 │       ├── domain/
@@ -360,7 +357,6 @@ rust/
 └── src/
     ├── lib.rs                                   # Crate 入口
     ├── frb_generated.rs                         # flutter_rust_bridge 生成代码
-    ├── ocr.rs                                   # OCR 引擎入口 (Burn 模型)
     ├── api/                                     # 暴露给 Dart 的接口
     │   ├── mod.rs
     │   ├── auth.rs                              # 登录认证
@@ -370,17 +366,17 @@ rust/
     │   ├── exam.rs                              # 考试查询
     │   ├── book.rs                              # 图书查询
     │   └── simple.rs                            # 简单测试接口
-    ├── crawler/                                 # 爬虫引擎核心
-    │   ├── mod.rs
-    │   ├── error.rs                             # 错误类型定义
-    │   ├── model.rs                             # 共享数据模型 (Dart ↔ Rust)
-    │   ├── parser.rs                            # HTML 解析器
-    │   └── core/
-    │       ├── mod.rs
-    │       ├── session.rs                       # HTTP 会话管理 (Reqwest + Cookie)
-    │       └── proxy_server.rs                  # 本地代理服务器 (Web 端跨域方案)
-    └── model/
-        └── mod.rs                               # 通用模型定义
+    └── crawler/                                 # 爬虫引擎核心
+        ├── mod.rs
+        ├── error.rs                             # 错误类型定义
+        ├── model.rs                             # 共享数据模型 (Dart ↔ Rust)
+        ├── parser.rs                            # HTML 解析器
+        ├── services/                            # 各业务爬虫服务 (课表/成绩/考试等)
+        └── core/
+            ├── mod.rs
+            ├── cas.rs                           # CAS 统一认证与加密
+            ├── session.rs                       # HTTP 会话管理 (Reqwest + Cookie)
+            └── proxy_server.rs                  # 本地代理服务器 (Web 端跨域方案)
 ```
 
 ### 架构分层对照
@@ -391,14 +387,13 @@ graph LR
         A["presentation/<br/>(Material + Cupertino)"] -->|"signal / SignalBuilder"| B["state/"]
         B -->|"get_it sl()"| C["data/"]
         C -->|"flutter_rust_bridge"| D["core/rust/api/"]
-        B -->|"sl()"| SVC["services/<br/>(通知 / 天气 / OCR / 更新)"]
+        B -->|"sl()"| SVC["services/<br/>(通知 / 天气 / 更新)"]
     end
 
     subgraph "Rust"
         D --> E["api/"]
         E --> F["crawler/"]
         F --> G["Reqwest + Scraper"]
-        F --> H["OCR Burn (200KB)"]
         F --> I["Proxy Server"]
     end
 

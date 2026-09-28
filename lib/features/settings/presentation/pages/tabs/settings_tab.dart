@@ -16,12 +16,10 @@ import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/util/feedback_handler.dart';
-import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_cupertino.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_about_card.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_web_download_card.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/log_settings_section.dart';
@@ -105,17 +103,6 @@ class _SettingsTabState extends State<SettingsTab>
     final state = sl<TimetableController>().state.value;
     final settings = sl<SettingsController>().state.value;
 
-    if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-      return buildSettingsCupertino(
-        context: context,
-        state: state,
-        settings: settings,
-        usernameController: _usernameController,
-        passwordController: _passwordController,
-        mounted: mounted,
-        onClearCache: () => sl<TimetableController>().clearAllCache(),
-      );
-    }
     return _buildMaterial(context, state, settings);
   }
 

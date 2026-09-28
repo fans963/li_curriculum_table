@@ -1,14 +1,12 @@
 import 'dart:async';
 
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:signals/signals_flutter.dart';
 
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -102,13 +100,10 @@ class _TimetableTabState extends State<TimetableTab>
     final colorScheme = Theme.of(context).colorScheme;
     final state = sl<TimetableController>().state.value;
     final settings = sl<SettingsController>().state.value;
-    final isCupertino = AdaptiveStyle.isCupertino(settings.designStyle);
     final ds = settings.designStyle;
 
     return ColoredBox(
-      color: isCupertino
-          ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-          : colorScheme.surface,
+      color: colorScheme.surface,
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -244,16 +239,13 @@ class _CompactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCupertino = AdaptiveStyle.isCupertino(designStyle);
     final cs = Theme.of(context).colorScheme;
 
     return Container(
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: isCupertino
-            ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-            : cs.surface,
+        color: cs.surface,
         border: Border(
           bottom: BorderSide(
             color: cs.outlineVariant.withValues(alpha: 0.3),

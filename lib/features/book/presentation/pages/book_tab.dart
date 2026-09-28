@@ -3,11 +3,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
-import 'package:li_curriculum_table/features/book/presentation/pages/book_cupertino.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_detail_page.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/widgets/m3e_adv_dropdown.dart';
@@ -129,60 +127,6 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     super.build(context);
     final ds = sl<SettingsController>().designStyle.value;
 
-    if (AdaptiveStyle.isCupertino(ds)) {
-      return buildBookCupertino(
-        context,
-        searchController: _searchController,
-        onSearch: _performSearch,
-        isLoading: _isLoading.value,
-        hasSearched: _hasSearched.value,
-        error: _error.value,
-        books: _books.value,
-        onBookTap: (book) => _showBookDetailsSheet(context, book),
-        advSearchType: _advSearchType.value,
-        advDoctype: _advDoctype.value,
-        advDept: _advDept.value,
-        advSort: _advSort.value,
-        advOrderby: _advOrderby.value,
-        advDisplaypg: _advDisplaypg.value,
-        searchTypeLabels: _searchTypeLabels.keys.toList(),
-        doctypeLabels: _doctypeLabels.keys.toList(),
-        deptLabels: _deptLabels.keys.toList(),
-        sortLabels: _sortLabels.keys.toList(),
-        displaypgOptions: _displaypgOptions,
-        searchTypeMap: _searchTypeLabels,
-        doctypeMap: _doctypeLabels,
-        deptMap: _deptLabels,
-        sortMap: _sortLabels,
-        onAdvChanged: <String, void Function(String)>{
-          'searchType': (v) {
-            _advSearchType.value = v;
-          },
-          'doctype': (v) {
-            _advDoctype.value = v;
-          },
-          'dept': (v) {
-            _advDept.value = v;
-          },
-          'sort': (v) {
-            _advSort.value = v;
-          },
-          'orderby': (v) {
-            _advOrderby.value = v;
-          },
-          'displaypg': (v) {
-            _advDisplaypg.value = int.parse(v);
-          },
-        },
-        page: _advPage.value,
-        totalCount: _totalCount.value,
-        totalPages: _totalPages,
-        onPageChanged: (page) {
-          _advPage.value = page;
-          _performSearch(changePage: true);
-        },
-      );
-    }
     return _buildMaterial(context, ds);
   }
 
@@ -522,9 +466,6 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  void _showBookDetailsSheet(BuildContext context, BookInfo book) {
-    showCupertinoBookDetailsSheet(context, book);
-  }
 
   void _showBookDetailsDialog(
     BuildContext context,

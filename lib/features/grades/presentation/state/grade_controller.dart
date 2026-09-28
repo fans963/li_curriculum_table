@@ -1,7 +1,6 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/grades/domain/models/grade.dart';
 import 'package:li_curriculum_table/features/grades/domain/repositories/grade_repository.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
@@ -52,11 +51,6 @@ class GradeController {
   }
 
   Future<void> loadGrades({bool forceRefresh = false}) async {
-    if (forceRefresh) {
-      final ocr = sl<OcrInitializer>();
-      await ocr.ensureInitialized();
-    }
-
     _state.value = _state.value.copyWith(isLoading: true, errorMessage: null);
 
     try {

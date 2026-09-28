@@ -284,25 +284,29 @@ class NotificationService {
   }) async {
     final tzTime = tz.TZDateTime.from(scheduledTime, tz.local);
 
-    await _plugin.zonedSchedule(
-      id: id,
-      title: title,
-      body: body,
-      scheduledDate: tzTime,
-      notificationDetails: NotificationDetails(
-        android: AndroidNotificationDetails(
-          channelId,
-          channelId == _courseChannelId ? '课程提醒' : '考试提醒',
-          channelDescription: channelId == _courseChannelId
-              ? '课前20分钟提醒'
-              : '考前1天和2小时提醒',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/launcher_icon',
+    try {
+      await _plugin.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzTime,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            channelId,
+            channelId == _courseChannelId ? '课程提醒' : '考试提醒',
+            channelDescription: channelId == _courseChannelId
+                ? '课前20分钟提醒'
+                : '考前1天和2小时提醒',
+            importance: Importance.high,
+            priority: Priority.high,
+            icon: '@mipmap/launcher_icon',
+          ),
         ),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-    );
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+    } on UnimplementedError {
+      // Platform (e.g. Linux desktop) does not support scheduled notifications
+    }
   }
 
   /// Generate a deterministic notification ID from course occurrence.

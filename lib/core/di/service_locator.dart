@@ -1,6 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
@@ -203,7 +202,6 @@ void setupServiceLocator() {
   );
 
   // ─── Controllers (signals-based) ───────────────────────────────────────
-  sl.registerLazySingleton<OcrInitializer>(() => OcrInitializer());
   sl.registerLazySingleton<NavigationController>(() => NavigationController());
   sl.registerLazySingleton<SettingsController>(() => SettingsController());
   sl.registerLazySingleton<TimetableController>(() => TimetableController());

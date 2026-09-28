@@ -1,6 +1,5 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/models/exam.dart';
 import 'package:li_curriculum_table/features/exam_schedule/domain/repositories/exam_repository.dart';
@@ -31,11 +30,6 @@ class ExamController {
   }
 
   Future<void> loadExams({bool forceRefresh = false}) async {
-    if (forceRefresh) {
-      final ocr = sl<OcrInitializer>();
-      await ocr.ensureInitialized();
-    }
-
     _state.value = _state.value.copyWith(isLoading: true, errorMessage: null);
 
     try {

@@ -1,9 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
-import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_cupertino.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_widgets.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
@@ -33,14 +30,6 @@ class _ClassroomTabState extends State<ClassroomTab>
     super.build(context);
     final notifier = sl<ClassroomController>();
     final state = notifier.state.value;
-    final settingsCtrl = sl<SettingsController>();
-    final isCupertino = AdaptiveStyle.isCupertino(
-      settingsCtrl.state.value.designStyle,
-    );
-
-    if (isCupertino) {
-      return buildClassroomCupertino(context, state, settingsCtrl, notifier);
-    }
     return _buildMaterial(context, state);
   }
 

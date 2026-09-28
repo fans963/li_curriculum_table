@@ -5,9 +5,6 @@ pub enum CrawlerError {
     #[error("Network error: {0}")]
     Network(#[from] reqwest::Error),
 
-    #[error("OCR error: {0}")]
-    Ocr(String),
-
     #[error("Parsing error: {0}")]
     Parse(String),
 
@@ -16,6 +13,12 @@ pub enum CrawlerError {
 
     #[error("Invalid credentials: Username or password incorrect")]
     InvalidCredentials,
+
+    #[error("Additional authentication or captcha is required")]
+    AuthenticationChallenge,
+
+    #[error("CAS did not grant an academic session; the authentication server may have rejected this client")]
+    AuthenticationRejected,
 
     #[error("Session expired or invalid")]
     SessionExpired,

@@ -1,27 +1,18 @@
-import groovy.json.JsonSlurper
-
-fun rustlsPlatformVerifierMaven(): File {
-    val manifestPath = File(projectDir, "../rust/Cargo.toml").canonicalPath
-    val output = providers.exec {
-        workingDir = projectDir.parentFile
-        commandLine(
-            "cargo",
-            "metadata",
-            "--format-version",
-            "1",
-            "--filter-platform",
-            "aarch64-linux-android",
-            "--manifest-path",
-            manifestPath,
-        )
-    }.standardOutput.asText.get()
-
-    val json = JsonSlurper().parseText(output) as Map<String, Any?>
-    val packages = json["packages"] as List<Map<String, Any?>>
-    val pkg = packages.first { it["name"] == "rustls-platform-verifier-android" }
-    val manifest = File(pkg["manifest_path"] as String)
-    return File(manifest.parentFile, "maven")
+fun getRustlsPlatformVersion(): String {
+    val lockFile = File(rootDir, "../rust/Cargo.lock")
+    if (lockFile.exists()) {
+        val lines = lockFile.readLines()
+        val nameIdx = lines.indexOfFirst { it.trim() == "name = \"rustls-platform-verifier-android\"" }
+        if (nameIdx >= 0) {
+            val versionLine = lines.drop(nameIdx + 1).firstOrNull { it.trimStart().startsWith("version = ") }
+            val version = versionLine?.substringAfter('"')?.substringBefore('"')
+            if (!version.isNullOrEmpty()) return version
+        }
+    }
+    return "0.2.0"
 }
+
+extra["rustlsVersion"] = getRustlsPlatformVersion()
 
 allprojects {
     repositories {
@@ -33,7 +24,9 @@ allprojects {
         }
         google()
         mavenCentral()
-        maven { url = uri(rustlsPlatformVerifierMaven()) }
+        maven { url = uri(File(rootDir, "local-maven")) }
+        maven { url = uri("https://raw.githubusercontent.com/rustls/rustls-platform-verifier/maven-archive/android-release-support/maven/") }
+        maven { url = uri("https://github.com/rustls/rustls-platform-verifier/raw/maven-archive/android-release-support/maven/") }
     }
 }
 

@@ -26,15 +26,9 @@ impl GradeService {
             .await?;
 
         // 2. Fetch grades HTML
-        let portal_url = self.session.config.get_portal_url();
-        let target_url = format!(
-            "{}/njlgdx/kscj/cjcx_list",
-            portal_url.replace(":8080", ":9080")
-        );
-        let query_url = format!(
-            "{}/njlgdx/kscj/cjcx_query?Ves632DSdyV=NEW_XSD_XJCJ",
-            portal_url.replace(":8080", ":9080")
-        );
+        let base_url = self.session.config.get_base_url();
+        let target_url = format!("{}/kscj/cjcx_list", base_url);
+        let query_url = format!("{}/kscj/cjcx_query?Ves632DSdyV=NEW_XSD_XJCJ", base_url);
 
         // POST body as seen in .har
         let body = "kksj=&kcxz=&kcmc=&xsfs=max".to_string().into_bytes();

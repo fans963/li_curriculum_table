@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -225,22 +224,8 @@ class TimetableController {
     _state.value = _state.value.copyWith(
       isLoading: true,
       needsLogin: false,
-      status: '正在初始化 OCR 引擎 (仅需一次)...',
+      status: '正在爬取课表并生成对比视图...',
     );
-
-    try {
-      final ocr = sl<OcrInitializer>();
-      await ocr.ensureInitialized();
-    } catch (e) {
-      _state.value = _state.value.copyWith(
-        isLoading: false,
-        status: 'OCR 引擎初始化失败: $e',
-      );
-      _isFetching = false;
-      return;
-    }
-
-    _state.value = _state.value.copyWith(status: '正在爬取课表并生成对比视图...');
 
     final repository = sl<TimetableRepository>();
 

@@ -1,7 +1,6 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 
@@ -10,10 +9,8 @@ Future<void> confirmRemoveScheduleEvent(
   BuildContext context,
   CourseOccurrence occurrence,
 ) async {
-  final ds = sl<SettingsController>().designStyle.value;
   final confirmed = await showAdaptiveConfirmDialog(
     context,
-    designStyle: ds,
     title: '删除日程',
     content: '确定删除「${occurrence.courseName}」吗？',
     confirmText: '删除',
@@ -31,7 +28,6 @@ Future<void> confirmRemoveScheduleEvent(
     if (!context.mounted) return;
     showAdaptiveMessage(
       context,
-      designStyle: ds,
       message: '已删除日程「${occurrence.courseName}」',
     );
   }

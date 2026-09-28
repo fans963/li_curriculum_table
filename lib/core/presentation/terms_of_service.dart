@@ -1,9 +1,6 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 
 const _termsTitle = '使用条款与隐私政策';
 
@@ -30,12 +27,6 @@ const _termsSections = [
     title: '定位信息',
     body:
         '本应用可选获取设备定位信息，仅用于查询并展示当地天气概况，不会将位置信息用于其他任何用途。你可在系统设置中随时关闭定位权限，关闭后天气功能将不可用，但不影响课表、成绩、教室、考试、图书等核心功能。',
-  ),
-  _TermsSection(
-    icon: Icons.camera_alt_outlined,
-    title: 'OCR 与验证码',
-    body:
-        '本应用内置自研 OCR 模型（约 200KB），用于在本地识别教务系统验证码以完成自动登录。验证码图片的识别完全在设备端进行，不依赖外部 OCR 服务，识别过程中不会将验证码图片发送至任何服务器。',
   ),
   _TermsSection(
     icon: Icons.warning_amber_outlined,
@@ -76,12 +67,9 @@ const _agreementFooter =
 /// Returns `true` if the user agreed, `false` if dismissed / declined.
 Future<bool> showTermsOfServiceDialog(
   BuildContext context, {
-  required DesignStyle designStyle,
+  DesignStyle? designStyle,
   bool barrierDismissible = false,
 }) async {
-  if (AdaptiveStyle.isCupertino(designStyle)) {
-    return _showCupertinoTerms(context, barrierDismissible: barrierDismissible);
-  }
   return _showMaterialTerms(context, barrierDismissible: barrierDismissible);
 }
 
@@ -243,120 +231,6 @@ class _MaterialSectionRow extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Cupertino
-// ═══════════════════════════════════════════════════════════════════════════
-
-Future<bool> _showCupertinoTerms(
-  BuildContext context, {
-  required bool barrierDismissible,
-}) async {
-  final result = await showCupertinoDialog<bool>(
-    context: context,
-    barrierDismissible: barrierDismissible,
-    builder: (ctx) => const _CupertinoTermsDialog(),
-  );
-  return result ?? false;
-}
-
-class _CupertinoTermsDialog extends StatelessWidget {
-  const _CupertinoTermsDialog();
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary = CupertinoColors.secondaryLabel.resolveFrom(context);
-
-    return CupertinoAlertDialog(
-      title: Padding(
-        padding: const EdgeInsets.only(bottom: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              CupertinoIcons.doc_text,
-              color: CupertinoColors.systemBlue.resolveFrom(context),
-              size: 22,
-            ),
-            const SizedBox(width: 8),
-            const Text(_termsTitle),
-          ],
-        ),
-      ),
-      content: SizedBox(
-        height: MediaQuery.of(context).size.height * 0.55,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(top: 12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final section in _termsSections) ...[
-                _CupertinoSectionRow(section: section),
-                const SizedBox(height: 10),
-              ],
-              const Divider(height: 16),
-              Text(
-                _agreementFooter,
-                style: TextStyle(fontSize: 12, color: secondary, height: 1.5),
-              ),
-            ],
-          ),
-        ),
-      ),
-      actions: [
-        CupertinoDialogAction(
-          child: const Text('不同意'),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          child: const Text('同意并继续'),
-          onPressed: () => Navigator.pop(context, true),
-        ),
-      ],
-    );
-  }
-}
-
-class _CupertinoSectionRow extends StatelessWidget {
-  final _TermsSection section;
-  const _CupertinoSectionRow({required this.section});
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary = CupertinoColors.secondaryLabel.resolveFrom(context);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '${_iconEmoji(section.icon)} ${section.title}',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          section.body,
-          style: TextStyle(fontSize: 12, color: secondary, height: 1.5),
-        ),
-      ],
-    );
-  }
-
-  static String _iconEmoji(IconData icon) {
-    if (icon == Icons.info_outline) return 'ℹ️';
-    if (icon == Icons.lock_outline) return '🔒';
-    if (icon == Icons.storage_outlined) return '💾';
-    if (icon == Icons.location_on_outlined) return '📍';
-    if (icon == Icons.camera_alt_outlined) return '📷';
-    if (icon == Icons.warning_amber_outlined) return '⚠️';
-    if (icon == Icons.gavel_outlined) return '⚖️';
-    if (icon == Icons.shield_outlined) return '🛡️';
-    if (icon == Icons.block_outlined) return '🚫';
-    if (icon == Icons.update_outlined) return '🔄';
-    return '•';
   }
 }
 

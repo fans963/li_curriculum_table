@@ -10,7 +10,6 @@ import 'package:li_curriculum_table/features/book/presentation/pages/book_materi
 import 'package:li_curriculum_table/core/presentation/info_row.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 
 class BookDetailDialog extends SignalStatefulWidget {
   final BookInfo book;

@@ -1,8 +1,5 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
-import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
@@ -78,8 +75,6 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
 
   @override
   Widget build(BuildContext context) {
-    final settings = sl<SettingsController>().state.value;
-    final isCupertino = AdaptiveStyle.isCupertino(settings.designStyle);
     final cs = Theme.of(context).colorScheme;
 
     if (widget.asyncCourses.isEmpty) return const SizedBox.shrink();
@@ -94,9 +89,7 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
         child: Container(
           height: stripHeight,
           decoration: BoxDecoration(
-            color: isCupertino
-                ? CupertinoColors.systemGroupedBackground.resolveFrom(context)
-                : cs.surface,
+            color: cs.surface,
             border: Border(
               bottom: BorderSide(
                 color: cs.outlineVariant.withValues(alpha: 0.2),
@@ -153,7 +146,6 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
                   itemBuilder: (context, index) {
                     return _AsyncCourseCard(
                       course: widget.asyncCourses[index],
-                      isCupertino: isCupertino,
                     );
                   },
                 ),
@@ -168,9 +160,8 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
 
 class _AsyncCourseCard extends StatelessWidget {
   final CourseRow course;
-  final bool isCupertino;
 
-  const _AsyncCourseCard({required this.course, required this.isCupertino});
+  const _AsyncCourseCard({required this.course});
 
   @override
   Widget build(BuildContext context) {
@@ -193,11 +184,7 @@ class _AsyncCourseCard extends StatelessWidget {
       child: Container(
         width: 155,
         decoration: BoxDecoration(
-          color: isCupertino
-              ? CupertinoColors.secondarySystemGroupedBackground.resolveFrom(
-                  context,
-                )
-              : cs.surfaceContainerLow,
+          color: cs.surfaceContainerLow,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: cs.outlineVariant.withValues(alpha: 0.3),

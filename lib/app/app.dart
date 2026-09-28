@@ -1,14 +1,11 @@
 import 'package:feedback/feedback.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/pages/main_screen.dart';
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart' as legacy;
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart' as m3e_new;
 import 'package:signals/signals_flutter.dart';
@@ -30,10 +27,10 @@ class CurriculumTableApp extends SignalWidget {
   _ThemeBundle _buildTheme({
     required Brightness brightness,
     required Color seedColor,
-    legacy.ColorScheme? dynamicScheme,
+    ColorScheme? dynamicScheme,
     ColorSchemeType colorSchemeType = ColorSchemeType.tonalSpot,
   }) {
-    final fallbackScheme = legacy.ColorScheme.fromSeed(
+    final fallbackScheme = ColorScheme.fromSeed(
       seedColor: seedColor,
       brightness: brightness,
     );
@@ -65,7 +62,7 @@ class CurriculumTableApp extends SignalWidget {
       inputDecoratorBackgroundAlpha: 5,
       navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
       navigationBarLabelBehavior:
-          legacy.NavigationDestinationLabelBehavior.alwaysShow,
+          NavigationDestinationLabelBehavior.alwaysShow,
       // Expressive shape hierarchy: cards & dialogs get xxLarge (32)
       cardRadius: 28,
       dialogRadius: 32,
@@ -125,28 +122,16 @@ class CurriculumTableApp extends SignalWidget {
   }
 
   ThemeData _modernThemeFromLegacy(
-    legacy.ThemeData theme,
+    ThemeData theme,
     FlexSubThemesData subThemes,
   ) {
-    final scheme = _modernColorScheme(theme.colorScheme);
+    final scheme = theme.colorScheme;
     final defaultRadius = subThemes.defaultRadius ?? 28;
     final cardRadius = subThemes.cardRadius ?? defaultRadius;
     final dialogRadius = subThemes.dialogRadius ?? 32;
     final inputRadius = subThemes.inputDecoratorRadius ?? 16;
 
-    return ThemeData(
-      useMaterial3: true,
-      platform: theme.platform,
-      colorScheme: scheme,
-      textTheme: _modernTextTheme(theme.textTheme),
-      primaryTextTheme: _modernTextTheme(theme.primaryTextTheme),
-      applyElevationOverlayColor: theme.applyElevationOverlayColor,
-      scaffoldBackgroundColor: theme.scaffoldBackgroundColor,
-      canvasColor: theme.canvasColor,
-      cardColor: theme.cardColor,
-      dividerColor: theme.dividerColor,
-      dialogBackgroundColor: theme.dialogBackgroundColor,
-      indicatorColor: theme.indicatorColor,
+    return theme.copyWith(
       cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
@@ -172,85 +157,6 @@ class CurriculumTableApp extends SignalWidget {
           borderSide: BorderSide(color: scheme.primary, width: 1.5),
         ),
       ),
-      visualDensity: VisualDensity(
-        horizontal: theme.visualDensity.horizontal,
-        vertical: theme.visualDensity.vertical,
-      ),
-    );
-  }
-
-  ColorScheme _modernColorScheme(legacy.ColorScheme scheme) {
-    return ColorScheme(
-      brightness: scheme.brightness,
-      primary: scheme.primary,
-      onPrimary: scheme.onPrimary,
-      primaryContainer: scheme.primaryContainer,
-      onPrimaryContainer: scheme.onPrimaryContainer,
-      primaryFixed: scheme.primaryFixed,
-      primaryFixedDim: scheme.primaryFixedDim,
-      onPrimaryFixed: scheme.onPrimaryFixed,
-      onPrimaryFixedVariant: scheme.onPrimaryFixedVariant,
-      secondary: scheme.secondary,
-      onSecondary: scheme.onSecondary,
-      secondaryContainer: scheme.secondaryContainer,
-      onSecondaryContainer: scheme.onSecondaryContainer,
-      secondaryFixed: scheme.secondaryFixed,
-      secondaryFixedDim: scheme.secondaryFixedDim,
-      onSecondaryFixed: scheme.onSecondaryFixed,
-      onSecondaryFixedVariant: scheme.onSecondaryFixedVariant,
-      tertiary: scheme.tertiary,
-      onTertiary: scheme.onTertiary,
-      tertiaryContainer: scheme.tertiaryContainer,
-      onTertiaryContainer: scheme.onTertiaryContainer,
-      tertiaryFixed: scheme.tertiaryFixed,
-      tertiaryFixedDim: scheme.tertiaryFixedDim,
-      onTertiaryFixed: scheme.onTertiaryFixed,
-      onTertiaryFixedVariant: scheme.onTertiaryFixedVariant,
-      error: scheme.error,
-      onError: scheme.onError,
-      errorContainer: scheme.errorContainer,
-      onErrorContainer: scheme.onErrorContainer,
-      surface: scheme.surface,
-      onSurface: scheme.onSurface,
-      surfaceDim: scheme.surfaceDim,
-      surfaceBright: scheme.surfaceBright,
-      surfaceContainerLowest: scheme.surfaceContainerLowest,
-      surfaceContainerLow: scheme.surfaceContainerLow,
-      surfaceContainer: scheme.surfaceContainer,
-      surfaceContainerHigh: scheme.surfaceContainerHigh,
-      surfaceContainerHighest: scheme.surfaceContainerHighest,
-      onSurfaceVariant: scheme.onSurfaceVariant,
-      outline: scheme.outline,
-      outlineVariant: scheme.outlineVariant,
-      shadow: scheme.shadow,
-      scrim: scheme.scrim,
-      inverseSurface: scheme.inverseSurface,
-      onInverseSurface: scheme.onInverseSurface,
-      inversePrimary: scheme.inversePrimary,
-      surfaceTint: scheme.surfaceTint,
-      background: scheme.background,
-      onBackground: scheme.onBackground,
-      surfaceVariant: scheme.surfaceVariant,
-    );
-  }
-
-  TextTheme _modernTextTheme(legacy.TextTheme textTheme) {
-    return TextTheme(
-      displayLarge: textTheme.displayLarge,
-      displayMedium: textTheme.displayMedium,
-      displaySmall: textTheme.displaySmall,
-      headlineLarge: textTheme.headlineLarge,
-      headlineMedium: textTheme.headlineMedium,
-      headlineSmall: textTheme.headlineSmall,
-      titleLarge: textTheme.titleLarge,
-      titleMedium: textTheme.titleMedium,
-      titleSmall: textTheme.titleSmall,
-      bodyLarge: textTheme.bodyLarge,
-      bodyMedium: textTheme.bodyMedium,
-      bodySmall: textTheme.bodySmall,
-      labelLarge: textTheme.labelLarge,
-      labelMedium: textTheme.labelMedium,
-      labelSmall: textTheme.labelSmall,
     );
   }
 
@@ -273,92 +179,6 @@ class CurriculumTableApp extends SignalWidget {
     }
   }
 
-  CupertinoThemeData _buildCupertinoTheme({
-    required Brightness brightness,
-    required Color seedColor,
-    legacy.ColorScheme? dynamicScheme,
-  }) {
-    final scheme =
-        dynamicScheme ??
-        legacy.ColorScheme.fromSeed(
-          seedColor: seedColor,
-          brightness: brightness,
-        );
-    final primaryColor = scheme.primary;
-
-    // iOS 26 Liquid Glass typography: monochromatic adaptive, crisp weights
-    return CupertinoThemeData(
-      brightness: brightness,
-      primaryColor: primaryColor,
-      scaffoldBackgroundColor: brightness == Brightness.dark
-          ? CupertinoColors.systemGroupedBackground.darkColor
-          : CupertinoColors.systemGroupedBackground.color,
-      textTheme: CupertinoTextThemeData(
-        primaryColor: primaryColor,
-        textStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        actionTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: primaryColor,
-        ),
-        tabLabelTextStyle: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          letterSpacing: 0.06,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navTitleTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w600,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navLargeTitleTextStyle: TextStyle(
-          fontSize: 34,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.37,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        navActionTextStyle: TextStyle(
-          fontSize: 17,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: primaryColor,
-        ),
-        pickerTextStyle: TextStyle(
-          fontSize: 21,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-        dateTimePickerTextStyle: TextStyle(
-          fontSize: 21,
-          fontWeight: FontWeight.w400,
-          letterSpacing: -0.41,
-          color: brightness == Brightness.dark
-              ? CupertinoColors.label.darkColor
-              : CupertinoColors.label.color,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final settingsCtrl = sl<SettingsController>();
@@ -368,10 +188,10 @@ class CurriculumTableApp extends SignalWidget {
       localeOverride: const Locale('zh', 'CN'),
       child: DynamicColorBuilder(
         builder: (lightDynamic, darkDynamic) {
-          final legacy.ColorScheme? lightScheme = settings.useDynamicColor
+          final ColorScheme? lightScheme = settings.useDynamicColor
               ? lightDynamic
               : null;
-          final legacy.ColorScheme? darkScheme = settings.useDynamicColor
+          final ColorScheme? darkScheme = settings.useDynamicColor
               ? darkDynamic
               : null;
 
@@ -380,11 +200,6 @@ class CurriculumTableApp extends SignalWidget {
               (settings.themeMode == ThemeMode.system &&
                   MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
-          final cupertinoTheme = _buildCupertinoTheme(
-            brightness: isDark ? Brightness.dark : Brightness.light,
-            seedColor: settings.seedColor,
-            dynamicScheme: isDark ? darkScheme : lightScheme,
-          );
           final lightTheme = _buildTheme(
             brightness: Brightness.light,
             seedColor: settings.seedColor,
@@ -409,14 +224,6 @@ class CurriculumTableApp extends SignalWidget {
                 data: isDark ? darkTheme.expressive : lightTheme.expressive,
                 child: content,
               );
-              if (AdaptiveStyle.isCupertino(settings.designStyle)) {
-                return CupertinoUiCompatibilityBridge(
-                  child: CupertinoTheme(
-                    data: cupertinoTheme,
-                    child: m3eTheme,
-                  ),
-                );
-              }
               return MaterialUiCompatibilityBridge(child: m3eTheme);
             },
             home: const MainScreen(),

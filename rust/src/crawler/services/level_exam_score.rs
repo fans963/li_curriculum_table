@@ -24,11 +24,10 @@ impl LevelExamScoreService {
             .login_if_needed(username, password, max_attempts)
             .await?;
 
-        let portal_url = self.session.config.get_portal_url();
-        let base_url = portal_url.replace(":8080", ":9080");
+        let base_url = self.session.config.get_base_url();
 
         // Level exam scores page is a direct GET — no term selection needed
-        let target_url = format!("{base_url}/njlgdx/kscj/djkscj_list");
+        let target_url = format!("{base_url}/kscj/djkscj_list");
         log::info!("LevelExamScoreService: GET {}", target_url);
 
         let html = self

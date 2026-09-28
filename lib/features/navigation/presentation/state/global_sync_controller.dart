@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
-import 'package:li_curriculum_table/core/services/ocr_initializer.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
@@ -15,9 +14,6 @@ class GlobalSyncController {
 
   Future<void> syncGlobal() async {
     if (isSyncing.value) return;
-
-    final ocr = sl<OcrInitializer>();
-    await ocr.ensureInitialized();
 
     final nav = sl<NavigationController>();
     final currentIndex = nav.currentIndex.value;

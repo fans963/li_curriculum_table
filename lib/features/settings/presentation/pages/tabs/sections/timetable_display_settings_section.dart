@@ -1,6 +1,5 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
@@ -189,12 +188,10 @@ class _FixedTextSettings extends StatelessWidget {
                       spacing: 8,
                       children: [1, 2, 3, 4].map((n) {
                         final selected = settings.timetableTextMaxLines == n;
-                        return M3EToggleButton.tonal(
+                        return M3EButton.tonal(
                           label: Text('$n'),
-                          checked: selected,
-                          onCheckedChange: (v) {
-                            if (v) notifier.setTimetableTextMaxLines(n);
-                          },
+                          isSelected: selected,
+                          onPressed: () => notifier.setTimetableTextMaxLines(n),
                           size: M3EButtonSize.sm,
                         );
                       }).toList(),
@@ -260,12 +257,10 @@ class _DaysCountSelector extends StatelessWidget {
               spacing: 10,
               children: _options.map((days) {
                 final selected = count == days;
-                return M3EToggleButton.tonal(
+                return M3EButton.tonal(
                   label: Text('$days 天'),
-                  checked: selected,
-                  onCheckedChange: (v) {
-                    if (v) notifier.setDaysVisibleCount(days);
-                  },
+                  isSelected: selected,
+                  onPressed: () => notifier.setDaysVisibleCount(days),
                   size: M3EButtonSize.sm,
                 );
               }).toList(),

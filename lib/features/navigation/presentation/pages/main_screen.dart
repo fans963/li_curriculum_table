@@ -1,21 +1,13 @@
-import 'package:cupertino_liquid_glass/cupertino_liquid_glass.dart';
-import 'package:material_3_expressive/components/navigation_bar/models/m3e_navigation_bar_destination.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/floating_action_buttons/enums/m3e_fab.dart';
-import 'package:material_3_expressive/components/navigation_bar/enums/m3e_nav_bar_enums.dart';
-
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/presentation/platform_exit.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/presentation/terms_of_service.dart';
 import 'package:li_curriculum_table/core/presentation/update_dialog.dart';
 import 'package:li_curriculum_table/core/services/update_service.dart';
-import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/global_sync_controller.dart';
 import 'package:li_curriculum_table/features/navigation/presentation/state/navigation_controller.dart';
@@ -38,8 +30,6 @@ class MainScreen extends SignalStatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   late final PageController _pageController;
-  // GlobalKey lets Flutter reuse the PageView even when its parent
-  // widget tree changes between Material and Cupertino layouts.
   final _pageViewKey = GlobalKey();
   final _nav = sl<NavigationController>();
   final _sync = sl<GlobalSyncController>();
@@ -58,9 +48,7 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _showTermsIfNeeded() async {
     if (_settings.termsAccepted.value) return;
     if (!mounted) return;
-    final ds = _settings.designStyle.value;
-    // ignore: use_build_context_synchronously
-    final agreed = await showTermsOfServiceDialog(context, designStyle: ds);
+    final agreed = await showTermsOfServiceDialog(context);
     if (agreed && mounted) {
       await _settings.setTermsAccepted(true);
     } else if (!agreed) {
@@ -86,13 +74,11 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  /// Build the page content once with a GlobalKey so Flutter can match it
-  /// across design style changes regardless of parent widget tree shape.
   Widget _buildPageContent() {
     return Column(
       key: _pageViewKey,
       children: [
-        if (isDesktop) TitleBar(),
+        if (isDesktop) const TitleBar(),
         Expanded(
           child: PageView(
             controller: _pageController,
@@ -115,33 +101,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final currentIndex = _nav.currentIndex.value;
     final isSyncing = _sync.isSyncing.value;
-    final settings = _settings.state.value;
-    final ds = settings.designStyle;
-    final isCupertino = AdaptiveStyle.isCupertino(ds);
 
-    if (isCupertino) {
-      // Cupertino: liquid glass bar floats OVER the content
-      return Scaffold(
-        body: Stack(
-          children: [
-            _buildPageContent(),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildCupertinoTabBar(
-                context,
-                currentIndex,
-                ds,
-                isSyncing,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // Material: standard Scaffold with bottomNavigationBar + FAB
     return Scaffold(
       body: _buildPageContent(),
       floatingActionButton: (currentIndex == 4 || currentIndex == 5)
@@ -152,17 +112,16 @@ class _MainScreenState extends State<MainScreen> {
               color: M3EFabColor.secondary,
               icon: isSyncing
                   ? adaptiveActivityIndicator(
-                      designStyle: ds,
                       size: 24,
                       color: Theme.of(context).colorScheme.onSecondaryContainer,
                     )
                   : const Icon(Icons.refresh),
             ),
-      bottomNavigationBar: _buildMaterialNavBar(currentIndex, ds),
+      bottomNavigationBar: _buildMaterialNavBar(currentIndex),
     );
   }
 
-  Widget _buildMaterialNavBar(int currentIndex, DesignStyle ds) {
+  Widget _buildMaterialNavBar(int currentIndex) {
     return M3ENavigationBar(
       selectedIndex: currentIndex,
       indicatorStyle: M3ENavBarIndicatorStyle.pill,
@@ -175,101 +134,36 @@ class _MainScreenState extends State<MainScreen> {
       },
       destinations: [
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.timetableOutline(ds)),
-          selectedIcon: Icon(AppIcons.timetable(ds)),
+          icon: Icon(AppIcons.timetableOutline(null)),
+          selectedIcon: Icon(AppIcons.timetable(null)),
           label: '课表',
         ),
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.classroomOutline(ds)),
-          selectedIcon: Icon(AppIcons.classroom(ds)),
+          icon: Icon(AppIcons.classroomOutline(null)),
+          selectedIcon: Icon(AppIcons.classroom(null)),
           label: '空闲教室',
         ),
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.gradeOutline(ds)),
-          selectedIcon: Icon(AppIcons.grade(ds)),
+          icon: Icon(AppIcons.gradeOutline(null)),
+          selectedIcon: Icon(AppIcons.grade(null)),
           label: '成绩',
         ),
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.examOutline(ds)),
-          selectedIcon: Icon(AppIcons.exam(ds)),
+          icon: Icon(AppIcons.examOutline(null)),
+          selectedIcon: Icon(AppIcons.exam(null)),
           label: '考试',
         ),
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.bookOutline(ds)),
-          selectedIcon: Icon(AppIcons.book(ds)),
+          icon: Icon(AppIcons.bookOutline(null)),
+          selectedIcon: Icon(AppIcons.book(null)),
           label: '图书',
         ),
         M3ENavigationBarDestination(
-          icon: Icon(AppIcons.settingsOutline(ds)),
-          selectedIcon: Icon(AppIcons.settings(ds)),
+          icon: Icon(AppIcons.settingsOutline(null)),
+          selectedIcon: Icon(AppIcons.settings(null)),
           label: '设置',
         ),
       ],
-    );
-  }
-
-  Widget _buildCupertinoTabBar(
-    BuildContext context,
-    int currentIndex,
-    DesignStyle ds,
-    bool isSyncing,
-  ) {
-    // iOS 26 Liquid Glass: subtle tint, content-derived color
-    return CupertinoLiquidGlassBottomBar(
-      theme: LiquidGlassThemeData.light().copyWith(tintOpacity: 0.15),
-      currentIndex: currentIndex,
-      onTap: (index) {
-        FocusScope.of(context).unfocus();
-        _nav.setIndex(index);
-        _pageController.jumpToPage(index);
-      },
-      items: [
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.timetableOutline(ds),
-          activeIcon: AppIcons.timetable(ds),
-          label: '课表',
-        ),
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.classroomOutline(ds),
-          activeIcon: AppIcons.classroom(ds),
-          label: '空闲教室',
-        ),
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.gradeOutline(ds),
-          activeIcon: AppIcons.grade(ds),
-          label: '成绩',
-        ),
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.examOutline(ds),
-          activeIcon: AppIcons.exam(ds),
-          label: '考试',
-        ),
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.bookOutline(ds),
-          activeIcon: AppIcons.book(ds),
-          label: '图书',
-        ),
-        LiquidGlassBottomBarItem(
-          icon: AppIcons.settingsOutline(ds),
-          activeIcon: AppIcons.settings(ds),
-          label: '设置',
-        ),
-      ],
-      detachedButton: (currentIndex >= 4)
-          ? null
-          : LiquidGlassDetachedButton(
-              onTap: isSyncing ? null : () => _sync.syncGlobal(),
-              child: isSyncing
-                  ? const CupertinoActivityIndicator(
-                      radius: 10,
-                      color: CupertinoColors.systemBlue,
-                    )
-                  : Icon(
-                      CupertinoIcons.arrow_2_circlepath,
-                      color: CupertinoColors.systemBlue.resolveFrom(context),
-                      size: 20,
-                    ),
-            ),
     );
   }
 }

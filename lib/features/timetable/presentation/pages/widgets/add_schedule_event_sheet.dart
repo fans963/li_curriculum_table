@@ -1,15 +1,10 @@
-import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
-import 'package:material_3_expressive/components/buttons/enums/m3e_button_enums.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
-import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/cupertino_pickers.dart';
-import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/schedule_event_form_cupertino.dart';
 import 'package:signals/signals_flutter.dart';
 
 /// Bottom sheet form for adding a schedule event with date + clock time.
@@ -17,13 +12,6 @@ class AddScheduleEventSheet extends SignalStatefulWidget {
   const AddScheduleEventSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    final ds = sl<SettingsController>().designStyle.value;
-    if (AdaptiveStyle.isCupertino(ds)) {
-      return showCupertinoModalPopup(
-        context: context,
-        builder: (_) => const AddScheduleEventSheet(),
-      );
-    }
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -71,25 +59,6 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   Widget build(BuildContext context) {
     // Subscribe to nameNotEmpty signal for reactive rebuilds
     final _ = _nameNotEmpty.value;
-    if (_isCupertino) {
-      return buildScheduleEventFormCupertino(
-        context: context,
-        nameController: _nameController,
-        teacherController: _teacherController,
-        locationController: _locationController,
-        date: _date,
-        startTime: _startTime,
-        endTime: _endTime,
-        enableNotification: _enableNotification,
-        notifyTime: _notifyTime,
-        weekdayLabel: _weekdayLabel,
-        onPickDate: _pickDate,
-        onPickStartTime: _pickStartTime,
-        onPickEndTime: _pickEndTime,
-        onPickNotifyTime: _pickNotifyTime,
-        onSubmit: _submit,
-      );
-    }
     return _buildMaterial(context);
   }
 
@@ -190,7 +159,7 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 ),
                 const SizedBox(height: 20),
 
-                // Start / End time
+                // Time range
                 Text('时间', style: Theme.of(ctx).textTheme.labelLarge),
                 const SizedBox(height: 8),
                 Row(
@@ -201,16 +170,18 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                         onTap: _pickStartTime,
                         child: InputDecorator(
                           decoration: const InputDecoration(
-                            labelText: '开始',
-                            prefixIcon: Icon(Icons.play_arrow_outlined),
+                            labelText: '开始时间',
+                            prefixIcon: Icon(Icons.access_time_outlined),
                             filled: true,
                           ),
-                          child: Text(startTime.format(context)),
+                          child: Text(
+                            '${startTime.hour.toString().padLeft(2, '0')}:${startTime.minute.toString().padLeft(2, '0')}',
+                          ),
                         ),
                       ),
                     ),
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      padding: EdgeInsets.symmetric(horizontal: 8),
                       child: Text('—'),
                     ),
                     Expanded(
@@ -219,11 +190,13 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                         onTap: _pickEndTime,
                         child: InputDecorator(
                           decoration: const InputDecoration(
-                            labelText: '结束',
-                            prefixIcon: Icon(Icons.stop_outlined),
+                            labelText: '结束时间',
+                            prefixIcon: Icon(Icons.access_time_outlined),
                             filled: true,
                           ),
-                          child: Text(endTime.format(context)),
+                          child: Text(
+                            '${endTime.hour.toString().padLeft(2, '0')}:${endTime.minute.toString().padLeft(2, '0')}',
+                          ),
                         ),
                       ),
                     ),
@@ -231,45 +204,97 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 ),
                 const SizedBox(height: 20),
 
-                // Notification
-                Material(
-                  type: MaterialType.transparency,
-                  child: SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('开启提醒'),
-                    subtitle: const Text('在指定时间发送通知提醒'),
-                    value: enableNotification,
-                    onChanged: (v) => _enableNotification.value = v,
-                  ),
-                ),
-                if (enableNotification) ...[
-                  const SizedBox(height: 8),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: _pickNotifyTime,
-                    child: InputDecorator(
-                      decoration: const InputDecoration(
-                        labelText: '提醒时间',
-                        prefixIcon: Icon(Icons.notifications_outlined),
-                        filled: true,
-                      ),
-                      child: Text(notifyTime.format(context)),
+                // Notification toggle
+                Card(
+                  elevation: 0,
+                  color: cs.surfaceContainerLow,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.notifications_outlined,
+                              size: 20,
+                              color: cs.primary,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                '开启提醒',
+                                style: Theme.of(ctx).textTheme.bodyMedium,
+                              ),
+                            ),
+                            Switch(
+                              value: enableNotification,
+                              onChanged: (v) => _enableNotification.value = v,
+                            ),
+                          ],
+                        ),
+                        if (enableNotification) ...[
+                          const Divider(),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: _pickNotifyTime,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              child: Row(
+                                children: [
+                                  Text(
+                                    '提醒时间',
+                                    style: Theme.of(ctx).textTheme.bodyMedium,
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    '${notifyTime.hour.toString().padLeft(2, '0')}:${notifyTime.minute.toString().padLeft(2, '0')}',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    size: 18,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ],
-                const SizedBox(height: 28),
+                ),
+                const SizedBox(height: 24),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: M3EButton.icon(
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('添加日程'),
-                    style: M3EButtonStyle.filled,
-                    size: M3EButtonSize.md,
-                    shape: M3EButtonShape.round,
-                    onPressed: _submit,
-                  ),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: M3EButton.text(
+                        onPressed: () => Navigator.of(context).pop(),
+                        size: M3EButtonSize.lg,
+                        shape: M3EButtonShape.round,
+                        child: const Text('取消'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: M3EButton.filled(
+                        onPressed: _nameNotEmpty.value ? _submit : null,
+                        size: M3EButtonSize.lg,
+                        shape: M3EButtonShape.round,
+                        child: const Text('保存'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -279,38 +304,26 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     );
   }
 
-  // _buildCupertino extracted to schedule_event_form_cupertino.dart
-
-  // _buildCupertinoCard, _buildCupertinoDivider, _buildCupertinoTapRow
-  // extracted to cupertino_form_widgets.dart (CupertinoFormCard, CupertinoFormDivider, CupertinoTapRow)
-
   String _weekdayLabel(int weekday) {
     const labels = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日'];
     return labels[weekday];
   }
 
-  bool get _isCupertino =>
-      AdaptiveStyle.isCupertino(sl<SettingsController>().designStyle.value);
-
   Future<void> _pickDate() async {
-    if (_isCupertino) {
-      final picked = await showCupertinoDatePickerModal(context, _date.value);
-      if (picked != null) _date.value = picked;
-    } else {
-      final picked = await showDatePicker(
-        context: context,
-        initialDate: _date.value,
-        firstDate: DateTime(2020),
-        lastDate: DateTime.now().add(const Duration(days: 365)),
-      );
-      if (picked != null) _date.value = picked;
-    }
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _date.value,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+    );
+    if (picked != null) _date.value = picked;
   }
 
   Future<void> _pickStartTime() async {
-    final picked = _isCupertino
-        ? await showCupertinoTimePickerModal(context, _startTime.value)
-        : await showTimePicker(context: context, initialTime: _startTime.value);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _startTime.value,
+    );
     if (picked != null) {
       _startTime.value = picked;
       final currentEnd = _endTime.value;
@@ -324,9 +337,10 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   Future<void> _pickEndTime() async {
-    final picked = _isCupertino
-        ? await showCupertinoTimePickerModal(context, _endTime.value)
-        : await showTimePicker(context: context, initialTime: _endTime.value);
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _endTime.value,
+    );
     if (picked != null) {
       final startMin = _startTime.value.hour * 60 + _startTime.value.minute;
       final pickedMin = picked.hour * 60 + picked.minute;
@@ -340,17 +354,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   Future<void> _pickNotifyTime() async {
-    final picked = _isCupertino
-        ? await showCupertinoTimePickerModal(context, _notifyTime.value)
-        : await showTimePicker(
-            context: context,
-            initialTime: _notifyTime.value,
-          );
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _notifyTime.value,
+    );
     if (picked != null) _notifyTime.value = picked;
   }
-
-  // _showCupertinoDatePicker & _showCupertinoTimePicker
-  // extracted to cupertino_pickers.dart (showCupertinoDatePickerModal, showCupertinoTimePickerModal)
 
   void _submit() {
     final name = _nameController.text.trim();

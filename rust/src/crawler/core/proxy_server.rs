@@ -1,5 +1,4 @@
 use crate::api::crawler::get_shared_session_manager;
-use crate::crawler::model::CrawlerConfig;
 use reqwest::Method;
 use std::net::SocketAddr;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -156,19 +155,27 @@ async fn handle_proxy_request(
         return Ok(());
     }
 
-    // Security: Only allow school domain
-    let config = CrawlerConfig::default();
-    let portal_host = Url::parse(&config.get_portal_url())?
-        .host_str()
-        .unwrap_or("")
-        .to_string();
-
-    if !target_url.contains(&portal_host) && !target_url.contains(":9080") {
+    // The web client needs both the CAS host and the academic system host.
+    // Check the parsed host so a crafted URL cannot bypass this allowlist.
+    let allowed = Url::parse(&target_url).ok().is_some_and(|url| {
+        url.scheme() == "https"
+            && matches!(
+                url.host_str(),
+                Some("ids.njust.edu.cn" | "bkjw.njust.edu.cn")
+            )
+    });
+    if !allowed {
         send_response(stream, 403, "Forbidden", "Target host not allowed", origin).await?;
         return Ok(());
     }
 
-    log::info!("[V9] Forwarding {:?} request to: {}", method, target_url);
+    let target = Url::parse(&target_url)?;
+    log::info!(
+        "[V9] Forwarding {:?} request to: {:?} {}",
+        method,
+        target.host_str(),
+        target.path()
+    );
 
     let session = get_shared_session_manager().await?;
 
@@ -185,9 +192,13 @@ async fn handle_proxy_request(
             };
             send_binary_response(stream, 200, "OK", &bytes, content_type, origin).await?;
         }
-        Err(e) => {
-            let error_msg = format!("Upstream error: {}", e);
-            log::error!("[V9] Proxy upstream error for {}: {}", target_url, e);
+        Err(_e) => {
+            let error_msg = "Upstream request failed";
+            log::error!(
+                "[V9] Proxy upstream error for {:?} {}",
+                target.host_str(),
+                target.path()
+            );
             send_binary_response(
                 stream,
                 500,
