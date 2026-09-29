@@ -1,4 +1,5 @@
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/data/datasources/secure_classroom_local_datasource.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/building.dart';
@@ -88,6 +89,9 @@ class ClassroomController {
         return (creds.username as String?, creds.password as String?);
       }
     } catch (_) {}
+    if (await rust_api.checkSessionValid()) {
+      return ('', '');
+    }
     return (null, null);
   }
 

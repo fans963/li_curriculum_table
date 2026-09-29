@@ -16,6 +16,7 @@ class TimetableControlPanel extends SignalStatefulWidget {
     required this.onTermStartDateChanged,
     required this.onCurrentTermChanged,
     this.onLoginPressed,
+    this.onQrLoginPressed,
   });
 
   final TextEditingController usernameController;
@@ -23,6 +24,7 @@ class TimetableControlPanel extends SignalStatefulWidget {
   final ValueChanged<DateTime> onTermStartDateChanged;
   final ValueChanged<String> onCurrentTermChanged;
   final VoidCallback? onLoginPressed;
+  final VoidCallback? onQrLoginPressed;
 
   @override
   State<TimetableControlPanel> createState() => _TimetableControlPanelState();
@@ -94,14 +96,54 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
       padding: const EdgeInsets.all(16),
       child: Column(
           children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: colorScheme.primary.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline_rounded, color: colorScheme.primary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '登录方式已更新',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: colorScheme.onPrimaryContainer,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '请使用「智慧理工服务门户」的账号和密码登录。',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             TextField(
               controller: widget.usernameController,
               enabled: !state.isLoading,
               textInputAction: TextInputAction.next,
               decoration: InputDecoration(
-                labelText: '教务系统账号',
+                labelText: '智慧理工服务门户账号',
                 prefixIcon: const Icon(Icons.account_circle_outlined),
-                hintText: '请输入学号',
+                hintText: '请输入门户账号',
                 filled: true,
                 fillColor: colorScheme.surface,
               ),
@@ -113,7 +155,7 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
               obscureText: true,
               textInputAction: TextInputAction.done,
               decoration: InputDecoration(
-                labelText: '登录密码',
+                labelText: '智慧理工服务门户密码',
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 hintText: '请输入密码',
                 filled: true,
@@ -143,6 +185,17 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                   size: M3EButtonSize.lg,
                   shape: M3EButtonShape.round,
                   onPressed: state.isLoading ? null : widget.onLoginPressed,
+                ),
+              ),
+            ],
+            if (widget.onQrLoginPressed != null) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: state.isLoading ? null : widget.onQrLoginPressed,
+                  icon: const Icon(Icons.qr_code_2_rounded),
+                  label: const Text('微信扫码登录'),
                 ),
               ),
             ],

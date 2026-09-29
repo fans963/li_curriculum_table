@@ -3,6 +3,7 @@ import '../datasources/grade_remote_datasource.dart';
 import '../../domain/models/grade.dart';
 import '../../domain/repositories/grade_repository.dart';
 import '../../../timetable/data/datasources/secure_credentials_local_datasource.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 
 class GradeRepositoryImpl implements GradeRepository {
   final GradeRemoteDataSource _remoteDataSource;
@@ -25,13 +26,14 @@ class GradeRepositoryImpl implements GradeRepository {
     }
 
     final credentials = await _credentialsDataSource.readCredentials();
-    if (credentials == null || credentials.isEmpty) {
+    if ((credentials == null || credentials.isEmpty) &&
+        !await rust_api.checkSessionValid()) {
       throw Exception('未登录，无法获取成绩');
     }
 
     final grades = await _remoteDataSource.getGrades(
-      username: credentials.username,
-      password: credentials.password,
+      username: credentials?.username ?? '',
+      password: credentials?.password ?? '',
     );
 
     await _localDataSource.saveGrades(grades);

@@ -82,7 +82,7 @@ class RustLib extends BaseEntrypoint<RustLibApi, RustLibApiImpl, RustLibWire> {
   String get codegenVersion => '2.13.0';
 
   @override
-  int get rustContentHash => -179873701;
+  int get rustContentHash => 1164202199;
 
   static const kDefaultExternalLibraryLoaderConfig =
       ExternalLibraryLoaderConfig(
@@ -106,9 +106,13 @@ abstract class RustLibApi extends BaseApi {
 
   Future<Client> crateApiHttpBuildClient();
 
+  Future<void> crateApiCrawlerCancelQrLogin();
+
   Future<UpdateData> crateApiUpdateCheckForUpdate();
 
   Future<bool> crateApiCrawlerCheckSessionValid();
+
+  Future<void> crateApiCrawlerClearPersistedCookies();
 
   Future<ClientBuilder> crateApiHttpClientBuilder();
 
@@ -131,6 +135,8 @@ abstract class RustLibApi extends BaseApi {
     required String username,
     required String password,
   });
+
+  Future<TimetableRecord> crateApiCrawlerFetchTimetableWithSession();
 
   Future<WeatherData> crateApiWeatherFetchWeather({
     required double latitude,
@@ -189,6 +195,8 @@ abstract class RustLibApi extends BaseApi {
 
   Future<ArcSessionManager> crateApiCrawlerGetSharedSessionManager();
 
+  Future<bool> crateApiCrawlerHasCasCookies();
+
   Future<void> crateApiSimpleInitApp();
 
   Stream<RustLogEntry> crateApiRustLoggerInitRustLogStream();
@@ -196,6 +204,12 @@ abstract class RustLibApi extends BaseApi {
   Future<void> crateApiCrawlerInjectSessionCookies({
     required List<CookieEntry> cookies,
   });
+
+  Future<BigInt> crateApiCrawlerPersistCookies();
+
+  Future<Uint8List> crateApiCrawlerPersistCookiesBytes();
+
+  Future<String> crateApiCrawlerPollQrLogin();
 
   Future<void> crateApiCrawlerRunProxyServer({required int port});
 
@@ -206,6 +220,10 @@ abstract class RustLibApi extends BaseApi {
   Future<BookSearchResult> crateApiBookSearchSearchBooksAdvanced({
     required BookSearchParams params,
   });
+
+  Future<BigInt> crateApiCrawlerSetInitialCookiesJson({required String json});
+
+  Future<QrLoginStart> crateApiCrawlerStartQrLogin();
 
   Future<void> crateApiCrawlerUpdateProxyConfig({required int port});
 
@@ -367,7 +385,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "build_client", argNames: []);
 
   @override
-  Future<UpdateData> crateApiUpdateCheckForUpdate() {
+  Future<void> crateApiCrawlerCancelQrLogin() {
     return handler.executeNormal(
       NormalTask(
         callFfi: (port_) {
@@ -376,6 +394,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             generalizedFrbRustBinding,
             serializer,
             funcId: 5,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerCancelQrLoginConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerCancelQrLoginConstMeta =>
+      const TaskConstMeta(debugName: "cancel_qr_login", argNames: []);
+
+  @override
+  Future<UpdateData> crateApiUpdateCheckForUpdate() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 6,
             port: port_,
           );
         },
@@ -402,7 +447,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 6,
+            funcId: 7,
             port: port_,
           );
         },
@@ -421,6 +466,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       const TaskConstMeta(debugName: "check_session_valid", argNames: []);
 
   @override
+  Future<void> crateApiCrawlerClearPersistedCookies() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 8,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_unit,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerClearPersistedCookiesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerClearPersistedCookiesConstMeta =>
+      const TaskConstMeta(debugName: "clear_persisted_cookies", argNames: []);
+
+  @override
   Future<ClientBuilder> crateApiHttpClientBuilder() {
     return handler.executeNormal(
       NormalTask(
@@ -429,7 +501,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 7,
+            funcId: 9,
             port: port_,
           );
         },
@@ -467,7 +539,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 8,
+              funcId: 10,
               port: port_,
             );
           },
@@ -502,7 +574,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 9,
+            funcId: 11,
             port: port_,
           );
         },
@@ -537,7 +609,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 10,
+            funcId: 12,
             port: port_,
           );
         },
@@ -572,7 +644,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 11,
+            funcId: 13,
             port: port_,
           );
         },
@@ -594,6 +666,36 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<TimetableRecord> crateApiCrawlerFetchTimetableWithSession() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 14,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_timetable_record,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerFetchTimetableWithSessionConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerFetchTimetableWithSessionConstMeta =>
+      const TaskConstMeta(
+        debugName: "fetch_timetable_with_session",
+        argNames: [],
+      );
+
+  @override
   Future<WeatherData> crateApiWeatherFetchWeather({
     required double latitude,
     required double longitude,
@@ -607,7 +709,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 12,
+            funcId: 15,
             port: port_,
           );
         },
@@ -642,7 +744,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 13,
+            funcId: 16,
             port: port_,
           );
         },
@@ -684,7 +786,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 14,
+            funcId: 17,
             port: port_,
           );
         },
@@ -721,7 +823,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 15,
+            funcId: 18,
             port: port_,
           );
         },
@@ -756,7 +858,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 16,
+            funcId: 19,
             port: port_,
           );
         },
@@ -802,7 +904,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 17,
+            funcId: 20,
             port: port_,
           );
         },
@@ -853,7 +955,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 18,
+            funcId: 21,
             port: port_,
           );
         },
@@ -887,7 +989,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 19,
+            funcId: 22,
             port: port_,
           );
         },
@@ -921,7 +1023,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 20,
+            funcId: 23,
             port: port_,
           );
         },
@@ -951,7 +1053,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 21,
+            funcId: 24,
             port: port_,
           );
         },
@@ -974,6 +1076,33 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<bool> crateApiCrawlerHasCasCookies() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 25,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_bool,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerHasCasCookiesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerHasCasCookiesConstMeta =>
+      const TaskConstMeta(debugName: "has_cas_cookies", argNames: []);
+
+  @override
   Future<void> crateApiSimpleInitApp() {
     return handler.executeNormal(
       NormalTask(
@@ -982,7 +1111,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 22,
+            funcId: 26,
             port: port_,
           );
         },
@@ -1012,7 +1141,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
             pdeCallFfi(
               generalizedFrbRustBinding,
               serializer,
-              funcId: 23,
+              funcId: 27,
               port: port_,
             );
           },
@@ -1047,7 +1176,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 24,
+            funcId: 28,
             port: port_,
           );
         },
@@ -1069,6 +1198,87 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<BigInt> crateApiCrawlerPersistCookies() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 29,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_usize,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerPersistCookiesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerPersistCookiesConstMeta =>
+      const TaskConstMeta(debugName: "persist_cookies", argNames: []);
+
+  @override
+  Future<Uint8List> crateApiCrawlerPersistCookiesBytes() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 30,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_list_prim_u_8_strict,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerPersistCookiesBytesConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerPersistCookiesBytesConstMeta =>
+      const TaskConstMeta(debugName: "persist_cookies_bytes", argNames: []);
+
+  @override
+  Future<String> crateApiCrawlerPollQrLogin() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 31,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_String,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerPollQrLoginConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerPollQrLoginConstMeta =>
+      const TaskConstMeta(debugName: "poll_qr_login", argNames: []);
+
+  @override
   Future<void> crateApiCrawlerRunProxyServer({required int port}) {
     return handler.executeNormal(
       NormalTask(
@@ -1078,7 +1288,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 25,
+            funcId: 32,
             port: port_,
           );
         },
@@ -1108,7 +1318,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 26,
+            funcId: 33,
             port: port_,
           );
         },
@@ -1138,7 +1348,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 27,
+            funcId: 34,
             port: port_,
           );
         },
@@ -1160,6 +1370,64 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
       );
 
   @override
+  Future<BigInt> crateApiCrawlerSetInitialCookiesJson({required String json}) {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          sse_encode_String(json, serializer);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 35,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_usize,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerSetInitialCookiesJsonConstMeta,
+        argValues: [json],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerSetInitialCookiesJsonConstMeta =>
+      const TaskConstMeta(
+        debugName: "set_initial_cookies_json",
+        argNames: ["json"],
+      );
+
+  @override
+  Future<QrLoginStart> crateApiCrawlerStartQrLogin() {
+    return handler.executeNormal(
+      NormalTask(
+        callFfi: (port_) {
+          final serializer = SseSerializer(generalizedFrbRustBinding);
+          pdeCallFfi(
+            generalizedFrbRustBinding,
+            serializer,
+            funcId: 36,
+            port: port_,
+          );
+        },
+        codec: SseCodec(
+          decodeSuccessData: sse_decode_qr_login_start,
+          decodeErrorData: sse_decode_AnyhowException,
+        ),
+        constMeta: kCrateApiCrawlerStartQrLoginConstMeta,
+        argValues: [],
+        apiImpl: this,
+      ),
+    );
+  }
+
+  TaskConstMeta get kCrateApiCrawlerStartQrLoginConstMeta =>
+      const TaskConstMeta(debugName: "start_qr_login", argNames: []);
+
+  @override
   Future<void> crateApiCrawlerUpdateProxyConfig({required int port}) {
     return handler.executeNormal(
       NormalTask(
@@ -1169,7 +1437,7 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
           pdeCallFfi(
             generalizedFrbRustBinding,
             serializer,
-            funcId: 28,
+            funcId: 37,
             port: port_,
           );
         },
@@ -1683,6 +1951,18 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw) {
     // Codec=Dco (DartCObject based), see doc to use other codecs
     return raw == null ? null : dco_decode_box_autoadd_f_64(raw);
+  }
+
+  @protected
+  QrLoginStart dco_decode_qr_login_start(dynamic raw) {
+    // Codec=Dco (DartCObject based), see doc to use other codecs
+    final arr = raw as List<dynamic>;
+    if (arr.length != 2)
+      throw Exception('unexpected arr length: expect 2 but see ${arr.length}');
+    return QrLoginStart(
+      imagePng: dco_decode_list_prim_u_8_strict(arr[0]),
+      alreadyAuthenticated: dco_decode_bool(arr[1]),
+    );
   }
 
   @protected
@@ -2411,6 +2691,17 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
   }
 
   @protected
+  QrLoginStart sse_decode_qr_login_start(SseDeserializer deserializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    var var_imagePng = sse_decode_list_prim_u_8_strict(deserializer);
+    var var_alreadyAuthenticated = sse_decode_bool(deserializer);
+    return QrLoginStart(
+      imagePng: var_imagePng,
+      alreadyAuthenticated: var_alreadyAuthenticated,
+    );
+  }
+
+  @protected
   RustLogEntry sse_decode_rust_log_entry(SseDeserializer deserializer) {
     // Codec=Sse (Serialization based), see doc to use other codecs
     var var_level = sse_decode_String(deserializer);
@@ -3058,6 +3349,13 @@ class RustLibApiImpl extends RustLibApiImplPlatform implements RustLibApi {
     if (self != null) {
       sse_encode_box_autoadd_f_64(self, serializer);
     }
+  }
+
+  @protected
+  void sse_encode_qr_login_start(QrLoginStart self, SseSerializer serializer) {
+    // Codec=Sse (Serialization based), see doc to use other codecs
+    sse_encode_list_prim_u_8_strict(self.imagePng, serializer);
+    sse_encode_bool(self.alreadyAuthenticated, serializer);
   }
 
   @protected

@@ -10,6 +10,20 @@ class TimetableRepositoryImpl implements TimetableRepository {
   final TimetableCrawlerClient _client;
 
   @override
+  Future<TimetableData> fetchWithSession() async {
+    final result = await _client.fetchWithSession();
+    final rows = result.rows
+        .map(CourseRow.fromRust)
+        .whereType<CourseRow>()
+        .toList(growable: false);
+    return TimetableData(
+      rows: rows,
+      occurrences: buildCourseOccurrences(rows),
+      loginLikelySuccess: result.loginLikelySuccess,
+    );
+  }
+
+  @override
   Future<TimetableData> fetchTimetable({
     required String username,
     required String password,
