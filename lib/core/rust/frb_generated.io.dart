@@ -221,6 +221,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
   double? dco_decode_opt_box_autoadd_f_64(dynamic raw);
 
   @protected
+  QrLoginStart dco_decode_qr_login_start(dynamic raw);
+
+  @protected
   RustLogEntry dco_decode_rust_log_entry(dynamic raw);
 
   @protected
@@ -438,6 +441,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   double? sse_decode_opt_box_autoadd_f_64(SseDeserializer deserializer);
+
+  @protected
+  QrLoginStart sse_decode_qr_login_start(SseDeserializer deserializer);
 
   @protected
   RustLogEntry sse_decode_rust_log_entry(SseDeserializer deserializer);
@@ -702,6 +708,9 @@ abstract class RustLibApiImplPlatform extends BaseApiImpl<RustLibWire> {
 
   @protected
   void sse_encode_opt_box_autoadd_f_64(double? self, SseSerializer serializer);
+
+  @protected
+  void sse_encode_qr_login_start(QrLoginStart self, SseSerializer serializer);
 
   @protected
   void sse_encode_rust_log_entry(RustLogEntry self, SseSerializer serializer);

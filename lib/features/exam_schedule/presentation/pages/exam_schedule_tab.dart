@@ -1,11 +1,14 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/login_required_view.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/exam_schedule/presentation/state/exam_state.dart';
 import 'package:li_curriculum_table/util/util.dart';
 import 'package:signals/signals_flutter.dart';
+
 import '../state/exam_controller.dart';
 import '../../domain/models/exam.dart';
 
@@ -30,8 +33,11 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
 
   Widget _buildMaterial(BuildContext context, ExamState state) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+
     return ColoredBox(
-      color: cs.surface,
+      color: style.pageBackgroundColor(cs),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -46,20 +52,13 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
 
   Widget _buildCompactHeader(BuildContext context, ExamState state) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
     final upcoming = state.exams.where((e) => !e.isExpired).length;
     final total = state.exams.length;
-    return Container(
+    return style.buildHeaderBar(
+      context: context,
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           Text(
@@ -82,6 +81,7 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
   }
 
   Widget _buildBody(BuildContext context, ExamState state) {
+    final ds = sl<SettingsController>().designStyle.value;
     return AnimatedSwitcher(
       duration: kDefaultAnimationDuration,
       switchInCurve: kDefaultAnimationCurve,
@@ -90,37 +90,35 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
         if (state.isLoading && state.exams.isEmpty) {
           return Center(
             key: const ValueKey('loading'),
-            child: M3ELoadingIndicator(),
+            child: adaptiveActivityIndicator(context: context, designStyle: ds),
           );
         }
 
         if (state.needsLogin) {
+          return LoginRequiredView(key: const ValueKey('needs_login'));
+        }
+
+        if (state.exams.isEmpty) {
           return Center(
-            key: const ValueKey('needs_login'),
+            key: const ValueKey('empty'),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  AppIcons.lock(sl<SettingsController>().designStyle.value),
-                  size: 64,
+                  AppIcons.exam(ds),
+                  size: 36,
                   color: Theme.of(context).colorScheme.outline,
                 ),
-                const SizedBox(height: 16),
-                const Text('需要登录后才能查询考试安排'),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Text(
-                  '请先前往「设置」页面输入账号密码',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  '暂无考试安排',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           );
-        }
-
-        if (state.exams.isEmpty) {
-          return const Center(key: ValueKey('empty'), child: Text('暂无考试安排'));
         }
 
         final sorted = List<ExamEntity>.from(state.filteredExams);
@@ -168,21 +166,15 @@ class _ExamScheduleTabState extends State<ExamScheduleTab>
   }
 
   Widget _buildSearchField(BuildContext context) {
+    final ds = sl<SettingsController>().designStyle.value;
+    final style = UiStyleRegistry.resolve(ds);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-      child: TextField(
-        decoration: InputDecoration(
-          hintText: '搜索课程名称...',
-          prefixIcon: Icon(
-            AppIcons.search(sl<SettingsController>().designStyle.value),
-          ),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
-          isDense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
+      child: style.buildSearchBar(
+        context: context,
+        controller: null,
+        placeholder: '搜索课程名称...',
         onChanged: (val) => sl<ExamController>().setSearchQuery(val),
       ),
     );
@@ -309,121 +301,111 @@ class _ExamCard extends StatelessWidget {
       accentColor = colorScheme.secondary;
     }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isExpired
-              ? colorScheme.surfaceContainerHighest.withValues(alpha: 0.4)
-              : colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isExpired
-                ? colorScheme.outlineVariant.withValues(alpha: 0.3)
-                : accentColor.withValues(alpha: 0.2),
-            width: isToday ? 1.5 : 1,
-          ),
-          boxShadow: [
-            if (!isExpired)
-              BoxShadow(
-                color: accentColor.withValues(alpha: 0.06),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: isExpired ? colorScheme.outlineVariant : accentColor,
-                    borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(16),
-                    ),
-                  ),
+    final style = UiStyleRegistry.resolve(ds);
+
+    final cardContent = ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              decoration: BoxDecoration(
+                color: isExpired ? colorScheme.outlineVariant : accentColor,
+                borderRadius: const BorderRadius.horizontal(
+                  left: Radius.circular(16),
                 ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
-                    child: Column(
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    exam.courseName,
-                                    style: theme.textTheme.titleMedium
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: isExpired
-                                              ? colorScheme.onSurfaceVariant
-                                                    .withValues(alpha: 0.75)
-                                              : colorScheme.onSurface,
-                                          fontSize: 16,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 3),
-                                  Text(
-                                    exam.courseCode,
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      color: isExpired
-                                          ? colorScheme.outline.withValues(
-                                              alpha: 0.6,
-                                            )
-                                          : colorScheme.outline,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ],
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                exam.courseName,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isExpired
+                                      ? colorScheme.onSurfaceVariant.withValues(
+                                          alpha: 0.75,
+                                        )
+                                      : colorScheme.onSurface,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            _buildCountdownBadge(
-                              context,
-                              accentColor,
-                              isExpired,
-                              isToday,
-                            ),
-                          ],
+                              const SizedBox(height: 3),
+                              Text(
+                                exam.courseCode,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: isExpired
+                                      ? colorScheme.outline.withValues(
+                                          alpha: 0.6,
+                                        )
+                                      : colorScheme.outline,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 12),
-                        _buildInfoRow(
+                        const SizedBox(width: 8),
+                        _buildCountdownBadge(
                           context,
-                          AppIcons.calendar(ds),
-                          '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}',
-                          isExpired: isExpired,
-                        ),
-                        const SizedBox(height: 6),
-                        _buildInfoRow(
-                          context,
-                          AppIcons.locationOutline(ds),
-                          exam.location,
-                          isExpired: isExpired,
-                        ),
-                        const SizedBox(height: 6),
-                        _buildInfoRow(
-                          context,
-                          AppIcons.seat(ds),
-                          '座位 ${exam.seatNumber}  ·  场次 ${exam.session}',
-                          isExpired: isExpired,
+                          accentColor,
+                          isExpired,
+                          isToday,
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      context,
+                      AppIcons.calendar(ds),
+                      '${exam.dateText}  ${exam.weekdayName}  ${exam.timeRange}',
+                      isExpired: isExpired,
+                    ),
+                    const SizedBox(height: 6),
+                    _buildInfoRow(
+                      context,
+                      AppIcons.locationOutline(ds),
+                      exam.location,
+                      isExpired: isExpired,
+                    ),
+                    const SizedBox(height: 6),
+                    _buildInfoRow(
+                      context,
+                      AppIcons.seat(ds),
+                      '座位 ${exam.seatNumber}  ·  场次 ${exam.session}',
+                      isExpired: isExpired,
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+      child: style.buildCard(
+        context: context,
+        padding: EdgeInsets.zero,
+        borderRadius: 20,
+        color: isToday ? accentColor.withValues(alpha: 0.15) : null,
+        isSelected: isToday,
+        accentColor: accentColor,
+        child: cardContent,
       ),
     );
   }

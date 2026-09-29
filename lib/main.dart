@@ -1,12 +1,14 @@
 import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/app/app.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/rust/api/rust_logger.dart';
 import 'package:li_curriculum_table/core/rust/frb_generated.dart';
-import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/services/app_logger.dart';
+import 'package:li_curriculum_table/core/services/cookie_storage/cookie_storage.dart';
+import 'package:li_curriculum_table/core/services/notification_service.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
@@ -16,6 +18,12 @@ import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await UiStyleRegistry.initializeAll();
+  } catch (e) {
+    if (kDebugMode) debugPrint('UiStyleRegistry init failed: $e');
+  }
 
   await AppLogger.instance.init();
 
@@ -79,6 +87,21 @@ Future<void> main() async {
   // Await settings so the first frame renders with persisted theme, not defaults
   await sl<SettingsController>().init();
 
+  // Rehydrate the Rust cookie jar from `flutter_secure_storage`. This is
+  // the single persistence backend for every platform (Android KeyStore,
+  // iOS Keychain, macOS Keychain, Linux libsecret, Windows DPAPI, Web
+  // localStorage). Must run *before* any controller fires a request so
+  // we don't trip an unauthenticated round-trip on cold start.
+  try {
+    await CookieStorage.bootstrap();
+  } catch (e, st) {
+    AppLogger.instance.warning(
+      'Cookie bootstrap failed; session will not persist',
+      error: e,
+      stack: st,
+    );
+  }
+
   // Initialize notifications (Windows unsupported by flutter_local_notifications)
   final notifications = sl<NotificationService>();
   try {
@@ -105,6 +128,4 @@ Future<void> main() async {
   });
 
   runApp(const CurriculumTableApp());
-
-
 }

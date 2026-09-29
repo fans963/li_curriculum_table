@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
-import 'package:li_curriculum_table/features/todo/domain/entities/course_todo.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/adaptive_date_picker.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/todo/domain/entities/course_todo.dart';
 import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
 import 'package:uuid/uuid.dart';
 
@@ -23,10 +25,8 @@ class AddTodoSheet extends SignalStatefulWidget {
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (_) => AddTodoSheet(
-        existing: existing,
-        presetCourseName: presetCourseName,
-      ),
+      builder: (_) =>
+          AddTodoSheet(existing: existing, presetCourseName: presetCourseName),
     );
   }
 
@@ -49,12 +49,11 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     super.initState();
     final e = widget.existing;
     _titleController = TextEditingController(text: e?.title ?? '');
-    _courseController =
-        TextEditingController(text: e?.courseName ?? widget.presetCourseName ?? '');
-    _noteController = TextEditingController(text: e?.note ?? '');
-    _deadline = signal<DateTime>(
-      e?.deadline ?? _defaultDeadline(),
+    _courseController = TextEditingController(
+      text: e?.courseName ?? widget.presetCourseName ?? '',
     );
+    _noteController = TextEditingController(text: e?.note ?? '');
+    _deadline = signal<DateTime>(e?.deadline ?? _defaultDeadline());
     _reminderMinutes = signal<int>(e?.reminderMinutes ?? 120);
     _saving = signal<bool>(false);
   }
@@ -63,9 +62,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     final now = DateTime.now();
     final base = DateTime(now.year, now.month, now.day, 23, 59);
     final diff = base.difference(now);
-    return diff.inHours < 4
-        ? base.add(const Duration(days: 1))
-        : base;
+    return diff.inHours < 4 ? base.add(const Duration(days: 1)) : base;
   }
 
   @override
@@ -78,8 +75,9 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
 
   Future<void> _pickDate() async {
     final initial = _deadline.value;
-    final picked = await showDatePicker(
+    final picked = await showAdaptiveDatePicker(
       context: context,
+      designStyle: sl<SettingsController>().state.value.designStyle,
       initialDate: initial,
       firstDate: DateTime.now().subtract(const Duration(days: 1)),
       lastDate: DateTime.now().add(const Duration(days: 365 * 2)),
@@ -149,10 +147,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
       }
       if (!mounted) return;
       Navigator.of(context).pop();
-      showAdaptiveMessage(
-        context,
-        message: isEdit ? '已更新待办' : '已添加待办',
-      );
+      showAdaptiveMessage(context, message: isEdit ? '已更新待办' : '已添加待办');
     } catch (e) {
       if (!mounted) return;
       showAdaptiveMessage(context, message: '保存失败：$e');
@@ -200,6 +195,7 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
     final cs = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    final ds = sl<SettingsController>().state.value.designStyle;
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: DraggableScrollableSheet(
@@ -208,12 +204,11 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
         maxChildSize: 0.95,
         expand: false,
         builder: (ctx, scrollController) {
-          return Container(
-            decoration: BoxDecoration(
-              color: cs.surface,
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(28)),
-            ),
+          return adaptiveSheetBackground(
+            context: context,
+            designStyle: ds,
+            topRadius: 28,
+            padding: EdgeInsets.zero,
             child: ListView(
               controller: scrollController,
               padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -240,32 +235,31 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                     const SizedBox(width: 12),
                     Text(
                       widget.existing == null ? '添加待办 / DDL' : '编辑待办',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                      style: Theme.of(context).textTheme.titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                TextField(
+                adaptiveTextField(
+                  context: context,
+                  designStyle: ds,
                   controller: _titleController,
                   autofocus: widget.existing == null,
-                  decoration: const InputDecoration(
-                    labelText: '待办标题 *',
-                    hintText: '例如：第三章课后习题 / 期末论文',
-                    prefixIcon: Icon(Icons.title_rounded),
-                  ),
+                  labelText: '待办标题 *',
+                  hintText: '例如：第三章课后习题 / 期末论文',
+                  prefixIcon: const Icon(Icons.title_rounded),
                   textInputAction: TextInputAction.next,
                   maxLength: 60,
                 ),
                 const SizedBox(height: 12),
-                TextField(
+                adaptiveTextField(
+                  context: context,
+                  designStyle: ds,
                   controller: _courseController,
-                  decoration: const InputDecoration(
-                    labelText: '关联课程（可选）',
-                    hintText: '例如：高等数学',
-                    prefixIcon: Icon(Icons.school_rounded),
-                  ),
+                  labelText: '关联课程（可选）',
+                  hintText: '例如：高等数学',
+                  prefixIcon: const Icon(Icons.school_rounded),
                   textInputAction: TextInputAction.next,
                   maxLength: 40,
                 ),
@@ -273,22 +267,27 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickDate,
-                        icon: const Icon(Icons.calendar_today_rounded, size: 18),
-                        label: Text(
-                          _formatDeadline(deadline).split(' ').first,
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle: ds,
+                        style: UiButtonStyle.outlined,
+                        icon: const Icon(
+                          Icons.calendar_today_rounded,
+                          size: 18,
                         ),
+                        onPressed: _pickDate,
+                        child: Text(_formatDeadline(deadline).split(' ').first),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickTime,
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle: ds,
+                        style: UiButtonStyle.outlined,
                         icon: const Icon(Icons.access_time_rounded, size: 18),
-                        label: Text(
-                          _formatDeadline(deadline).split(' ').last,
-                        ),
+                        onPressed: _pickTime,
+                        child: Text(_formatDeadline(deadline).split(' ').last),
                       ),
                     ),
                   ],
@@ -296,9 +295,8 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                 const SizedBox(height: 16),
                 Text(
                   '提醒',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -306,46 +304,55 @@ class _AddTodoSheetState extends State<AddTodoSheet> {
                   runSpacing: 8,
                   children: _reminderOptions.map((m) {
                     final selected = reminder == m;
-                    return ChoiceChip(
-                      label: Text(_reminderLabel(m)),
+                    return adaptiveChip(
+                      context: context,
+                      designStyle: ds,
+                      label: _reminderLabel(m),
                       selected: selected,
-                      onSelected: (_) => _reminderMinutes.value = m,
+                      onTap: () => _reminderMinutes.value = m,
                     );
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-                TextField(
+                adaptiveTextField(
+                  context: context,
+                  designStyle: ds,
                   controller: _noteController,
                   minLines: 2,
                   maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: '备注（可选）',
-                    hintText: '要求、提交方式、链接等',
-                    prefixIcon: Icon(Icons.notes_rounded),
-                  ),
+                  labelText: '备注（可选）',
+                  hintText: '要求、提交方式、链接等',
+                  prefixIcon: const Icon(Icons.notes_rounded),
                 ),
                 const SizedBox(height: 24),
                 Row(
                   children: [
                     if (widget.existing != null)
                       Expanded(
-                        child: M3EButton.outlined(
+                        child: adaptiveButton(
+                          context: context,
+                          designStyle: ds,
+                          style: UiButtonStyle.outlined,
+                          color: cs.error,
                           onPressed: saving ? null : _delete,
-                          decoration: M3EButtonDecoration.styleFrom(
-                            foregroundColor: cs.error,
-                            side: BorderSide(color: cs.error),
-                          ),
                           child: const Text('删除'),
                         ),
                       ),
                     if (widget.existing != null) const SizedBox(width: 12),
                     Expanded(
                       flex: 2,
-                      child: M3EButton.filled(
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle: ds,
+                        style: UiButtonStyle.filled,
                         onPressed: saving ? null : _save,
                         child: saving
                             ? adaptiveActivityIndicator(
-                                color: cs.onPrimary, size: 20)
+                                context: context,
+                                designStyle: ds,
+                                color: cs.onPrimary,
+                                size: 20,
+                              )
                             : Text(widget.existing == null ? '保存待办' : '更新'),
                       ),
                     ),

@@ -7,6 +7,8 @@ import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/login_required_view.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
@@ -89,7 +91,6 @@ class _TimetableTabState extends State<TimetableTab>
     }).toList();
   }
 
-
   @override
   void dispose() {
     _nowTicker?.cancel();
@@ -103,9 +104,10 @@ class _TimetableTabState extends State<TimetableTab>
     final state = sl<TimetableController>().state.value;
     final settings = sl<SettingsController>().state.value;
     final ds = settings.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
     return ColoredBox(
-      color: colorScheme.surface,
+      color: style.pageBackgroundColor(colorScheme),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -129,9 +131,7 @@ class _TimetableTabState extends State<TimetableTab>
             // Async online course strip (collapsible).
             // Dependencies ensure reactivity when custom course colors change.
             SignalBuilder(
-              dependencies: [
-                sl<CourseColorService>().version,
-              ],
+              dependencies: [sl<CourseColorService>().version],
               builder: (context) => AsyncCourseStrip(
                 key: _asyncStripKey,
                 asyncCourses: _asyncCourses,
@@ -145,10 +145,7 @@ class _TimetableTabState extends State<TimetableTab>
                 switchInCurve: kDefaultAnimationCurve,
                 switchOutCurve: kDefaultAnimationCurve,
                 child: state.needsLogin
-                    ? _NeedsLoginView(
-                        key: const ValueKey('needs_login'),
-                        onSync: () => sl<TimetableController>().syncFromCache(),
-                      )
+                    ? LoginRequiredView(key: const ValueKey('needs_login'))
                     : M3ERefreshIndicator(
                         key: const ValueKey('timetable_view'),
                         color: colorScheme.primary,
@@ -156,9 +153,8 @@ class _TimetableTabState extends State<TimetableTab>
                           await sl<TimetableController>().syncFromCache();
                         },
                         child: ScrollConfiguration(
-                          behavior: ScrollConfiguration.of(
-                            context,
-                          ).copyWith(scrollbars: false),
+                          behavior: ScrollConfiguration.of(context)
+                              .copyWith(scrollbars: false),
                           child: NotificationListener<ScrollNotification>(
                             onNotification: (_) => false,
                             child: TimetableWeekView(
@@ -245,19 +241,12 @@ class _CompactHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final style = UiStyleRegistry.resolve(designStyle);
 
-    return Container(
+    return style.buildHeaderBar(
+      context: context,
       height: 40,
       padding: const EdgeInsets.symmetric(horizontal: 8),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           // Week number
@@ -278,37 +267,38 @@ class _CompactHeader extends StatelessWidget {
 
           // Async online courses toggle (only shown when async courses exist)
           if (hasAsyncCourses)
-            M3EIconButton(
+            adaptiveIconButton(
+              designStyle: designStyle,
               icon: Icon(
                 isAsyncStripExpanded
                     ? Icons.live_tv_rounded
                     : Icons.live_tv_outlined,
                 size: 20,
               ),
-              variant: M3EIconButtonVariant.standard,
-              shape: M3EIconButtonShapeVariant.round,
+              size: 32,
               tooltip: isAsyncStripExpanded ? '收起网课' : '展开网课',
               onPressed: onAsyncToggle,
             ),
 
           // Scroll toggle
-          M3EIconButton(
+          adaptiveIconButton(
+            designStyle: designStyle,
             icon: Icon(
               isWeeklyScrollActive
                   ? AppIcons.viewWeekFilled(designStyle)
                   : AppIcons.viewWeek(designStyle),
+              size: 20,
             ),
-            variant: M3EIconButtonVariant.standard,
-            shape: M3EIconButtonShapeVariant.round,
+            size: 32,
             tooltip: isWeeklyScrollActive ? '按星期滑动' : '无极滑动',
             onPressed: isSwitchingScroll ? null : onScrollToggle,
           ),
 
           // Add button
-          M3EIconButton(
-            icon: const Icon(Icons.add_rounded),
-            variant: M3EIconButtonVariant.standard,
-            shape: M3EIconButtonShapeVariant.round,
+          adaptiveIconButton(
+            designStyle: designStyle,
+            icon: const Icon(Icons.add_rounded, size: 20),
+            size: 32,
             tooltip: '添加日程',
             onPressed: onAddPressed,
           ),
@@ -387,44 +377,3 @@ class _InlineWeatherState extends State<_InlineWeather> {
 // ═══════════════════════════════════════════════════════════════════════════
 // Needs Login View
 // ═══════════════════════════════════════════════════════════════════════════
-
-class _NeedsLoginView extends StatelessWidget {
-  final VoidCallback onSync;
-  const _NeedsLoginView({super.key, required this.onSync});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.calendar_view_week_rounded,
-              size: 64,
-              color: colorScheme.primary.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '暂无课表数据',
-              style: textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '请先前往「设置」页面输入账号密码，\n然后点击下方「同步课表」按钮。',
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

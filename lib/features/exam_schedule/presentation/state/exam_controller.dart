@@ -53,18 +53,22 @@ class ExamController {
 
       _updateExamsState(exams);
     } catch (e, st) {
-      AppLogger.instance.error(
-        'loadExams failed',
-        tag: 'ExamController',
-        error: e,
-        stack: st,
-      );
       if (e.toString().contains('未登录')) {
+        AppLogger.instance.info(
+          'Exam data requires login',
+          tag: 'ExamController',
+        );
         _state.value = _state.value.copyWith(
           isLoading: false,
           needsLogin: true,
         );
       } else {
+        AppLogger.instance.error(
+          'loadExams failed',
+          tag: 'ExamController',
+          error: e,
+          stack: st,
+        );
         _state.value = _state.value.copyWith(
           isLoading: false,
           errorMessage: e.toString(),

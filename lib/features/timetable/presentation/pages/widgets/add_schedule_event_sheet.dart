@@ -1,9 +1,12 @@
-import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:flutter/material.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/adaptive_date_picker.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/schedule_event.dart';
+import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/liquid_glass_add_schedule_event_sheet.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -59,7 +62,46 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   Widget build(BuildContext context) {
     // Subscribe to nameNotEmpty signal for reactive rebuilds
     final _ = _nameNotEmpty.value;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+    if (concrete == DesignStyle.cupertino) {
+      return _buildLiquidGlass(context);
+    }
     return _buildMaterial(context);
+  }
+
+  Widget _buildLiquidGlass(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: bottomPadding),
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.8,
+        minChildSize: 0.5,
+        maxChildSize: 0.92,
+        expand: false,
+        builder: (ctx, scrollController) {
+          return LiquidGlassAddScheduleEventSheetView(
+            scrollController: scrollController,
+            nameController: _nameController,
+            teacherController: _teacherController,
+            locationController: _locationController,
+            date: _date.value,
+            startTime: _startTime.value,
+            endTime: _endTime.value,
+            enableNotification: _enableNotification.value,
+            notifyTime: _notifyTime.value,
+            nameNotEmpty: _nameNotEmpty.value,
+            onPickDate: _pickDate,
+            onPickStartTime: _pickStartTime,
+            onPickEndTime: _pickEndTime,
+            onToggleNotification: (v) => _enableNotification.value = v,
+            onPickNotifyTime: _pickNotifyTime,
+            onSubmit: _submit,
+            onCancel: () => Navigator.of(context).pop(),
+          );
+        },
+      ),
+    );
   }
 
   Widget _buildMaterial(BuildContext context) {
@@ -69,6 +111,8 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
     final enableNotification = _enableNotification.value;
     final notifyTime = _notifyTime.value;
     final bottomPadding = MediaQuery.of(context).viewInsets.bottom;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
     return Padding(
       padding: EdgeInsets.only(bottom: bottomPadding),
@@ -103,9 +147,8 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 const SizedBox(height: 16),
                 Text(
                   '添加日程',
-                  style: Theme.of(
-                    ctx,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(ctx).textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 20),
 
@@ -205,9 +248,13 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 const SizedBox(height: 20),
 
                 // Notification toggle
-                Card(
-                  elevation: 0,
-                  color: cs.surfaceContainerLow,
+                style.buildCard(
+                  context: ctx,
+                  borderRadius: 20,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
@@ -230,7 +277,12 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                                 style: Theme.of(ctx).textTheme.bodyMedium,
                               ),
                             ),
-                            Switch(
+                            adaptiveSwitch(
+                              context: ctx,
+                              designStyle: sl<SettingsController>()
+                                  .state
+                                  .value
+                                  .designStyle,
                               value: enableNotification,
                               onChanged: (v) => _enableNotification.value = v,
                             ),
@@ -278,19 +330,23 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
                 Row(
                   children: [
                     Expanded(
-                      child: M3EButton.text(
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle:
+                            sl<SettingsController>().state.value.designStyle,
+                        style: UiButtonStyle.text,
                         onPressed: () => Navigator.of(context).pop(),
-                        size: M3EButtonSize.lg,
-                        shape: M3EButtonShape.round,
                         child: const Text('取消'),
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: M3EButton.filled(
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle:
+                            sl<SettingsController>().state.value.designStyle,
+                        style: UiButtonStyle.filled,
                         onPressed: _nameNotEmpty.value ? _submit : null,
-                        size: M3EButtonSize.lg,
-                        shape: M3EButtonShape.round,
                         child: const Text('保存'),
                       ),
                     ),
@@ -310,8 +366,9 @@ class _AddScheduleEventSheetState extends State<AddScheduleEventSheet> {
   }
 
   Future<void> _pickDate() async {
-    final picked = await showDatePicker(
+    final picked = await showAdaptiveDatePicker(
       context: context,
+      designStyle: sl<SettingsController>().state.value.designStyle,
       initialDate: _date.value,
       firstDate: DateTime(2020),
       lastDate: DateTime.now().add(const Duration(days: 365)),

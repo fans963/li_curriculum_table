@@ -1,5 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_row.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
@@ -76,6 +78,9 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+    final isGlass = style.usesAmbientBackground;
 
     if (widget.asyncCourses.isEmpty) return const SizedBox.shrink();
 
@@ -88,14 +93,18 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
         opacity: _fadeAnimation,
         child: Container(
           height: stripHeight,
+          // Glass: keep the strip transparent so the ambient mesh shows
+          // through; M3E: opaque surface with subtle bottom divider.
           decoration: BoxDecoration(
-            color: cs.surface,
-            border: Border(
-              bottom: BorderSide(
-                color: cs.outlineVariant.withValues(alpha: 0.2),
-                width: 0.5,
-              ),
-            ),
+            color: isGlass ? Colors.transparent : cs.surface,
+            border: isGlass
+                ? null
+                : Border(
+                    bottom: BorderSide(
+                      color: cs.outlineVariant.withValues(alpha: 0.2),
+                      width: 0.5,
+                    ),
+                  ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -144,9 +153,7 @@ class AsyncCourseStripState extends State<AsyncCourseStrip>
                   itemCount: widget.asyncCourses.length,
                   separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, index) {
-                    return _AsyncCourseCard(
-                      course: widget.asyncCourses[index],
-                    );
+                    return _AsyncCourseCard(course: widget.asyncCourses[index]);
                   },
                 ),
               ),
@@ -166,6 +173,8 @@ class _AsyncCourseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
     // Use the same color resolver as grid cards, including custom color overrides.
     final customColor = sl<CourseColorService>().getColor(course.courseName);
     final tone = resolveAppointmentTone(
@@ -176,64 +185,63 @@ class _AsyncCourseCard extends StatelessWidget {
     final color = tone.accent;
 
     // Location display: auto-detected "线上" > raw location
-    final locText =
-        (course.location.trim() == '线上' ? '线上' : course.location.trim());
+    final locText = (course.location.trim() == '线上'
+        ? '线上'
+        : course.location.trim());
 
-    return GestureDetector(
-      onTap: () => openCourseDetails(context, _toOccurrence(course, color)),
-      child: Container(
-        width: 155,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
+    final cardContent = Row(
+      children: [
+        Container(
+          width: 3,
+          height: 32,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(1.5),
           ),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        child: Row(
-          children: [
-            Container(
-              width: 3,
-              height: 32,
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(1.5),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                course.courseName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurface,
+                  height: 1.2,
+                ),
               ),
-            ),
-            const SizedBox(width: 6),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    course.courseName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: cs.onSurface,
-                      height: 1.2,
-                    ),
+              if (locText.isNotEmpty)
+                Text(
+                  locText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                    height: 1.2,
                   ),
-                  if (locText.isNotEmpty)
-                    Text(
-                      locText,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: cs.onSurfaceVariant.withValues(alpha: 0.7),
-                        height: 1.2,
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+
+    return SizedBox(
+      width: 155,
+      child: GestureDetector(
+        onTap: () => openCourseDetails(context, _toOccurrence(course, color)),
+        child: style.buildCard(
+          context: context,
+          borderRadius: 10,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: cardContent,
         ),
       ),
     );

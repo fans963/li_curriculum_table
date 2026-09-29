@@ -1,7 +1,9 @@
 import 'package:animations/animations.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_style.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
@@ -107,7 +109,6 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     // the callback fires twice. Only use the internal handler as fallback.
     final cardOnTap = onTap == null ? handleTap : null;
 
-
     return _buildMaterialCard(
       context,
       occurrence,
@@ -138,6 +139,7 @@ class _AnimatedAppointmentCard extends StatelessWidget {
     bool isLiveOnline = false,
   }) {
     final cs = Theme.of(context).colorScheme;
+    final isGlass = AdaptiveStyle.isLiquidGlass(designStyle);
 
     return Padding(
       padding: const EdgeInsets.all(1.5),
@@ -149,6 +151,12 @@ class _AnimatedAppointmentCard extends StatelessWidget {
         child: Stack(
           clipBehavior: Clip.none,
           children: [
+            if (isGlass)
+              const Positioned.fill(
+                child: GlassContainer(
+                  shape: LiquidRoundedSuperellipse(borderRadius: 16),
+                ),
+              ),
             // Dashed border overlay for live online courses
             if (isLiveOnline && !isOngoing)
               Positioned.fill(
@@ -162,7 +170,9 @@ class _AnimatedAppointmentCard extends StatelessWidget {
               ),
             Container(
               decoration: BoxDecoration(
-                color: isOngoing
+                color: isGlass
+                    ? tone.background.withValues(alpha: 0.18)
+                    : isOngoing
                     ? Color.alphaBlend(
                         tone.accent.withValues(alpha: 0.08),
                         tone.background,
@@ -326,13 +336,13 @@ class _AnimatedAppointmentCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Course-level DDL badge (top-right). Shown only when this
-              // course has at least one open todo.
-              Positioned(
-                top: -2,
-                right: -2,
-                child: _CourseTodoBadge(courseName: occurrence.courseName),
-              ),
+            // Course-level DDL badge (top-right). Shown only when this
+            // course has at least one open todo.
+            Positioned(
+              top: -2,
+              right: -2,
+              child: _CourseTodoBadge(courseName: occurrence.courseName),
+            ),
           ],
         ),
       ),
@@ -350,8 +360,7 @@ class _CourseTodoBadge extends StatelessWidget {
     return SignalBuilder(
       dependencies: [todoCtrl.openTodos],
       builder: (context) {
-        final count =
-            todoCtrl.openCountByCourse.value[courseName.trim()] ?? 0;
+        final count = todoCtrl.openCountByCourse.value[courseName.trim()] ?? 0;
         if (count == 0) return const SizedBox.shrink();
         final cs = Theme.of(context).colorScheme;
         return Container(
@@ -400,7 +409,6 @@ Future<void> _showDetailsDialog(
     designStyle: designStyle,
     onClose: () => Navigator.of(context).pop(),
   );
-
 
   return Navigator.of(context).push(
     PageRouteBuilder(

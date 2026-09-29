@@ -1,16 +1,51 @@
 use crate::api::http;
+use crate::crawler::core::cookie_store::{debug_summary, PersistedCookieStore};
 use crate::crawler::core::cas::{encrypt_password, LoginForm};
+use crate::crawler::core::qr::{QrLoginAttempt, QrLoginForm};
 use crate::crawler::error::{CrawlerError, CrawlerResult};
 use crate::crawler::model::CrawlerConfig;
 use encoding_rs::GBK;
 #[cfg(not(target_arch = "wasm32"))]
-use reqwest::cookie::Jar;
 use reqwest::{Client, Method};
 use std::sync::atomic::{AtomicU16, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
 #[cfg(not(target_arch = "wasm32"))]
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
+
+
+/// Directory (absolute path) where the persisted cookie jar should live.
+/// Set by Dart at startup via [`set_cookie_storage_dir`]. If unset, the
+/// cookie store stays in-memory only (no persistence across launches).
+pub static COOKIE_STORAGE_DIR: std::sync::OnceLock<String> = std::sync::OnceLock::new();
+
+/// Set the directory used to persist the reqwest cookie jar. Must be
+/// called before the first `SessionManager` is constructed (i.e. before
+/// `get_shared_session_manager()` is awaited from Dart).
+pub fn set_cookie_storage_dir(path: String) {
+    let _ = COOKIE_STORAGE_DIR.set(path);
+}
+
+/// Cookie JSON (as produced by [`SessionManager::persist_cookies_bytes`])
+/// to inject into the very first `SessionManager` we construct. Used
+/// by the Dart side to rehydrate the jar from `flutter_secure_storage`
+/// at startup without going through a filesystem. Cleared after use.
+static COOKIE_PRELOAD_JSON: std::sync::Mutex<Option<Vec<u8>>> =
+    std::sync::Mutex::new(None);
+
+/// Hand the in-memory cookie jar a JSON snapshot from a previous
+/// session (typically loaded from `flutter_secure_storage` by Dart).
+/// Must be called before the first `SessionManager` is constructed.
+pub fn set_cookie_preload_json(json: Vec<u8>) {
+    let mut guard = COOKIE_PRELOAD_JSON.lock().unwrap_or_else(|e| e.into_inner());
+    *guard = Some(json);
+}
+
+fn take_cookie_preload_json() -> Option<Vec<u8>> {
+    let mut guard = COOKIE_PRELOAD_JSON.lock().unwrap_or_else(|e| e.into_inner());
+    guard.take()
+}
 
 static PROXY_PORT: AtomicU16 = AtomicU16::new(9999);
 
@@ -31,10 +66,11 @@ pub enum NetworkingStrategy {
 
 pub struct SessionManager {
     pub client: Client,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub jar: Arc<Jar>,
+    /// Persisted cookie store — survives across app restarts.
+    cookie_store: Arc<PersistedCookieStore>,
     pub config: CrawlerConfig,
     pub login_lock: Mutex<()>,
+    qr_login: Mutex<Option<QrLoginAttempt>>,
     pub strategy: NetworkingStrategy,
 }
 
@@ -45,8 +81,36 @@ impl SessionManager {
         #[cfg(not(target_arch = "wasm32"))]
         let strategy: NetworkingStrategy;
 
-        #[cfg(not(target_arch = "wasm32"))]
-        let jar = Arc::new(Jar::default());
+        // Build the cookie store. The file-backed variant is used only
+        // when `set_cookie_storage_dir` was called (legacy native path).
+        // The default in-memory variant is used both for tests and for
+        // the new Dart-side persistence via `flutter_secure_storage`,
+        // which pre-loads cookies via `set_cookie_preload_json`.
+        let cookie_store: Arc<PersistedCookieStore> = match COOKIE_STORAGE_DIR.get() {
+            Some(dir) => {
+                let path = std::path::PathBuf::from(dir).join("cookies.json");
+                debug_summary(&path);
+                Arc::new(PersistedCookieStore::load_or_new(path))
+            }
+            None => Arc::new(PersistedCookieStore::empty()),
+        };
+
+        // Apply any cookie preload handed in by Dart (typically loaded
+        // from `flutter_secure_storage`). This is the path used on
+        // every platform now: native via the secure KV, web via the
+        // same secure KV.
+        if let Some(json) = take_cookie_preload_json() {
+            match cookie_store.load_from_json(&json) {
+                Ok(count) => log::info!(
+                    "CookieStore: preloaded {} cookies from JSON",
+                    count
+                ),
+                Err(e) => log::warn!(
+                    "CookieStore: preload failed ({}); starting empty",
+                    e
+                ),
+            }
+        }
         let builder = http::client_builder();
 
         #[cfg(target_arch = "wasm32")]
@@ -72,7 +136,7 @@ impl SessionManager {
         #[cfg(not(target_arch = "wasm32"))]
         let builder = {
             let b = builder
-                .cookie_provider(Arc::clone(&jar))
+                .cookie_provider(Arc::clone(&cookie_store))
                 .redirect(reqwest::redirect::Policy::limited(16));
 
             strategy = NetworkingStrategy::Direct;
@@ -89,10 +153,10 @@ impl SessionManager {
 
         Self {
             client,
-            #[cfg(not(target_arch = "wasm32"))]
-            jar,
+            cookie_store: Arc::clone(&cookie_store),
             config: CrawlerConfig::default(),
             login_lock: Mutex::new(()),
+            qr_login: Mutex::new(None),
             strategy,
         }
     }
@@ -106,7 +170,7 @@ impl SessionManager {
         #[cfg(not(target_arch = "wasm32"))]
         for (raw_url, cookie_str) in cookies {
             if let Ok(url) = Url::parse(raw_url) {
-                self.jar.add_cookie_str(cookie_str, &url);
+                self.cookie_store.add_cookie_str(cookie_str, &url);
                 log::info!(
                     "Crawler: Injected cookie for {:?} {}",
                     url.host_str(),
@@ -210,6 +274,16 @@ impl SessionManager {
             .await?;
 
         if is_authenticated_page(&response) || self.check_session().await {
+            // Persist cookies on successful (re)login so the session
+            // survives across app restarts.
+            if let Err(e) = self.cookie_store.save_to_disk() {
+                log::warn!("CookieStore: failed to persist after login: {}", e);
+            } else {
+                log::info!(
+                    "CookieStore: saved {} cookies after password login",
+                    self.cookie_store.len()
+                );
+            }
             return Ok(());
         }
         if response.contains("用户名或密码错误")
@@ -253,10 +327,181 @@ impl SessionManager {
         self.inject_cookies(&cookies);
 
         if self.check_session().await {
+            // Persist cookies imported from external browser so the
+            // session survives across app restarts.
+            if let Err(e) = self.cookie_store.save_to_disk() {
+                log::warn!("CookieStore: failed to persist after login_with_cookies: {}", e);
+            } else {
+                log::info!(
+                    "CookieStore: saved {} cookies after login_with_cookies",
+                    self.cookie_store.len()
+                );
+            }
             Ok(())
         } else {
             Err(CrawlerError::SessionExpired)
         }
+    }
+
+    /// Begin a QR login in the same cookie jar used by timetable requests.
+    /// An empty result means the academic session is already authenticated.
+    pub async fn start_qr_login(&self) -> CrawlerResult<Option<Vec<u8>>> {
+        let _login_lock = self.login_lock.lock().await;
+        *self.qr_login.lock().await = None;
+
+        let entry_url = format!("{}/indexsso.jsp", self.config.get_base_url());
+        let (page_url, html) = self
+            .fetch_text_with_url(&entry_url, Method::GET, None, None)
+            .await?;
+        if is_authenticated_page(&html) {
+            return Ok(None);
+        }
+
+        let cas_host = self.config.get_cas_host();
+        let expected_host = Url::parse(cas_host)
+            .ok()
+            .and_then(|url| url.host_str().map(str::to_owned))
+            .unwrap_or_else(|| cas_host.to_string());
+        if page_url.host_str() != Some(expected_host.as_str()) {
+            return Err(CrawlerError::Parse("Untrusted CAS QR login page".into()));
+        }
+        let form = QrLoginForm::parse(&html, &page_url)?;
+
+        let token_url = page_url
+            .join("/authserver/qrCode/getToken")
+            .map_err(|e| CrawlerError::Parse(format!("Invalid QR token URL: {e}")))?;
+        let uuid = self
+            .fetch_text(token_url.as_str(), Method::GET, None, Some(page_url.as_str()))
+            .await?
+            .trim()
+            .to_string();
+        if !uuid.starts_with("QR-") || uuid.len() > 128 || !uuid.is_ascii() {
+            return Err(CrawlerError::Parse("Invalid QR token response".into()));
+        }
+
+        let image_url = Url::parse_with_params(
+            page_url.join("/authserver/qrCode/getCode").unwrap().as_str(),
+            [("uuid", uuid.as_str())],
+        )
+        .map_err(|e| CrawlerError::Parse(format!("Invalid QR image URL: {e}")))?;
+        let png = self
+            .fetch_raw(image_url.as_str(), Method::GET, None, Some(page_url.as_str()))
+            .await?;
+        if !png.starts_with(b"\x89PNG\r\n\x1a\n") || png.len() > 1_000_000 {
+            return Err(CrawlerError::Parse("Invalid QR image response".into()));
+        }
+
+        *self.qr_login.lock().await = Some(QrLoginAttempt { uuid, page_url, form });
+        Ok(Some(png))
+    }
+
+    /// Returns waiting, scanned, expired, or confirmed.
+    pub async fn poll_qr_login(&self) -> CrawlerResult<String> {
+        let attempt = self
+            .qr_login
+            .lock()
+            .await
+            .clone()
+            .ok_or_else(|| CrawlerError::Parse("No active QR login".into()))?;
+        let ts = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+            .to_string();
+        let status_url = Url::parse_with_params(
+            attempt.page_url.join("/authserver/qrCode/getStatus.htl").unwrap().as_str(),
+            [("ts", ts.as_str()), ("uuid", attempt.uuid.as_str())],
+        )
+        .map_err(|e| CrawlerError::Parse(format!("Invalid QR status URL: {e}")))?;
+        let status = self
+            .fetch_text(status_url.as_str(), Method::GET, None, Some(attempt.page_url.as_str()))
+            .await?;
+        match status.trim() {
+            "0" => Ok("waiting".into()),
+            "2" => Ok("scanned".into()),
+            "3" => {
+                let mut current = self.qr_login.lock().await;
+                if current.as_ref().is_some_and(|active| active.uuid == attempt.uuid) {
+                    *current = None;
+                }
+                Ok("expired".into())
+            }
+            "1" => {
+                let _login_lock = self.login_lock.lock().await;
+                let current = self.qr_login.lock().await;
+                if current.as_ref().is_none_or(|active| active.uuid != attempt.uuid) {
+                    return Err(CrawlerError::Parse("QR login was replaced".into()));
+                }
+                drop(current);
+
+                self.fetch_text(
+                    attempt.form.action().as_str(),
+                    Method::POST,
+                    Some(attempt.form.payload(&attempt.uuid)),
+                    Some(attempt.page_url.as_str()),
+                )
+                .await?;
+                if !self.check_session().await {
+                    return Err(CrawlerError::AuthenticationRejected);
+                }
+                *self.qr_login.lock().await = None;
+                // Cookies were just set by the POST above and the
+                // subsequent check_session GET. Persist them now so the
+                // user doesn't have to scan QR again next launch.
+                if let Err(e) = self.cookie_store.save_to_disk() {
+                    log::warn!("CookieStore: failed to persist after QR login: {}", e);
+                } else {
+                    log::info!(
+                        "CookieStore: saved {} cookies after QR login",
+                        self.cookie_store.len()
+                    );
+                }
+                Ok("confirmed".into())
+            }
+            _ => Err(CrawlerError::Parse("Unexpected QR status response".into())),
+        }
+    }
+
+    pub async fn cancel_qr_login(&self) {
+        *self.qr_login.lock().await = None;
+    }
+
+    /// Snapshot the current cookie jar as JSON bytes. Returned to Dart
+    /// so it can persist the jar through `flutter_secure_storage`
+    /// (the cross-platform KV). Empty `Vec` means "nothing to save".
+    pub fn persist_cookies_bytes(&self) -> anyhow::Result<Vec<u8>> {
+        self.cookie_store.to_json_bytes()
+    }
+
+    /// Restore cookies from a JSON blob previously produced by
+    /// [`persist_cookies_bytes`]. Used at startup to rehydrate the jar
+    /// from `flutter_secure_storage`. Returns the number of cookies
+    /// loaded.
+    pub fn load_cookies_from_json(&self, json: &[u8]) -> anyhow::Result<usize> {
+        self.cookie_store.load_from_json(json)
+    }
+
+    /// Persist the current cookie jar to disk. Returns the number of
+    /// cookies written. Safe to call at any time; a no-op if no storage
+    /// dir was configured (i.e. if `set_cookie_storage_dir` was never
+    /// called from Dart).
+    pub fn persist_cookies(&self) -> anyhow::Result<usize> {
+        let count = self.cookie_store.len();
+        self.cookie_store.save_to_disk()?;
+        Ok(count)
+    }
+
+    /// Clear cookies both in-memory and on-disk. Called when the user
+    /// signs out so the next launch goes through login again.
+    pub fn clear_persisted_cookies(&self) -> anyhow::Result<()> {
+        self.cookie_store.clear()
+    }
+
+    /// Whether we have any cookie that would be sent to the CAS host.
+    /// Used at startup to decide whether to show the login screen.
+    pub fn has_cas_cookies(&self) -> bool {
+        self.cookie_store
+            .has_cookies_for(self.config.get_cas_host())
     }
 
     /// Public wrapper for check_session, exposed for the API layer.
@@ -492,9 +737,30 @@ mod tests {
         session.config.cas_host = format!("http://127.0.0.1:{port}");
 
         session
-            .login_if_needed("923104780617", "Fanenbo20051127", 1)
+            .login_if_needed("mock-user", "mock-password", 1)
             .await
             .unwrap();
+        assert!(session.check_session().await);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[tokio::test]
+    #[ignore]
+    async fn mock_qr_login_reaches_academic_home() {
+        let listener = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let _server = std::thread::spawn(move || run_mock_cas(listener, port));
+        let base_url = format!("http://127.0.0.1:{port}/njlgdx");
+
+        let mut session = SessionManager::new().await;
+        session.config.login_url = base_url.clone();
+        session.config.target_url = format!("{base_url}/xskb/xskb_list.do");
+        session.config.academic_base = base_url;
+        session.config.cas_host = format!("http://127.0.0.1:{port}");
+
+        let image = session.start_qr_login().await.unwrap().unwrap();
+        assert!(image.starts_with(b"\x89PNG\r\n\x1a\n"));
+        assert_eq!(session.poll_qr_login().await.unwrap(), "confirmed");
         assert!(session.check_session().await);
     }
 
@@ -511,6 +777,39 @@ mod tests {
             .await
             .unwrap();
         assert!(session.check_session().await);
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn live_qr_login_starts_and_waits_for_scan() {
+        let session = SessionManager::new().await;
+        let image = session.start_qr_login().await.unwrap().unwrap();
+        assert!(image.starts_with(b"\x89PNG\r\n\x1a\n"));
+        assert_eq!(session.poll_qr_login().await.unwrap(), "waiting");
+    }
+
+    #[tokio::test]
+    #[ignore]
+    async fn live_qr_login_completes_after_manual_scan() {
+        let session = SessionManager::new().await;
+        let image = session.start_qr_login().await.unwrap().unwrap();
+        let image_path = std::env::var("NJUST_QR_IMAGE_PATH")
+            .unwrap_or_else(|_| "/tmp/njust-qr-live.png".into());
+        std::fs::write(&image_path, image).unwrap();
+        println!("QR image ready at {image_path}");
+
+        for _ in 0..120 {
+            match session.poll_qr_login().await.unwrap().as_str() {
+                "waiting" | "scanned" => tokio::time::sleep(std::time::Duration::from_secs(1)).await,
+                "confirmed" => {
+                    assert!(session.check_session().await);
+                    return;
+                }
+                "expired" => panic!("QR code expired before confirmation"),
+                other => panic!("Unexpected QR status: {other}"),
+            }
+        }
+        panic!("Timed out waiting for QR confirmation");
     }
 
     #[tokio::test]
@@ -592,6 +891,12 @@ mod tests {
     <input name=\"lt\" id=\"lt\" type=\"hidden\" value=\"\">\n\
     <input id=\"pwdEncryptSalt\" type=\"hidden\" value=\"MOCKSALT12345678\">\n\
     <input name=\"execution\" id=\"execution\" type=\"hidden\" value=\"e3s3\">\n\
+</form>\n\
+<form id=\"qrLoginForm\" method=\"post\" action=\"/authserver/login\">\n\
+    <input name=\"lt\" value=\"\"><input name=\"uuid\" value=\"\">\n\
+    <input name=\"cllt\" value=\"qrLogin\"><input name=\"dllt\" value=\"generalLogin\">\n\
+    <input name=\"execution\" value=\"e4s1\"><input name=\"_eventId\" value=\"submit\">\n\
+    <input name=\"rmShown\" value=\"1\">\n\
 </form></body></html>";
     let student_center = "\
 <!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>学生个人中心</title></head>\n\
@@ -672,7 +977,7 @@ mod tests {
                 let png: Vec<u8> = vec![0x89, b'P', b'N', b'G', 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0];
                 binary_response(200, "image/png", &png)
             }
-            ("GET", "/authserver/qrCode/getStatus.htl") => text_response(200, "0", ""),
+            ("GET", "/authserver/qrCode/getStatus.htl") => text_response(200, "1", ""),
             ("GET", "/authserver/bfp/info") => {
                 extra_headers.push_str(
                     "Set-Cookie: MULTIFACTOR_BROWSER_FINGERPRINT=mockbfp; Path=/; HttpOnly\r\n",
@@ -776,4 +1081,3 @@ fn binary_response(status: u16, content_type: &str, body: &[u8]) -> Vec<u8> {
     build_http_response(status, content_type, body, "")
 }
 }
-

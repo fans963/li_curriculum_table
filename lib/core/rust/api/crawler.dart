@@ -22,6 +22,50 @@ Future<TimetableRecord> fetchTimetableData({
   password: password,
 );
 
+Future<TimetableRecord> fetchTimetableWithSession() =>
+    RustLib.instance.api.crateApiCrawlerFetchTimetableWithSession();
+
+Future<QrLoginStart> startQrLogin() =>
+    RustLib.instance.api.crateApiCrawlerStartQrLogin();
+
+Future<String> pollQrLogin() =>
+    RustLib.instance.api.crateApiCrawlerPollQrLogin();
+
+Future<void> cancelQrLogin() =>
+    RustLib.instance.api.crateApiCrawlerCancelQrLogin();
+
+/// Restore cookies from a JSON blob previously produced by
+/// [`persist_cookies_bytes`]. Used at startup to rehydrate the jar
+/// from `flutter_secure_storage`. Must be called *before* the first
+/// `get_shared_session_manager()` call so the SessionManager picks up
+/// the preload on construction.
+Future<BigInt> setInitialCookiesJson({required String json}) =>
+    RustLib.instance.api.crateApiCrawlerSetInitialCookiesJson(json: json);
+
+/// Snapshot the current cookie jar as JSON bytes. Returned to Dart
+/// so it can persist the jar through `flutter_secure_storage`. The
+/// `Vec` may be empty if the jar is empty.
+Future<Uint8List> persistCookiesBytes() =>
+    RustLib.instance.api.crateApiCrawlerPersistCookiesBytes();
+
+/// Explicitly flush the in-memory cookie jar to disk. Returns the
+/// number of cookies persisted. Called automatically after QR /
+/// password login; this is mainly for the logout flow to wipe the
+/// on-disk copy.
+Future<BigInt> persistCookies() =>
+    RustLib.instance.api.crateApiCrawlerPersistCookies();
+
+/// Clear all persisted cookies both in-memory and on disk. The next
+/// request after this will trigger a fresh login.
+Future<void> clearPersistedCookies() =>
+    RustLib.instance.api.crateApiCrawlerClearPersistedCookies();
+
+/// Whether any cookies for the CAS host are currently loaded. Cheap
+/// probe used by Dart at startup to decide whether to show the login
+/// dialog vs. attempt silent re-login.
+Future<bool> hasCasCookies() =>
+    RustLib.instance.api.crateApiCrawlerHasCasCookies();
+
 /// Inject cookies from an external browser (WebView) login session into the
 /// Rust HTTP client's cookie jar. Each cookie entry is a pair of
 /// `(origin_url, cookie_string)` where:
@@ -60,4 +104,25 @@ class CookieEntry {
           runtimeType == other.runtimeType &&
           url == other.url &&
           cookie == other.cookie;
+}
+
+class QrLoginStart {
+  final Uint8List imagePng;
+  final bool alreadyAuthenticated;
+
+  const QrLoginStart({
+    required this.imagePng,
+    required this.alreadyAuthenticated,
+  });
+
+  @override
+  int get hashCode => imagePng.hashCode ^ alreadyAuthenticated.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is QrLoginStart &&
+          runtimeType == other.runtimeType &&
+          imagePng == other.imagePng &&
+          alreadyAuthenticated == other.alreadyAuthenticated;
 }

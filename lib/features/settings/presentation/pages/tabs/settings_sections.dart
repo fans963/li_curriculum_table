@@ -1,5 +1,8 @@
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 
 export 'sections/theme_settings_section.dart';
 export 'sections/timetable_display_settings_section.dart';
@@ -9,7 +12,7 @@ const sectionSpacing = 12.0;
 const cardPadding = EdgeInsets.all(16);
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Shared Components
+// Shared Components — adapted per DesignStyle
 // ═══════════════════════════════════════════════════════════════════════════
 
 class SectionCard extends StatelessWidget {
@@ -17,6 +20,7 @@ class SectionCard extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget child;
+  final DesignStyle? designStyle;
 
   const SectionCard({
     super.key,
@@ -24,70 +28,76 @@ class SectionCard extends StatelessWidget {
     required this.title,
     this.subtitle,
     required this.child,
+    this.designStyle,
   });
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final ds = designStyle ?? sl<SettingsController>().designStyle.value;
+    final style = UiStyleRegistry.resolve(ds);
+    final isLiquidGlass =
+        ds == DesignStyle.cupertino ||
+        (ds == DesignStyle.system && style.usesAmbientBackground);
 
-    return M3ECard(
-      variant: M3ECardVariant.outlined,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 0,
-      color: cs.surfaceContainerLow,
-      border: BorderSide(
-        color: cs.outlineVariant.withValues(alpha: 0.5),
+    // Icon badge shape adapts per platform:
+    // M3E → rounded rect (12dp), Liquid Glass → continuous superellipse.
+    final iconBadge = Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        color: isLiquidGlass
+            ? cs.primary.withValues(alpha: 0.12)
+            : cs.primaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(isLiquidGlass ? 10 : 12),
       ),
-      padding: cardPadding,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+      child: Icon(icon, size: 20, color: cs.primary),
+    );
+
+    final header = Row(
+      children: [
+        iconBadge,
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: cs.primaryContainer.withValues(alpha: 0.35),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, size: 20, color: cs.primary),
+              Text(
+                title,
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: tt.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle!,
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
+              if (subtitle != null) ...[
+                const SizedBox(height: 2),
+                Text(
+                  subtitle!,
+                  style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
-              ),
+              ],
             ],
           ),
-          const SizedBox(height: 16),
-          child,
-        ],
+        ),
+      ],
+    );
+
+    // M3E uses extraLarge (28dp) for section cards; Liquid Glass uses 20dp superellipse.
+    final radius = isLiquidGlass ? 20.0 : 28.0;
+
+    return style.buildCard(
+      context: context,
+      borderRadius: radius,
+      padding: isLiquidGlass ? const EdgeInsets.all(20) : cardPadding,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [header, const SizedBox(height: 16), child],
       ),
     );
   }
 }
 
 /// A clickable settings row with optional trailing widget.
+///
+/// Adapts InkWell border radius per the active design style.
 class SettingsTile extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -145,6 +155,14 @@ class SettingsTile extends StatelessWidget {
     );
 
     if (onTap != null && trailing == null) {
+      final ds = sl<SettingsController>().designStyle.value;
+      if (UiStyleRegistry.resolveConcreteStyle(ds) == DesignStyle.cupertino) {
+        return GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: tile,
+        );
+      }
       return InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),

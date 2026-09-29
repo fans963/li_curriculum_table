@@ -4,6 +4,7 @@ import '../datasources/exam_remote_datasource.dart';
 import '../../domain/models/exam.dart';
 import '../../domain/repositories/exam_repository.dart';
 import '../../../timetable/data/datasources/secure_credentials_local_datasource.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 
 class ExamRepositoryImpl implements ExamRepository {
   final ExamRemoteDataSource _remoteDataSource;
@@ -39,19 +40,20 @@ class ExamRepositoryImpl implements ExamRepository {
     }
 
     final credentials = await _credentialsDataSource.readCredentials();
-    if (credentials == null || credentials.isEmpty) {
-      AppLogger.instance.warning('No credentials found', tag: 'ExamRepo');
+    if ((credentials == null || credentials.isEmpty) &&
+        !await rust_api.checkSessionValid()) {
+      AppLogger.instance.info('No credentials found', tag: 'ExamRepo');
       throw Exception('未登录，无法获取考试安排');
     }
 
     AppLogger.instance.info(
-      'Fetching exams for user: ${credentials.username}',
+      'Fetching exams for user: ${credentials?.username ?? 'QR session'}',
       tag: 'ExamRepo',
     );
 
     final exams = await _remoteDataSource.getExams(
-      username: credentials.username,
-      password: credentials.password,
+      username: credentials?.username ?? '',
+      password: credentials?.password ?? '',
     );
 
     AppLogger.instance.info(

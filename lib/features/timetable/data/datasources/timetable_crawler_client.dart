@@ -24,6 +24,15 @@ class TimetableCrawlerException implements Exception {
 }
 
 class TimetableCrawlerClient {
+  Future<TimetableCrawlerResult> fetchWithSession() async {
+    final record = await rust_api.fetchTimetableWithSession();
+    return TimetableCrawlerResult(
+      loginLikelySuccess: record.loginLikelySuccess,
+      headers: record.headers,
+      rows: record.rows,
+    );
+  }
+
   Future<TimetableCrawlerResult> loginAndFetchSchedule({
     required String username,
     required String password,

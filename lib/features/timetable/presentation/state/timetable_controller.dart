@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 import 'package:li_curriculum_table/core/services/app_logger.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/services/notification_service.dart';
@@ -188,12 +189,15 @@ class TimetableController {
 
   Future<void> syncFromCache() async {
     if (_isFetching) return;
-    _isFetching = true;
     try {
       final repository = sl<CredentialsRepository>();
       final creds = await repository.loadCredentials();
       if (creds == null || creds.isEmpty) {
-        _state.value = _state.value.copyWith(needsLogin: true, status: '');
+        if (await rust_api.checkSessionValid()) {
+          await fetchAndBuildWithSession();
+        } else {
+          _state.value = _state.value.copyWith(needsLogin: true, status: '');
+        }
         return;
       }
       await fetchAndBuild(username: creds.username, password: creds.password);
@@ -202,20 +206,27 @@ class TimetableController {
         isLoading: false,
         status: '同步失败: $e',
       );
-    } finally {
-      _isFetching = false;
     }
   }
+
+  Future<void> fetchAndBuildWithSession() =>
+      _fetchAndBuild(username: '', password: '', sessionOnly: true);
 
   Future<void> fetchAndBuild({
     required String username,
     required String password,
+  }) => _fetchAndBuild(username: username, password: password);
+
+  Future<void> _fetchAndBuild({
+    required String username,
+    required String password,
+    bool sessionOnly = false,
   }) async {
     if (_isFetching) return;
     _isFetching = true;
 
     final cleanUser = username.trim();
-    if (cleanUser.isEmpty || password.isEmpty) {
+    if (!sessionOnly && (cleanUser.isEmpty || password.isEmpty)) {
       _state.value = _state.value.copyWith(status: '账号和密码不能为空。');
       _isFetching = false;
       return;
@@ -230,10 +241,16 @@ class TimetableController {
     final repository = sl<TimetableRepository>();
 
     try {
-      final data = await repository.fetchTimetable(
-        username: cleanUser,
-        password: password,
-      );
+      final data = sessionOnly
+          ? await repository.fetchWithSession()
+          : await repository.fetchTimetable(
+              username: cleanUser,
+              password: password,
+            );
+
+      if (sessionOnly) {
+        await sl<CredentialsRepository>().clearCredentials();
+      }
 
       final cacheRepository = sl<TimetableCacheRepository>();
       try {
@@ -250,7 +267,7 @@ class TimetableController {
         }
       }
 
-      if (data.loginLikelySuccess) {
+      if (data.loginLikelySuccess && !sessionOnly) {
         final credentialsRepository = sl<CredentialsRepository>();
         try {
           await credentialsRepository.cacheCredentials(

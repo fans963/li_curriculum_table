@@ -1,4 +1,5 @@
 import 'package:li_curriculum_table/features/timetable/data/datasources/secure_credentials_local_datasource.dart';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 import '../datasources/level_exam_score_local_datasource.dart';
 import '../datasources/level_exam_score_remote_datasource.dart';
 import '../../domain/models/level_exam_score.dart';
@@ -25,13 +26,14 @@ class LevelExamScoreRepositoryImpl implements LevelExamScoreRepository {
     }
 
     final credentials = await _credentialsDataSource.readCredentials();
-    if (credentials == null || credentials.isEmpty) {
+    if ((credentials == null || credentials.isEmpty) &&
+        !await rust_api.checkSessionValid()) {
       throw Exception('未登录，无法获取等级考试成绩');
     }
 
     final scores = await _remoteDataSource.getScores(
-      username: credentials.username,
-      password: credentials.password,
+      username: credentials?.username ?? '',
+      password: credentials?.password ?? '',
     );
 
     await _localDataSource.saveScores(scores);

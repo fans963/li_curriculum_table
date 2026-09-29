@@ -1,14 +1,21 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/login_required_view.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_controller.dart';
 import 'package:li_curriculum_table/features/grades/presentation/state/grade_state.dart';
 import 'package:li_curriculum_table/features/level_exam_scores/presentation/state/level_exam_score_controller.dart';
+
 import 'widgets/level_exam_score_card.dart';
+
 import 'package:li_curriculum_table/util/util.dart';
+
 import '../../domain/models/grade.dart';
+
 import 'package:collection/collection.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -39,8 +46,11 @@ class _GradesTabState extends State<GradesTab>
 
   Widget _buildMaterial(BuildContext context, GradeState state) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().designStyle.value;
+    final style = UiStyleRegistry.resolve(ds);
+
     return ColoredBox(
-      color: cs.surface,
+      color: style.pageBackgroundColor(cs),
       child: SafeArea(
         bottom: false,
         child: Column(
@@ -55,18 +65,12 @@ class _GradesTabState extends State<GradesTab>
 
   Widget _buildCompactHeader(BuildContext context, GradeState state) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    final ds = sl<SettingsController>().designStyle.value;
+    final style = UiStyleRegistry.resolve(ds);
+
+    return style.buildHeaderBar(
+      context: context,
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           Text(
@@ -92,53 +96,44 @@ class _GradesTabState extends State<GradesTab>
     final colorScheme = theme.colorScheme;
     final ds = sl<SettingsController>().designStyle.value;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            colorScheme.primary.withValues(alpha: 0.05),
-            colorScheme.secondary.withValues(alpha: 0.05),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final content = Row(
+      children: [
+        Expanded(
+          child: _buildStatItem(
+            context,
+            '选中加权均分',
+            state.selectedWeightedAverage.toStringAsFixed(2),
+            AppIcons.stars(ds),
+            '${state.selectedCredits.toStringAsFixed(1)} 学分',
+            colorScheme.primary,
+          ),
         ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
+        Container(
+          height: 40,
+          width: 1,
           color: colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-        child: Row(
-          children: [
-            Expanded(
-              child: _buildStatItem(
-                context,
-                '选中加权均分',
-                state.selectedWeightedAverage.toStringAsFixed(2),
-                AppIcons.stars(ds),
-                '${state.selectedCredits.toStringAsFixed(1)} 学分',
-                colorScheme.primary,
-              ),
-            ),
-            Container(
-              height: 40,
-              width: 1,
-              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-            ),
-            Expanded(
-              child: _buildStatItem(
-                context,
-                '总加权均分',
-                state.weightedAverage.toStringAsFixed(2),
-                AppIcons.analytics(ds),
-                '${state.totalCredits.toStringAsFixed(1)} 总学分',
-                colorScheme.secondary,
-              ),
-            ),
-          ],
+        Expanded(
+          child: _buildStatItem(
+            context,
+            '总加权均分',
+            state.weightedAverage.toStringAsFixed(2),
+            AppIcons.analytics(ds),
+            '${state.totalCredits.toStringAsFixed(1)} 总学分',
+            colorScheme.secondary,
+          ),
         ),
-      ),
+      ],
+    );
+
+    final style = UiStyleRegistry.resolve(ds);
+    // M3E → extraLarge (28dp), Liquid Glass → 20dp superellipse.
+    final radius = style.usesAmbientBackground ? 20.0 : 28.0;
+    return style.buildCard(
+      context: context,
+      borderRadius: radius,
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+      child: content,
     );
   }
 
@@ -188,6 +183,7 @@ class _GradesTabState extends State<GradesTab>
   }
 
   Widget _buildBody(BuildContext context, GradeState state) {
+    final ds = sl<SettingsController>().designStyle.value;
     return AnimatedSwitcher(
       duration: kDefaultAnimationDuration,
       switchInCurve: kDefaultAnimationCurve,
@@ -196,34 +192,12 @@ class _GradesTabState extends State<GradesTab>
         if (state.isLoading && state.grades.isEmpty) {
           return Center(
             key: const ValueKey('loading'),
-            child: M3ELoadingIndicator(),
+            child: adaptiveActivityIndicator(context: context, designStyle: ds),
           );
         }
 
         if (state.needsLogin) {
-          final ds = sl<SettingsController>().designStyle.value;
-          return Center(
-            key: const ValueKey('needs_login'),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  AppIcons.lock(ds),
-                  size: 64,
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-                const SizedBox(height: 16),
-                const Text('需要登录后才能查询成绩'),
-                const SizedBox(height: 8),
-                Text(
-                  '请先前往「设置」页面输入账号密码',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          );
+          return LoginRequiredView(key: const ValueKey('needs_login'));
         }
 
         if (state.grades.isEmpty) {
@@ -268,18 +242,16 @@ class _GradesTabState extends State<GradesTab>
     final selectedCount = state.selectedCourseCodes.length;
     final isAllSelected = selectedCount == allCount;
 
+    final style = UiStyleRegistry.resolve(ds);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
       child: Column(
         children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: '搜索课程名称...',
-              prefixIcon: Icon(AppIcons.search(ds)),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+          style.buildSearchBar(
+            context: context,
+            controller: null,
+            placeholder: '搜索课程名称...',
             onChanged: (val) => controller.setSearchQuery(val),
           ),
           const SizedBox(height: 8),
@@ -301,9 +273,8 @@ class _GradesTabState extends State<GradesTab>
               const Spacer(),
               Text(
                 '已选 $selectedCount/$allCount 门',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.outline),
               ),
             ],
           ),
@@ -327,32 +298,12 @@ class _GradesTabState extends State<GradesTab>
     required bool isSelected,
     required VoidCallback onTap,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return GestureDetector(
+    final ds = sl<SettingsController>().designStyle.value;
+    return adaptiveChip(
+      designStyle: ds,
+      label: label,
+      selected: isSelected,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? colorScheme.primaryContainer
-              : colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected
-                ? colorScheme.primary.withValues(alpha: 0.3)
-                : colorScheme.outlineVariant.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: isSelected
-                ? colorScheme.onPrimaryContainer
-                : colorScheme.onSurfaceVariant,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
     );
   }
 
@@ -514,151 +465,135 @@ class _GradeItemCardState extends State<_GradeItemCard> {
       scoreColor = colorScheme.error;
     }
 
-    return Center(
-      child: AnimatedScale(
-        scale: _isPressed.value ? 0.97 : 1.0,
-        duration: kInteractionDuration,
-        curve: kEmphasizedCurve,
-        child: AnimatedContainer(
-          duration: kDefaultAnimationDuration,
-          curve: kDefaultAnimationCurve,
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? colorScheme.primaryContainer.withValues(alpha: 0.35)
-                : colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(isSelected ? 20 : 16),
-            border: Border.all(
-              color: isSelected
-                  ? colorScheme.primary.withValues(alpha: 0.4)
-                  : colorScheme.outlineVariant.withValues(alpha: 0.5),
-              width: isSelected ? 1.5 : 1,
+    final cardContent = Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Row(
+        children: [
+          AnimatedContainer(
+            duration: kDefaultAnimationDuration,
+            curve: kSpringCurve,
+            width: 24,
+            height: 24,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isSelected ? colorScheme.primary : Colors.transparent,
+              border: Border.all(
+                color: isSelected ? colorScheme.primary : colorScheme.outline,
+                width: 2,
+              ),
             ),
-            boxShadow: [
-              if (!_isPressed.value)
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-            ],
+            child: isSelected
+                ? Icon(Icons.check, size: 16, color: colorScheme.onPrimary)
+                : null,
           ),
-          child: InkWell(
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  grade.courseName,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _buildChip(
+                      context,
+                      '${grade.credits} 学分',
+                      AppIcons.starOutline(ds),
+                    ),
+                    _buildChip(
+                      context,
+                      grade.courseAttribute,
+                      AppIcons.bookmark(ds),
+                    ),
+                    _buildChip(
+                      context,
+                      grade.courseNature,
+                      AppIcons.category(ds),
+                    ),
+                    if (grade.scoreMark.isNotEmpty)
+                      _buildChip(context, grade.scoreMark, AppIcons.info(ds)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            constraints: const BoxConstraints(minWidth: 64),
+            decoration: BoxDecoration(
+              color: scoreColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: scoreColor.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  grade.score,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: scoreColor,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  'GRADE',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scoreColor.withValues(alpha: 0.6),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final style = UiStyleRegistry.resolve(ds);
+    final isGlass =
+        UiStyleRegistry.resolveConcreteStyle(ds) == DesignStyle.cupertino;
+    final cardInner = isGlass
+        ? GestureDetector(
+            onTapDown: (_) => _isPressed.value = true,
+            onTapUp: (_) => _isPressed.value = false,
+            onTapCancel: () => _isPressed.value = false,
+            onTap: widget.onToggle,
+            behavior: HitTestBehavior.opaque,
+            child: cardContent,
+          )
+        : InkWell(
             onTapDown: (_) => _isPressed.value = true,
             onTapUp: (_) => _isPressed.value = false,
             onTapCancel: () => _isPressed.value = false,
             onTap: widget.onToggle,
             borderRadius: BorderRadius.circular(16),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: kDefaultAnimationDuration,
-                    curve: kSpringCurve,
-                    width: 24,
-                    height: 24,
-                    margin: const EdgeInsets.only(right: 12),
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isSelected
-                          ? colorScheme.primary
-                          : Colors.transparent,
-                      border: Border.all(
-                        color: isSelected
-                            ? colorScheme.primary
-                            : colorScheme.outline,
-                        width: 2,
-                      ),
-                    ),
-                    child: isSelected
-                        ? Icon(
-                            Icons.check,
-                            size: 16,
-                            color: colorScheme.onPrimary,
-                          )
-                        : null,
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          grade.courseName,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: colorScheme.onSurface,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 6,
-                          children: [
-                            _buildChip(
-                              context,
-                              '${grade.credits} 学分',
-                              AppIcons.starOutline(ds),
-                            ),
-                            _buildChip(
-                              context,
-                              grade.courseAttribute,
-                              AppIcons.bookmark(ds),
-                            ),
-                            _buildChip(
-                              context,
-                              grade.courseNature,
-                              AppIcons.category(ds),
-                            ),
-                            if (grade.scoreMark.isNotEmpty)
-                              _buildChip(
-                                context,
-                                grade.scoreMark,
-                                AppIcons.info(ds),
-                              ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    constraints: const BoxConstraints(minWidth: 64),
-                    decoration: BoxDecoration(
-                      color: scoreColor.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: scoreColor.withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          grade.score,
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            color: scoreColor,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        Text(
-                          'GRADE',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scoreColor.withValues(alpha: 0.6),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            child: cardContent,
+          );
+
+    return Center(
+      child: AnimatedScale(
+        scale: _isPressed.value ? 0.97 : 1.0,
+        duration: kInteractionDuration,
+        curve: kEmphasizedCurve,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          child: style.buildCard(
+            context: context,
+            // M3E → largeIncreased (20dp), Liquid Glass → 20dp squircle.
+            borderRadius: 20,
+            isSelected: isSelected,
+            padding: EdgeInsets.zero,
+            child: cardInner,
           ),
         ),
       ),

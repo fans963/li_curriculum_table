@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/add_todo_sheet.dart';
 import 'package:li_curriculum_table/features/todo/domain/entities/course_todo.dart';
 import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/todo_management_sheet.dart';
@@ -97,6 +100,77 @@ class _TodoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final accent = _urgencyColor(context);
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+    final isGlass = concrete == DesignStyle.cupertino;
+
+    final cardContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(
+              todo.isOverdue
+                  ? Icons.error_rounded
+                  : Icons.alarm_rounded,
+              size: 14,
+              color: accent,
+            ),
+            const SizedBox(width: 4),
+            Expanded(
+              child: Text(
+                todo.remainingTimeText,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: accent,
+                  fontWeight: FontWeight.w600,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          todo.title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+        ),
+        const SizedBox(height: 4),
+        if (todo.courseName?.isNotEmpty == true)
+          Text(
+            todo.courseName!,
+            style: TextStyle(
+              fontSize: 11,
+              color: cs.onSurfaceVariant,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+      ],
+    );
+
+    if (isGlass) {
+      return SizedBox(
+        width: 220,
+        child: GestureDetector(
+          onTap: () => AddTodoSheet.show(context, existing: todo),
+          child: style.buildCard(
+            context: context,
+            borderRadius: 16,
+            padding: const EdgeInsets.all(12),
+            child: cardContent,
+          ),
+        ),
+      );
+    }
+
     return SizedBox(
       width: 220,
       child: Material(
@@ -114,56 +188,7 @@ class _TodoCard extends StatelessWidget {
                 width: 1,
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(
-                      todo.isOverdue
-                          ? Icons.error_rounded
-                          : Icons.alarm_rounded,
-                      size: 14,
-                      color: accent,
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        todo.remainingTimeText,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: accent,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  todo.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                if (todo.courseName?.isNotEmpty == true)
-                  Text(
-                    todo.courseName!,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: cs.onSurfaceVariant,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-              ],
-            ),
+            child: cardContent,
           ),
         ),
       ),
@@ -178,6 +203,44 @@ class _MoreChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+    final isGlass = concrete == DesignStyle.cupertino;
+
+    final content = Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.more_horiz_rounded,
+          color: cs.onSurfaceVariant,
+        ),
+        const SizedBox(height: 2),
+        Text(
+          '还有 $count',
+          style: TextStyle(
+            fontSize: 11,
+            color: cs.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
+
+    if (isGlass) {
+      return SizedBox(
+        width: 80,
+        child: GestureDetector(
+          onTap: () => TodoManagementSheet.show(context),
+          child: style.buildCard(
+            context: context,
+            borderRadius: 16,
+            padding: EdgeInsets.zero,
+            child: Center(child: content),
+          ),
+        ),
+      );
+    }
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -193,23 +256,7 @@ class _MoreChip extends StatelessWidget {
               color: cs.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.more_horiz_rounded,
-                color: cs.onSurfaceVariant,
-              ),
-              const SizedBox(height: 2),
-              Text(
-                '还有 $count',
-                style: TextStyle(
-                  fontSize: 11,
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+          child: content,
         ),
       ),
     );

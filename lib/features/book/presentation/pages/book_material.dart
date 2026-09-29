@@ -1,4 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -6,6 +8,7 @@ import 'package:li_curriculum_table/core/rust/api/book.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/features/book/domain/book_cover_loader.dart';
 import 'package:li_curriculum_table/core/presentation/info_row.dart';
+import 'package:li_curriculum_table/features/book/presentation/pages/widgets/book_card.dart';
 import 'package:signals/signals_flutter.dart';
 
 part 'widgets/material_book_card.dart';
@@ -30,7 +33,11 @@ Widget buildMaterialBody(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const M3ELoadingIndicator(),
+          adaptiveActivityIndicator(
+            context: context,
+            designStyle: ds,
+            size: 28,
+          ),
           const SizedBox(height: 16),
           Text(
             '正在为您检索南理工馆藏图书...',
@@ -67,12 +74,12 @@ Widget buildMaterialBody(
               ),
             ),
             const SizedBox(height: 24),
-            M3EButton.icon(
+            adaptiveButton(
+              context: context,
+              designStyle: ds,
               icon: Icon(AppIcons.refresh(ds), size: 18),
-              label: const Text('重新尝试'),
-              style: M3EButtonStyle.filled,
-              size: M3EButtonSize.md,
-              shape: M3EButtonShape.round,
+              child: const Text('重新尝试'),
+              style: UiButtonStyle.filled,
               onPressed: onRetry,
             ),
           ],
@@ -152,5 +159,5 @@ Widget buildMaterialBody(
     );
   }
 
-  return _BookWaterfallGrid(books: books, ds: ds, onBookTap: onBookTap);
+  return BookWaterfallGrid(books: books, ds: ds, onBookTap: onBookTap);
 }

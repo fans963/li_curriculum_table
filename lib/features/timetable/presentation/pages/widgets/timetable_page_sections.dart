@@ -1,10 +1,16 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
 import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/adaptive_date_picker.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 
@@ -16,6 +22,7 @@ class TimetableControlPanel extends SignalStatefulWidget {
     required this.onTermStartDateChanged,
     required this.onCurrentTermChanged,
     this.onLoginPressed,
+    this.onQrLoginPressed,
   });
 
   final TextEditingController usernameController;
@@ -23,6 +30,7 @@ class TimetableControlPanel extends SignalStatefulWidget {
   final ValueChanged<DateTime> onTermStartDateChanged;
   final ValueChanged<String> onCurrentTermChanged;
   final VoidCallback? onLoginPressed;
+  final VoidCallback? onQrLoginPressed;
 
   @override
   State<TimetableControlPanel> createState() => _TimetableControlPanelState();
@@ -75,85 +83,217 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final cs = colorScheme;
     final state = sl<TimetableController>().state.value;
     final settingsCtrl = sl<SettingsController>();
+    final ds = settingsCtrl.state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+    final isGlass = concrete == DesignStyle.cupertino;
     final options = _getSemesterOptions();
     final currentTerm = settingsCtrl.currentTerm.value;
     if (currentTerm.isNotEmpty && !options.contains(currentTerm)) {
       options.insert(0, currentTerm);
     }
 
-    return M3ECard(
-      variant: M3ECardVariant.outlined,
-      borderRadius: BorderRadius.circular(28),
-      elevation: 0,
-      color: colorScheme.surfaceContainerLow,
-      border: BorderSide(
-        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-      ),
+    Future<void> pickTermStartDate() async {
+      final termStart = sl<TimetableController>().termStartMonday.value;
+      final initialDate = termStart ?? DateTime.now();
+      final pickedDate = await showAdaptiveDatePicker(
+        context: context,
+        designStyle: ds,
+        initialDate: initialDate,
+        firstDate: DateTime(initialDate.year - 1),
+        lastDate: DateTime(initialDate.year + 1),
+        helpText: '选择开学日期 (第一周周一)',
+      );
+      if (pickedDate != null && mounted) {
+        widget.onTermStartDateChanged(pickedDate);
+      }
+    }
+
+    return style.buildCard(
+      context: context,
+      borderRadius: 24,
       padding: const EdgeInsets.all(16),
       child: Column(
-          children: [
-            TextField(
-              controller: widget.usernameController,
-              enabled: !state.isLoading,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: '教务系统账号',
-                prefixIcon: const Icon(Icons.account_circle_outlined),
-                hintText: '请输入学号',
-                filled: true,
-                fillColor: colorScheme.surface,
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: widget.passwordController,
-              enabled: !state.isLoading,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              decoration: InputDecoration(
-                labelText: '登录密码',
-                prefixIcon: const Icon(Icons.lock_outline_rounded),
-                hintText: '请输入密码',
-                filled: true,
-                fillColor: colorScheme.surface,
-              ),
-            ),
-            if (widget.onLoginPressed != null) ...[
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: M3EButton.icon(
-                  icon: state.isLoading
-                      ? SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: M3ELoadingIndicator(
-                            color: colorScheme.onPrimary,
-                          ),
-                        )
-                      : const Icon(Icons.cloud_sync_rounded),
-                  label: AutoSizeText(
-                    state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息',
-                    maxLines: 1,
-                  ),
-                  style: M3EButtonStyle.filled,
-                  size: M3EButtonSize.lg,
-                  shape: M3EButtonShape.round,
-                  onPressed: state.isLoading ? null : widget.onLoginPressed,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isGlass
+                  ? colorScheme.primary.withValues(alpha: 0.15)
+                  : colorScheme.primaryContainer,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: colorScheme.primary.withValues(
+                  alpha: isGlass ? 0.35 : 0.25,
                 ),
               ),
-            ],
-            const SizedBox(height: 12),
-            _TermDropdown(
-              options: options,
-              currentTerm: currentTerm,
-              isLoading: state.isLoading,
-              onSelected: widget.onCurrentTermChanged,
             ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.info_outline_rounded, color: colorScheme.primary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '登录方式已更新',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: isGlass
+                              ? colorScheme.primary
+                              : colorScheme.onPrimaryContainer,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '请使用「智慧理工服务门户」的账号和密码登录。',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: isGlass
+                              ? colorScheme.onSurface
+                              : colorScheme.onPrimaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          adaptiveTextField(
+            context: context,
+            designStyle: ds,
+            controller: widget.usernameController,
+            enabled: !state.isLoading,
+            textInputAction: TextInputAction.next,
+            labelText: '智慧理工服务门户账号',
+            prefixIcon: const Icon(Icons.account_circle_outlined),
+            hintText: '请输入门户账号',
+          ),
+          const SizedBox(height: 12),
+          adaptiveTextField(
+            context: context,
+            designStyle: ds,
+            controller: widget.passwordController,
+            enabled: !state.isLoading,
+            obscureText: true,
+            textInputAction: TextInputAction.done,
+            labelText: '智慧理工服务门户密码',
+            prefixIcon: const Icon(Icons.lock_outline_rounded),
+            hintText: '请输入密码',
+          ),
+          if (widget.onLoginPressed != null) ...[
             const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: adaptiveButton(
+                context: context,
+                designStyle: ds,
+                style: UiButtonStyle.filled,
+                onPressed: state.isLoading ? null : widget.onLoginPressed,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (state.isLoading)
+                      SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: adaptiveActivityIndicator(
+                          context: context,
+                          designStyle: ds,
+                          size: 20,
+                        ),
+                      )
+                    else
+                      const Icon(Icons.cloud_sync_rounded),
+                    const SizedBox(width: 8),
+                    AutoSizeText(
+                      state.isLoading ? '正在登录并同步信息...' : '一键登录并同步所有信息',
+                      maxLines: 1,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          if (widget.onQrLoginPressed != null) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: adaptiveButton(
+                context: context,
+                designStyle: ds,
+                style: UiButtonStyle.outlined,
+                onPressed: state.isLoading ? null : widget.onQrLoginPressed,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.qr_code_2_rounded),
+                    SizedBox(width: 8),
+                    Text('微信扫码登录'),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          _TermDropdown(
+            options: options,
+            currentTerm: currentTerm,
+            isLoading: state.isLoading,
+            onSelected: widget.onCurrentTermChanged,
+          ),
+          const SizedBox(height: 12),
+          if (isGlass) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '本学期开学日期',
+                style: Theme.of(context).textTheme.labelMedium
+                    ?.copyWith(color: cs.onSurfaceVariant),
+              ),
+            ),
+            const SizedBox(height: 8),
+            LayoutBuilder(
+              builder: (context, constraints) => GlassButton.custom(
+                width: constraints.maxWidth,
+                height: 52,
+                shape: const LiquidRoundedSuperellipse(borderRadius: 14),
+                enabled: !state.isLoading,
+                onTap: pickTermStartDate,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(CupertinoIcons.calendar, size: 20),
+                    const SizedBox(width: 10),
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _termStartController,
+                      builder: (context, value, _) => Text(
+                        value.text.isEmpty ? '选择开学日期' : value.text,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              '当前推算为第 ${state.currentTeachingWeek} 周',
+              style: Theme.of(context).textTheme.bodySmall
+                  ?.copyWith(color: cs.onSurfaceVariant),
+            ),
+          ] else
             TextFormField(
               readOnly: true,
               controller: _termStartController,
@@ -167,26 +307,20 @@ class _TimetableControlPanelState extends State<TimetableControlPanel> {
                   color: colorScheme.primary,
                   fontWeight: FontWeight.bold,
                 ),
-                filled: true,
-                fillColor: colorScheme.surface,
+                filled: isGlass,
+                fillColor: cs.surface.withValues(alpha: isGlass ? 0.2 : 1.0),
+                border: isGlass
+                    ? OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(
+                          color: cs.outlineVariant.withValues(alpha: 0.4),
+                        ),
+                      )
+                    : null,
               ),
-              onTap: () async {
-                final termStart =
-                    sl<TimetableController>().termStartMonday.value;
-                final initialDate = termStart ?? DateTime.now();
-                final pickedDate = await showDatePicker(
-                  context: context,
-                  initialDate: initialDate,
-                  firstDate: DateTime(initialDate.year - 1),
-                  lastDate: DateTime(initialDate.year + 1),
-                  helpText: '选择开学日期 (第一周周一)',
-                );
-                if (pickedDate != null) {
-                  widget.onTermStartDateChanged(pickedDate);
-                }
-              },
+              onTap: pickTermStartDate,
             ),
-          ],
+        ],
       ),
     );
   }
@@ -207,13 +341,10 @@ class TimetableStatusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
     final isError = _looksLikeError(status);
 
-    final backgroundColor = isError
-        ? colorScheme.errorContainer
-        : hasData
-        ? colorScheme.secondaryContainer.withValues(alpha: 0.4)
-        : colorScheme.surfaceContainerHighest;
     final foregroundColor = isError
         ? colorScheme.onErrorContainer
         : hasData
@@ -224,37 +355,39 @@ class TimetableStatusBanner extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return M3ECard(
-      variant: M3ECardVariant.filled,
-      borderRadius: BorderRadius.circular(16),
-      elevation: 0,
-      color: backgroundColor,
+    return style.buildCard(
+      context: context,
+      borderRadius: 16,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-          children: [
-            if (isLoading)
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: M3ELoadingIndicator(),
-              )
-            else
-              Icon(
-                isError ? Icons.error_outline : Icons.info_outline,
-                size: 20,
-                color: foregroundColor,
+        children: [
+          if (isLoading)
+            SizedBox(
+              width: 18,
+              height: 18,
+              child: adaptiveActivityIndicator(
+                context: context,
+                designStyle: ds,
+                size: 18,
               ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                status,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: foregroundColor,
-                  fontWeight: FontWeight.w500,
-                ),
+            )
+          else
+            Icon(
+              isError ? Icons.error_outline : Icons.info_outline,
+              size: 20,
+              color: foregroundColor,
+            ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              status,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: foregroundColor,
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ],
+          ),
+        ],
       ),
     );
   }
@@ -286,6 +419,71 @@ class _TermDropdown extends StatefulWidget {
 class _TermDropdownState extends State<_TermDropdown> {
   late final M3EDropdownController<String> _controller;
   final _syncing = ValueNotifier(false);
+
+  Future<void> _showGlassTermPicker() async {
+    if (widget.isLoading || widget.options.isEmpty) return;
+    final cs = Theme.of(context).colorScheme;
+    final selected = await GlassDialog.show<String>(
+      context: context,
+      title: '选择当前学期',
+      maxWidth: 380,
+      barrierDismissible: true,
+      content: SizedBox(
+        height: (MediaQuery.sizeOf(context).height * 0.45).clamp(180.0, 380.0),
+        child: CupertinoScrollbar(
+          child: ListView.builder(
+            itemCount: widget.options.length,
+            itemExtent: 48,
+            itemBuilder: (itemContext, index) {
+              final term = widget.options[index];
+              final isSelected = term == widget.currentTerm;
+              return CupertinoButton(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                borderRadius: BorderRadius.circular(12),
+                onPressed: () => Navigator.of(itemContext).pop(term),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? cs.primary.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            term,
+                            style: Theme.of(context).textTheme.bodyLarge
+                                ?.copyWith(
+                                  color: isSelected ? cs.primary : cs.onSurface,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w600
+                                      : FontWeight.w400,
+                                ),
+                          ),
+                        ),
+                        if (isSelected)
+                          Icon(CupertinoIcons.checkmark, color: cs.primary),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+      actions: [
+        GlassDialogAction(
+          label: '取消',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+      ],
+    );
+    if (selected != null && mounted) widget.onSelected(selected);
+  }
 
   @override
   void initState() {
@@ -334,6 +532,52 @@ class _TermDropdownState extends State<_TermDropdown> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final ds = sl<SettingsController>().state.value.designStyle;
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+
+    if (concrete == DesignStyle.cupertino) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '当前学期',
+            style: Theme.of(context).textTheme.labelMedium
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          LayoutBuilder(
+            builder: (context, constraints) => GlassButton.custom(
+              width: constraints.maxWidth,
+              height: 52,
+              shape: const LiquidRoundedSuperellipse(borderRadius: 14),
+              enabled: !widget.isLoading && widget.options.isNotEmpty,
+              onTap: _showGlassTermPicker,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(CupertinoIcons.calendar, size: 20),
+                  const SizedBox(width: 10),
+                  Text(
+                    widget.currentTerm.isNotEmpty
+                        ? widget.currentTerm
+                        : '选择当前学期',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '格式：学年-学期（1 秋季、2 春季、3 暑期）',
+            style: Theme.of(context).textTheme.bodySmall
+                ?.copyWith(color: cs.onSurfaceVariant),
+          ),
+        ],
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

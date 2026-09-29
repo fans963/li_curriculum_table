@@ -21,6 +21,7 @@ class SecureSettingsLocalDataSource {
   static const _kTimetableTextFontSize = 'timetable_text_font_size';
   static const _kDaysVisibleCount = 'days_visible_count';
   static const _kTermsAccepted = 'terms_accepted';
+  static const _kThemeOnboardingCompleted = 'theme_onboarding_completed';
   SecureSettingsLocalDataSource(this._store);
 
   Future<AppSettings> loadSettings() async {
@@ -41,6 +42,7 @@ class SecureSettingsLocalDataSource {
       _kTimetableTextFontSize,
       _kDaysVisibleCount,
       _kTermsAccepted,
+      _kThemeOnboardingCompleted,
     ]);
 
     final enabled = data[_kProxyEnabled] == 'true';
@@ -74,6 +76,11 @@ class SecureSettingsLocalDataSource {
         double.tryParse(data[_kTimetableTextFontSize] ?? '') ?? 11.0;
     final daysVisibleCount = int.tryParse(data[_kDaysVisibleCount] ?? '7') ?? 7;
     final termsAccepted = data[_kTermsAccepted] == 'true'; // default false
+    // Users who accepted terms before this onboarding was introduced are
+    // existing users; keep their current appearance without prompting again.
+    final themeOnboardingCompleted =
+        data[_kThemeOnboardingCompleted] == 'true' ||
+        (data[_kThemeOnboardingCompleted] == null && termsAccepted);
 
     return AppSettings(
       proxyEnabled: enabled,
@@ -92,6 +99,7 @@ class SecureSettingsLocalDataSource {
       timetableTextFontSize: timetableTextFontSize,
       daysVisibleCount: daysVisibleCount,
       termsAccepted: termsAccepted,
+      themeOnboardingCompleted: themeOnboardingCompleted,
     );
   }
 
@@ -113,6 +121,7 @@ class SecureSettingsLocalDataSource {
       _kTimetableTextFontSize: settings.timetableTextFontSize.toString(),
       _kDaysVisibleCount: settings.daysVisibleCount.toString(),
       _kTermsAccepted: settings.termsAccepted.toString(),
+      _kThemeOnboardingCompleted: settings.themeOnboardingCompleted.toString(),
     });
   }
 }

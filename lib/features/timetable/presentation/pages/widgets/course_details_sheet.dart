@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -35,6 +36,7 @@ class CourseDetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final style = UiStyleRegistry.resolve(designStyle);
     final customColor = sl<CourseColorService>().getColor(
       occurrence.courseName,
     );
@@ -47,12 +49,13 @@ class CourseDetailsSheet extends StatelessWidget {
       insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
-        child: Container(
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHigh,
-            borderRadius: BorderRadius.circular(36),
-          ),
-          clipBehavior: Clip.antiAlias,
+        child: style.buildCard(
+          context: context,
+          borderRadius: style.style == DesignStyle.cupertino ? 28 : 36,
+          color: style.style == DesignStyle.cupertino
+              ? cs.surface.withValues(alpha: 0.62)
+              : null,
+          padding: EdgeInsets.zero,
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(28, 28, 28, 20),
             child: Column(
@@ -147,10 +150,10 @@ class CourseDetailsSheet extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        M3EButton.filled(
-                          onPressed: onClose ?? () {},
-                          size: M3EButtonSize.md,
-                          shape: M3EButtonShape.round,
+                        adaptiveButton(
+                          context: context,
+                          designStyle: designStyle,
+                          onPressed: onClose,
                           child: const Text('关闭'),
                         ),
                       ],
@@ -164,7 +167,6 @@ class CourseDetailsSheet extends StatelessWidget {
     );
   }
 
-
   Widget _buildTodoSection(BuildContext context) {
     final todoCtrl = sl<TodoController>();
     final cs = Theme.of(context).colorScheme;
@@ -172,40 +174,30 @@ class CourseDetailsSheet extends StatelessWidget {
       dependencies: [todoCtrl.openTodos],
       builder: (context) {
         final todos = todoCtrl.todosForCourse(occurrence.courseName);
-        return Container(
+        return UiStyleRegistry.resolve(designStyle).buildCard(
+          context: context,
           padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: cs.outlineVariant.withValues(alpha: 0.3),
-            ),
-          ),
+          borderRadius: 18,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(
-                    Icons.event_note_rounded,
-                    size: 16,
-                    color: cs.primary,
-                  ),
+                  Icon(Icons.event_note_rounded, size: 16, color: cs.primary),
                   const SizedBox(width: 6),
                   Text(
                     '本课程待办 / DDL',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const Spacer(),
                   if (todos.isNotEmpty)
                     Text(
                       '${todos.length} 项',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
+                      style: Theme.of(context).textTheme.labelSmall
+                          ?.copyWith(color: cs.onSurfaceVariant),
                     ),
                 ],
               ),
@@ -213,12 +205,13 @@ class CourseDetailsSheet extends StatelessWidget {
               if (todos.isEmpty)
                 Text(
                   '尚未添加此课程的作业或 DDL。',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
+                  style: Theme.of(context).textTheme.bodySmall
+                      ?.copyWith(color: cs.onSurfaceVariant),
                 )
               else
-                ...todos.take(3).map(
+                ...todos
+                    .take(3)
+                    .map(
                       (t) => Padding(
                         padding: const EdgeInsets.only(bottom: 4),
                         child: Row(
@@ -226,9 +219,7 @@ class CourseDetailsSheet extends StatelessWidget {
                             Icon(
                               Icons.circle,
                               size: 6,
-                              color: t.isOverdue
-                                  ? cs.error
-                                  : cs.primary,
+                              color: t.isOverdue ? cs.error : cs.primary,
                             ),
                             const SizedBox(width: 8),
                             Expanded(
@@ -243,7 +234,9 @@ class CourseDetailsSheet extends StatelessWidget {
                               t.remainingTimeText,
                               style: TextStyle(
                                 fontSize: 11,
-                                color: t.isOverdue ? cs.error : cs.onSurfaceVariant,
+                                color: t.isOverdue
+                                    ? cs.error
+                                    : cs.onSurfaceVariant,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -255,23 +248,25 @@ class CourseDetailsSheet extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: M3EButton.tonal(
+                    child: adaptiveButton(
+                      context: context,
+                      designStyle: designStyle,
+                      style: UiButtonStyle.tonal,
                       onPressed: () => AddTodoSheet.show(
                         context,
                         presetCourseName: occurrence.courseName,
                       ),
-                      size: M3EButtonSize.sm,
-                      shape: M3EButtonShape.round,
                       child: const Text('+ 添加此课程 DDL'),
                     ),
                   ),
                   if (todos.isNotEmpty) ...[
                     const SizedBox(width: 8),
                     Expanded(
-                      child: M3EButton.text(
+                      child: adaptiveButton(
+                        context: context,
+                        designStyle: designStyle,
+                        style: UiButtonStyle.text,
                         onPressed: () => TodoManagementSheet.show(context),
-                        size: M3EButtonSize.sm,
-                        shape: M3EButtonShape.round,
                         child: const Text('管理全部'),
                       ),
                     ),
@@ -285,7 +280,7 @@ class CourseDetailsSheet extends StatelessWidget {
     );
   }
 
-    static const _palette = <Color>[
+  static const _palette = <Color>[
     Color(0xFFD32F2F),
     Color(0xFFE64A19),
     Color(0xFFF57C00),
@@ -317,9 +312,8 @@ class CourseDetailsSheet extends StatelessWidget {
               children: [
                 Text(
                   '卡片颜色',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                  ),
+                  style: Theme.of(context).textTheme.labelMedium
+                      ?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const Spacer(),
                 if (active != null)
@@ -391,12 +385,10 @@ class CourseDetailsSheet extends StatelessWidget {
   ) {
     if (value.trim().isEmpty) return const SizedBox.shrink();
     final cs = Theme.of(context).colorScheme;
-    final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-      color: cs.onSurfaceVariant,
-    );
-    final valueStyle = Theme.of(
-      context,
-    ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600);
+    final labelStyle = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: cs.onSurfaceVariant);
+    final valueStyle = Theme.of(context).textTheme.bodyLarge
+        ?.copyWith(fontWeight: FontWeight.w600);
     const iconSize = 22.0;
     const bgAlpha = 0.20;
     const gap = 2.0;

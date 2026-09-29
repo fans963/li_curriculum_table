@@ -6,25 +6,20 @@ import 'package:li_curriculum_table/features/navigation/presentation/pages/main_
 import 'package:dynamic_color/dynamic_color.dart';
 import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/material.dart' as flutter_material;
+import 'package:flutter/cupertino.dart' as flutter_cupertino;
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart' as m3e_new;
 import 'package:signals/signals_flutter.dart';
 
 // ignore_for_file: deprecated_member_use
 
 const bool isWeb = kIsWeb;
 
-class _ThemeBundle {
-  const _ThemeBundle({required this.modern, required this.expressive});
-
-  final ThemeData modern;
-  final m3e_new.M3EThemeData expressive;
-}
-
 class CurriculumTableApp extends SignalWidget {
   const CurriculumTableApp({super.key});
 
-  _ThemeBundle _buildTheme({
+  ThemeData _buildTheme({
     required Brightness brightness,
     required Color seedColor,
     ColorScheme? dynamicScheme,
@@ -61,8 +56,7 @@ class CurriculumTableApp extends SignalWidget {
       inputDecoratorFocusedHasBorder: true,
       inputDecoratorBackgroundAlpha: 5,
       navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
-      navigationBarLabelBehavior:
-          NavigationDestinationLabelBehavior.alwaysShow,
+      navigationBarLabelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       // Expressive shape hierarchy: cards & dialogs get xxLarge (32)
       cardRadius: 28,
       dialogRadius: 32,
@@ -114,11 +108,7 @@ class CurriculumTableApp extends SignalWidget {
             tones: _flexTones(colorSchemeType, Brightness.light),
           );
 
-    final modern = _modernThemeFromLegacy(legacyTheme, subThemes);
-    return _ThemeBundle(
-      modern: modern,
-      expressive: m3e_new.M3EThemeData.fromMaterial(modern),
-    );
+    return _modernThemeFromLegacy(legacyTheme, subThemes);
   }
 
   ThemeData _modernThemeFromLegacy(
@@ -213,20 +203,96 @@ class CurriculumTableApp extends SignalWidget {
             colorSchemeType: settings.colorSchemeType,
           );
 
-          return MaterialApp(
+          final activeStyle = UiStyleRegistry.resolve(settings.designStyle);
+
+          final app = MaterialApp(
             title: '🍐课表',
+            localizationsDelegates: const [
+              flutter_material.DefaultMaterialLocalizations.delegate,
+              flutter_cupertino.DefaultCupertinoLocalizations.delegate,
+            ],
             themeMode: settings.themeMode,
-            theme: lightTheme.modern,
-            darkTheme: darkTheme.modern,
+            theme: lightTheme,
+            darkTheme: darkTheme,
             builder: (context, child) {
               final content = child ?? const SizedBox.shrink();
-              final m3eTheme = m3e_new.M3ETheme(
-                data: isDark ? darkTheme.expressive : lightTheme.expressive,
-                child: content,
+              final appTheme = Theme.of(context);
+              final scheme = appTheme.colorScheme;
+              // The app uses material_ui, while Liquid Glass and a few legacy
+              // widgets read Flutter's own Material/Cupertino inherited themes.
+              // Keep both trees on the same palette and brightness.
+              final flutterScheme =
+                  flutter_material.ColorScheme.fromSeed(
+                    seedColor: scheme.primary,
+                    brightness: scheme.brightness,
+                  ).copyWith(
+                    primary: scheme.primary,
+                    onPrimary: scheme.onPrimary,
+                    primaryContainer: scheme.primaryContainer,
+                    onPrimaryContainer: scheme.onPrimaryContainer,
+                    secondary: scheme.secondary,
+                    onSecondary: scheme.onSecondary,
+                    secondaryContainer: scheme.secondaryContainer,
+                    onSecondaryContainer: scheme.onSecondaryContainer,
+                    tertiary: scheme.tertiary,
+                    onTertiary: scheme.onTertiary,
+                    tertiaryContainer: scheme.tertiaryContainer,
+                    onTertiaryContainer: scheme.onTertiaryContainer,
+                    error: scheme.error,
+                    onError: scheme.onError,
+                    surface: scheme.surface,
+                    onSurface: scheme.onSurface,
+                    onSurfaceVariant: scheme.onSurfaceVariant,
+                    outline: scheme.outline,
+                    outlineVariant: scheme.outlineVariant,
+                    surfaceContainerLowest: scheme.surfaceContainerLowest,
+                    surfaceContainerLow: scheme.surfaceContainerLow,
+                    surfaceContainer: scheme.surfaceContainer,
+                    surfaceContainerHigh: scheme.surfaceContainerHigh,
+                    surfaceContainerHighest: scheme.surfaceContainerHighest,
+                  );
+              return flutter_material.Theme(
+                data: flutter_material.ThemeData(
+                  useMaterial3: true,
+                  colorScheme: flutterScheme,
+                  scaffoldBackgroundColor: scheme.surface,
+                ),
+                child: flutter_cupertino.CupertinoTheme(
+                  data: flutter_cupertino.CupertinoThemeData(
+                    brightness: scheme.brightness,
+                    primaryColor: scheme.primary,
+                  ),
+                  child: DefaultTextStyle(
+                    // material_ui's MaterialApp deliberately uses a red,
+                    // 48px, yellow-underlined fallback outside Material.
+                    // Glass pages do not have Material ancestors.
+                    style: (appTheme.textTheme.bodyMedium ?? const TextStyle())
+                        .copyWith(
+                          color: scheme.onSurface,
+                          decoration: TextDecoration.none,
+                        ),
+                    // Keep the Navigator's inherited wrapper stable while
+                    // the first-use appearance dialog previews either style.
+                    // Glass widgets can coexist with this M3 compatibility
+                    // layer; replacing it would dispose the open dialog.
+                    child: const Material3ExpressiveStyle().wrapContent(
+                      context: context,
+                      child: content,
+                      isDark: isDark,
+                      colorScheme: scheme,
+                    ),
+                  ),
+                ),
               );
-              return MaterialUiCompatibilityBridge(child: m3eTheme);
             },
             home: const MainScreen(),
+          );
+
+          return activeStyle.wrapApp(
+            child: app,
+            lightScheme: lightTheme.colorScheme,
+            darkScheme: darkTheme.colorScheme,
+            isDark: isDark,
           );
         },
       ),

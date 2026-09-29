@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 
 import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
@@ -13,6 +14,8 @@ import 'package:li_curriculum_table/features/timetable/domain/repositories/crede
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/services/cookie_storage/cookie_storage.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
@@ -24,6 +27,7 @@ import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/se
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/material_web_download_card.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/sections/log_settings_section.dart';
 import 'package:li_curriculum_table/features/settings/presentation/pages/tabs/settings_sections.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/widgets/qr_login_dialog.dart';
 
 class SettingsTab extends SignalStatefulWidget {
   const SettingsTab({super.key});
@@ -117,14 +121,15 @@ class _SettingsTabState extends State<SettingsTab>
   ) {
     final cs = Theme.of(context).colorScheme;
     final ds = settings.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
     return ColoredBox(
-      color: cs.surface,
+      color: style.pageBackgroundColor(cs),
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _buildSettingsHeader(context),
+            _buildSettingsHeader(context, style),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -136,7 +141,7 @@ class _SettingsTabState extends State<SettingsTab>
                 SectionCard(
                   icon: AppIcons.vpnKey(ds),
                   title: '账号',
-                  subtitle: '登录教务系统以同步课表数据',
+                  subtitle: '使用智慧理工服务门户账号和密码登录',
                   child: _buildLoginPanel(context, state),
                 ),
                 const SizedBox(height: sectionSpacing),
@@ -201,6 +206,23 @@ class _SettingsTabState extends State<SettingsTab>
                   ),
                 ),
                 const SizedBox(height: sectionSpacing),
+
+                // ── Session ──
+                _buildSectionHeader(context, '登录态', Icons.lock_outline_rounded),
+                const SizedBox(height: sectionSpacing),
+                SectionCard(
+                  icon: AppIcons.lock(ds),
+                  title: '登录态',
+                  subtitle: '持久化 Cookie / 扫码 / 密码凭据',
+                  child: SettingsTile(
+                    icon: Icons.logout_rounded,
+                    title: '退出当前登录',
+                    subtitle: '清除已保存的 Cookie 与密码，下次启动需重新登录',
+                    onTap: () => _confirmSignOut(context),
+                    iconColor: cs.error,
+                  ),
+                ),
+                const SizedBox(height: sectionSpacing),
                 const LogSettingsSection(),
 
                 // ── About ──
@@ -259,20 +281,11 @@ class _SettingsTabState extends State<SettingsTab>
     );
   }
 
-  Widget _buildSettingsHeader(BuildContext context) {
+  Widget _buildSettingsHeader(BuildContext context, UiStyle style) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    return style.buildHeaderBar(
+      context: context,
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           Text(
@@ -328,17 +341,58 @@ class _SettingsTabState extends State<SettingsTab>
           showAdaptiveMessage(
             context,
             designStyle: sl<SettingsController>().designStyle.value,
-            message: '请输入学号和密码',
+            message: '请输入智慧理工服务门户账号和密码',
           );
           return;
         }
         FocusScope.of(context).unfocus();
         await sl<TimetableController>().fetchAndBuild(username: u, password: p);
       },
+      onQrLoginPressed: kIsWeb
+          ? null
+          : () async {
+              FocusScope.of(context).unfocus();
+              if (await QrLoginDialog.show(context)) {
+                _usernameController.clear();
+                _passwordController.clear();
+                await sl<TimetableController>().fetchAndBuildWithSession();
+              }
+            },
     );
   }
 
   void _exitApp() => exitApp();
+
+  Future<void> _confirmSignOut(BuildContext context) async {
+    final confirmed = await showAdaptiveConfirmDialog(
+      context,
+      title: '退出当前登录？',
+      content:
+          '会清除本地保存的 CAS Cookie 和账号密码。\n下次启动需要重新扫码或输入账号密码。',
+      confirmText: '退出登录',
+      isDestructive: true,
+    );
+    if (!confirmed || !context.mounted) return;
+    try {
+      await clearPersistedSession();
+      if (!context.mounted) return;
+      _usernameController.clear();
+      _passwordController.clear();
+      await sl<CredentialsRepository>().clearCredentials();
+      await sl<TimetableController>().syncFromCache();
+      if (!context.mounted) return;
+      showAdaptiveMessage(context, message: '已退出当前登录');
+    } catch (e) {
+      if (!context.mounted) return;
+      showAdaptiveMessage(context, message: '退出失败: $e');
+    }
+  }
+
+  Future<void> clearPersistedSession() async {
+    await CookieStorage.clear();
+    // Also force a flush so the wipe is durable before we navigate.
+    await rust_api.persistCookies();
+  }
 
   Future<void> _confirmClearCache(BuildContext context) async {
     final confirmed = await showAdaptiveConfirmDialog(

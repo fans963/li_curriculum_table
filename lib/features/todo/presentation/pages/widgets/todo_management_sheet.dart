@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/todo/domain/entities/course_todo.dart';
 import 'package:li_curriculum_table/features/todo/presentation/pages/widgets/add_todo_sheet.dart';
 import 'package:li_curriculum_table/features/todo/presentation/state/todo_controller.dart';
@@ -26,18 +28,18 @@ class TodoManagementSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
+    final ds = sl<SettingsController>().state.value.designStyle;
     return DraggableScrollableSheet(
       initialChildSize: 0.9,
       minChildSize: 0.5,
       maxChildSize: 0.95,
       expand: false,
       builder: (ctx, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: cs.surface,
-            borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
+        return adaptiveSheetBackground(
+          context: context,
+          designStyle: ds,
+          topRadius: 28,
+          padding: EdgeInsets.zero,
           child: Padding(
             padding: EdgeInsets.only(bottom: bottomInset),
             child: Column(
@@ -81,10 +83,12 @@ class TodoManagementSheet extends StatelessWidget {
                         },
                         icon: const Icon(Icons.cleaning_services_rounded),
                       ),
-                      M3EButton.tonal(
+                      adaptiveButton(
+                        context: context,
+                        designStyle: ds,
+                        style: UiButtonStyle.tonal,
+                        height: 36,
                         onPressed: () => AddTodoSheet.show(context),
-                        size: M3EButtonSize.sm,
-                        shape: M3EButtonShape.round,
                         child: const Text('添加'),
                       ),
                     ],
@@ -105,7 +109,7 @@ class TodoManagementSheet extends StatelessWidget {
                         );
                       }
                       final all = controller.todos.value;
-                      if (all.isEmpty) return const _EmptyState();
+                      if (all.isEmpty) return _EmptyState(designStyle: ds);
                       final open = all.where((t) => !t.isCompleted).toList()
                         ..sort((a, b) => a.deadline.compareTo(b.deadline));
                       final completed = all.where((t) => t.isCompleted).toList()
@@ -186,11 +190,13 @@ class _SectionHeader extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final DesignStyle designStyle;
+  const _EmptyState({required this.designStyle});
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final ds = designStyle;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -216,7 +222,10 @@ class _EmptyState extends StatelessWidget {
                   ),
             ),
             const SizedBox(height: 16),
-            M3EButton.filled(
+            adaptiveButton(
+              context: context,
+              designStyle: ds,
+              style: UiButtonStyle.filled,
               onPressed: () => AddTodoSheet.show(context),
               child: const Text('添加待办'),
             ),
@@ -268,7 +277,7 @@ class _TodoTile extends StatelessWidget {
       },
       child: ListTile(
         onTap: onEdit,
-        leading: Checkbox(
+        leading: Checkbox.adaptive(
           value: todo.isCompleted,
           onChanged: (_) => onToggle(),
           shape: const CircleBorder(),
