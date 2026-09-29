@@ -32,6 +32,9 @@ class SettingsController {
   );
   late final daysVisibleCount = computed(() => _state.value.daysVisibleCount);
   late final termsAccepted = computed(() => _state.value.termsAccepted);
+  late final themeOnboardingCompleted = computed(
+    () => _state.value.themeOnboardingCompleted,
+  );
   Future<void> init() async {
     final repository = sl<SettingsRepository>();
     _state.value = await repository.loadSettings();
@@ -92,6 +95,29 @@ class SettingsController {
   Future<void> setTermsAccepted(bool accepted) async {
     _state.value = _state.value.copyWith(termsAccepted: accepted);
     await _save();
+  }
+
+  Future<void> completeThemeOnboarding({
+    required DesignStyle designStyle,
+    required ThemeMode themeMode,
+  }) async {
+    _state.value = _state.value.copyWith(
+      designStyle: designStyle,
+      themeMode: themeMode,
+      themeOnboardingCompleted: true,
+    );
+    await _save();
+  }
+
+  /// Updates the visible appearance without persisting an onboarding preview.
+  void previewAppearance({
+    required DesignStyle designStyle,
+    required ThemeMode themeMode,
+  }) {
+    _state.value = _state.value.copyWith(
+      designStyle: designStyle,
+      themeMode: themeMode,
+    );
   }
 
   Future<void> setDaysVisibleCount(int days) async {

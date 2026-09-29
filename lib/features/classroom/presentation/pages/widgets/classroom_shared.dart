@@ -1,7 +1,8 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 
 class TopAppBar extends StatelessWidget {
@@ -20,55 +21,6 @@ class TopAppBar extends StatelessWidget {
   }
 }
 
-class NeedsLoginView extends StatelessWidget {
-  final VoidCallback onRetry;
-  const NeedsLoginView({super.key, required this.onRetry});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final ds = sl<SettingsController>().state.value.designStyle;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              AppIcons.login(ds),
-              size: 64,
-              color: colorScheme.primary.withValues(alpha: 0.6),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              '需要登录',
-              style: textTheme.titleMedium?.copyWith(
-                color: colorScheme.onSurface,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '请先前往「设置」页面输入账号密码，然后返回此页面。',
-              textAlign: TextAlign.center,
-              style: textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 24),
-            M3EButton.tonal(
-              onPressed: onRetry,
-              size: M3EButtonSize.md,
-              shape: M3EButtonShape.round,
-              child: const Text('已登录，点击加载'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class ErrorView extends StatelessWidget {
   final String message;
   final VoidCallback onRetry;
@@ -76,15 +28,14 @@ class ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ds = sl<SettingsController>().state.value.designStyle;
     return Center(
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              AppIcons.errorOutline(
-                sl<SettingsController>().state.value.designStyle,
-              ),
+              AppIcons.errorOutline(ds),
               size: 64,
               color: Theme.of(context).colorScheme.error,
             ),
@@ -98,10 +49,11 @@ class ErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            M3EButton.tonal(
+            adaptiveButton(
+              context: context,
+              designStyle: ds,
+              style: UiButtonStyle.tonal,
               onPressed: onRetry,
-              size: M3EButtonSize.md,
-              shape: M3EButtonShape.round,
               child: const Text('重试'),
             ),
           ],

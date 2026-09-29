@@ -1,5 +1,7 @@
 part of '../book_material.dart';
 
+// Legacy card kept for callers migrating to the separate M3E and glass cards.
+// ignore: unused_element
 class _BookWaterfallGrid extends StatelessWidget {
   final List<BookInfo> books;
   final DesignStyle ds;
@@ -303,6 +305,8 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
             ),
           );
 
+    final style = UiStyleRegistry.resolve(widget.ds);
+
     return GestureDetector(
       onTap: () {
         final box = cardKey.currentContext?.findRenderObject() as RenderBox?;
@@ -314,16 +318,12 @@ class _BookWaterfallCardState extends State<_BookWaterfallCard> {
       },
       child: Container(
         key: cardKey,
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: cs.outlineVariant.withValues(alpha: 0.4),
-            width: 1,
-          ),
+        child: style.buildCard(
+          context: context,
+          padding: EdgeInsets.zero,
+          borderRadius: 16,
+          child: cardContent,
         ),
-        clipBehavior: Clip.antiAlias,
-        child: cardContent,
       ),
     );
   }

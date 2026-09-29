@@ -1,13 +1,21 @@
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
-/// Resolves design style. Since Cupertino UI has been removed,
-/// this always resolves to Material 3.
+/// Resolves the effective [DesignStyle] at runtime.
+///
+/// When the user picks [DesignStyle.system], this delegates to
+/// [UiStyleRegistry.resolveConcreteStyle] to determine the active style.
 class AdaptiveStyle {
   const AdaptiveStyle._();
 
-  /// Always returns [DesignStyle.material].
-  static DesignStyle resolve([DesignStyle? setting]) => DesignStyle.material;
+  /// Returns the concrete style for the given [setting].
+  static DesignStyle resolve([DesignStyle? setting]) =>
+      UiStyleRegistry.resolveConcreteStyle(setting);
 
-  /// Always false since the app is unified on Material 3.
-  static bool isCupertino([DesignStyle? setting]) => false;
+  /// Convenience: `true` when the resolved style is iOS 26 Liquid Glass.
+  static bool isCupertino([DesignStyle? setting]) =>
+      resolve(setting) == DesignStyle.cupertino;
+
+  /// Alias for clarity: `true` when the resolved style is Liquid Glass.
+  static bool isLiquidGlass([DesignStyle? setting]) => isCupertino(setting);
 }

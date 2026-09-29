@@ -1,9 +1,12 @@
 import 'package:infinite_calendar_view/infinite_calendar_view.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/liquid_glass_background.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/calendar_view/calendar_view_adapter.dart';
 import 'package:li_curriculum_table/features/timetable/domain/entities/course_occurrence.dart';
@@ -103,7 +106,13 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
     final colorScheme = Theme.of(context).colorScheme;
     const headerHeight = 44.0;
 
-    final surfaceColor = colorScheme.surface;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final isGlassDark =
+        UiStyleRegistry.resolveConcreteStyle(ds) == DesignStyle.cupertino &&
+        colorScheme.brightness == Brightness.dark;
+    final surfaceColor = isGlassDark
+        ? LiquidGlassBackground.darkBaseColor
+        : colorScheme.surface;
     final separatorColor = colorScheme.outlineVariant.withValues(alpha: 0.3);
     final primaryColor = colorScheme.primary;
     final onSurfaceColor = colorScheme.onSurface;
@@ -116,8 +125,11 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
         if (constraints.maxWidth < 120 || constraints.maxHeight < 100) {
           return Container(
             color: surfaceColor,
-            child: const Center(
-              child: M3ELoadingIndicator(),
+            child: Center(
+              child: adaptiveActivityIndicator(
+                context: context,
+                designStyle: ds,
+              ),
             ),
           );
         }
@@ -148,6 +160,10 @@ class TimetableWeekViewState extends State<TimetableWeekView> {
               dayParam: DayParam(
                 dayTopPadding: 0,
                 dayColor: surfaceColor,
+                todayColor: Color.alphaBlend(
+                  colorScheme.primary.withValues(alpha: 0.055),
+                  surfaceColor,
+                ),
                 dayEventBuilder: (event, height, width, heightPerMinute) {
                   final occurrence = event.data as CourseOccurrence?;
                   if (occurrence == null) return const SizedBox.shrink();

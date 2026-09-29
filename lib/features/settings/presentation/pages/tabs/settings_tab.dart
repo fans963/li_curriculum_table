@@ -14,6 +14,7 @@ import 'package:li_curriculum_table/features/timetable/domain/repositories/crede
 import 'package:li_curriculum_table/features/timetable/presentation/pages/widgets/timetable_page_sections.dart';
 import 'package:li_curriculum_table/features/timetable/presentation/state/timetable_controller.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:li_curriculum_table/core/services/cookie_storage/cookie_storage.dart';
 import 'package:li_curriculum_table/core/services/cache_backup_service.dart';
 import 'package:li_curriculum_table/features/timetable/domain/services/course_color_service.dart';
@@ -120,14 +121,15 @@ class _SettingsTabState extends State<SettingsTab>
   ) {
     final cs = Theme.of(context).colorScheme;
     final ds = settings.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
     return ColoredBox(
-      color: cs.surface,
+      color: style.pageBackgroundColor(cs),
       child: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _buildSettingsHeader(context),
+            _buildSettingsHeader(context, style),
             Expanded(
               child: Center(
                 child: ConstrainedBox(
@@ -279,20 +281,11 @@ class _SettingsTabState extends State<SettingsTab>
     );
   }
 
-  Widget _buildSettingsHeader(BuildContext context) {
+  Widget _buildSettingsHeader(BuildContext context, UiStyle style) {
     final cs = Theme.of(context).colorScheme;
-    return Container(
+    return style.buildHeaderBar(
+      context: context,
       height: 44,
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Row(
         children: [
           Text(

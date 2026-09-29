@@ -1,13 +1,15 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/liquid_glass_background.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/domain/models/classroom_availability.dart';
 
 class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
   final ColorScheme colorScheme;
-  SessionHeaderDelegate({required this.colorScheme});
+  final bool isGlass;
+  SessionHeaderDelegate({required this.colorScheme, required this.isGlass});
 
   @override
   Widget build(
@@ -20,9 +22,11 @@ class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
     return Container(
       height: maxExtent,
       decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(
-          alpha: overlapsContent ? 0.95 : 1.0,
-        ),
+        color:
+            (isGlass && colorScheme.brightness == Brightness.dark
+                    ? LiquidGlassBackground.darkBaseColor
+                    : colorScheme.surface)
+                .withValues(alpha: overlapsContent ? 0.95 : 1.0),
         border: Border(
           bottom: BorderSide(
             color: colorScheme.outlineVariant.withValues(
@@ -69,7 +73,9 @@ class SessionHeaderDelegate extends SliverPersistentHeaderDelegate {
   double get minExtent => 48;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
-      false;
+      oldDelegate is! SessionHeaderDelegate ||
+      oldDelegate.colorScheme != colorScheme ||
+      oldDelegate.isGlass != isGlass;
 }
 
 class ClassroomSliverList extends StatelessWidget {
@@ -94,56 +100,52 @@ class ClassroomSliverList extends StatelessWidget {
         final item = results[index];
         final colorScheme = Theme.of(context).colorScheme;
         final textTheme = Theme.of(context).textTheme;
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: index == results.length - 1 ? 0 : 8,
-          ),
-          child: M3ECard(
-          variant: M3ECardVariant.outlined,
-          borderRadius: BorderRadius.circular(16),
-          elevation: 0,
-          color: colorScheme.surfaceContainerLowest,
-          border: BorderSide(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        item.classroomName,
-                        style: textTheme.titleMedium?.copyWith(
+        final ds = sl<SettingsController>().state.value.designStyle;
+
+        final cardContent = Row(
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.classroomName,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  if (item.hasNoClassesThisTerm)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2.0),
+                      child: Text(
+                        '本学期无排课',
+                        style: textTheme.labelSmall?.copyWith(
+                          color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
-                      if (item.hasNoClassesThisTerm)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2.0),
-                          child: Text(
-                            '本学期无排课',
-                            style: textTheme.labelSmall?.copyWith(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                ...List.generate(5, (sIdx) {
-                  final isFree = item.availability[sIdx];
-                  return Expanded(
-                    flex: 2,
-                    child: StatusIndicator(isFree: isFree),
-                  );
-                }),
-              ],
-          ),
+                    ),
+                ],
+              ),
+            ),
+            ...List.generate(5, (sIdx) {
+              final isFree = item.availability[sIdx];
+              return Expanded(flex: 2, child: StatusIndicator(isFree: isFree));
+            }),
+          ],
+        );
+
+        final style = UiStyleRegistry.resolve(ds);
+
+        return Padding(
+          padding: EdgeInsets.only(bottom: index == results.length - 1 ? 0 : 8),
+          child: style.buildCard(
+            context: context,
+            borderRadius: 20,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: cardContent,
           ),
         );
       }, childCount: results.length),
@@ -159,18 +161,21 @@ class StatusIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
+    final isGlass = style.usesAmbientBackground;
+
     return Container(
       height: 28,
       margin: const EdgeInsets.symmetric(horizontal: 2),
       decoration: BoxDecoration(
         color: isFree
-            ? colorScheme.primary.withValues(alpha: 0.15)
-            : colorScheme.error.withValues(alpha: 0.08),
+            ? colorScheme.primary.withValues(alpha: isGlass ? 0.22 : 0.15)
+            : colorScheme.error.withValues(alpha: isGlass ? 0.14 : 0.08),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isFree
-              ? colorScheme.primary.withValues(alpha: 0.3)
-              : colorScheme.error.withValues(alpha: 0.15),
+              ? colorScheme.primary.withValues(alpha: isGlass ? 0.45 : 0.3)
+              : colorScheme.error.withValues(alpha: isGlass ? 0.3 : 0.15),
           width: 1,
         ),
       ),
@@ -180,7 +185,7 @@ class StatusIndicator extends StatelessWidget {
           size: 16,
           color: isFree
               ? colorScheme.primary
-              : colorScheme.error.withValues(alpha: 0.6),
+              : colorScheme.error.withValues(alpha: 0.7),
         ),
       ),
     );

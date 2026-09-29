@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:li_curriculum_table/core/services/weather_service.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:signals/signals_flutter.dart';
 
 class WeatherBanner extends SignalStatefulWidget {
@@ -41,26 +43,24 @@ class _WeatherBannerState extends State<WeatherBanner> {
     final w = _weather.value;
     if (w == null) return const SizedBox.shrink();
 
-    return _buildMaterial(context, w);
+    final ds = widget.designStyle ??
+        sl<SettingsController>().state.value.designStyle;
+    return _buildContent(context, w, ds);
   }
 
-  Widget _buildMaterial(BuildContext context, WeatherInfo w) {
+  Widget _buildContent(BuildContext context, WeatherInfo w, DesignStyle ds) {
     final cs = Theme.of(context).colorScheme;
+    final style = UiStyleRegistry.resolve(ds);
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Semantics(
         label:
             '天气: ${w.minTemperature.round()}到${w.maxTemperature.round()}度, ${w.description}',
-        child: Container(
+        child: style.buildCard(
+          context: context,
+          borderRadius: 16,
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: cs.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: cs.outlineVariant.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
           child: Row(
             children: [
               Icon(w.icon, size: 22, color: w.color),

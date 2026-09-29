@@ -50,6 +50,7 @@ Widget buildMaterialHoldings(
 ) {
   final cs = Theme.of(context).colorScheme;
   final tt = Theme.of(context).textTheme;
+  final style = UiStyleRegistry.resolve(ds);
 
   return FutureBuilder<BookDetail>(
     future: fetchBookLocations(detailUrl: book.detailUrl),
@@ -58,7 +59,7 @@ Widget buildMaterialHoldings(
         return Column(
           children: [
             const SizedBox(height: 8),
-            const M3EProgressIndicator.linear(),
+            adaptiveLinearProgressIndicator(context: context, designStyle: ds),
             const SizedBox(height: 16),
             Center(
               child: Text(
@@ -117,15 +118,10 @@ Widget buildMaterialHoldings(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 3-column Metadata Dashboard Card
-          Container(
+          style.buildCard(
+            context: context,
+            borderRadius: 14,
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.3),
-              ),
-            ),
             child: Row(
               children: [
                 Expanded(
@@ -193,64 +189,61 @@ Widget buildMaterialHoldings(
                   ? Icons.check_circle_outline
                   : Icons.remove_circle_outline;
 
-              return Container(
-                margin: const EdgeInsets.symmetric(vertical: 6),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: cs.outlineVariant.withValues(alpha: 0.3),
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: style.buildCard(
+                  context: context,
+                  borderRadius: 14,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
                   ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      AppIcons.place(ds),
-                      color: cs.primary.withValues(alpha: 0.7),
-                      size: 20,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        loc.location,
-                        style: tt.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        AppIcons.place(ds),
+                        color: cs.primary.withValues(alpha: 0.7),
+                        size: 20,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: statusBgColor,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: statusTextColor.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(statusIcon, size: 14, color: statusTextColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            loc.status,
-                            style: tt.labelSmall?.copyWith(
-                              color: statusTextColor,
-                              fontWeight: FontWeight.bold,
-                            ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          loc.location,
+                          style: tt.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 12),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: statusBgColor,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: statusTextColor.withValues(alpha: 0.2),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(statusIcon, size: 14, color: statusTextColor),
+                            const SizedBox(width: 4),
+                            Text(
+                              loc.status,
+                              style: tt.labelSmall?.copyWith(
+                                color: statusTextColor,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               );
             }),

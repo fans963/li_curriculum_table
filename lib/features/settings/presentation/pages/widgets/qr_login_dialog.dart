@@ -2,8 +2,14 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:material_ui/material_ui.dart';
+import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:li_curriculum_table/core/rust/api/crawler.dart' as rust_api;
 import 'package:li_curriculum_table/core/services/cookie_storage/cookie_storage.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/widgets/liquid_glass_qr_login_dialog.dart';
+import 'package:li_curriculum_table/features/settings/presentation/pages/widgets/m3e_qr_login_dialog.dart';
 
 class QrLoginDialog extends StatefulWidget {
   const QrLoginDialog({super.key});
@@ -138,48 +144,25 @@ class _QrLoginDialogState extends State<QrLoginDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('微信扫码登录'),
-      content: SizedBox(
-        width: 280,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (_image != null)
-              Image.memory(
-                _image!,
-                width: 240,
-                height: 240,
-                gaplessPlayback: true,
-              )
-            else if (_loading)
-              const SizedBox(
-                height: 240,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-            const SizedBox(height: 16),
-            Text(_message, textAlign: TextAlign.center),
-            if (_image != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                '同一部手机操作时，可截屏后在微信扫一扫中从相册选取二维码。',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: const Text('取消'),
-        ),
-        TextButton(
-          onPressed: _loading ? null : _start,
-          child: const Text('刷新二维码'),
-        ),
-      ],
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+
+    if (concrete == DesignStyle.cupertino) {
+      return LiquidGlassQrLoginDialogView(
+        image: _image,
+        loading: _loading,
+        message: _message,
+        onRefresh: _start,
+        onCancel: () => Navigator.of(context).pop(false),
+      );
+    }
+
+    return M3EQrLoginDialogView(
+      image: _image,
+      loading: _loading,
+      message: _message,
+      onRefresh: _start,
+      onCancel: () => Navigator.of(context).pop(false),
     );
   }
 }

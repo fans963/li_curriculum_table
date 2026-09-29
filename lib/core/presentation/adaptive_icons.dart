@@ -1,85 +1,347 @@
+import 'package:flutter/cupertino.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 
 IconData adaptiveIcon(
   dynamic style, {
   required IconData material,
   dynamic cupertino,
 }) {
+  if (cupertino != null) {
+    final ds = style is DesignStyle ? style : null;
+    final concrete = UiStyleRegistry.resolveConcreteStyle(ds);
+    if (concrete == DesignStyle.cupertino) {
+      return cupertino as IconData;
+    }
+  }
   return material;
 }
 
-/// Unified Material 3 icons for the app.
+/// Unified Adaptive icons for the app (Material 3 Expressive & iOS 26 Liquid Glass).
 class AppIcons {
   const AppIcons._();
 
   // ─── Navigation (Tab Bar) ────────────────────────────────────────────────
-  static IconData timetable([dynamic _]) => Icons.calendar_view_week;
-  static IconData timetableOutline([dynamic _]) => Icons.calendar_view_week_outlined;
-  static IconData classroom([dynamic _]) => Icons.meeting_room;
-  static IconData classroomOutline([dynamic _]) => Icons.meeting_room_outlined;
-  static IconData grade([dynamic _]) => Icons.verified;
-  static IconData gradeOutline([dynamic _]) => Icons.verified_outlined;
-  static IconData exam([dynamic _]) => Icons.edit_note;
-  static IconData examOutline([dynamic _]) => Icons.edit_note_outlined;
-  static IconData book([dynamic _]) => Icons.book_rounded;
-  static IconData bookOutline([dynamic _]) => Icons.book_outlined;
-  static IconData settings([dynamic _]) => Icons.settings;
-  static IconData settingsOutline([dynamic _]) => Icons.settings_outlined;
+  static IconData timetable([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.calendar_view_week,
+    cupertino: CupertinoIcons.calendar_today,
+  );
+  static IconData timetableOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.calendar_view_week_outlined,
+    cupertino: CupertinoIcons.calendar,
+  );
+  static IconData classroom([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.meeting_room,
+    cupertino: CupertinoIcons.building_2_fill,
+  );
+  static IconData classroomOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.meeting_room_outlined,
+    cupertino: CupertinoIcons.building_2_fill,
+  );
+  static IconData grade([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.verified,
+    cupertino: CupertinoIcons.chart_bar_fill,
+  );
+  static IconData gradeOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.verified_outlined,
+    cupertino: CupertinoIcons.chart_bar,
+  );
+  static IconData exam([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.edit_note,
+    cupertino: CupertinoIcons.pencil_ellipsis_rectangle,
+  );
+  static IconData examOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.edit_note_outlined,
+    cupertino: CupertinoIcons.pencil_outline,
+  );
+  static IconData book([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.book_rounded,
+    cupertino: CupertinoIcons.book_fill,
+  );
+  static IconData bookOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.book_outlined,
+    cupertino: CupertinoIcons.book,
+  );
+  static IconData settings([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.settings,
+    cupertino: CupertinoIcons.gear_alt_fill,
+  );
+  static IconData settingsOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.settings_outlined,
+    cupertino: CupertinoIcons.gear_alt,
+  );
 
   // ─── Actions ─────────────────────────────────────────────────────────────
-  static IconData search([dynamic _]) => Icons.search_rounded;
-  static IconData refresh([dynamic _]) => Icons.refresh;
-  static IconData syncIcon([dynamic _]) => Icons.sync_rounded;
-  static IconData clear([dynamic _]) => Icons.clear_rounded;
-  static IconData arrowForward([dynamic _]) => Icons.arrow_forward_rounded;
-  static IconData chevronRight([dynamic _]) => Icons.chevron_right_rounded;
-  static IconData close([dynamic _]) => Icons.close;
+  static IconData search([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.search_rounded,
+    cupertino: CupertinoIcons.search,
+  );
+  static IconData refresh([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.refresh,
+    cupertino: CupertinoIcons.arrow_clockwise,
+  );
+  static IconData syncIcon([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.sync_rounded,
+    cupertino: CupertinoIcons.arrow_2_circlepath,
+  );
+  static IconData clear([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.clear_rounded,
+    cupertino: CupertinoIcons.xmark,
+  );
+  static IconData arrowForward([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.arrow_forward_rounded,
+    cupertino: CupertinoIcons.arrow_right,
+  );
+  static IconData chevronRight([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.chevron_right_rounded,
+    cupertino: CupertinoIcons.chevron_right,
+  );
+  static IconData close([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.close,
+    cupertino: CupertinoIcons.xmark,
+  );
 
   // ─── Content ─────────────────────────────────────────────────────────────
-  static IconData person([dynamic _]) => Icons.person_outline_rounded;
-  static IconData school([dynamic _]) => Icons.school;
-  static IconData location([dynamic _]) => Icons.location_on;
-  static IconData locationOutline([dynamic _]) => Icons.location_on_outlined;
-  static IconData time([dynamic _]) => Icons.access_time_filled;
-  static IconData calendar([dynamic _]) => Icons.calendar_today_rounded;
-  static IconData star([dynamic _]) => Icons.star_rounded;
-  static IconData starOutline([dynamic _]) => Icons.star_outline;
-  static IconData bookmark([dynamic _]) => Icons.bookmark_outline_rounded;
-  static IconData category([dynamic _]) => Icons.category_rounded;
-  static IconData info([dynamic _]) => Icons.info_rounded;
-  static IconData lock([dynamic _]) => Icons.lock_outline;
-  static IconData login([dynamic _]) => Icons.login_rounded;
-  static IconData menuBook([dynamic _]) => Icons.menu_book_rounded;
-  static IconData libraryBooks([dynamic _]) => Icons.library_books_rounded;
-  static IconData place([dynamic _]) => Icons.place_rounded;
-  static IconData business([dynamic _]) => Icons.business_rounded;
-  static IconData bolt([dynamic _]) => Icons.bolt_rounded;
-  static IconData seat([dynamic _]) => Icons.event_seat_outlined;
+  static IconData person([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.person_outline_rounded,
+    cupertino: CupertinoIcons.person,
+  );
+  static IconData school([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.school,
+    cupertino: CupertinoIcons.book,
+  );
+  static IconData location([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.location_on,
+    cupertino: CupertinoIcons.location_fill,
+  );
+  static IconData locationOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.location_on_outlined,
+    cupertino: CupertinoIcons.location,
+  );
+  static IconData time([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.access_time_filled,
+    cupertino: CupertinoIcons.clock_fill,
+  );
+  static IconData calendar([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.calendar_today_rounded,
+    cupertino: CupertinoIcons.calendar,
+  );
+  static IconData star([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.star_rounded,
+    cupertino: CupertinoIcons.star_fill,
+  );
+  static IconData starOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.star_outline,
+    cupertino: CupertinoIcons.star,
+  );
+  static IconData bookmark([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.bookmark_outline_rounded,
+    cupertino: CupertinoIcons.bookmark,
+  );
+  static IconData category([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.category_rounded,
+    cupertino: CupertinoIcons.tag,
+  );
+  static IconData info([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.info_rounded,
+    cupertino: CupertinoIcons.info_circle_fill,
+  );
+  static IconData lock([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.lock_outline,
+    cupertino: CupertinoIcons.lock,
+  );
+  static IconData login([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.login_rounded,
+    cupertino: CupertinoIcons.arrow_right_square,
+  );
+  static IconData menuBook([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.menu_book_rounded,
+    cupertino: CupertinoIcons.book,
+  );
+  static IconData libraryBooks([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.library_books_rounded,
+    cupertino: CupertinoIcons.collections,
+  );
+  static IconData place([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.place_rounded,
+    cupertino: CupertinoIcons.placemark_fill,
+  );
+  static IconData business([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.business_rounded,
+    cupertino: CupertinoIcons.building_2_fill,
+  );
+  static IconData bolt([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.bolt_rounded,
+    cupertino: CupertinoIcons.bolt_fill,
+  );
+  static IconData seat([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.event_seat_outlined,
+    cupertino: CupertinoIcons.person_2,
+  );
 
   // ─── Settings ────────────────────────────────────────────────────────────
-  static IconData vpnKey([dynamic _]) => Icons.vpn_key_outlined;
-  static IconData palette([dynamic _]) => Icons.palette_outlined;
-  static IconData colorLens([dynamic _]) => Icons.color_lens_outlined;
-  static IconData viewWeek([dynamic _]) => Icons.view_week_rounded;
-  static IconData viewInAr([dynamic _]) => Icons.view_in_ar_rounded;
-  static IconData viewWeekFilled([dynamic _]) => Icons.view_week_rounded;
-  static IconData swapHoriz([dynamic _]) => Icons.swap_horiz_rounded;
-  static IconData lan([dynamic _]) => Icons.lan_outlined;
-  static IconData router([dynamic _]) => Icons.router_outlined;
-  static IconData numbers([dynamic _]) => Icons.numbers_outlined;
-  static IconData radar([dynamic _]) => Icons.radar_outlined;
-  static IconData storage([dynamic _]) => Icons.storage_outlined;
-  static IconData deleteSweep([dynamic _]) => Icons.delete_sweep_outlined;
-  static IconData feedback([dynamic _]) => Icons.feedback_outlined;
-  static IconData markUnread([dynamic _]) => Icons.mark_as_unread_outlined;
-  static IconData errorOutline([dynamic _]) => Icons.error_outline_rounded;
-  static IconData cloudOff([dynamic _]) => Icons.cloud_off_rounded;
-  static IconData searchOff([dynamic _]) => Icons.search_off_rounded;
-  static IconData check([dynamic _]) => Icons.check_rounded;
-  static IconData checkCircle([dynamic _]) => Icons.check_circle_rounded;
-  static IconData calendarMonth([dynamic _]) => Icons.calendar_month_rounded;
-  static IconData apartment([dynamic _]) => Icons.apartment_rounded;
-  static IconData locationOn([dynamic _]) => Icons.location_on_rounded;
-  static IconData analytics([dynamic _]) => Icons.analytics_rounded;
-  static IconData stars([dynamic _]) => Icons.stars_rounded;
+  static IconData vpnKey([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.vpn_key_outlined,
+    cupertino: CupertinoIcons.lock_shield,
+  );
+  static IconData palette([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.palette_outlined,
+    cupertino: CupertinoIcons.paintbrush,
+  );
+  static IconData colorLens([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.color_lens_outlined,
+    cupertino: CupertinoIcons.color_filter,
+  );
+  static IconData viewWeek([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.view_week_rounded,
+    cupertino: CupertinoIcons.slider_horizontal_3,
+  );
+  static IconData viewInAr([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.view_in_ar_rounded,
+    cupertino: CupertinoIcons.cube,
+  );
+  static IconData viewWeekFilled([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.view_week_rounded,
+    cupertino: CupertinoIcons.rectangle_grid_1x2_fill,
+  );
+  static IconData swapHoriz([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.swap_horiz_rounded,
+    cupertino: CupertinoIcons.arrow_left_right,
+  );
+  static IconData lan([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.lan_outlined,
+    cupertino: CupertinoIcons.wifi,
+  );
+  static IconData router([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.router_outlined,
+    cupertino: CupertinoIcons.antenna_radiowaves_left_right,
+  );
+  static IconData numbers([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.numbers_outlined,
+    cupertino: CupertinoIcons.number,
+  );
+  static IconData radar([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.radar_outlined,
+    cupertino: CupertinoIcons.dot_radiowaves_left_right,
+  );
+  static IconData storage([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.storage_outlined,
+    cupertino: CupertinoIcons.folder,
+  );
+  static IconData deleteSweep([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.delete_sweep_outlined,
+    cupertino: CupertinoIcons.delete,
+  );
+  static IconData feedback([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.feedback_outlined,
+    cupertino: CupertinoIcons.bubble_left,
+  );
+  static IconData markUnread([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.mark_as_unread_outlined,
+    cupertino: CupertinoIcons.mail,
+  );
+  static IconData errorOutline([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.error_outline_rounded,
+    cupertino: CupertinoIcons.exclamationmark_triangle,
+  );
+  static IconData cloudOff([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.cloud_off_rounded,
+    cupertino: CupertinoIcons.exclamationmark_circle,
+  );
+  static IconData searchOff([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.search_off_rounded,
+    cupertino: CupertinoIcons.search,
+  );
+  static IconData check([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.check_rounded,
+    cupertino: CupertinoIcons.checkmark,
+  );
+  static IconData checkCircle([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.check_circle_rounded,
+    cupertino: CupertinoIcons.checkmark_circle_fill,
+  );
+  static IconData calendarMonth([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.calendar_month_rounded,
+    cupertino: CupertinoIcons.calendar,
+  );
+  static IconData apartment([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.apartment_rounded,
+    cupertino: CupertinoIcons.building_2_fill,
+  );
+  static IconData locationOn([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.location_on_rounded,
+    cupertino: CupertinoIcons.location_fill,
+  );
+  static IconData analytics([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.analytics_rounded,
+    cupertino: CupertinoIcons.chart_bar_fill,
+  );
+  static IconData stars([dynamic s]) => adaptiveIcon(
+    s,
+    material: Icons.stars_rounded,
+    cupertino: CupertinoIcons.star_fill,
+  );
 }

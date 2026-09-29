@@ -1,6 +1,9 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
+import 'package:li_curriculum_table/core/presentation/widgets/login_required_view.dart';
+import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/pages/classroom_widgets.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_controller.dart';
 import 'package:li_curriculum_table/features/classroom/presentation/state/classroom_state.dart';
@@ -37,9 +40,11 @@ class _ClassroomTabState extends State<ClassroomTab>
 
   Widget _buildMaterial(BuildContext context, ClassroomState state) {
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
     return ColoredBox(
-      color: cs.surface,
+      color: style.pageBackgroundColor(cs),
       child: SafeArea(
         bottom: false,
         child: Center(
@@ -55,9 +60,12 @@ class _ClassroomTabState extends State<ClassroomTab>
                     switchInCurve: kDefaultAnimationCurve,
                     switchOutCurve: kDefaultAnimationCurve,
                     child: state.isLoading && state.results.isEmpty
-                        ? const Center(
-                            key: ValueKey('loading'),
-                            child: M3ELoadingIndicator(),
+                        ? Center(
+                            key: const ValueKey('loading'),
+                            child: adaptiveActivityIndicator(
+                              context: context,
+                              designStyle: ds,
+                            ),
                           )
                         : CustomScrollView(
                             key: const ValueKey('results_list'),
@@ -91,15 +99,11 @@ class _ClassroomTabState extends State<ClassroomTab>
                                 pinned: true,
                                 delegate: SessionHeaderDelegate(
                                   colorScheme: cs,
+                                  isGlass: style.usesAmbientBackground,
                                 ),
                               ),
                               if (state.needsLogin)
-                                SliverFillRemaining(
-                                  child: NeedsLoginView(
-                                    onRetry: () => sl<ClassroomController>()
-                                        .fetchCampuses(forceRefresh: true),
-                                  ),
-                                )
+                                SliverFillRemaining(child: LoginRequiredView())
                               else if (state.error != null)
                                 SliverFillRemaining(
                                   child: ErrorView(
@@ -140,18 +144,12 @@ class _ClassroomTabState extends State<ClassroomTab>
   Widget _buildCompactHeader(BuildContext context, ClassroomState state) {
     final notifier = sl<ClassroomController>();
     final cs = Theme.of(context).colorScheme;
+    final ds = sl<SettingsController>().state.value.designStyle;
+    final style = UiStyleRegistry.resolve(ds);
 
-    return Container(
+    return style.buildHeaderBar(
+      context: context,
       padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-      decoration: BoxDecoration(
-        color: cs.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: cs.outlineVariant.withValues(alpha: 0.3),
-            width: 0.5,
-          ),
-        ),
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -178,7 +176,9 @@ class _ClassroomTabState extends State<ClassroomTab>
           // Row 2: campus + building dropdowns (only when available)
           if (state.campuses.isNotEmpty || state.buildings.isNotEmpty) ...[
             const SizedBox(height: 4),
-            Row(
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
                 if (state.campuses.isNotEmpty)
                   CampusDropdown(
@@ -190,7 +190,6 @@ class _ClassroomTabState extends State<ClassroomTab>
                     },
                   ),
                 if (state.buildings.isNotEmpty) ...[
-                  const SizedBox(width: 8),
                   BuildingDropdown(
                     onSelected: (b) {
                       if (b.id == state.selectedBuilding?.id) return;
@@ -201,11 +200,14 @@ class _ClassroomTabState extends State<ClassroomTab>
                   ),
                 ],
                 if (state.isLoading && state.selectedCampus != null) ...[
-                  const SizedBox(width: 8),
-                  const SizedBox(
+                  SizedBox(
                     width: 16,
                     height: 16,
-                    child: M3ELoadingIndicator(),
+                    child: adaptiveActivityIndicator(
+                      context: context,
+                      designStyle: ds,
+                      size: 16,
+                    ),
                   ),
                 ],
               ],

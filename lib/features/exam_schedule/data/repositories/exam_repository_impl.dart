@@ -42,7 +42,7 @@ class ExamRepositoryImpl implements ExamRepository {
     final credentials = await _credentialsDataSource.readCredentials();
     if ((credentials == null || credentials.isEmpty) &&
         !await rust_api.checkSessionValid()) {
-      AppLogger.instance.warning('No credentials found', tag: 'ExamRepo');
+      AppLogger.instance.info('No credentials found', tag: 'ExamRepo');
       throw Exception('未登录，无法获取考试安排');
     }
 

@@ -1,14 +1,16 @@
 import 'package:animations/animations.dart';
+import 'package:liquid_glass_widgets/liquid_glass_widgets.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:material_3_expressive/material_3_expressive.dart';
 import 'package:li_curriculum_table/core/di/service_locator.dart';
+import 'package:li_curriculum_table/core/presentation/adaptive_helpers.dart';
 import 'package:li_curriculum_table/core/presentation/adaptive_icons.dart';
 import 'package:li_curriculum_table/core/rust/api/book.dart';
 import 'package:li_curriculum_table/core/settings/domain/settings_repository.dart';
 import 'package:li_curriculum_table/core/settings/presentation/settings_providers.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_detail_page.dart';
 import 'package:li_curriculum_table/features/book/presentation/pages/book_material.dart';
-import 'package:li_curriculum_table/features/book/presentation/pages/widgets/m3e_adv_dropdown.dart';
+import 'package:li_curriculum_table/features/book/presentation/pages/widgets/book_adv_dropdown.dart';
 import 'package:signals/signals_flutter.dart';
 
 class BookTab extends SignalStatefulWidget {
@@ -130,7 +132,7 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     return _buildMaterial(context, ds);
   }
 
-  Widget _buildPaginationBar(BuildContext context) {
+  Widget _buildPaginationBar(BuildContext context, DesignStyle ds) {
     final cs = Theme.of(context).colorScheme;
     final pg = _advPage.value;
     return Padding(
@@ -138,11 +140,10 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          M3EIconButton(
+          adaptiveIconButton(
+            designStyle: ds,
             icon: const Icon(Icons.navigate_before, size: 18),
-            variant: M3EIconButtonVariant.tonal,
-            shape: M3EIconButtonShapeVariant.round,
-            size: M3EIconButtonSize.sm,
+            size: 32,
             onPressed: pg > 1
                 ? () {
                     _advPage.value = pg - 1;
@@ -156,11 +157,10 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
             style: TextStyle(fontSize: 13, color: cs.onSurfaceVariant),
           ),
           const SizedBox(width: 12),
-          M3EIconButton(
+          adaptiveIconButton(
+            designStyle: ds,
             icon: const Icon(Icons.navigate_next, size: 18),
-            variant: M3EIconButtonVariant.tonal,
-            shape: M3EIconButtonShapeVariant.round,
-            size: M3EIconButtonSize.sm,
+            size: 32,
             onPressed: pg < _totalPages
                 ? () {
                     _advPage.value = pg + 1;
@@ -173,10 +173,181 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     );
   }
 
-  Widget _buildAdvancedSearchPanel(BuildContext context) {
+  Widget _buildAdvancedSearchPanel(BuildContext context, DesignStyle ds) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
     final adv = _advExpanded.value;
+
+    final panelContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Row 1: 检索字段 + 文献类型
+        Row(
+          children: [
+            _advDropdown(
+              context,
+              label: '检索字段',
+              value: _advSearchType.value,
+              items: _searchTypeLabels,
+              onChanged: (v) => _advSearchType.value = v,
+            ),
+            const SizedBox(width: 10),
+            _advDropdown(
+              context,
+              label: '文献类型',
+              value: _advDoctype.value,
+              items: _doctypeLabels,
+              onChanged: (v) => _advDoctype.value = v,
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        // Row 2: 校区 + 排序
+        Row(
+          children: [
+            _advDropdown(
+              context,
+              label: '校区',
+              value: _advDept.value,
+              items: _deptLabels,
+              onChanged: (v) => _advDept.value = v,
+            ),
+            const SizedBox(width: 10),
+            _advDropdown(
+              context,
+              label: '排序',
+              value: _advSort.value,
+              items: _sortLabels,
+              onChanged: (v) => _advSort.value = v,
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        // Row 3: 排序方向 + 每页数量
+        Builder(
+          builder: (context) {
+            final isLiquid =
+                UiStyleRegistry.resolveConcreteStyle(ds) ==
+                DesignStyle.cupertino;
+            if (isLiquid) {
+              return Row(
+                children: [
+                  Text(
+                    '每页',
+                    style: tt.labelSmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 140,
+                    height: 32,
+                    child: GlassSegmentedControl(
+                      segments: _displaypgOptions
+                          .map((n) => GlassSegment(label: '$n'))
+                          .toList(),
+                      selectedIndex: _displaypgOptions
+                          .indexOf(_advDisplaypg.value)
+                          .clamp(0, 3),
+                      onSegmentSelected: (i) =>
+                          _advDisplaypg.value = _displaypgOptions[i],
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: 160,
+                    height: 32,
+                    child: GlassSegmentedControl(
+                      segments: const [
+                        GlassSegment(label: '最新优先'),
+                        GlassSegment(label: '最早优先'),
+                      ],
+                      selectedIndex: _advOrderby.value == 'DESC' ? 0 : 1,
+                      onSegmentSelected: (i) =>
+                          _advOrderby.value = i == 0 ? 'DESC' : 'asc',
+                    ),
+                  ),
+                ],
+              );
+            }
+            return Row(
+              children: [
+                Text(
+                  '每页',
+                  style: tt.labelSmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                ToggleButtons(
+                  isSelected: _displaypgOptions
+                      .map((n) => n == _advDisplaypg.value)
+                      .toList(),
+                  onPressed: (i) =>
+                      _advDisplaypg.value = _displaypgOptions[i],
+                  borderRadius: BorderRadius.circular(20),
+                  constraints: const BoxConstraints(
+                    minWidth: 40,
+                    minHeight: 32,
+                  ),
+                  children: _displaypgOptions
+                      .map(
+                        (n) => Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                          ),
+                          child: Text(
+                            '$n',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const Spacer(),
+                SegmentedButton<String>(
+                  segments: [
+                    ButtonSegment(
+                      value: 'DESC',
+                      label: Text(
+                        '最新优先',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _advOrderby.value == 'DESC'
+                              ? cs.onPrimary
+                              : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                    ButtonSegment(
+                      value: 'asc',
+                      label: Text(
+                        '最早优先',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _advOrderby.value == 'asc'
+                              ? cs.onPrimary
+                              : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  ],
+                  selected: {_advOrderby.value},
+                  onSelectionChanged: (s) => _advOrderby.value = s.first,
+                  showSelectedIcon: false,
+                  style: const ButtonStyle(
+                    visualDensity: VisualDensity.compact,
+                    padding: WidgetStatePropertyAll(
+                      EdgeInsets.symmetric(horizontal: 14),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -214,137 +385,11 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
           ),
         ),
         if (adv) ...[
-          Container(
+          UiStyleRegistry.resolve(ds).buildCard(
+            context: context,
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: cs.outlineVariant.withValues(alpha: 0.4),
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Row 1: 检索字段 + 文献类型
-                Row(
-                  children: [
-                    _advDropdown(
-                      context,
-                      label: '检索字段',
-                      value: _advSearchType.value,
-                      items: _searchTypeLabels,
-                      onChanged: (v) => _advSearchType.value = v,
-                    ),
-                    const SizedBox(width: 10),
-                    _advDropdown(
-                      context,
-                      label: '文献类型',
-                      value: _advDoctype.value,
-                      items: _doctypeLabels,
-                      onChanged: (v) => _advDoctype.value = v,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // Row 2: 校区 + 排序
-                Row(
-                  children: [
-                    _advDropdown(
-                      context,
-                      label: '校区',
-                      value: _advDept.value,
-                      items: _deptLabels,
-                      onChanged: (v) => _advDept.value = v,
-                    ),
-                    const SizedBox(width: 10),
-                    _advDropdown(
-                      context,
-                      label: '排序',
-                      value: _advSort.value,
-                      items: _sortLabels,
-                      onChanged: (v) => _advSort.value = v,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                // Row 3: 排序方向 + 每页数量
-                Row(
-                  children: [
-                    Text(
-                      '每页',
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    ToggleButtons(
-                      isSelected: _displaypgOptions
-                          .map((n) => n == _advDisplaypg.value)
-                          .toList(),
-                      onPressed: (i) =>
-                          _advDisplaypg.value = _displaypgOptions[i],
-                      borderRadius: BorderRadius.circular(20),
-                      constraints: const BoxConstraints(
-                        minWidth: 40,
-                        minHeight: 32,
-                      ),
-                      children: _displaypgOptions
-                          .map(
-                            (n) => Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 4,
-                              ),
-                              child: Text(
-                                '$n',
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                    const Spacer(),
-                    SegmentedButton<String>(
-                      segments: [
-                        ButtonSegment(
-                          value: 'DESC',
-                          label: Text(
-                            '最新优先',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _advOrderby.value == 'DESC'
-                                  ? cs.onPrimary
-                                  : cs.onSurface,
-                            ),
-                          ),
-                        ),
-                        ButtonSegment(
-                          value: 'asc',
-                          label: Text(
-                            '最早优先',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: _advOrderby.value == 'asc'
-                                  ? cs.onPrimary
-                                  : cs.onSurface,
-                            ),
-                          ),
-                        ),
-                      ],
-                      selected: {_advOrderby.value},
-                      onSelectionChanged: (s) => _advOrderby.value = s.first,
-                      showSelectedIcon: false,
-                      style: const ButtonStyle(
-                        visualDensity: VisualDensity.compact,
-                        padding: WidgetStatePropertyAll(
-                          EdgeInsets.symmetric(horizontal: 14),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            borderRadius: 16,
+            child: panelContent,
           ),
           const SizedBox(height: 8),
         ],
@@ -360,7 +405,7 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
     required ValueChanged<String> onChanged,
   }) {
     return Expanded(
-      child: M3EAdvDropdown(
+      child: BookAdvDropdown(
         label: label,
         value: value,
         items: items,
@@ -371,9 +416,10 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
 
   Widget _buildMaterial(BuildContext context, DesignStyle ds) {
     final colorScheme = Theme.of(context).colorScheme;
+    final style = UiStyleRegistry.resolve(ds);
 
     return ColoredBox(
-      color: colorScheme.surface,
+      color: style.pageBackgroundColor(colorScheme),
       child: SafeArea(
         bottom: false,
         child: Center(
@@ -382,66 +428,37 @@ class _BookTabState extends State<BookTab> with AutomaticKeepAliveClientMixin {
             child: Column(
               children: [
                 // Compact header: search bar
-                Container(
+                style.buildHeaderBar(
+                  context: context,
                   padding: const EdgeInsets.fromLTRB(16, 6, 16, 6),
-                  decoration: BoxDecoration(
-                    color: colorScheme.surface,
-                    border: Border(
-                      bottom: BorderSide(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.3,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: style.buildSearchBar(
+                          context: context,
+                          controller: _searchController,
+                          placeholder: '输入书名检索馆藏，例如 "计算机"',
+                          onSubmitted: (_) => _performSearch(),
                         ),
-                        width: 0.5,
                       ),
-                    ),
-                  ),
-                  child: SearchBar(
-                    controller: _searchController,
-                    hintText: '输入书名检索馆藏，例如 "计算机"',
-                    leading: Icon(
-                      AppIcons.search(ds),
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    trailing: [
-                      if (_searchController.text.isNotEmpty)
-                        M3EIconButton(
-                          icon: Icon(AppIcons.clear(ds)),
-                          variant: M3EIconButtonVariant.tonal,
-                          shape: M3EIconButtonShapeVariant.round,
-                          onPressed: () => _searchController.clear(),
-                        ),
-                      M3EIconButton(
+                      const SizedBox(width: 8),
+                      adaptiveIconButton(
+                        designStyle: ds,
                         icon: Icon(AppIcons.arrowForward(ds)),
-                        variant: M3EIconButtonVariant.filled,
-                        shape: M3EIconButtonShapeVariant.round,
+                        tooltip: '搜索',
                         onPressed: _performSearch,
                       ),
                     ],
-                    onSubmitted: (_) => _performSearch(),
-                    elevation: WidgetStateProperty.all(0),
-                    backgroundColor: WidgetStateProperty.all(
-                      colorScheme.surfaceContainerHigh,
-                    ),
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(
-                          color: colorScheme.outlineVariant.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                      ),
-                    ),
                   ),
                 ), // end compact header
                 // Advanced search toggle + panel
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildAdvancedSearchPanel(context),
+                  child: _buildAdvancedSearchPanel(context, ds),
                 ),
                 // Pagination controls
                 if (_hasSearched.value && _totalCount.value > 0)
-                  _buildPaginationBar(context),
+                  _buildPaginationBar(context, ds),
                 Expanded(
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 300),

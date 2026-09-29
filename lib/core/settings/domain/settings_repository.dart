@@ -84,21 +84,21 @@ enum ColorSchemeType {
 
 /// Design style for the app UI.
 enum DesignStyle {
-  /// Material Design 3 (Android/Google style)
+  /// Material Design 3 Expressive (Android/Google style)
   material,
 
-  /// Cupertino design (iOS/Apple style)
+  /// iOS 26 Liquid Glass (Apple style)
   cupertino,
 
-  /// Follow the current platform (Android → Material, iOS → Cupertino)
+  /// Follow the current platform (Android/Linux/Windows → Material, iOS/macOS → Liquid Glass)
   system;
 
   String get label {
     switch (this) {
       case DesignStyle.material:
-        return 'Material';
+        return 'Material 3 Expressive';
       case DesignStyle.cupertino:
-        return 'Cupertino';
+        return 'iOS 26 Liquid Glass';
       case DesignStyle.system:
         return '跟随系统';
     }
@@ -107,11 +107,11 @@ enum DesignStyle {
   IconData get icon {
     switch (this) {
       case DesignStyle.material:
-        return Icons.android;
+        return Icons.auto_awesome;
       case DesignStyle.cupertino:
-        return Icons.apple;
+        return Icons.water_drop_outlined;
       case DesignStyle.system:
-        return Icons.phone_android;
+        return Icons.devices;
     }
   }
 }
@@ -150,6 +150,9 @@ class AppSettings {
   /// Whether the user has accepted the terms of service.
   final bool termsAccepted;
 
+  /// Whether the first-use appearance choice has been completed.
+  final bool themeOnboardingCompleted;
+
   const AppSettings({
     required this.proxyEnabled,
     required this.proxyPort,
@@ -168,6 +171,7 @@ class AppSettings {
         11.0, // overridden on mobile in defaultSettings()
     this.daysVisibleCount = 7,
     this.termsAccepted = false,
+    this.themeOnboardingCompleted = false,
   });
 
   factory AppSettings.defaultSettings() {
@@ -192,6 +196,7 @@ class AppSettings {
       timetableTextFontSize: isMobile ? 8.0 : 11.0,
       daysVisibleCount: 7,
       termsAccepted: false,
+      themeOnboardingCompleted: false,
     );
   }
 
@@ -212,6 +217,7 @@ class AppSettings {
     double? timetableTextFontSize,
     int? daysVisibleCount,
     bool? termsAccepted,
+    bool? themeOnboardingCompleted,
   }) {
     return AppSettings(
       proxyEnabled: proxyEnabled ?? this.proxyEnabled,
@@ -232,6 +238,8 @@ class AppSettings {
           timetableTextFontSize ?? this.timetableTextFontSize,
       daysVisibleCount: daysVisibleCount ?? this.daysVisibleCount,
       termsAccepted: termsAccepted ?? this.termsAccepted,
+      themeOnboardingCompleted:
+          themeOnboardingCompleted ?? this.themeOnboardingCompleted,
     );
   }
 }

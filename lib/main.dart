@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:li_curriculum_table/core/presentation/styles/styles.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:li_curriculum_table/app/app.dart';
@@ -17,6 +18,12 @@ import 'package:window_manager/window_manager.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await UiStyleRegistry.initializeAll();
+  } catch (e) {
+    if (kDebugMode) debugPrint('UiStyleRegistry init failed: $e');
+  }
 
   await AppLogger.instance.init();
 
